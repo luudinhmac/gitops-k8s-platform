@@ -11,9 +11,22 @@ export class PostsController {
     return this.postsService.findAll();
   }
 
+  @Get('admin')
+  @UseGuards(AuthGuard('jwt'))
+  findAllAdmin(@Req() req: any) {
+    return this.postsService.findAll(req.user, true);
+  }
+
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.postsService.findOne(+id);
+  findOne(@Param('id') id: string, @Query('action') action: string) {
+    const isView = action === 'view';
+    return this.postsService.findOne(+id, isView);
+  }
+
+  @Post(':id/like')
+  @UseGuards(AuthGuard('jwt'))
+  toggleLike(@Param('id') id: string, @Req() req: any) {
+    return this.postsService.toggleLike(+id, req.user.id);
   }
 
   @Post()
@@ -39,5 +52,12 @@ export class PostsController {
   togglePin(@Param('id') id: string, @Req() req: any) {
     if (req.user.role !== 'admin') throw new Error('Unauthorized');
     return this.postsService.togglePin(+id);
+  }
+
+  @Patch(':id/toggle-publish')
+  @UseGuards(AuthGuard('jwt'))
+  togglePublish(@Param('id') id: string, @Req() req: any) {
+    if (req.user.role !== 'admin') throw new Error('Unauthorized');
+    return this.postsService.togglePublish(+id);
   }
 }

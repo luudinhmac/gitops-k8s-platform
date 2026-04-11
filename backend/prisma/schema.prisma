@@ -23,7 +23,7 @@ model Comment {
   created_at   DateTime @default(now())
   Post         Post?    @relation(fields: [post_id], references: [id], onDelete: Cascade)
 
-  @@index([post_id], map: "Comment_post_id_fkey")
+  @@index([post_id])
 }
 
 model Post {
@@ -32,6 +32,7 @@ model Post {
   content     String?    @db.Text
   series      String?    @db.Text
   is_pinned   Boolean    @default(false)
+  is_published Boolean   @default(true)
   views       Int        @default(0)
   likes       Int        @default(0)
   created_at  DateTime   @default(now())
@@ -44,8 +45,8 @@ model Post {
   PostLike    PostLike[]
   Tag         Tag[]      @relation("PostTags")
 
-  @@index([author_id], map: "Post_author_id_fkey")
-  @@index([category_id], map: "Post_category_id_fkey")
+  @@index([author_id])
+  @@index([category_id])
 }
 
 model PostLike {
@@ -57,7 +58,7 @@ model PostLike {
   User       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@unique([user_id, post_id])
-  @@index([post_id], map: "PostLike_post_id_fkey")
+  @@index([post_id])
 }
 
 model Tag {

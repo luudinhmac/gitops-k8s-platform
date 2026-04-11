@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, Save, Loader2, Image as ImageIcon, Tag, Layout } from 'lucide-react';
 
-export default function NewPostPage() {
+export default function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   
   const [formData, setFormData] = useState({
@@ -19,27 +21,47 @@ export default function NewPostPage() {
     is_pinned: false
   });
 
+  // Fetch initial data
   useEffect(() => {
-    // Fetch categories for dropdown
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`);
-        const data = await res.json();
-        setCategories(Array.isArray(data) ? data : []);
+        const [postRes, catsRes] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts/${id}`, { credentials: 'include' }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`)
+        ]);
+
+        if (!postRes.ok) throw new Error('Không thể tải bài viết');
+        
+        const post = await postRes.json();
+        const cats = await catsRes.json();
+
+        setCategories(Array.isArray(cats) ? cats : []);
+        setFormData({
+          title: post.title || '',
+          content: post.content || '',
+          category_id: post.category_id?.toString() || '',
+          tags: post.Tag?.map((t: any) => t.name).join(', ') || '',
+          series: post.series || '',
+          is_pinned: post.is_pinned || false
+        });
       } catch (err) {
-        console.error('Error fetching categories:', err);
+        console.error(err);
+        alert('Lỗi khi tải dữ liệu bài viết');
+      } finally {
+        setLoading(false);
       }
     };
-    fetchCategories();
-  }, []);
+
+    fetchData();
+  }, [id]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setSubmitting(true);
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts`, {
-        method: 'POST',
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts/${id}`, {
+        method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
@@ -49,16 +71,24 @@ export default function NewPostPage() {
         }),
       });
 
-      if (!response.ok) throw new Error('Không thể tạo bài viết');
+      if (!response.ok) throw new Error('Không thể cập nhật bài viết');
 
       router.push('/admin');
       router.refresh();
     } catch (err) {
-      alert('Có lỗi xảy ra khi tạo bài viết');
+      alert('Có lỗi xảy ra khi cập nhật bài viết');
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <Loader2 size={40} className="animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -73,35 +103,28 @@ export default function NewPostPage() {
               <ArrowLeft size={20} />
             </Link>
             <div>
-              <h1 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">Viết bài mới</h1>
+              <h1 className="text-xl font-bold text-slate-900 dark:text-white leading-tight">Chỉnh sửa bài viết</h1>
               <div className="flex items-center text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">
                 <span className="text-primary mr-1.5">•</span>
-                Trạng thái: Bản nháp
+                ID: #{id}
               </div>
             </div>
           </div>
 
           <div className="flex items-center space-x-3">
             <button
-              onClick={() => alert('Sẽ sớm ra mắt chức năng lưu nháp')}
-              className="hidden md:flex px-5 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 rounded-xl text-sm font-bold hover:bg-slate-50 transition-all items-center"
-            >
-              Lưu nháp
-            </button>
-            <button
               onClick={handleSubmit}
-              disabled={loading}
+              disabled={submitting}
               className="px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/30 hover:shadow-primary/40 hover:-translate-y-0.5 disabled:opacity-50 transition-all flex items-center"
             >
-              {loading ? <Loader2 size={18} className="mr-2 animate-spin" /> : <Save size={18} className="mr-2" />}
-              Xuất bản ngay
+              {submitting ? <Loader2 size={18} className="mr-2 animate-spin" /> : <Save size={18} className="mr-2" />}
+              Lưu thay đổi
             </button>
           </div>
         </div>
       </div>
 
       <div className="max-w-5xl mx-auto px-4 pb-20">
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Editor Card */}
           <div className="lg:col-span-2 space-y-6">
@@ -112,7 +135,7 @@ export default function NewPostPage() {
                   </label>
                   <input 
                     type="text" 
-                    placeholder="Nhập tiêu đề ấn tượng..."
+                    placeholder="Nhập tiêu đề..."
                     className="w-full px-6 py-4 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-primary outline-none transition-all text-lg font-bold"
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
@@ -121,11 +144,11 @@ export default function NewPostPage() {
 
                <div>
                   <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 ml-1">
-                    Nội dung bài viết (Hỗ trợ HTML)
+                    Nội dung bài viết
                   </label>
                   <textarea 
                     rows={15}
-                    placeholder="Viết nội dung bài viết tại đây..."
+                    placeholder="Nội dung bài viết..."
                     className="w-full px-6 py-4 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-primary outline-none transition-all resize-none font-mono text-sm leading-relaxed"
                     value={formData.content}
                     onChange={(e) => setFormData({ ...formData, content: e.target.value })}
@@ -139,7 +162,7 @@ export default function NewPostPage() {
              <div className="glass p-8 rounded-[2.5rem]">
                 <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center">
                    <Layout size={18} className="mr-2 text-primary" />
-                   Cấu hình bài viết
+                   Cấu hình
                 </h3>
 
                 <div className="space-y-6">
@@ -207,7 +230,7 @@ export default function NewPostPage() {
                 </h3>
                 <div className="aspect-video bg-slate-100 dark:bg-slate-800 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 flex flex-col items-center justify-center text-slate-400">
                     <ImageIcon size={32} className="mb-2" />
-                    <span className="text-xs">Chức năng upload sắp ra mắt</span>
+                    <span className="text-xs text-center px-4">Ảnh bìa hiện đang được giữ nguyên</span>
                 </div>
              </div>
           </div>

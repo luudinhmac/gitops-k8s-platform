@@ -15,8 +15,14 @@ export class PostsService {
     }
   };
 
-  async findAll(user?: any) {
-    const where = user && user.role !== 'admin' ? { author_id: user.id } : {};
+  async findAll(user?: any, isAdmin: boolean = false) {
+    const where: any = {};
+    if (!isAdmin) {
+      where.is_published = true;
+    } else if (user && user.role !== 'admin') {
+      where.author_id = user.id;
+    }
+    
     return this.prisma.post.findMany({
       where,
       orderBy: [
@@ -28,12 +34,27 @@ export class PostsService {
         User: {
           select: { fullname: true }
         },
-        Tag: true
+        Tag: true,
+        _count: {
+          select: { Comment: true, PostLike: true }
+        }
       }
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, incrementView: boolean = false) {
+    if (incrementView) {
+      console.log(`[PostsService] Incrementing views for post ID: ${id}`);
+      try {
+        await this.prisma.post.update({
+          where: { id },
+          data: { views: { increment: 1 } }
+        });
+      } catch (err) {
+        console.error('Error incrementing view:', err);
+      }
+    }
+
     const post = await this.prisma.post.findUnique({
       where: { id },
       include: {
@@ -41,7 +62,10 @@ export class PostsService {
         User: {
           select: { fullname: true, avatar: true }
         },
-        Tag: true
+        Tag: true,
+        _count: {
+          select: { Comment: true, PostLike: true }
+        }
       }
     });
     if (!post) throw new NotFoundException('Post not found');
@@ -49,22 +73,33 @@ export class PostsService {
   }
 
   async create(user: any, data: any) {
-    const { tags, ...postData } = data;
+    const { tags, category_id, ...postData } = data;
     const cleanContent = sanitizeHtml(data.content, this.sanitizeOptions);
     
+    const createData: any = {
+      ...postData,
+      content: cleanContent,
+      author_id: user.id,
+      is_pinned: (user.role === 'admin' && data.is_pinned) ? true : false,
+    };
+
+    if (category_id && !isNaN(parseInt(category_id))) {
+      createData.category_id = parseInt(category_id);
+    } else if (category_id === null) {
+      createData.category_id = null;
+    }
+
+    if (tags && typeof tags === 'string' && tags.trim()) {
+      createData.Tag = {
+        connectOrCreate: tags.split(',').map(tag => ({
+          where: { name: tag.trim() },
+          create: { name: tag.trim() }
+        }))
+      };
+    }
+
     return this.prisma.post.create({
-      data: {
-        ...postData,
-        content: cleanContent,
-        author_id: user.id,
-        is_pinned: (user.role === 'admin' && data.is_pinned) ? true : false,
-        Tag: {
-          connectOrCreate: tags?.split(',').map(tag => ({
-            where: { name: tag.trim() },
-            create: { name: tag.trim() }
-          }))
-        }
-      }
+      data: createData
     });
   }
 
@@ -110,6 +145,36 @@ export class PostsService {
     return this.prisma.post.update({
       where: { id },
       data: { is_pinned: !post.is_pinned }
+    });
+  }
+
+  async toggleLike(id: number, userId: number) {
+    const post = await this.prisma.post.findUnique({ where: { id } });
+    if (!post) throw new NotFoundException('Post not found');
+
+    const existingLike = await this.prisma.postLike.findUnique({
+      where: { user_id_post_id: { user_id: userId, post_id: id } }
+    });
+
+    if (existingLike) {
+      await this.prisma.postLike.delete({ where: { id: existingLike.id } });
+      await this.prisma.post.update({ where: { id }, data: { likes: { decrement: 1 } } });
+      return { liked: false };
+    } else {
+      await this.prisma.postLike.create({
+        data: { user_id: userId, post_id: id }
+      });
+      await this.prisma.post.update({ where: { id }, data: { likes: { increment: 1 } } });
+      return { liked: true };
+    }
+  }
+
+  async togglePublish(id: number) {
+    const post = await this.prisma.post.findUnique({ where: { id } });
+    if (!post) throw new NotFoundException('Post not found');
+    return this.prisma.post.update({
+      where: { id },
+      data: { is_published: !post.is_published }
     });
   }
 }

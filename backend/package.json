@@ -30,7 +30,6 @@
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.4.1",
-    "passage": "^0.0.1",
     "pg": "^8.13.1",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
