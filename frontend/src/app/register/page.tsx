@@ -24,7 +24,7 @@ export default function RegisterPage() {
     setError('');
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
@@ -38,8 +38,8 @@ export default function RegisterPage() {
 
       // Đăng ký thành công, chuyển hướng đến trang đăng nhập
       router.push('/login?registered=success');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError((err as Error).message);
     } finally {
       setLoading(false);
     }
@@ -106,7 +106,7 @@ export default function RegisterPage() {
                 <input
                   type="text"
                   className="w-full pl-11 pr-4 py-3.5 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-                  placeholder="John Doe"
+                  placeholder="Nguyễn Văn A"
                   value={formData.fullname}
                   onChange={(e) => setFormData({ ...formData, fullname: e.target.value })}
                 />
@@ -124,6 +124,8 @@ export default function RegisterPage() {
                 <input
                   type="email"
                   required
+                  pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$"
+                  title="Vui lòng nhập định dạng email hợp lệ (vd: name@domain.com)"
                   className="w-full pl-11 pr-4 py-3.5 bg-white/50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
                   placeholder="john@example.com"
                   value={formData.email}

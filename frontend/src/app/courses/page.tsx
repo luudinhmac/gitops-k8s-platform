@@ -51,7 +51,7 @@ export default function CoursesPage() {
           {/* Left Column: Certificates */}
           <div className="flex-grow lg:w-2/3">
             <h1 className="text-4xl md:text-5xl font-display font-bold text-slate-900 dark:text-white mb-6">
-              Học vấn & <span className="text-gradient">Chứng chỉ</span>
+              Học vấn & <span className="text-primary">Chứng chỉ</span>
             </h1>
             <div className="mb-12 p-8 bg-primary/5 rounded-[2.5rem] border border-primary/10">
                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Đại học Sư phạm Kỹ thuật TP.HCM</h3>

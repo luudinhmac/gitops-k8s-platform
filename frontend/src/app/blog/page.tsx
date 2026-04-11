@@ -1,219 +1,278 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
-import { Calendar, Clock, ChevronRight, Search, Tag, Eye, MessageCircle, Heart } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { Search, Calendar, User as UserIcon, Clock, ChevronRight, Eye, Terminal, MessageSquare, Tag as TagIcon, Layout } from 'lucide-react';
 
-export default function BlogListPage() {
-  const { isAuthenticated } = useAuth();
-  const [posts, setPosts] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
+interface Post {
+  id: number;
+  title: string;
+  slug: string;
+  excerpt: string;
+  cover_image: string | null;
+  series: string | null;
+  created_at: string;
+  readTime: number;
+  views: number;
+  author_id: number;
+  Category: {
+    name: string;
+    slug: string;
+  } | null;
+  User: {
+    fullname: string;
+  };
+  Tag: {
+    name: string;
+  }[];
+}
+
+interface Category {
+  id: number;
+  name: string;
+  _count?: {
+    Post: number;
+  };
+}
+
+function BlogContent() {
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
-
-  const calculateReadTime = (content: string) => {
-    const words = content?.replace(/<[^>]*>/g, '').split(/\s+/).length || 0;
-    const time = Math.ceil(words / 200);
-    return time < 1 ? 1 : time;
-  };
-
-  const handleLike = async (postId: number) => {
-    if (!isAuthenticated) {
-      alert('Vui lòng đăng nhập để lưu bài viết vào yêu thích.');
-      return;
-    }
-    
-    try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts/${postId}/like`, {
-        method: 'POST',
-        credentials: 'include'
-      });
-      const data = await response.json();
-      
-      setPosts(currentPosts => currentPosts.map(p => {
-        if (p.id === postId) {
-          return {
-            ...p,
-            likes: data.liked ? (p.likes || 0) + 1 : Math.max(0, (p.likes || 1) - 1)
-          }
-        }
-        return p;
-      }));
-      
-      setLikedPosts(prev => {
-        const next = new Set(prev);
-        if (data.liked) next.add(postId);
-        else next.delete(postId);
-        return next;
-      });
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const q = searchParams.get('q') || '';
+  const [searchTerm, setSearchTerm] = useState(q);
 
   useEffect(() => {
-    const fetchPosts = async () => {
+    setSearchTerm(q);
+  }, [q]);
+
+  useEffect(() => {
+    const fetchData = async () => {
       try {
         const [postsRes, catsRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts`, { cache: 'no-store' }),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, { cache: 'no-store' })
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`)
         ]);
-        
+
         const postsData = await postsRes.json();
         const catsData = await catsRes.json();
-        
-        setPosts(Array.isArray(postsData) ? postsData : []);
-        setCategories(Array.isArray(catsData) ? catsData : []);
+
+        setPosts(postsData);
+        setCategories(catsData);
       } catch (error) {
-        console.error('Error fetching blog data:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchPosts();
+    fetchData();
   }, []);
 
-  const filteredPosts = posts.filter(post => {
-    const matchesSearch = post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         post.content?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = selectedCategory ? post.category_id === selectedCategory : true;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredPosts = posts.filter(post =>
+    post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    post.excerpt?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Group unique series
+  const series = Array.from(new Set(posts.map(p => p.series).filter(Boolean))) as string[];
 
   return (
     <div className="pt-32 pb-20 px-4 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 space-y-6 md:space-y-0">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-display font-bold text-slate-900 dark:text-white mb-4">
-              Blog & Kiến thức
-            </h1>
-            <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl">
-              Nơi chia sẻ những kinh nghiệm thực tế, các bài hướng dẫn kỹ thuật và góc nhìn về công nghệ.
-            </p>
-          </div>
-
-          <div className="relative w-full md:w-96">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
-              <Search size={18} />
-            </div>
-            <input
-              type="text"
-              className="w-full pl-11 pr-4 py-3 bg-slate-100 dark:bg-slate-900 border-none rounded-2xl focus:ring-2 focus:ring-primary transition-all outline-none"
-              placeholder="Tìm kiếm bài viết..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
+        {/* Header Section */}
+        <div className="text-center mb-12">
+          <h3 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-slate-900 dark:text-white mb-6">
+            Blog & Kiến thức
+          </h3>
+          <p className="text-base text-slate-500 max-w-2xl mx-auto leading-relaxed">
+            Chia sẻ kinh nghiệm về Linux, Cloud, Virtualization và hành trình làm nghề System Engineer.
+          </p>
         </div>
 
-        {/* Category Tabs */}
-        {!loading && categories.length > 0 && (
-          <div className="flex flex-wrap items-center gap-2 mb-12">
-            <button
-              onClick={() => setSelectedCategory(null)}
-              className={cn(
-                "px-5 py-2.5 rounded-full text-sm font-bold transition-all",
-                selectedCategory === null 
-                  ? "bg-primary text-white shadow-lg shadow-primary/30" 
-                  : "bg-slate-100 dark:bg-slate-900 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800"
-              )}
-            >
-              Tất cả bài viết
-            </button>
-            {categories.map(cat => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={cn(
-                  "px-5 py-2.5 rounded-full text-sm font-bold transition-all",
-                  selectedCategory === cat.id 
-                    ? "bg-primary text-white shadow-lg shadow-primary/30" 
-                    : "bg-slate-100 dark:bg-slate-900 text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800"
-                )}
-              >
-                {cat.name}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="glass rounded-[2rem] p-6 h-96 animate-pulse" />
-            ))}
-          </div>
-        ) : filteredPosts.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredPosts.map((post) => (
-              <article 
-                key={post.id} 
-                className="group glass rounded-[2.5rem] overflow-hidden hover-lift flex flex-col h-full"
-              >
-                <div className="aspect-[16/10] overflow-hidden relative">
-                  <div className="absolute top-4 left-4 z-10">
-                    <span className="px-3 py-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm rounded-full text-xs font-bold text-primary">
-                      {post.Category?.name || 'Chưa phân loại'}
-                    </span>
-                  </div>
-                  {/* Placeholder for images if not exists */}
-                  <div className="w-full h-full bg-gradient-to-br from-indigo-500/10 to-purple-500/20 flex items-center justify-center">
-                    <Tag size={48} className="text-primary/20" />
-                  </div>
-                </div>
-
-                <div className="p-8 flex flex-col flex-grow">
-                  <div className="flex items-center space-x-4 mb-4 text-xs font-bold text-slate-500">
-                    <span className="flex items-center px-2 py-1 rounded-md text-blue-500 bg-blue-500/10">
-                      <Eye size={14} className="mr-1.5" />
-                      {post.views || 0}
-                    </span>
-                    <span className="flex items-center px-2 py-1 rounded-md text-emerald-500 bg-emerald-500/10">
-                      <MessageCircle size={14} className="mr-1.5" />
-                      {post._count?.Comment || 0}
-                    </span>
-                    <button 
-                      onClick={(e) => { e.preventDefault(); handleLike(post.id); }}
-                      className={cn(
-                        "flex items-center px-2 py-1 rounded-md transition-colors",
-                        likedPosts.has(post.id) ? "text-pink-500 bg-pink-500/10" : "text-pink-400 bg-pink-400/5 hover:bg-pink-400/10"
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Main Content (Posts) */}
+          <div className="flex-grow lg:w-3/4">
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {[1, 2, 3, 4, 5, 6].map(i => (
+                  <div key={i} className="bg-white dark:bg-slate-900 rounded-3xl h-[350px] animate-pulse border border-slate-100 dark:border-slate-800" />
+                ))}
+              </div>
+            ) : filteredPosts.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {filteredPosts.map((post) => (
+                  <Link
+                    key={post.id}
+                    href={`/${post.Category?.slug || 'uncategorized'}/${post.slug}`}
+                    className="group flex flex-col bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800 hover-lift shadow-sm hover:shadow-xl transition-all h-full"
+                  >
+                    {/* Image Container */}
+                    <div className="relative h-40 overflow-hidden">
+                      {post.cover_image ? (
+                        <img
+                          src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${post.cover_image}`}
+                          alt={post.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center">
+                          <Terminal size={32} className="text-slate-300 dark:text-slate-700" />
+                        </div>
                       )}
-                    >
-                      <Heart size={14} className={cn("mr-1.5", likedPosts.has(post.id) ? "fill-current" : "")} />
-                      {post.likes || 0}
-                    </button>
-                    <span className="flex items-center ml-auto">
-                      <Clock size={14} className="mr-1.5" />
-                      {calculateReadTime(post.content || '')} phút đọc
-                    </span>
-                  </div>
+                    </div>
 
-                  <Link href={`/blog/${post.id}`}>
-                    <h2 className="text-xl font-bold mb-3 line-clamp-2 text-slate-900 dark:text-white hover:text-primary transition-colors">
-                      {post.title}
-                    </h2>
+                    {/* Content */}
+                    <div className="p-4 flex flex-col flex-grow">
+                      {/* Metadata */}
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-2">
+                        <div className="flex items-center text-primary bg-primary/5 px-1.5 py-0.5 rounded">
+                          <UserIcon size={10} className="mr-1" />
+                          {post.User?.fullname || 'Ẩn danh'}
+                        </div>
+                        <div className="flex items-center">
+                          <Calendar size={10} className="mr-1 text-primary" />
+                          {post.created_at ? new Date(post.created_at).toLocaleDateString('vi-VN') : 'Đang cập nhật'}
+                        </div>
+                        <div className="flex items-center">
+                          <Eye size={10} className="mr-1 text-primary" />
+                          {post.views || 0}
+                        </div>
+                        <div className="flex items-center">
+                          <MessageSquare size={10} className="mr-1 text-primary" />
+                          0
+                        </div>
+                      </div>
+
+                      <h3 className="text-[15px] font-bold text-slate-900 dark:text-white mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-snug">
+                        {post.title}
+                      </h3>
+
+                      {/* Badges moved below title */}
+                      <div className="flex flex-wrap gap-1.5 mb-2.5">
+                        {post.Category && (
+                          <span className="px-2 py-0.5 bg-primary/10 rounded-full text-[8px] font-bold uppercase tracking-wider text-primary">
+                            {post.Category.name}
+                          </span>
+                        )}
+                        {post.series && (
+                          <span className="px-2 py-0.5 bg-indigo-500/10 rounded-full text-[8px] font-bold uppercase tracking-wider text-indigo-500">
+                            Series: {post.series}
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-slate-500 dark:text-slate-400 text-[10.5px] line-clamp-2 mb-3 leading-relaxed">
+                        {post.excerpt}
+                      </p>
+
+                      <div className="mt-auto flex items-center gap-4 pt-3">
+                        <div className="flex items-center text-[9px] font-bold text-slate-400 uppercase">
+                          <Clock size={10} className="mr-1 text-primary" />
+                          {post.readTime || 5} min
+                        </div>
+                        <div className="text-primary ml-auto group-hover:translate-x-1 transition-transform">
+                          <ChevronRight size={14} />
+                        </div>
+                      </div>
+                    </div>
                   </Link>
-                  
-                  <p className="text-slate-600 dark:text-slate-400 text-sm line-clamp-3 mb-6 flex-grow">
-                    {post.content?.replace(/<[^>]*>/g, '') || 'Nhấp vào tiêu đề để bắt đầu đọc nội dung chi tiết của bài viết...'}
-                  </p>
-                </div>
-              </article>
-            ))}
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800">
+                <Search size={40} className="mx-auto text-slate-300 mb-4" />
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Không tìm thấy bài viết</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm">Hãy thử tìm kiếm với từ khóa khác.</p>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="text-center py-20">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Không tìm thấy bài viết</h3>
-            <p className="text-slate-500">Hãy thử tìm kiếm với từ khóa khác.</p>
-          </div>
-        )}
+
+          {/* Sidebar */}
+          <aside className="lg:w-1/4 space-y-8">
+            {/* Sidebar Search (Visible on Mobile or as redundant) */}
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest mb-4 flex items-center">
+                <Search size={14} className="mr-2 text-primary" /> Tìm kiếm
+              </h4>
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Nhập từ khóa..."
+                  className="w-full pl-4 pr-10 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl text-xs focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      router.push(`/blog?q=${encodeURIComponent(searchTerm)}`);
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => router.push(`/blog?q=${encodeURIComponent(searchTerm)}`)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors"
+                >
+                  <Search size={14} />
+                </button>
+              </div>
+            </div>
+
+            {/* Categories */}
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest mb-4 flex items-center">
+                <Layout size={14} className="mr-2 text-primary" /> Danh mục
+              </h4>
+              <div className="space-y-1">
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => router.push(`/blog?q=${encodeURIComponent(cat.name)}`)}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-[11px] font-medium text-slate-600 dark:text-slate-400 hover:bg-primary/5 hover:text-primary transition-all group"
+                  >
+                    <span>{cat.name}</span>
+                    <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded group-hover:bg-primary/20 transition-colors">
+                      {cat._count?.Post || 0}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Latest Series */}
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest mb-4 flex items-center">
+                <TagIcon size={14} className="mr-2 text-primary" /> Series mới nhất
+              </h4>
+              <div className="space-y-2">
+                {series.length > 0 ? (
+                  series.slice(0, 5).map((s, idx) => (
+                    <button
+                      key={idx}
+                      onClick={() => router.push(`/blog?q=${encodeURIComponent(s)}`)}
+                      className="w-full text-left px-3 py-2.5 rounded-xl border border-slate-50 dark:border-slate-800 text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:border-primary/30 hover:bg-primary/5 transition-all"
+                    >
+                      <div className="text-[8px] text-primary uppercase font-bold mb-0.5">Series</div>
+                      <div className="line-clamp-1">{s}</div>
+                    </button>
+                  ))
+                ) : (
+                  <p className="text-[10px] text-slate-400 italic">Chưa có chuỗi bài viết nào.</p>
+                )}
+              </div>
+            </div>
+          </aside>
+        </div>
       </div>
     </div>
+  );
+}
+
+export default function BlogPage() {
+  return (
+    <Suspense fallback={<div className="pt-40 text-center">Đang tải trang blog...</div>}>
+      <BlogContent />
+    </Suspense>
   );
 }

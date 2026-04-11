@@ -46,8 +46,8 @@ export default function LoginPage() {
 
       // Đăng nhập thành công - Cập nhật AuthContext
       login(data.user);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError((err as Error).message);
     } finally {
       setLoading(false);
     }

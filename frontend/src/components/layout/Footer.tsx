@@ -22,8 +22,7 @@ export default function Footer() {
               Portfolio
             </Link>
             <p className="mt-4 text-slate-600 dark:text-slate-400 max-w-sm">
-              Đam mê xây dựng những ứng dụng web hiện đại, hiệu quả và mang lại giá trị tốt nhất cho người dùng. 
-              Chuyên về System Engineering và Fullstack Development.
+              Đam mê xây dựng những ứng dụng web hiện đại, hiệu quả và mang lại giá trị tốt nhất cho người dùng. Chuyên về System Engineering và Fullstack Development.
             </p>
             <div className="mt-6 flex space-x-4">
               <a href="https://github.com/luudinhmac" target="_blank" className="p-2 glass rounded-full hover:text-primary transition-colors">
@@ -51,7 +50,7 @@ export default function Footer() {
                 <Link href="/blog" className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Blog</Link>
               </li>
               <li>
-                <Link href="/about" className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Về tôi</Link>
+                <Link href="/about" className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Giới thiệu</Link>
               </li>
               <li>
                 <Link href="/projects" className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Dự án</Link>
@@ -76,7 +75,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 text-sm text-slate-500">
-          <p>© {currentYear} Portfolio. All rights reserved.</p>
+          <p>© {currentYear} Portfolio. Bản quyền đã được bảo hộ.</p>
           <div className="flex space-x-6">
             <Link href="/privacy" className="hover:text-primary transition-colors">Quyền riêng tư</Link>
             <Link href="/terms" className="hover:text-primary transition-colors">Điều khoản</Link>

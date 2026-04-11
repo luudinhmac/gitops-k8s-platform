@@ -10,6 +10,7 @@ datasource db {
 model Category {
   id         Int      @id @default(autoincrement())
   name       String   @unique
+  slug       String   @unique @default("")
   created_at DateTime @default(now())
   Post       Post[]
 }
@@ -29,8 +30,10 @@ model Comment {
 model Post {
   id          Int        @id @default(autoincrement())
   title       String     @db.Text
+  slug        String     @unique @default("")
   content     String?    @db.Text
   series      String?    @db.Text
+  cover_image String?    @db.VarChar(500)
   is_pinned   Boolean    @default(false)
   is_published Boolean   @default(true)
   views       Int        @default(0)

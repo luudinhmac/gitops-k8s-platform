@@ -2,26 +2,36 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Menu, X, ChevronRight, LayoutDashboard, User, LogOut, PenSquare, ChevronDown } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes';
+import { Menu, X, ChevronRight, LayoutDashboard, User, LogOut, PenSquare, ChevronDown, Moon, Sun, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
-
-const navItems = [
-  { name: 'Trang chủ', href: '/' },
-  { name: 'Blog', href: '/blog' },
-  { name: 'Dự án', href: '/projects' },
-  { name: 'Khóa học', href: '/courses' },
-  { name: 'Giới thiệu', href: '/about' },
-];
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const { user, isAuthenticated, loading, logout } = useAuth();
+  const { theme, setTheme } = useTheme();
   const pathname = usePathname();
+  const router = useRouter();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+  const [searchValue, setSearchValue] = useState('');
+
+  const navItems = [
+    { name: 'Trang chủ', href: '/' },
+    { name: 'Blog', href: '/blog' },
+    { name: 'Dự án', href: '/projects' },
+    { name: 'Khóa học', href: '/courses' },
+    { name: 'Giới thiệu', href: '/about' },
+  ];
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -49,9 +59,28 @@ export default function Navbar() {
         scrolled ? "py-3 shadow-lg" : "py-4 bg-transparent border-transparent"
       )}>
         <div className="flex items-center justify-between">
-          <Link href="/" className="text-xl md:text-2xl font-display font-bold text-gradient">
+          <Link href="/" className="text-xl md:text-2xl font-display font-bold text-gradient flex-shrink-0">
             Portfolio
           </Link>
+
+          {/* Search Bar in Navbar */}
+          <div className="hidden lg:flex flex-grow max-w-md mx-8 relative group">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+              <Search size={16} />
+            </div>
+            <input
+              type="text"
+              placeholder="Tìm kiếm bài viết..."
+              className="w-full pl-10 pr-4 py-2 bg-slate-100/50 dark:bg-slate-800/50 border border-transparent focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all rounded-full text-sm"
+              value={searchValue}
+              onChange={(e) => setSearchValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  router.push(`/blog?q=${encodeURIComponent(searchValue)}`);
+                }
+              }}
+            />
+          </div>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center space-x-8">
@@ -61,6 +90,18 @@ export default function Navbar() {
                 {item.name}
               </Link>
             ))}
+
+            {mounted && (
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="p-2 glass rounded-full text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-primary transition-colors"
+                  aria-label="Toggle Theme"
+                >
+                  {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+                </button>
+              </div>
+            )}
 
             {!loading && (
               isAuthenticated && user ? (
@@ -79,7 +120,6 @@ export default function Navbar() {
                     <ChevronDown size={14} className={cn("text-slate-400 transition-transform", dropdownOpen && "rotate-180")} />
                   </button>
 
-                  {/* Dropdown Menu */}
                   <div className={cn(
                     "absolute right-0 top-full mt-2 w-52 glass rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden transition-all duration-200 origin-top-right",
                     dropdownOpen ? "scale-100 opacity-100" : "scale-95 opacity-0 pointer-events-none"
@@ -129,10 +169,20 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Toggle */}
-          <button className="md:hidden p-2 text-slate-600 dark:text-slate-300" onClick={() => setIsOpen(!isOpen)}>
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+          {/* Mobile Toggle & Theme */}
+          <div className="md:hidden flex items-center space-x-2">
+            {mounted && (
+              <button
+                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                className="p-2 text-slate-600 dark:text-slate-300"
+              >
+                {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+              </button>
+            )}
+            <button className="p-2 text-slate-600 dark:text-slate-300" onClick={() => setIsOpen(!isOpen)}>
+              {isOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
       </div>
 

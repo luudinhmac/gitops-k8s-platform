@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth, User } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import {
   User as UserIcon, FileText, Lock, Save, Loader2,
@@ -22,7 +22,13 @@ export default function ProfilePage() {
   const [saveLoading, setSaveLoading] = useState(false);
   const [saveMsg, setSaveMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  const [myPosts, setMyPosts] = useState<any[]>([]);
+  const [myPosts, setMyPosts] = useState<{
+    id: number;
+    title: string;
+    created_at: string;
+    views: number;
+    is_published: boolean;
+  }[]>([]);
   const [postsLoading, setPostsLoading] = useState(false);
 
   const [passForm, setPassForm] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
@@ -34,37 +40,37 @@ export default function ProfilePage() {
     if (!authLoading && !isAuthenticated) {
       router.push('/login');
     }
-  }, [authLoading, isAuthenticated]);
+  }, [authLoading, isAuthenticated, router]);
 
   useEffect(() => {
     if (user) {
       setProfileForm({
         fullname: user.fullname || '',
-        email: (user as any).email || '',
-        phone: (user as any).phone || '',
-        address: (user as any).address || '',
-        profession: (user as any).profession || '',
-        birthday: (user as any).birthday || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        address: user.address || '',
+        profession: user.profession || '',
+        birthday: user.birthday || '',
       });
     }
   }, [user]);
-
-  useEffect(() => {
-    if (activeTab === 'posts' && user) {
-      fetchMyPosts();
-    }
-  }, [activeTab, user]);
 
   const fetchMyPosts = async () => {
     setPostsLoading(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts/admin`, { credentials: 'include' });
       const data = await res.json();
-      const mine = Array.isArray(data) ? data.filter((p: any) => p.author_id === user?.id) : [];
+      const mine = Array.isArray(data) ? data.filter((p: { author_id: number }) => p.author_id === user?.id) : [];
       setMyPosts(mine);
     } catch (err) { console.error(err); }
     finally { setPostsLoading(false); }
   };
+
+  useEffect(() => {
+    if (activeTab === 'posts' && user) {
+      fetchMyPosts();
+    }
+  }, [activeTab, user]);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -81,8 +87,8 @@ export default function ProfilePage() {
       if (!res.ok) throw new Error(data.message || 'Không thể cập nhật thông tin');
       setSaveMsg({ type: 'success', text: 'Đã cập nhật thông tin thành công!' });
       checkAuth();
-    } catch (err: any) {
-      setSaveMsg({ type: 'error', text: err.message });
+    } catch (err: unknown) {
+      setSaveMsg({ type: 'error', text: (err as Error).message });
     } finally {
       setSaveLoading(false);
       setTimeout(() => setSaveMsg(null), 4000);
@@ -108,8 +114,8 @@ export default function ProfilePage() {
       if (!res.ok) throw new Error(data.message || 'Không thể đổi mật khẩu');
       setPassMsg({ type: 'success', text: 'Đã đổi mật khẩu thành công!' });
       setPassForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
-    } catch (err: any) {
-      setPassMsg({ type: 'error', text: err.message });
+    } catch (err: unknown) {
+      setPassMsg({ type: 'error', text: (err as Error).message });
     } finally {
       setPassLoading(false);
     }
@@ -136,7 +142,7 @@ export default function ProfilePage() {
   ];
 
   return (
-    <div className="pt-24 pb-20 px-4 min-h-screen">
+    <div className="pt-24 pb-20 px-4 min-h-screen bg-slate-50 dark:bg-slate-950">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center space-x-4 mb-10">
@@ -144,8 +150,8 @@ export default function ProfilePage() {
             <ArrowLeft size={20} />
           </Link>
           <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-primary/30">
-              {(user?.fullname || user?.username)?.[0]?.toUpperCase()}
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-primary/30 overflow-hidden">
+              {user?.avatar ? <img src={user.avatar} alt={user.fullname} className="w-full h-full object-cover" /> : (user?.fullname || user?.username)?.[0]?.toUpperCase()}
             </div>
             <div>
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{user?.fullname || user?.username}</h1>
@@ -160,15 +166,15 @@ export default function ProfilePage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-2 mb-8 bg-slate-100 dark:bg-slate-900 p-1.5 rounded-2xl w-fit">
+        <div className="flex space-x-2 mb-8 bg-white dark:bg-slate-900 p-1.5 rounded-2xl w-fit shadow-sm border border-slate-200 dark:border-slate-800">
           {tabs.map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as 'info' | 'posts' | 'password')}
               className={cn(
                 "flex items-center px-5 py-2.5 rounded-xl text-sm font-bold transition-all",
                 activeTab === tab.id
-                  ? "bg-white dark:bg-slate-800 text-primary shadow-sm"
+                  ? "bg-primary text-white shadow-lg shadow-primary/20"
                   : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
               )}
             >
@@ -178,139 +184,139 @@ export default function ProfilePage() {
           ))}
         </div>
 
-        {/* Tab: Thông tin cá nhân */}
-        {activeTab === 'info' && (
-          <div className="glass p-8 rounded-[2.5rem]">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-8">Chỉnh sửa thông tin</h2>
-            {saveMsg && (
-              <div className={cn("flex items-center space-x-2 p-4 rounded-2xl mb-6 text-sm",
-                saveMsg.type === 'success' ? "bg-emerald-50 border border-emerald-200 text-emerald-600" : "bg-red-50 border border-red-200 text-red-600"
-              )}>
-                {saveMsg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}
-                <span>{saveMsg.text}</span>
+        {/* Tab content area */}
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-[2.5rem] shadow-sm">
+          {activeTab === 'info' && (
+            <div>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-8">Chỉnh sửa thông tin</h2>
+              {saveMsg && (
+                <div className={cn("flex items-center space-x-2 p-4 rounded-2xl mb-6 text-sm",
+                  saveMsg.type === 'success' ? "bg-emerald-50 border border-emerald-200 text-emerald-600" : "bg-red-50 border border-red-200 text-red-600"
+                )}>
+                  {saveMsg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}
+                  <span>{saveMsg.text}</span>
+                </div>
+              )}
+              <form onSubmit={handleSaveProfile} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {[
+                    { label: 'Họ và tên', key: 'fullname', placeholder: 'Nguyễn Văn A', icon: UserIcon },
+                    { label: 'Email', key: 'email', placeholder: 'email@example.com', icon: Mail, type: 'email' },
+                    { label: 'Số điện thoại', key: 'phone', placeholder: '0912 345 678', icon: Phone },
+                    { label: 'Ngành nghề', key: 'profession', placeholder: 'System Engineer', icon: Briefcase },
+                    { label: 'Ngày sinh', key: 'birthday', placeholder: 'DD/MM/YYYY', icon: Calendar },
+                    { label: 'Địa chỉ', key: 'address', placeholder: 'Hà Nội, Việt Nam', icon: MapPin },
+                  ].map(field => (
+                    <div key={field.key}>
+                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">{field.label}</label>
+                      <div className="relative">
+                        <field.icon size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                          type={field.key === 'email' ? 'email' : 'text'}
+                          placeholder={field.placeholder}
+                          value={(profileForm as Record<string, string>)[field.key]}
+                          onChange={e => setProfileForm({ ...profileForm, [field.key]: e.target.value })}
+                          className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button type="submit" disabled={saveLoading}
+                  className="flex items-center px-8 py-4 bg-primary text-white rounded-2xl text-base font-bold shadow-xl shadow-primary/30 hover:-translate-y-0.5 transition-all disabled:opacity-50">
+                  {saveLoading ? <Loader2 size={18} className="animate-spin mr-2" /> : <Save size={18} className="mr-2" />}
+                  Lưu thay đổi
+                </button>
+              </form>
+            </div>
+          )}
+
+          {activeTab === 'posts' && (
+            <div>
+              <div className="flex items-center justify-between mb-8">
+                <h2 className="text-xl font-bold text-slate-900 dark:text-white">Bài viết của tôi ({myPosts.length})</h2>
+                <Link href="/admin/posts/new" className="px-5 py-2.5 bg-primary text-white rounded-2xl text-sm font-bold shadow-lg shadow-primary/30 hover:-translate-y-0.5 transition-all flex items-center">
+                  <Edit size={16} className="mr-2" /> Viết bài mới
+                </Link>
               </div>
-            )}
-            <form onSubmit={handleSaveProfile} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {postsLoading ? (
+                <div className="flex justify-center py-12"><Loader2 className="animate-spin text-primary" size={32} /></div>
+              ) : myPosts.length === 0 ? (
+                <div className="text-center py-16 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-[2.5rem]">
+                  <FileText size={40} className="mx-auto text-slate-200 dark:text-slate-800 mb-4" />
+                  <p className="text-slate-500">Bạn chưa có bài viết nào.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {myPosts.map(post => (
+                    <div key={post.id} className="flex items-center justify-between p-5 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800 group hover:border-primary/20 transition-all">
+                      <div className="flex-1 min-w-0 pr-4">
+                        <div className="flex items-center space-x-2 mb-1">
+                          {!post.is_published && <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 text-[10px] font-bold rounded uppercase">Ẩn</span>}
+                          <h3 className="font-bold text-slate-900 dark:text-white text-sm truncate">{post.title}</h3>
+                        </div>
+                        <p className="text-xs text-slate-500">{new Date(post.created_at).toLocaleDateString('vi-VN')} · {post.views || 0} lượt xem</p>
+                      </div>
+                      <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Link href={`/admin/posts/edit/${post.id}`}
+                          className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all">
+                          <Edit size={16} />
+                        </Link>
+                        <button onClick={() => handleDeletePost(post.id)}
+                          className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'password' && (
+            <div className="max-w-md mx-auto py-4">
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-8 text-center">Đổi mật khẩu bảo mật</h2>
+              {passMsg && (
+                <div className={cn("flex items-center space-x-2 p-4 rounded-2xl mb-6 text-sm",
+                  passMsg.type === 'success' ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
+                )}>
+                  {passMsg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}
+                  <span>{passMsg.text}</span>
+                </div>
+              )}
+              <form onSubmit={handleChangePassword} className="space-y-5">
                 {[
-                  { label: 'Họ và tên', key: 'fullname', placeholder: 'Nguyễn Văn A', icon: UserIcon },
-                  { label: 'Email', key: 'email', placeholder: 'email@example.com', icon: Mail, type: 'email' },
-                  { label: 'Số điện thoại', key: 'phone', placeholder: '0912 345 678', icon: Phone },
-                  { label: 'Ngành nghề', key: 'profession', placeholder: 'System Engineer', icon: Briefcase },
-                  { label: 'Ngày sinh', key: 'birthday', placeholder: 'DD/MM/YYYY', icon: Calendar },
-                  { label: 'Địa chỉ', key: 'address', placeholder: 'Hà Nội, Việt Nam', icon: MapPin },
+                  { label: 'Mật khẩu hiện tại', key: 'oldPassword', show: showPass.old, toggle: () => setShowPass({ ...showPass, old: !showPass.old }) },
+                  { label: 'Mật khẩu mới', key: 'newPassword', show: showPass.new, toggle: () => setShowPass({ ...showPass, new: !showPass.new }) },
+                  { label: 'Xác nhận mật khẩu mới', key: 'confirmPassword', show: showPass.confirm, toggle: () => setShowPass({ ...showPass, confirm: !showPass.confirm }) },
                 ].map(field => (
                   <div key={field.key}>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">{field.label}</label>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">{field.label}</label>
                     <div className="relative">
-                      <field.icon size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                       <input
-                        type={(field as any).type || 'text'}
-                        placeholder={field.placeholder}
-                        value={(profileForm as any)[field.key]}
-                        onChange={e => setProfileForm({ ...profileForm, [field.key]: e.target.value })}
-                        className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary transition-all"
+                        required
+                        type={field.show ? 'text' : 'password'}
+                        placeholder="••••••••"
+                        value={(passForm as Record<string, string>)[field.key]}
+                        onChange={e => setPassForm({ ...passForm, [field.key]: e.target.value })}
+                        className="w-full px-4 py-3.5 pr-12 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                       />
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <button type="submit" disabled={saveLoading}
-                className="flex items-center px-8 py-3 bg-primary text-white rounded-2xl text-sm font-bold shadow-lg shadow-primary/30 hover:-translate-y-0.5 transition-all disabled:opacity-50">
-                {saveLoading ? <Loader2 size={18} className="animate-spin mr-2" /> : <Save size={18} className="mr-2" />}
-                Lưu thay đổi
-              </button>
-            </form>
-          </div>
-        )}
-
-        {/* Tab: Bài viết của tôi */}
-        {activeTab === 'posts' && (
-          <div className="glass p-8 rounded-[2.5rem]">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white">Bài viết của tôi ({myPosts.length})</h2>
-              <Link href="/admin/posts/new" className="flex items-center px-5 py-2.5 bg-primary text-white rounded-2xl text-sm font-bold shadow-lg shadow-primary/30 hover:-translate-y-0.5 transition-all">
-                Viết bài mới
-              </Link>
-            </div>
-            {postsLoading ? (
-              <div className="flex justify-center py-12"><Loader2 className="animate-spin text-primary" size={32} /></div>
-            ) : myPosts.length === 0 ? (
-              <div className="text-center py-16 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-3xl">
-                <FileText size={40} className="mx-auto text-slate-200 dark:text-slate-800 mb-4" />
-                <p className="text-slate-500">Bạn chưa có bài viết nào.</p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {myPosts.map(post => (
-                  <div key={post.id} className="flex items-center justify-between p-5 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 group hover:border-primary/20 transition-all">
-                    <div className="flex-1 min-w-0 pr-4">
-                      <div className="flex items-center space-x-2 mb-1">
-                        {!post.is_published && <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 text-[10px] font-bold rounded">ẨN</span>}
-                        <h3 className="font-bold text-slate-900 dark:text-white text-sm truncate">{post.title}</h3>
-                      </div>
-                      <p className="text-xs text-slate-400">{new Date(post.created_at).toLocaleDateString('vi-VN')} · {post.views || 0} lượt xem</p>
-                    </div>
-                    <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Link href={`/admin/posts/edit/${post.id}`}
-                        className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-all">
-                        <Edit size={16} />
-                      </Link>
-                      <button onClick={() => handleDeletePost(post.id)}
-                        className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all">
-                        <Trash2 size={16} />
+                      <button type="button" onClick={field.toggle} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                        {field.show ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
                   </div>
                 ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Tab: Đổi mật khẩu */}
-        {activeTab === 'password' && (
-          <div className="glass p-8 rounded-[2.5rem] max-w-lg">
-            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-8">Đổi mật khẩu</h2>
-            {passMsg && (
-              <div className={cn("flex items-center space-x-2 p-4 rounded-2xl mb-6 text-sm",
-                passMsg.type === 'success' ? "bg-emerald-50 border border-emerald-200 text-emerald-600" : "bg-red-50 border border-red-200 text-red-600"
-              )}>
-                {passMsg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}
-                <span>{passMsg.text}</span>
-              </div>
-            )}
-            <form onSubmit={handleChangePassword} className="space-y-5">
-              {[
-                { label: 'Mật khẩu hiện tại', key: 'oldPassword', show: showPass.old, toggle: () => setShowPass({ ...showPass, old: !showPass.old }) },
-                { label: 'Mật khẩu mới', key: 'newPassword', show: showPass.new, toggle: () => setShowPass({ ...showPass, new: !showPass.new }) },
-                { label: 'Xác nhận mật khẩu mới', key: 'confirmPassword', show: showPass.confirm, toggle: () => setShowPass({ ...showPass, confirm: !showPass.confirm }) },
-              ].map(field => (
-                <div key={field.key}>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">{field.label}</label>
-                  <div className="relative">
-                    <input
-                      required
-                      type={field.show ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      value={(passForm as any)[field.key]}
-                      onChange={e => setPassForm({ ...passForm, [field.key]: e.target.value })}
-                      className="w-full px-4 py-3 pr-12 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary"
-                    />
-                    <button type="button" onClick={field.toggle} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                      {field.show ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                </div>
-              ))}
-              <button type="submit" disabled={passLoading}
-                className="w-full py-3 bg-primary text-white rounded-2xl text-sm font-bold shadow-lg shadow-primary/30 hover:-translate-y-0.5 transition-all disabled:opacity-50 flex items-center justify-center">
-                {passLoading ? <Loader2 size={18} className="animate-spin mr-2" /> : <Lock size={18} className="mr-2" />}
-                Xác nhận đổi mật khẩu
-              </button>
-            </form>
-          </div>
-        )}
+                <button type="submit" disabled={passLoading}
+                  className="w-full py-4 bg-primary text-white rounded-2xl text-base font-bold shadow-xl shadow-primary/30 hover:opacity-95 transition-all disabled:opacity-50 flex items-center justify-center mt-4">
+                  {passLoading ? <Loader2 size={18} className="animate-spin mr-2" /> : <Lock size={18} className="mr-2" />}
+                  Xác nhận đổi mật khẩu
+                </button>
+              </form>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

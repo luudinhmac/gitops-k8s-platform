@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
-import { ExternalLink, Github, Code2, Layers, Cpu, Globe } from 'lucide-react';
+import { ExternalLink, Github, Layers, Cpu, Globe } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import React from 'react';
 
 const projects = [
   {
@@ -89,7 +89,7 @@ const projects = [
   }
 ];
 
-function Database(props: any) {
+function Database(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
   );
@@ -97,7 +97,15 @@ function Database(props: any) {
 
 export default function ProjectsPage() {
   const [activeFilter, setActiveFilter] = useState('All');
-  const filters = ['All', 'High Availability', 'Virtualization', 'Cloud', 'Storage', 'Infrastructure'];
+  
+  const filters = [
+    { label: 'Tất cả', value: 'All' },
+    { label: 'High Availability', value: 'High Availability' },
+    { label: 'Virtualization', value: 'Virtualization' },
+    { label: 'Cloud', value: 'Cloud' },
+    { label: 'Storage', value: 'Storage' },
+    { label: 'Infrastructure', value: 'Infrastructure' }
+  ];
 
   const filteredProjects = activeFilter === 'All' 
     ? projects 
@@ -107,11 +115,11 @@ export default function ProjectsPage() {
     <div className="pt-32 pb-20 px-4 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <h1 className="text-4xl md:text-6xl font-display font-bold text-slate-900 dark:text-white mb-6">
-            Dự án <span className="text-gradient">Thực tế</span>
+          <h1 className="text-4xl md:text-5xl lg:text-7xl font-display font-bold text-slate-900 dark:text-white mb-6">
+            Dự án Thực tế
           </h1>
-          <p className="text-lg text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
-            Tổng hợp các sản phẩm tiêu biểu tôi đã từng tham gia phát triển, từ nền tảng web phức tạp đến các giải pháp phần cứng thông minh.
+          <p className="text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
+            Danh sách các dự án tiêu biểu tôi đã tham gia triển khai, vận hành và tối ưu hóa hạ tầng.
           </p>
         </div>
 
@@ -119,16 +127,16 @@ export default function ProjectsPage() {
         <div className="flex flex-wrap justify-center gap-3 mb-12">
           {filters.map((filter) => (
             <button
-              key={filter}
-              onClick={() => setActiveFilter(filter)}
+              key={filter.value}
+              onClick={() => setActiveFilter(filter.value)}
               className={cn(
                 "px-6 py-2.5 rounded-full text-sm font-medium transition-all shadow-sm",
-                activeFilter === filter 
+                activeFilter === filter.value 
                   ? "bg-primary text-white shadow-lg shadow-primary/20" 
                   : "bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
               )}
             >
-              {filter}
+              {filter.label}
             </button>
           ))}
         </div>
@@ -145,12 +153,12 @@ export default function ProjectsPage() {
                   <project.icon size={32} />
                 </div>
                 <div className="flex space-x-2">
-                  <Link href={project.github} className="p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+                  <a href={project.github} target="_blank" className="p-2 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
                     <Github size={20} />
-                  </Link>
-                  <Link href={project.link} className="p-2 text-slate-400 hover:text-primary transition-colors">
+                  </a>
+                  <a href={project.link} target="_blank" className="p-2 text-slate-400 hover:text-primary transition-colors">
                     <ExternalLink size={20} />
-                  </Link>
+                  </a>
                 </div>
               </div>
 
