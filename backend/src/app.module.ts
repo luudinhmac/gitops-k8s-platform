@@ -11,6 +11,7 @@ import { PostsModule } from './posts/posts.module';
 import { CategoriesModule } from './categories/categories.module';
 import { CommentsModule } from './comments/comments.module';
 import { UploadModule } from './upload/upload.module';
+import { SeriesModule } from './series/series.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { UploadModule } from './upload/upload.module';
     CategoriesModule,
     CommentsModule,
     UploadModule,
+    SeriesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -3,13 +3,14 @@
 import { useState, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import 'react-quill-new/dist/quill.snow.css';
-import { FileUp, Loader2 } from 'lucide-react';
+import { FileUp, Loader2, Sun, Moon } from 'lucide-react';
 import * as mammoth from 'mammoth';
+import { useTheme } from 'next-themes';
 
 // Register fonts in Quill
 const registerQuill = async () => {
     const Quill = (await import('react-quill-new')).default.Quill;
-    const Font = Quill.import('formats/font');
+    const Font = Quill.import('formats/font') as any;
     Font.whitelist = ['inter', 'roboto', 'georgia', 'times-new-roman', 'courier-new'];
     Quill.register(Font, true);
 };
@@ -21,7 +22,7 @@ const ReactQuill = dynamic(async () => {
     return RQ;
 }, {
     ssr: false,
-    loading: () => <div className="h-[400px] w-full bg-slate-50 animate-pulse rounded-2xl flex items-center justify-center text-slate-400">Đang tải trình soạn thảo...</div>
+    loading: () => <div className="h-[400px] w-full bg-slate-50 animate-pulse rounded-xl flex items-center justify-center text-slate-400">Đang tải trình soạn thảo...</div>
 });
 
 interface RichEditorProps {
@@ -33,6 +34,7 @@ interface RichEditorProps {
 export default function RichEditor({ value, onChange, placeholder }: RichEditorProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [importing, setImporting] = useState(false);
+    const { theme, setTheme } = useTheme();
 
     const modules = useMemo(() => ({
         toolbar: {
@@ -102,7 +104,15 @@ export default function RichEditor({ value, onChange, placeholder }: RichEditorP
 
     return (
         <div className="relative rich-editor-container">
-            <div className="absolute right-2 top-2 z-10">
+            <div className="absolute right-2 top-2 z-10 flex items-center space-x-2">
+                <button
+                    type="button"
+                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                    className="p-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-500 hover:text-primary transition-colors shadow-sm"
+                    title="Đổi giao diện"
+                >
+                    {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+                </button>
                 <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
@@ -128,7 +138,7 @@ export default function RichEditor({ value, onChange, placeholder }: RichEditorP
                 modules={modules}
                 formats={formats}
                 placeholder={placeholder || 'Bắt đầu viết nội dung bài viết của bạn...'}
-                className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden min-h-[400px]"
+                className="bg-white dark:bg-slate-900 rounded-xl overflow-hidden min-h-[400px]"
             />
 
             <style jsx global>{`
@@ -175,6 +185,13 @@ export default function RichEditor({ value, onChange, placeholder }: RichEditorP
                     background-color: #0f172a !important;
                     border-color: #1e293b !important;
                     color: #94a3b8 !important;
+                }
+                .ql-editor.ql-blank::before {
+                    color: #94a3b8 !important;
+                    font-style: normal !important;
+                }
+                .dark .ql-editor.ql-blank::before {
+                    color: #475569 !important;
                 }
             `}</style>
         </div>

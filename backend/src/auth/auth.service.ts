@@ -54,7 +54,7 @@ export class AuthService {
         data: {
           username: data.username,
           email: data.email,
-          fullname: data.fullname,
+          fullname: data.fullname || data.username,
           password: hash,
           role: 'editor',
           profession: 'Người dùng mới',

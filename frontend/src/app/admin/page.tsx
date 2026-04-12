@@ -10,6 +10,10 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import AdminSidebar from '@/components/admin/AdminSidebar';
+import ConfirmationModal from '@/components/admin/ConfirmationModal';
+import { useSidebar } from '@/context/SidebarContext';
+import AdminPageHeader from '@/components/admin/AdminPageHeader';
+import AdminCard from '@/components/admin/AdminCard';
 
 interface AdminPost {
   id: number;
@@ -27,17 +31,15 @@ interface AdminPost {
 }
 
 export default function AdminDashboardPage() {
-  const { user, loading: authLoading, isAuthenticated, logout } = useAuth();
-  const router = useRouter();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { setSidebarOpen } = useSidebar();
   const [posts, setPosts] = useState<AdminPost[]>([]);
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) router.push('/login');
-  }, [authLoading, isAuthenticated, router]);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchData = async () => {
     if (!isAuthenticated) return;
@@ -66,19 +68,24 @@ export default function AdminDashboardPage() {
     fetchData();
   }, [isAuthenticated, user]);
 
-  const handleDeletePost = async (id: number) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa bài viết này?')) return;
+  const handleDeletePost = async () => {
+    if (!deleteId) return;
+    setIsDeleting(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts/${id}`, {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts/${deleteId}`, {
         method: 'DELETE',
         credentials: 'include'
       });
       if (res.ok) {
-        setPosts(posts.filter(p => p.id !== id));
+        setPosts(posts.filter(p => p.id !== deleteId));
+        setIsDeleteModalOpen(false);
+        setDeleteId(null);
       }
     } catch (error) {
       console.error('Delete error:', error);
       alert('Không thể xóa bài viết');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -104,81 +111,50 @@ export default function AdminDashboardPage() {
     p.User?.fullname?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
-        <Loader2 className="w-10 h-10 text-primary animate-spin" />
+      <div className="flex items-center justify-center py-12">
+        <Loader2 className="w-8 h-8 text-primary animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
-      {/* ── Sidebar ── */}
-      <AdminSidebar 
-        sidebarOpen={sidebarOpen} 
-        setSidebarOpen={setSidebarOpen} 
+    <>
+      <AdminPageHeader 
+        title="Quản lý bài viết"
+        subtitle="Xem, tạo và chỉnh sửa các bài viết trên Blog."
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Tìm bài viết..."
+        primaryAction={{
+          label: "Viết bài",
+          icon: Plus,
+          href: "/admin/posts/new"
+        }}
       />
 
-      {/* ── Main Content ── */}
-      <main className="flex-1 w-full lg:ml-64 relative min-h-screen">
-        <div className="p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto">
-          {/* Header */}
-          <header className="hidden md:flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-0.5">Quản lý bài viết</h1>
-              <p className="text-[13px] text-slate-500">Xem, tạo và chỉnh sửa các bài viết trên Blog.</p>
-            </div>
-            <div className="flex items-center space-x-3">
-              <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                <input type="text" placeholder="Tìm bài viết..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                  className="pl-9 pr-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-[13px] focus:ring-2 focus:ring-primary/20 outline-none w-52 shadow-sm" />
-              </div>
-              <Link href="/admin/posts/new" className="px-4 py-2 bg-primary text-white rounded-xl text-[13px] font-bold shadow-lg shadow-primary/30 hover:-translate-y-0.5 transition-all flex items-center">
-                <Plus size={16} className="mr-2" />Viết bài
-              </Link>
-            </div>
-          </header>
-
-          {/* ── Mobile Header & Search ── */}
-          <div className="md:hidden flex items-center justify-between mb-6">
-            <button onClick={() => setSidebarOpen(true)} className="p-2 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800">
-              <Menu size={20} />
-            </button>
-            <h1 className="text-lg font-bold">Quản lý</h1>
-            <Link href="/admin/posts/new" className="p-2 bg-primary text-white rounded-xl">
-              <Plus size={20} />
-            </Link>
-          </div>
-          <div className="md:hidden mb-5">
-            <div className="relative">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input type="text" placeholder="Tìm bài viết..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm focus:ring-2 focus:ring-primary/20 outline-none shadow-sm" />
-            </div>
-          </div>
-
+      <div className="space-y-6">
           {/* ── Stats Grid ── */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 mb-6 md:mb-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
               { label: 'Tổng bài viết', count: posts.length, icon: FileText, color: 'text-blue-500', bg: 'bg-blue-500/10' },
               { label: 'Tổng lượt xem', count: posts.reduce((a, p) => a + (p.views || 0), 0), icon: Eye, color: 'text-purple-500', bg: 'bg-purple-500/10' },
               { label: 'Danh mục', count: categories.length, icon: Layout, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
               { label: 'Thẻ', count: posts.reduce((a, p) => a + (p.Tag?.length || 0), 0), icon: TagIcon, color: 'text-pink-500', bg: 'bg-pink-500/10' },
             ].map((stat, i) => (
-              <div key={i} className="bg-white dark:bg-slate-900 p-4 md:p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-transform hover:shadow-md">
-                <div className={cn("w-8 h-8 md:w-10 md:h-10 rounded-xl flex items-center justify-center mb-3", stat.bg)}>
+              <div key={i} className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-transform hover:-translate-y-1">
+                <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center mb-3", stat.bg)}>
                   <stat.icon className={stat.color} size={16} />
                 </div>
-                <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white leading-none">{stat.count}</h3>
-                <p className="text-[11px] font-bold text-slate-500 mt-2 uppercase tracking-tight">{stat.label}</p>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-none">{stat.count}</h3>
+                <p className="text-[10px] font-bold text-slate-500 mt-2 uppercase tracking-tight">{stat.label}</p>
               </div>
             ))}
           </div>
 
           {/* ── Posts Table ── */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden shadow-sm">
+          <AdminCard padding="p-0" title="Danh sách bài viết" icon={FileText}>
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -193,7 +169,7 @@ export default function AdminDashboardPage() {
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                   {filteredPosts.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-6 py-20 text-center text-slate-500">
+                      <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
                         Không tìm thấy bài viết nào.
                       </td>
                     </tr>
@@ -233,7 +209,7 @@ export default function AdminDashboardPage() {
                       </td>
                       <td className="px-6 py-5">
                         <button onClick={() => togglePublish(post.id, post.is_published)} 
-                          className={cn("px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all",
+                          className={cn("px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all",
                             post.is_published ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"
                           )}>
                           {post.is_published ? 'Đang bật' : 'Đang ẩn'}
@@ -251,7 +227,7 @@ export default function AdminDashboardPage() {
                           <Link href={`/admin/posts/edit/${post.id}`} className="p-1.5 text-slate-400 hover:text-indigo-500 hover:bg-indigo-500/5 rounded-lg transition-all">
                             <Edit size={14} />
                           </Link>
-                          <button onClick={() => handleDeletePost(post.id)} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-500/5 rounded-lg transition-all">
+                          <button onClick={() => { setDeleteId(post.id); setIsDeleteModalOpen(true); }} className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-500/5 rounded-lg transition-all">
                             <Trash2 size={14} />
                           </button>
                         </div>
@@ -261,9 +237,17 @@ export default function AdminDashboardPage() {
                 </tbody>
               </table>
             </div>
-          </div>
+          </AdminCard>
         </div>
-      </main>
-    </div>
+
+        <ConfirmationModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => setIsDeleteModalOpen(false)}
+          onConfirm={handleDeletePost}
+          loading={isDeleting}
+          title="Xóa bài viết"
+          message="Bạn có chắc chắn muốn xóa bài viết này? Hành động này không thể hoàn tác."
+        />
+    </>
   );
 }

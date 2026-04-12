@@ -14,8 +14,8 @@ export default function Footer() {
 
   return (
     <footer className="bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800">
-      <div className="max-w-7xl mx-auto px-4 py-12 md:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
+      <div suppressHydrationWarning={true} className="max-w-7xl mx-auto px-4 py-12 md:py-16">
+        <div suppressHydrationWarning={true} className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {/* Brand Section */}
           <div className="md:col-span-2">
             <Link href="/" className="text-2xl font-display font-bold text-gradient">
@@ -74,8 +74,8 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 text-sm text-slate-500">
-          <p>© {currentYear} Portfolio. Bản quyền đã được bảo hộ.</p>
+        <div suppressHydrationWarning={true} className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 text-sm text-slate-500">
+          <p>© {currentYear} Macld. Bản quyền đã được bảo hộ.</p>
           <div className="flex space-x-6">
             <Link href="/privacy" className="hover:text-primary transition-colors">Quyền riêng tư</Link>
             <Link href="/terms" className="hover:text-primary transition-colors">Điều khoản</Link>

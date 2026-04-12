@@ -45,15 +45,15 @@ const roadmap = [
 
 export default function CoursesPage() {
   return (
-    <div className="pt-32 pb-20 px-4 min-h-screen">
+    <div className="pt-32 pb-12 px-4 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col lg:flex-row gap-16">
+        <div className="flex flex-col lg:flex-row gap-8">
           {/* Left Column: Certificates */}
           <div className="flex-grow lg:w-2/3">
             <h1 className="text-4xl md:text-5xl font-display font-bold text-slate-900 dark:text-white mb-6">
               Học vấn & <span className="text-primary">Chứng chỉ</span>
             </h1>
-            <div className="mb-12 p-8 bg-primary/5 rounded-[2.5rem] border border-primary/10">
+            <div className="mb-12 p-8 bg-primary/5 rounded-xl border border-primary/10">
                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Đại học Sư phạm Kỹ thuật TP.HCM</h3>
                <p className="text-primary font-medium mb-2">Kỹ sư Công nghệ Thông tin</p>
                <p className="text-sm text-slate-500">Giai đoạn: 2014 - 2019</p>
@@ -61,8 +61,8 @@ export default function CoursesPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {certificates.map((cert, i) => (
-                <div key={i} className="glass p-8 rounded-[2.5rem] flex flex-col hover-lift group">
-                  <div className={cn("p-4 rounded-2xl w-fit mb-6", cert.bg)}>
+                <div key={i} className="glass p-8 rounded-xl flex flex-col hover-lift group">
+                  <div className={cn("p-4 rounded-xl w-fit mb-6", cert.bg)}>
                     <cert.icon className={cert.color} size={32} />
                   </div>
                   <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
@@ -80,7 +80,7 @@ export default function CoursesPage() {
 
           {/* Right Column: Roadmap */}
           <div className="lg:w-1/3">
-            <div className="bg-slate-50 dark:bg-slate-900/50 p-8 rounded-[2.5rem] border border-slate-200 dark:border-slate-800">
+            <div className="bg-slate-50 dark:bg-slate-900/50 p-8 rounded-xl border border-slate-200 dark:border-slate-800">
               <div className="flex items-center space-x-3 mb-8">
                 <BookOpen size={24} className="text-primary" />
                 <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Lộ trình học tập</h2>
@@ -98,7 +98,7 @@ export default function CoursesPage() {
                 ))}
               </div>
 
-              <button className="w-full mt-10 py-4 bg-primary text-white rounded-2xl font-bold text-sm shadow-lg shadow-primary/20 hover:opacity-90 transition-all">
+              <button className="w-full mt-10 py-4 bg-primary text-white rounded-xl font-bold text-sm shadow-lg shadow-primary/20 hover:opacity-90 transition-all">
                 Kết nối học tập
               </button>
             </div>

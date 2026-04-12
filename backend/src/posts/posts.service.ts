@@ -35,12 +35,34 @@ export class PostsService {
     }
   };
 
-  async findAll(user?: any, isAdmin: boolean = false) {
+  async findAll(user?: any, isAdmin: boolean = false, query?: string) {
     const where: any = {};
     if (!isAdmin) {
       where.is_published = true;
     } else if (user && user.role !== 'admin') {
       where.author_id = user.id;
+    }
+
+    if (query) {
+      where.OR = [
+        { title: { contains: query } }, // Case-insensitive is default in some DBs, or use mode: 'insensitive' if Prisma supports it for the provider
+        { content: { contains: query } },
+        { 
+          Tag: {
+            some: { name: { contains: query } }
+          }
+        },
+        {
+          Category: {
+            name: { contains: query }
+          }
+        },
+        {
+          Series: {
+            name: { contains: query }
+          }
+        }
+      ];
     }
     
     return this.prisma.post.findMany({
@@ -52,9 +74,10 @@ export class PostsService {
       include: {
         Category: true,
         User: {
-          select: { fullname: true, username: true }
+          select: { id: true, fullname: true, username: true, avatar: true }
         },
         Tag: true,
+        Series: true,
         _count: {
           select: { Comment: true, PostLike: true }
         }
@@ -86,17 +109,62 @@ export class PostsService {
           select: { fullname: true, avatar: true, username: true }
         },
         Tag: true,
+        Series: true,
+        Comment: {
+          orderBy: { created_at: 'desc' },
+          select: {
+            id: true,
+            content: true,
+            author_name: true,
+            author_email: true,
+            created_at: true
+          }
+        },
         _count: {
           select: { Comment: true, PostLike: true }
         }
       }
     });
     if (!post) throw new NotFoundException('Post not found');
-    return post;
+
+    // Fetch next/prev posts if in a series
+    let prevPost: any = null;
+    let nextPost: any = null;
+    if (post.series_id) {
+      const currentOrder = post.series_order ?? 0;
+      [prevPost, nextPost] = await Promise.all([
+        this.prisma.post.findFirst({
+          where: { 
+            series_id: post.series_id, 
+            is_published: true,
+            OR: [
+              { series_order: { lt: currentOrder } },
+              { series_order: currentOrder, created_at: { lt: post.created_at } }
+            ]
+          },
+          orderBy: [{ series_order: 'desc' }, { created_at: 'desc' }],
+          select: { id: true, title: true, slug: true, Category: { select: { slug: true } } }
+        }),
+        this.prisma.post.findFirst({
+          where: { 
+            series_id: post.series_id, 
+            is_published: true,
+            OR: [
+              { series_order: { gt: currentOrder } },
+              { series_order: currentOrder, created_at: { gt: post.created_at } }
+            ]
+          },
+          orderBy: [{ series_order: 'asc' }, { created_at: 'asc' }],
+          select: { id: true, title: true, slug: true, Category: { select: { slug: true } } }
+        })
+      ]);
+    }
+
+    return { ...post, prevPost, nextPost };
   }
 
   async create(user: any, data: any) {
-    const { tags, category_id, ...postData } = data;
+    const { tags, category_id, series_name, ...postData } = data;
     const cleanContent = sanitizeHtml(data.content, this.sanitizeOptions);
     
     // Generate unique slug
@@ -116,6 +184,8 @@ export class PostsService {
       content: cleanContent,
       author_id: user.id,
       is_pinned: (user.role === 'admin' && data.is_pinned) ? true : false,
+      series_id: data.series_id ? parseInt(data.series_id) : null,
+      series_order: data.series_order ? parseInt(data.series_order) : 0,
     };
 
     if (category_id && !isNaN(parseInt(category_id))) {
@@ -146,7 +216,7 @@ export class PostsService {
       throw new ForbiddenException('Bạn chỉ có thể chỉnh sửa bài viết của chính mình.');
     }
 
-    const { tags, slug, ...postData } = data;
+    const { tags, slug, series_name, ...postData } = data;
     const cleanContent = data.content ? sanitizeHtml(data.content, this.sanitizeOptions) : post.content;
 
     // Handle slug update if provided and different
@@ -174,6 +244,8 @@ export class PostsService {
         slug: finalSlug,
         content: cleanContent,
         is_pinned: user.role === 'admin' ? data.is_pinned : post.is_pinned,
+        series_id: data.series_id ? parseInt(data.series_id) : (data.series_id === null ? null : post.series_id),
+        series_order: data.series_order !== undefined ? parseInt(data.series_order) : post.series_order,
         Tag: {
           set: [], // Clear old tags
           connectOrCreate: tags?.split(',').map(tag => ({

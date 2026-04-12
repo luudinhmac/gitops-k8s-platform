@@ -142,7 +142,7 @@ export default function ProfilePage() {
   ];
 
   return (
-    <div className="pt-24 pb-20 px-4 min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="pt-24 pb-12 px-4 min-h-screen bg-slate-50 dark:bg-slate-950">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center space-x-4 mb-10">
@@ -150,7 +150,7 @@ export default function ProfilePage() {
             <ArrowLeft size={20} />
           </Link>
           <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-primary/30 overflow-hidden">
+            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-primary/30 overflow-hidden">
               {user?.avatar ? <img src={user.avatar} alt={user.fullname} className="w-full h-full object-cover" /> : (user?.fullname || user?.username)?.[0]?.toUpperCase()}
             </div>
             <div>
@@ -166,7 +166,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-2 mb-8 bg-white dark:bg-slate-900 p-1.5 rounded-2xl w-fit shadow-sm border border-slate-200 dark:border-slate-800">
+        <div className="flex space-x-2 mb-8 bg-white dark:bg-slate-900 p-1.5 rounded-xl w-fit shadow-sm border border-slate-200 dark:border-slate-800">
           {tabs.map(tab => (
             <button
               key={tab.id}
@@ -185,12 +185,12 @@ export default function ProfilePage() {
         </div>
 
         {/* Tab content area */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-[2.5rem] shadow-sm">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-xl shadow-sm">
           {activeTab === 'info' && (
             <div>
               <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-8">Chỉnh sửa thông tin</h2>
               {saveMsg && (
-                <div className={cn("flex items-center space-x-2 p-4 rounded-2xl mb-6 text-sm",
+                <div className={cn("flex items-center space-x-2 p-4 rounded-xl mb-6 text-sm",
                   saveMsg.type === 'success' ? "bg-emerald-50 border border-emerald-200 text-emerald-600" : "bg-red-50 border border-red-200 text-red-600"
                 )}>
                   {saveMsg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}
@@ -216,14 +216,14 @@ export default function ProfilePage() {
                           placeholder={field.placeholder}
                           value={(profileForm as Record<string, string>)[field.key]}
                           onChange={e => setProfileForm({ ...profileForm, [field.key]: e.target.value })}
-                          className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                          className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                         />
                       </div>
                     </div>
                   ))}
                 </div>
                 <button type="submit" disabled={saveLoading}
-                  className="flex items-center px-8 py-4 bg-primary text-white rounded-2xl text-base font-bold shadow-xl shadow-primary/30 hover:-translate-y-0.5 transition-all disabled:opacity-50">
+                  className="flex items-center px-8 py-4 bg-primary text-white rounded-xl text-base font-bold shadow-xl shadow-primary/30 hover:-translate-y-0.5 transition-all disabled:opacity-50">
                   {saveLoading ? <Loader2 size={18} className="animate-spin mr-2" /> : <Save size={18} className="mr-2" />}
                   Lưu thay đổi
                 </button>
@@ -235,21 +235,21 @@ export default function ProfilePage() {
             <div>
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">Bài viết của tôi ({myPosts.length})</h2>
-                <Link href="/admin/posts/new" className="px-5 py-2.5 bg-primary text-white rounded-2xl text-sm font-bold shadow-lg shadow-primary/30 hover:-translate-y-0.5 transition-all flex items-center">
+                <Link href="/admin/posts/new" className="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/30 hover:-translate-y-0.5 transition-all flex items-center">
                   <Edit size={16} className="mr-2" /> Viết bài mới
                 </Link>
               </div>
               {postsLoading ? (
                 <div className="flex justify-center py-12"><Loader2 className="animate-spin text-primary" size={32} /></div>
               ) : myPosts.length === 0 ? (
-                <div className="text-center py-16 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-[2.5rem]">
+                <div className="text-center py-16 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-xl">
                   <FileText size={40} className="mx-auto text-slate-200 dark:text-slate-800 mb-4" />
                   <p className="text-slate-500">Bạn chưa có bài viết nào.</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {myPosts.map(post => (
-                    <div key={post.id} className="flex items-center justify-between p-5 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800 group hover:border-primary/20 transition-all">
+                    <div key={post.id} className="flex items-center justify-between p-5 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800 group hover:border-primary/20 transition-all">
                       <div className="flex-1 min-w-0 pr-4">
                         <div className="flex items-center space-x-2 mb-1">
                           {!post.is_published && <span className="px-2 py-0.5 bg-yellow-100 text-yellow-700 text-[10px] font-bold rounded uppercase">Ẩn</span>}
@@ -278,7 +278,7 @@ export default function ProfilePage() {
             <div className="max-w-md mx-auto py-4">
               <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-8 text-center">Đổi mật khẩu bảo mật</h2>
               {passMsg && (
-                <div className={cn("flex items-center space-x-2 p-4 rounded-2xl mb-6 text-sm",
+                <div className={cn("flex items-center space-x-2 p-4 rounded-xl mb-6 text-sm",
                   passMsg.type === 'success' ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
                 )}>
                   {passMsg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}
@@ -300,7 +300,7 @@ export default function ProfilePage() {
                         placeholder="••••••••"
                         value={(passForm as Record<string, string>)[field.key]}
                         onChange={e => setPassForm({ ...passForm, [field.key]: e.target.value })}
-                        className="w-full px-4 py-3.5 pr-12 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
+                        className="w-full px-4 py-3.5 pr-12 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                       />
                       <button type="button" onClick={field.toggle} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                         {field.show ? <EyeOff size={18} /> : <Eye size={18} />}
@@ -309,7 +309,7 @@ export default function ProfilePage() {
                   </div>
                 ))}
                 <button type="submit" disabled={passLoading}
-                  className="w-full py-4 bg-primary text-white rounded-2xl text-base font-bold shadow-xl shadow-primary/30 hover:opacity-95 transition-all disabled:opacity-50 flex items-center justify-center mt-4">
+                  className="w-full py-4 bg-primary text-white rounded-xl text-base font-bold shadow-xl shadow-primary/30 hover:opacity-95 transition-all disabled:opacity-50 flex items-center justify-center mt-4">
                   {passLoading ? <Loader2 size={18} className="animate-spin mr-2" /> : <Lock size={18} className="mr-2" />}
                   Xác nhận đổi mật khẩu
                 </button>

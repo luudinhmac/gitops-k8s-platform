@@ -43,6 +43,7 @@ export class UsersService {
       const user = await this.prisma.user.create({
         data: {
           ...data,
+          fullname: (data.fullname && data.fullname.trim()) ? data.fullname : data.username,
           password: hash,
           role: data.role || 'editor',
           profession: data.profession || 'Người dùng mới',
@@ -69,9 +70,17 @@ export class UsersService {
     }
     // Không cho phép tự xóa password qua route này
     const { password, ...safeData } = data;
+    // Tự động gán fullname = username nếu để trống
+    const updateData = { ...safeData };
+    if (updateData.fullname !== undefined && (!updateData.fullname || !updateData.fullname.trim())) {
+      // Tìm lại username của user nếu không được gửi kèm trong updateData
+      const targetUser = await this.prisma.user.findUnique({ where: { id } });
+      updateData.fullname = targetUser?.username || 'user';
+    }
+
     return this.prisma.user.update({
       where: { id },
-      data: safeData,
+      data: updateData,
       select: this.publicSelect,
     });
   }

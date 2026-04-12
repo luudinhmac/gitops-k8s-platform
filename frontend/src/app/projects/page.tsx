@@ -112,7 +112,7 @@ export default function ProjectsPage() {
     : projects.filter(p => p.category === activeFilter);
 
   return (
-    <div className="pt-32 pb-20 px-4 min-h-screen">
+    <div className="pt-32 pb-12 px-4 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-5xl lg:text-7xl font-display font-bold text-slate-900 dark:text-white mb-6">
@@ -146,10 +146,10 @@ export default function ProjectsPage() {
           {filteredProjects.map((project, i) => (
             <div 
               key={i}
-              className="group glass rounded-[2.5rem] p-8 hover-lift flex flex-col h-full"
+              className="group glass rounded-xl p-8 hover-lift flex flex-col h-full"
             >
               <div className="mb-6 flex items-start justify-between">
-                <div className="p-4 bg-primary/10 rounded-2xl text-primary">
+                <div className="p-4 bg-primary/10 rounded-xl text-primary">
                   <project.icon size={32} />
                 </div>
                 <div className="flex space-x-2">

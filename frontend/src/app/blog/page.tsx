@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Search, Calendar, User as UserIcon, Clock, ChevronRight, Eye, Terminal, MessageSquare, Tag as TagIcon, Layout } from 'lucide-react';
+import PageHeader from '@/components/layout/PageHeader';
 
 interface Post {
   id: number;
@@ -22,6 +23,7 @@ interface Post {
   } | null;
   User: {
     fullname: string;
+    username: string;
   };
   Tag: {
     name: string;
@@ -51,9 +53,10 @@ function BlogContent() {
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
         const [postsRes, catsRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts${q ? `?q=${encodeURIComponent(q)}` : ''}`),
           fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`)
         ]);
 
@@ -69,45 +72,39 @@ function BlogContent() {
       }
     };
     fetchData();
-  }, []);
+  }, [q]);
 
-  const filteredPosts = posts.filter(post =>
-    post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    post.excerpt?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredPosts = posts;
 
   // Group unique series
   const series = Array.from(new Set(posts.map(p => p.series).filter(Boolean))) as string[];
 
   return (
-    <div className="pt-32 pb-20 px-4 min-h-screen">
+    <div className="pt-24 pb-12 px-4 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
-        <div className="text-center mb-12">
-          <h3 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-slate-900 dark:text-white mb-6">
-            Blog & Kiến thức
-          </h3>
-          <p className="text-base text-slate-500 max-w-2xl mx-auto leading-relaxed">
-            Chia sẻ kinh nghiệm về Linux, Cloud, Virtualization và hành trình làm nghề System Engineer.
-          </p>
-        </div>
+        <PageHeader 
+          title="Blog & Kiến thức"
+          description="Chia sẻ kinh nghiệm về Linux, Cloud, Virtualization và hành trình làm nghề System Engineer."
+          centered
+          breadcrumbs={[{ label: 'Blog' }]}
+        />
 
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-4">
           {/* Main Content (Posts) */}
           <div className="flex-grow lg:w-3/4">
             {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {[1, 2, 3, 4, 5, 6].map(i => (
-                  <div key={i} className="bg-white dark:bg-slate-900 rounded-3xl h-[350px] animate-pulse border border-slate-100 dark:border-slate-800" />
+                  <div key={i} className="bg-white dark:bg-slate-900 rounded-xl h-[350px] animate-pulse border border-slate-100 dark:border-slate-800" />
                 ))}
               </div>
             ) : filteredPosts.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                 {filteredPosts.map((post) => (
                   <Link
                     key={post.id}
                     href={`/${post.Category?.slug || 'uncategorized'}/${post.slug}`}
-                    className="group flex flex-col bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-100 dark:border-slate-800 hover-lift shadow-sm hover:shadow-xl transition-all h-full"
+                    className="group flex flex-col bg-white dark:bg-slate-900 rounded-xl overflow-hidden border border-slate-100 dark:border-slate-800 hover-lift shadow-sm hover:shadow-xl transition-all h-full"
                   >
                     {/* Image Container */}
                     <div className="relative h-40 overflow-hidden">
@@ -130,7 +127,7 @@ function BlogContent() {
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-2">
                         <div className="flex items-center text-primary bg-primary/5 px-1.5 py-0.5 rounded">
                           <UserIcon size={10} className="mr-1" />
-                          {post.User?.fullname || 'Ẩn danh'}
+                          {post.User?.fullname || post.User?.username || 'Ẩn danh'}
                         </div>
                         <div className="flex items-center">
                           <Calendar size={10} className="mr-1 text-primary" />
@@ -182,7 +179,7 @@ function BlogContent() {
                 ))}
               </div>
             ) : (
-              <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-[2rem] border border-slate-100 dark:border-slate-800">
+              <div className="text-center py-12 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800">
                 <Search size={40} className="mx-auto text-slate-300 mb-4" />
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Không tìm thấy bài viết</h3>
                 <p className="text-slate-500 dark:text-slate-400 text-sm">Hãy thử tìm kiếm với từ khóa khác.</p>
@@ -191,45 +188,44 @@ function BlogContent() {
           </div>
 
           {/* Sidebar */}
-          <aside className="lg:w-1/4 space-y-8">
-            {/* Sidebar Search (Visible on Mobile or as redundant) */}
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
-              <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest mb-4 flex items-center">
-                <Search size={14} className="mr-2 text-primary" /> Tìm kiếm
-              </h4>
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Nhập từ khóa..."
-                  className="w-full pl-4 pr-10 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-2xl text-xs focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      router.push(`/blog?q=${encodeURIComponent(searchTerm)}`);
-                    }
-                  }}
-                />
-                <button
-                  onClick={() => router.push(`/blog?q=${encodeURIComponent(searchTerm)}`)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors"
-                >
-                  <Search size={14} />
-                </button>
+          <aside className="lg:w-1/4 space-y-6">
+            {/* Sidebar Search - Refined: No Card, No Title */}
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+                <Search size={16} />
               </div>
+              <input
+                type="text"
+                placeholder="Tìm kiếm bài viết..."
+                className="w-full pl-10 pr-10 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    router.push(`/blog?q=${encodeURIComponent(searchTerm)}`);
+                  }
+                }}
+              />
+              <button
+                onClick={() => router.push(`/blog?q=${encodeURIComponent(searchTerm)}`)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors"
+                aria-label="Search"
+              >
+                <ChevronRight size={16} />
+              </button>
             </div>
 
             {/* Categories */}
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
-              <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest mb-4 flex items-center">
-                <Layout size={14} className="mr-2 text-primary" /> Danh mục
+            <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
+              <h4 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center">
+                <Layout size={12} className="mr-2 text-primary" /> Danh mục
               </h4>
               <div className="space-y-1">
                 {categories.map((cat) => (
                   <button
                     key={cat.id}
                     onClick={() => router.push(`/blog?q=${encodeURIComponent(cat.name)}`)}
-                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-[11px] font-medium text-slate-600 dark:text-slate-400 hover:bg-primary/5 hover:text-primary transition-all group"
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-[11px] font-medium text-slate-600 dark:text-slate-400 hover:bg-primary/5 hover:text-primary transition-all group"
                   >
                     <span>{cat.name}</span>
                     <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 rounded group-hover:bg-primary/20 transition-colors">
@@ -241,9 +237,9 @@ function BlogContent() {
             </div>
 
             {/* Latest Series */}
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
-              <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-widest mb-4 flex items-center">
-                <TagIcon size={14} className="mr-2 text-primary" /> Series mới nhất
+            <div className="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
+              <h4 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.2em] mb-4 flex items-center">
+                <TagIcon size={12} className="mr-2 text-primary" /> Series mới nhất
               </h4>
               <div className="space-y-2">
                 {series.length > 0 ? (
@@ -251,9 +247,9 @@ function BlogContent() {
                     <button
                       key={idx}
                       onClick={() => router.push(`/blog?q=${encodeURIComponent(s)}`)}
-                      className="w-full text-left px-3 py-2.5 rounded-xl border border-slate-50 dark:border-slate-800 text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:border-primary/30 hover:bg-primary/5 transition-all"
+                      className="w-full text-left px-3 py-2 border border-slate-50 dark:border-slate-800 rounded-lg text-[11px] font-medium text-slate-700 dark:text-slate-300 hover:border-primary/30 hover:bg-primary/5 transition-all"
                     >
-                      <div className="text-[8px] text-primary uppercase font-bold mb-0.5">Series</div>
+                      <div className="text-[7px] text-primary uppercase font-bold mb-0.5">Series</div>
                       <div className="line-clamp-1">{s}</div>
                     </button>
                   ))

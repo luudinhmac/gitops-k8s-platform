@@ -60,7 +60,7 @@ export default function AuthorPage({ params }: { params: Promise<{ id: string }>
 
   if (loading) {
     return (
-      <div className="pt-32 pb-20 px-4 min-h-screen max-w-4xl mx-auto text-center">
+      <div className="pt-32 pb-12 px-4 min-h-screen max-w-4xl mx-auto text-center">
          <div className="w-24 h-24 bg-slate-100 dark:bg-slate-800 rounded-full animate-pulse mx-auto mb-6" />
          <div className="h-8 w-48 bg-slate-100 dark:bg-slate-800 rounded mx-auto mb-4 animate-pulse" />
       </div>
@@ -69,7 +69,7 @@ export default function AuthorPage({ params }: { params: Promise<{ id: string }>
 
   if (!author) {
     return (
-      <div className="pt-48 pb-20 px-4 text-center">
+      <div className="pt-48 pb-12 px-4 text-center">
         <h2 className="text-2xl font-bold mb-4">Tác giả không tồn tại</h2>
         <Link href="/blog" className="text-primary hover:underline">Quay lại trang blog</Link>
       </div>
@@ -77,11 +77,11 @@ export default function AuthorPage({ params }: { params: Promise<{ id: string }>
   }
 
   return (
-    <div className="pt-32 pb-20 px-4 min-h-screen">
+    <div className="pt-32 pb-12 px-4 min-h-screen">
       <div className="max-w-4xl mx-auto">
         
         {/* Author Header */}
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-center mb-12 relative overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-xl p-6 md:p-8 border border-slate-100 dark:border-slate-800 shadow-sm flex flex-col items-center mb-12 relative overflow-hidden">
            <div className="absolute top-0 right-0 w-48 h-48 bg-primary/5 blur-[60px] rounded-full" />
            <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-500/5 blur-[60px] rounded-full" />
            
@@ -119,7 +119,7 @@ export default function AuthorPage({ params }: { params: Promise<{ id: string }>
         <div className="grid gap-5">
           {posts.length > 0 ? (
             posts.map(post => (
-              <article key={post.id} className="group glass p-5 md:p-6 rounded-2xl transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-0.5">
+              <article key={post.id} className="group glass p-5 md:p-6 rounded-xl transition-all duration-300 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-0.5">
                  <div className="flex flex-col md:flex-row gap-6 md:gap-8">
                     {/* Date Block */}
                     <div className="flex-shrink-0 flex flex-col justify-center items-center p-3 bg-white/50 dark:bg-slate-900/50 rounded-xl w-full md:w-24 border border-slate-100 dark:border-slate-800">
@@ -177,7 +177,7 @@ export default function AuthorPage({ params }: { params: Promise<{ id: string }>
               </article>
             ))
           ) : (
-            <div className="text-center py-20 bg-white/50 dark:bg-slate-900/50 rounded-3xl border-2 border-dashed border-slate-200 dark:border-slate-800">
+            <div className="text-center py-12 bg-white/50 dark:bg-slate-900/50 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-800">
                <p className="text-slate-500 font-medium">Tác giả này chưa có bài viết nào.</p>
             </div>
           )}

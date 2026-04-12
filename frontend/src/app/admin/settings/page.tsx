@@ -56,7 +56,7 @@ export default function SettingsPage() {
             <button 
               onClick={handleSave}
               disabled={saving}
-              className="px-6 py-3 bg-primary text-white rounded-2xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-all flex items-center justify-center min-w-[140px]"
+              className="px-6 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:opacity-90 transition-all flex items-center justify-center min-w-[140px]"
             >
               {saving ? <Loader2 size={20} className="animate-spin mr-2" /> : <Save size={20} className="mr-2" />}
               {saving ? 'Đang lưu...' : 'Lưu thay đổi'}
@@ -64,7 +64,7 @@ export default function SettingsPage() {
           </header>
 
           {success && (
-            <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-2xl flex items-center text-green-600 dark:text-green-400 text-sm font-medium animate-in fade-in slide-in-from-top-4">
+            <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-800 rounded-xl flex items-center text-green-600 dark:text-green-400 text-sm font-medium animate-in fade-in slide-in-from-top-4">
               <CheckCircle2 size={18} className="mr-2" />
               Đã cập nhật cấu hình thành công!
             </div>
@@ -91,7 +91,7 @@ export default function SettingsPage() {
 
              {/* Right Column: Settings Content */}
              <div className="md:col-span-2 space-y-6">
-                <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 md:p-8 border border-slate-100 dark:border-slate-800 shadow-sm">
+                <div className="bg-white dark:bg-slate-900 rounded-xl p-6 md:p-8 border border-slate-100 dark:border-slate-800 shadow-sm">
                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center">
                       < Globe size={20} className="mr-2 text-primary" />
                       Thông tin Website
@@ -105,7 +105,7 @@ export default function SettingsPage() {
                         <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Mô tả SEO</label>
                         <textarea className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20 h-24 resize-none" defaultValue="Portfolio cá nhân của Lưu Đình Mác - Kỹ sư hệ thống (Linux Expert)." />
                       </div>
-                      <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
+                      <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
                          <div>
                             <p className="text-sm font-bold text-slate-900 dark:text-white">Chế độ bảo trì</p>
                             <p className="text-xs text-slate-500">Tạm thời ngừng truy cập công khai</p>
@@ -117,7 +117,7 @@ export default function SettingsPage() {
                    </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-6 md:p-8 border border-slate-100 dark:border-slate-800 shadow-sm">
+                <div className="bg-white dark:bg-slate-900 rounded-xl p-6 md:p-8 border border-slate-100 dark:border-slate-800 shadow-sm">
                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center">
                       <Lock size={20} className="mr-2 text-primary" />
                       Đổi mật khẩu tài khoản

@@ -2,7 +2,7 @@
 
 import { 
   Server, Shield, Terminal, Zap, Code2, Layers, Cpu, Globe, Rocket, Github, Cloud, Database, 
-  Workflow, CheckCircle2, ChevronRight, MonitorLink, Award, FileCode, Coffee, Heart
+  Workflow, CheckCircle2, ChevronRight, Award, FileCode, Coffee, Heart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
@@ -39,7 +39,7 @@ export default function AboutPage() {
   ];
 
   return (
-    <div className="pt-24 pb-20 px-4 min-h-screen bg-white dark:bg-slate-950 overflow-hidden relative">
+    <div className="pt-24 pb-12 px-4 min-h-screen bg-white dark:bg-slate-950 overflow-hidden relative">
       {/* Background Ornaments */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
@@ -47,7 +47,7 @@ export default function AboutPage() {
       <div className="max-w-6xl mx-auto relative z-10">
         {/* Hero Section */}
         <section className="mb-24">
-          <div className="flex flex-col md:flex-row items-center gap-12 md:gap-20">
+          <div className="flex flex-col md:flex-row items-center gap-6 md:gap-8">
             <div className="md:w-1/2">
               <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest mb-6 animate-fade-in">
                 <span className="relative flex h-2 w-2 mr-3">
@@ -65,17 +65,17 @@ export default function AboutPage() {
                 Với hơn 4 năm kinh nghiệm trong lĩnh vực DevOps và System Admin, tôi tập trung vào việc tạo ra các hệ thống có tính sẵn sàng cao, bảo mật và khả năng mở rộng linh hoạt.
               </p>
               <div className="flex flex-wrap gap-4">
-                <Link href="/projects" className="px-8 py-4 bg-primary text-white rounded-2xl font-bold shadow-xl shadow-primary/30 hover:-translate-y-1 transition-all">
+                <Link href="/projects" className="px-8 py-4 bg-primary text-white rounded-xl font-bold shadow-xl shadow-primary/30 hover:-translate-y-1 transition-all">
                   Dự án của tôi
                 </Link>
-                <Link href="#contact" className="px-8 py-4 glass dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl font-bold hover:bg-slate-50 transition-all">
+                <Link href="#contact" className="px-8 py-4 glass dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold hover:bg-slate-50 transition-all">
                   Liên hệ
                 </Link>
               </div>
             </div>
             
             <div className="md:w-1/2 relative">
-               <div className="relative z-10 rounded-[3rem] overflow-hidden border-8 border-white dark:border-slate-900 shadow-2xl">
+               <div className="relative z-10 rounded-xl overflow-hidden border-8 border-white dark:border-slate-900 shadow-2xl">
                   <div className="aspect-square bg-slate-200 animate-pulse" />
                   {/* Thay thế bằng ảnh thật khi có */}
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-indigo-600/20 flex items-center justify-center">
@@ -92,8 +92,8 @@ export default function AboutPage() {
         {/* Stats Section */}
         <section className="mb-24 grid grid-cols-2 lg:grid-cols-4 gap-6">
           {stats.map((stat, i) => (
-            <div key={i} className="glass p-8 rounded-[2.5rem] border border-slate-200 dark:border-slate-800 hover:border-primary/30 transition-all text-center group">
-              <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-4 bg-slate-50 dark:bg-slate-900 transition-all group-hover:scale-110 shadow-sm", stat.color)}>
+            <div key={i} className="glass p-8 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-primary/30 transition-all text-center group">
+              <div className={cn("w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-4 bg-slate-50 dark:bg-slate-900 transition-all group-hover:scale-110 shadow-sm", stat.color)}>
                 <stat.icon size={28} />
               </div>
               <h3 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">{stat.value}</h3>
@@ -111,9 +111,9 @@ export default function AboutPage() {
           
           <div className="grid md:grid-cols-2 gap-8">
             {technologies.map((tech, i) => (
-              <div key={i} className="group p-8 glass rounded-[3rem] border border-slate-100 dark:border-slate-800 hover:border-primary/20 transition-all">
+              <div key={i} className="group p-8 glass rounded-xl border border-slate-100 dark:border-slate-800 hover:border-primary/20 transition-all">
                 <div className="flex items-center space-x-4 mb-6">
-                  <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
                     <tech.icon size={24} />
                   </div>
                   <h3 className="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-wider">{tech.category}</h3>
@@ -129,7 +129,7 @@ export default function AboutPage() {
             ))}
           </div>
           
-          <div className="mt-16 p-8 glass rounded-[2.5rem] bg-gradient-to-br from-primary/5 to-indigo-500/5">
+          <div className="mt-16 p-8 glass rounded-xl bg-gradient-to-br from-primary/5 to-indigo-500/5">
              <h4 className="text-xl font-bold text-slate-900 dark:text-white mb-4 italic">&quot;Duy trì tính sẵn sàng cao là ưu tiên hàng đầu.&quot;</h4>
              <p className="text-slate-500 text-sm leading-relaxed">
                &quot;Học tập là hạt giống của kiến thức, kiến thức là hạt giống của hạnh phúc.&quot; Tôi cam kết tối ưu hóa hạ tầng và tự động hóa quy trình để đạt được hiệu quả vận hành tối đa cho doanh nghiệp.

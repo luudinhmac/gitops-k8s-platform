@@ -3,10 +3,11 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { 
-  FileText, Layout, Users, Settings, LogOut, X
+  FileText, Layout, Users, Settings, LogOut, X, Layers, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
+import { useSidebar } from '@/context/SidebarContext';
 
 interface AdminSidebarProps {
   sidebarOpen: boolean;
@@ -23,12 +24,15 @@ interface NavContentProps {
     role: string;
   } | null;
   logout: () => void;
+  isCollapsed?: boolean;
+  setIsCollapsed?: (collapsed: boolean) => void;
 }
 
-const NavContent = ({ mobile = false, setSidebarOpen, pathname, user, logout }: NavContentProps) => {
+const NavContent = ({ mobile = false, setSidebarOpen, pathname, user, logout, isCollapsed = false, setIsCollapsed }: NavContentProps) => {
   const menuItems = [
     { id: 'posts', label: 'Bài viết', icon: FileText, href: '/admin' },
     { id: 'categories', label: 'Danh mục', icon: Layout, href: '/admin/categories' },
+    { id: 'series', label: 'Series', icon: Layers, href: '/admin/series' },
     ...(user?.role === 'admin' ? [{ id: 'users', label: 'Người dùng', icon: Users, href: '/admin/users' }] : []),
   ];
 
@@ -39,62 +43,80 @@ const NavContent = ({ mobile = false, setSidebarOpen, pathname, user, logout }: 
 
   return (
     <>
-      <div className={cn("p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between", mobile && "p-4")}>
+      <div className={cn("p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between", mobile && "p-4", !mobile && isCollapsed && "px-0 justify-center")}>
         <Link 
           href="/" 
-          className={cn("text-lg font-display font-bold text-slate-900 dark:text-white", mobile && "text-base")}
+          className={cn("text-lg font-display font-bold text-slate-900 dark:text-white transition-all", mobile && "text-base", !mobile && isCollapsed && "text-[0px] opacity-0 overflow-hidden w-0")}
           onClick={() => mobile && setSidebarOpen(false)}
         >
-          Portfolio Admin
+          {isCollapsed ? "P" : "Portfolio Admin"}
         </Link>
+        {!mobile && isCollapsed && <div className="text-xl font-bold text-primary">P</div>}
         {mobile && (
           <button onClick={() => setSidebarOpen(false)} className="p-2 text-slate-400 hover:text-slate-600 rounded-lg">
             <X size={20} />
           </button>
         )}
       </div>
-      <nav className="flex-grow p-3 space-y-0.5 mt-2">
+      <nav className={cn("flex-grow p-3 space-y-1 mt-2", isCollapsed && "px-2")}>
         {menuItems.map((item) => (
           <Link 
             key={item.id} 
             href={item.href}
+            title={isCollapsed ? item.label : undefined}
             onClick={() => mobile && setSidebarOpen(false)}
             className={cn(
-              "w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all",
+              "w-full flex items-center px-3 py-2.5 rounded-xl text-xs font-bold transition-all",
+              isCollapsed ? "justify-center px-0" : "space-x-3",
               isActive(item.href) 
                 ? "bg-primary/10 text-primary" 
                 : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
             )}
           >
-            <item.icon size={16} />
-            <span>{item.label}</span>
+            <item.icon size={isCollapsed ? 20 : 16} />
+            {!isCollapsed && <span>{item.label}</span>}
           </Link>
         ))}
       </nav>
-      <div className={cn("p-3 border-t border-slate-200 dark:border-slate-800 space-y-0.5", mobile && "bg-slate-50 dark:bg-slate-900/50")}>
+      <div className={cn("p-3 border-t border-slate-200 dark:border-slate-800 space-y-1", mobile && "bg-slate-50 dark:bg-slate-900/50", isCollapsed && "px-2")}>
         <Link 
           href="/admin/settings" 
+          title={isCollapsed ? "Cài đặt" : undefined}
           onClick={() => mobile && setSidebarOpen(false)}
           className={cn(
-            "w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-colors",
+            "w-full flex items-center px-3 py-2.5 rounded-xl text-xs font-bold transition-colors",
+            isCollapsed ? "justify-center px-0" : "space-x-3",
             pathname === '/admin/settings'
               ? "bg-primary/10 text-primary"
               : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
           )}
         >
-          <Settings size={16} />
-          <span>Cài đặt</span>
+          <Settings size={isCollapsed ? 20 : 16} />
+          {!isCollapsed && <span>Cài đặt</span>}
         </Link>
         <button 
           onClick={() => {
             logout();
             if (mobile) setSidebarOpen(false);
           }} 
-          className="w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-bold text-destructive hover:bg-destructive/10 transition-colors"
+          title={isCollapsed ? "Đăng xuất" : undefined}
+          className={cn(
+            "w-full flex items-center px-3 py-2.5 rounded-xl text-xs font-bold text-destructive hover:bg-destructive/10 transition-colors",
+            isCollapsed ? "justify-center px-0" : "space-x-3"
+          )}
         >
-          <LogOut size={16} />
-          <span>Đăng xuất</span>
+          <LogOut size={isCollapsed ? 20 : 16} />
+          {!isCollapsed && <span>Đăng xuất</span>}
         </button>
+        
+        {!mobile && setIsCollapsed && (
+          <button 
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="w-full flex items-center justify-center p-2.5 mt-4 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-xl transition-all"
+          >
+            {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+          </button>
+        )}
       </div>
     </>
   );
@@ -102,17 +124,23 @@ const NavContent = ({ mobile = false, setSidebarOpen, pathname, user, logout }: 
 
 export default function AdminSidebar({ sidebarOpen, setSidebarOpen }: AdminSidebarProps) {
   const { user, logout } = useAuth();
+  const { isCollapsed, setIsCollapsed } = useSidebar();
   const pathname = usePathname();
 
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="w-64 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hidden lg:flex flex-col fixed inset-y-0 shadow-sm z-50">
+      <aside className={cn(
+        "border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hidden lg:flex flex-col fixed inset-y-0 shadow-sm z-50 transition-all duration-300",
+        isCollapsed ? "w-20" : "w-64"
+      )}>
         <NavContent 
           setSidebarOpen={setSidebarOpen} 
           pathname={pathname} 
           user={user} 
           logout={logout} 
+          isCollapsed={isCollapsed}
+          setIsCollapsed={setIsCollapsed}
         />
       </aside>
 

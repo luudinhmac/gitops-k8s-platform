@@ -7,8 +7,8 @@ export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Get()
-  findAll() {
-    return this.postsService.findAll();
+  findAll(@Query('q') q: string) {
+    return this.postsService.findAll(null, false, q);
   }
 
   @Get('admin')

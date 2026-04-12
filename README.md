@@ -13,9 +13,10 @@ Dự án Portfolio + Blog chuyên nghiệp dành cho Kỹ sư Hệ thống (Syst
   - Nginx (Reverse Proxy)
 
 ## Features
-- **Portfolio:** Giới thiệu kỹ năng ảo hóa (VMware, Proxmox), lưu trữ (IBM SAN, HPE Tape) và hạ tầng.
-- **Blog System:** Quản trị bài viết kỹ thuật (CRUD).
-- **Admin Dashboard:** Giao diện quản trị tập trung.
+- **Blog System:** Quản trị bài viết kỹ thuật (CRUD), hệ thống thẻ (Tags), phân loại chuyên sâu theo Chuyên mục (Categories) và Chuỗi bài viết (Series).
+- **Advanced Search:** Tìm kiếm mạnh mẽ server-side hỗ trợ lọc theo Tiêu đề, Nội dung, Thẻ, Chuyên mục và Series.
+- **Admin Dashboard:** Giao diện quản trị tập trung, hiện đại và bảo mật.
+- **Interactive UI:** Trang chi tiết bài viết tích hợp Sidebar điều hướng, bộ nút tương tác (Like/Share) và điều hướng Series thông minh.
 - **Authentication:** Quy trình xác thực JWT bền vững với HttpOnly Cookies.
 
 ## Project Structure

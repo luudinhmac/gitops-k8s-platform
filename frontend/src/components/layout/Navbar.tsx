@@ -54,18 +54,18 @@ export default function Navbar() {
 
   return (
     <nav className={cn("fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4", scrolled ? "py-3" : "py-6")}>
-      <div className={cn(
-        "max-w-7xl mx-auto glass rounded-2xl md:rounded-[2rem] px-6 transition-all duration-300",
+      <div suppressHydrationWarning={true} className={cn(
+        "max-w-7xl mx-auto glass rounded-xl md:rounded-xl px-6 transition-all duration-300",
         scrolled ? "py-3 shadow-lg" : "py-4 bg-transparent border-transparent"
       )}>
-        <div className="flex items-center justify-between">
+        <div suppressHydrationWarning={true} className="flex items-center justify-between">
           <Link href="/" className="text-xl md:text-2xl font-display font-bold text-gradient flex-shrink-0">
             Portfolio
           </Link>
 
           {/* Search Bar in Navbar */}
-          <div className="hidden lg:flex flex-grow max-w-md mx-8 relative group">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+          <div suppressHydrationWarning={true} className="hidden lg:flex flex-grow max-w-md mx-8 relative group">
+            <div suppressHydrationWarning={true} className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
               <Search size={16} />
             </div>
             <input
@@ -121,7 +121,7 @@ export default function Navbar() {
                   </button>
 
                   <div className={cn(
-                    "absolute right-0 top-full mt-2 w-52 glass rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden transition-all duration-200 origin-top-right",
+                    "absolute right-0 top-full mt-2 w-52 glass rounded-xl shadow-xl border border-slate-100 dark:border-slate-800 overflow-hidden transition-all duration-200 origin-top-right",
                     dropdownOpen ? "scale-100 opacity-100" : "scale-95 opacity-0 pointer-events-none"
                   )}>
                     <div className="p-3 border-b border-slate-100 dark:border-slate-800">
@@ -188,7 +188,7 @@ export default function Navbar() {
 
       {/* Mobile Menu */}
       <div className={cn(
-        "md:hidden absolute top-24 left-4 right-4 glass rounded-3xl p-6 transition-all duration-300 origin-top shadow-2xl",
+        "md:hidden absolute top-24 left-4 right-4 glass rounded-xl p-6 transition-all duration-300 origin-top shadow-2xl",
         isOpen ? "scale-100 opacity-100" : "scale-95 opacity-0 pointer-events-none"
       )}>
         <div className="flex flex-col space-y-4">
@@ -213,27 +213,27 @@ export default function Navbar() {
                   </div>
                 </div>
                 <Link href="/profile" onClick={() => setIsOpen(false)}
-                  className="flex items-center w-full py-3 px-4 rounded-2xl bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-medium">
+                  className="flex items-center w-full py-3 px-4 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-medium">
                   <User size={18} className="mr-3" /> Hồ sơ cá nhân
                 </Link>
                 <Link href="/admin/posts/new" onClick={() => setIsOpen(false)}
-                  className="flex items-center w-full py-3 px-4 rounded-2xl bg-primary/10 text-primary font-medium">
+                  className="flex items-center w-full py-3 px-4 rounded-xl bg-primary/10 text-primary font-medium">
                   <PenSquare size={18} className="mr-3" /> Viết bài mới
                 </Link>
                 {user.role === 'admin' && (
                   <Link href="/admin" onClick={() => setIsOpen(false)}
-                    className="flex items-center w-full py-3 px-4 rounded-2xl bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-medium">
+                    className="flex items-center w-full py-3 px-4 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-medium">
                     <LayoutDashboard size={18} className="mr-3" /> Trang quản trị
                   </Link>
                 )}
                 <button onClick={() => { logout(); setIsOpen(false); }}
-                  className="flex items-center w-full py-3 px-4 rounded-2xl bg-red-50 dark:bg-red-900/20 text-red-500 font-medium">
+                  className="flex items-center w-full py-3 px-4 rounded-xl bg-red-50 dark:bg-red-900/20 text-red-500 font-medium">
                   <LogOut size={18} className="mr-3" /> Đăng xuất
                 </button>
               </div>
             ) : (
               <Link href="/login"
-                className="w-full py-4 bg-primary text-white rounded-2xl text-center font-medium shadow-lg shadow-primary/20 flex items-center justify-center"
+                className="w-full py-4 bg-primary text-white rounded-xl text-center font-medium shadow-lg shadow-primary/20 flex items-center justify-center"
                 onClick={() => setIsOpen(false)}>
                 Đăng nhập
               </Link>

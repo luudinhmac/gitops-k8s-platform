@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronRight, Code2, Layers, Cpu, Globe, Rocket, Terminal, Database, Shield, Zap, Sparkles, MonitorLink, Cloud } from 'lucide-react';
+import { ChevronRight, Code2, Layers, Cpu, Globe, Rocket, Terminal, Database, Shield, Zap, Sparkles, Cloud } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const services = [
@@ -30,17 +30,17 @@ const services = [
 
 export default function Home() {
   return (
-    <div className="relative overflow-hidden">
+    <div suppressHydrationWarning={true} className="relative overflow-hidden">
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 px-4 overflow-hidden">
+      <section className="relative pt-32 pb-12 lg:pt-48 lg:pb-32 px-4 overflow-hidden">
         {/* Animated Background Shapes */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none">
           <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px] animate-pulse" />
           <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-500/20 rounded-full blur-[120px] animate-pulse delay-700" />
         </div>
 
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center">
+        <div suppressHydrationWarning={true} className="max-w-7xl mx-auto">
+          <div suppressHydrationWarning={true} className="text-center">
             <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800 mb-8 animate-fade-in">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -48,22 +48,22 @@ export default function Home() {
               </span>
               <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Sẵn sàng cho những dự án mới</span>
             </div>
-            
-            <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold text-slate-900 dark:text-white mb-8 tracking-tight leading-[1.1]">
-              Xin chào, tôi là <br /> 
+
+            <h1 className="text-xl md:text-2xl lg:text-4xl font-display font-bold text-slate-900 dark:text-white mb-8 tracking-tight leading-[1.1]">
+              Xin chào, tôi là <br />
               <span className="text-primary drop-shadow-sm">LƯU ĐÌNH MÁC</span>
             </h1>
-            
-            <p className="text-lg md:text-xl text-slate-600 dark:text-slate-400 max-w-3xl mx-auto leading-relaxed mb-12 animate-slide-up delay-200">
-             chuyên về Hạ tầng Đám mây & Tự động hóa. Tôi xây dựng, tối ưu hóa và duy trì các hệ thống hạ tầng sẵn sàng cao (High Availability) cho doanh nghiệp.
+
+            <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed mb-12 animate-slide-up delay-200">
+              chuyên về Hạ tầng Đám mây & Tự động hóa. Tôi xây dựng, tối ưu hóa và duy trì các hệ thống hạ tầng sẵn sàng cao (High Availability) cho doanh nghiệp.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 animate-slide-up delay-300">
-              <Link href="/projects" className="group px-8 py-4 bg-primary text-white rounded-2xl font-bold flex items-center shadow-xl shadow-primary/25 hover:scale-105 active:scale-95 transition-all">
+              <Link href="/projects" className="group px-8 py-4 bg-primary text-white rounded-xl font-bold flex items-center shadow-xl shadow-primary/25 hover:scale-105 active:scale-95 transition-all">
                 Xem các dự án
                 <ChevronRight size={20} className="ml-2 group-hover:translate-x-1 transition-transform" />
               </Link>
-              <Link href="/blog" className="px-8 py-4 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-2xl font-bold border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95">
+              <Link href="/blog" className="px-8 py-4 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl font-bold border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95">
                 Đọc Blog của tôi
               </Link>
             </div>
@@ -72,18 +72,18 @@ export default function Home() {
       </section>
 
       {/* Services/Features Grid */}
-      <section className="py-20 px-4 bg-slate-50/50 dark:bg-slate-900/20">
+      <section className="py-12 px-4 bg-slate-50/50 dark:bg-slate-900/20">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {services.map((service, index) => (
-              <div 
-                key={service.title} 
+              <div
+                key={service.title}
                 className={cn(
-                  "p-8 rounded-[2.5rem] glass hover-lift group animate-slide-up",
+                  "p-8 rounded-xl glass hover-lift group animate-slide-up",
                   index === 0 ? "delay-100" : index === 1 ? "delay-200" : "delay-300"
                 )}
               >
-                <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform", service.bg, service.color)}>
+                <div className={cn("w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform", service.bg, service.color)}>
                   <service.icon size={28} />
                 </div>
                 <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-4 italic italic--vibrant">
@@ -99,22 +99,18 @@ export default function Home() {
       </section>
 
       {/* Stats/Call to Action */}
-      <section className="py-24 px-4 relative overflow-hidden">
-        <div className="max-w-5xl mx-auto rounded-[3rem] bg-slate-900 text-white p-12 md:p-20 relative overflow-hidden shadow-2xl">
-          <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 w-96 h-96 bg-primary/20 rounded-full blur-[100px]" />
-          
-          <div className="relative z-10 text-center">
-            <h2 className="text-3xl md:text-5xl font-display font-bold mb-8">
-              Bắt đầu hành trình <br /> <span className="text-primary">cùng nhau ngay hôm nay.</span>
-            </h2>
-            <p className="text-slate-400 text-lg mb-12 max-w-2xl mx-auto">
-              Sẵn sàng để đưa ý tưởng của bạn thành hiện thực với giải pháp hạ tầng và phần mềm tối ưu.
-            </p>
-            <Link href="/about" className="inline-flex items-center px-8 py-4 bg-white text-slate-900 rounded-2xl font-bold hover:scale-105 active:scale-95 transition-all">
-              Lên lịch tư vấn
-              <Sparkles size={18} className="ml-2 text-primary" />
-            </Link>
-          </div>
+      <section className="py-16 px-4 relative overflow-hidden text-center">
+        <div className="max-w-5xl mx-auto relative z-10">
+          <h2 className="text-xl md:text-2xl font-display font-bold mb-6 text-slate-900 dark:text-white">
+            Bắt đầu hành trình <br /> <span className="text-primary">cùng nhau ngay hôm nay.</span>
+          </h2>
+          <p className="text-slate-600 dark:text-slate-400 text-base mb-10 max-w-2xl mx-auto">
+            Sẵn sàng để đưa ý tưởng của bạn thành hiện thực với giải pháp hạ tầng và phần mềm tối ưu.
+          </p>
+          <Link href="/about" className="inline-flex items-center px-8 py-4 bg-primary text-white rounded-xl font-bold hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20">
+            Lên lịch tư vấn
+            <Sparkles size={18} className="ml-2" />
+          </Link>
         </div>
       </section>
     </div>
