@@ -18,6 +18,7 @@ export default function CategoriesPage() {
   const { setSidebarOpen } = useSidebar();
   const [categories, setCategories] = useState<{ id: number; name: string; created_at?: string; _count?: { Post: number } }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const [newCategory, setNewCategory] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -25,6 +26,10 @@ export default function CategoriesPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const filteredCategories = categories.filter(cat => 
+    cat.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const fetchCategories = async () => {
     setLoading(true);
@@ -113,6 +118,9 @@ export default function CategoriesPage() {
       <AdminPageHeader 
         title="Quản lý danh mục"
         subtitle="Quản lý các danh mục bài viết trên hệ thống."
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Tìm danh mục..."
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -136,16 +144,16 @@ export default function CategoriesPage() {
         <div className="lg:col-span-2">
            <AdminCard padding="p-0" title="Danh sách hiện tại" icon={Layout} headerAction={
               <span className="px-2.5 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-[9px] font-bold rounded-full text-slate-500 tracking-tight">
-                 {categories.length} mục
+                 {filteredCategories.length} mục
               </span>
            }>
               <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                 {categories.length === 0 ? (
+                 {filteredCategories.length === 0 ? (
                     <div className="p-10 text-center">
                        <Layout size={48} className="mx-auto text-slate-200 mb-4" />
-                       <p className="text-slate-500 font-medium">Chưa có danh mục nào được tạo.</p>
+                       <p className="text-slate-500 font-medium">Không tìm thấy danh mục nào.</p>
                     </div>
-                 ) : categories.map(cat => (
+                 ) : filteredCategories.map(cat => (
                     <div key={cat.id} className="p-6 md:p-8 flex items-center justify-between group hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-all">
                        <div className="flex items-center space-x-4 flex-1 min-w-0">
                           <div className="w-12 h-12 bg-primary/5 rounded-xl flex items-center justify-center text-primary flex-shrink-0 group-hover:scale-110 transition-transform">

@@ -3,6 +3,9 @@
 import Link from 'next/link';
 import { ChevronRight, Code2, Layers, Cpu, Globe, Rocket, Terminal, Database, Shield, Zap, Sparkles, Cloud } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import AboutSection from '@/components/home/AboutSection';
+import ProjectsSection from '@/components/home/ProjectsSection';
+import CoursesSection from '@/components/home/CoursesSection';
 
 const services = [
   {
@@ -97,6 +100,15 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* About Section */}
+      <AboutSection />
+
+      {/* Projects Section */}
+      <ProjectsSection />
+
+      {/* Courses Section */}
+      <CoursesSection />
 
       {/* Stats/Call to Action */}
       <section className="py-16 px-4 relative overflow-hidden text-center">

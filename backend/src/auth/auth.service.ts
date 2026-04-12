@@ -37,9 +37,14 @@ export class AuthService {
       user: {
         id: user.id,
         username: user.username,
+        email: user.email,
         fullname: user.fullname,
         avatar: user.avatar,
         role: user.role,
+        phone: user.phone,
+        profession: user.profession,
+        birthday: user.birthday,
+        address: user.address,
       },
     };
   }
@@ -56,8 +61,10 @@ export class AuthService {
           email: data.email,
           fullname: data.fullname || data.username,
           password: hash,
-          role: 'editor',
-          profession: 'Người dùng mới',
+          role: 'user',
+          phone: data.phone || null,
+          birthday: data.birthday || null,
+          profession: data.profession || 'Người dùng mới',
         },
       });
       const { password, ...result } = user;

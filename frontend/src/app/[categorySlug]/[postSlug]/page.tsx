@@ -334,6 +334,7 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
               {/* Series Navigation Box */}
               {post.Series && (
                 <div className="mt-12 p-6 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                  {/* ... existing series nav ... */}
                   <div className="flex items-center justify-between mb-4">
                     <Link href={`/series/${post.Series.slug}`} className="flex items-center space-x-3 group">
                       <div className="p-2 bg-primary/10 text-primary rounded-lg group-hover:bg-primary transition-colors group-hover:text-white">
@@ -373,6 +374,78 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
                 </div>
               )}
             </div>
+
+            {/* Tags Section */}
+            {post.Tag && post.Tag.length > 0 && (
+              <div className="mt-8 pt-8 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-2">Tags:</span>
+                  {post.Tag.map((tag, i) => (
+                    <Link key={i} href={`/blog?q=${tag.name}`} className="px-3 py-1 bg-slate-50 dark:bg-slate-800 hover:bg-primary/10 hover:text-primary text-slate-500 rounded-full text-[10px] font-bold transition-all border border-slate-100 dark:border-slate-700">
+                      #{tag.name}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Discussion Section (Moved inside content column) */}
+            <section id="discussion" className="bg-white dark:bg-slate-900 rounded-xl p-6 md:p-8 border border-slate-100 dark:border-slate-800 shadow-sm mt-12">
+              <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-white mb-8 flex items-center">
+                Thảo luận <span className="ml-3 px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">{post.Comment?.length || 0}</span>
+              </h2>
+
+              <form onSubmit={handleComment} className="mb-12">
+                <div className="relative mb-4">
+                  <textarea
+                    placeholder="Hãy để lại ý kiến của bạn..."
+                    className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all min-h-[100px] text-sm resize-none"
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                    Đang bình luận với {isAuthenticated ? user?.username : 'Khách'}
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || !commentText.trim()}
+                    className="px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:opacity-90 disabled:opacity-50 transition-all"
+                  >
+                    {isSubmitting ? 'Đang gửi...' : 'Gửi bình luận'}
+                  </button>
+                </div>
+              </form>
+
+              <div className="space-y-6">
+                {post.Comment && post.Comment.length > 0 ? post.Comment.slice(0, 10).map((comment) => (
+                  <div key={comment.id} className="flex space-x-3">
+                    <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 font-bold text-xs uppercase">
+                      {(comment.authorName || 'K')[0]}
+                    </div>
+                    <div className="flex-grow">
+                      <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-bold text-slate-900 dark:text-white text-xs">{comment.authorName}</span>
+                          <span className="text-[9px] text-slate-400 font-bold uppercase">
+                            {new Date(comment.createdAt).toLocaleDateString('vi-VN')}
+                          </span>
+                        </div>
+                        <p className="text-slate-600 dark:text-slate-400 text-[13px] leading-relaxed">
+                          {comment.content}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )) : (
+                  <div className="text-center py-10 border border-dashed border-slate-100 dark:border-slate-800 rounded-xl">
+                    <MessageSquare size={32} className="mx-auto text-slate-200 mb-4" />
+                    <p className="text-slate-400 text-xs font-medium">Chưa có bình luận nào.</p>
+                  </div>
+                )}
+              </div>
+            </section>
           </div>
 
           {/* Sidebar (Fixed Width 320px on LG) */}
@@ -460,63 +533,7 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
           </aside>
         </div>
 
-        {/* Discussion Section */}
-        <section id="discussion" className="bg-white dark:bg-slate-900 rounded-xl p-6 md:p-8 border border-slate-100 dark:border-slate-800 shadow-sm mb-12">
-          <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-white mb-8 flex items-center">
-            Thảo luận <span className="ml-3 px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">{post.Comment?.length || 0}</span>
-          </h2>
 
-          <form onSubmit={handleComment} className="mb-12">
-            <div className="relative mb-4">
-              <textarea
-                placeholder="Hãy để lại ý kiến của bạn..."
-                className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all min-h-[100px] text-sm resize-none"
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                Đang bình luận với {isAuthenticated ? user?.username : 'Khách'}
-              </div>
-              <button
-                type="submit"
-                disabled={isSubmitting || !commentText.trim()}
-                className="px-6 py-2.5 bg-primary text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:opacity-90 disabled:opacity-50 transition-all"
-              >
-                {isSubmitting ? 'Đang gửi...' : 'Gửi bình luận'}
-              </button>
-            </div>
-          </form>
-
-          <div className="space-y-6">
-            {post.Comment && post.Comment.length > 0 ? post.Comment.slice(0, 10).map((comment) => (
-              <div key={comment.id} className="flex space-x-3">
-                <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 font-bold text-xs uppercase">
-                  {(comment.authorName || 'K')[0]}
-                </div>
-                <div className="flex-grow">
-                  <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="font-bold text-slate-900 dark:text-white text-xs">{comment.authorName}</span>
-                      <span className="text-[9px] text-slate-400 font-bold uppercase">
-                        {new Date(comment.createdAt).toLocaleDateString('vi-VN')}
-                      </span>
-                    </div>
-                    <p className="text-slate-600 dark:text-slate-400 text-[13px] leading-relaxed">
-                      {comment.content}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )) : (
-              <div className="text-center py-10 border border-dashed border-slate-100 dark:border-slate-800 rounded-xl">
-                <MessageSquare size={32} className="mx-auto text-slate-200 mb-4" />
-                <p className="text-slate-400 text-xs font-medium">Chưa có bình luận nào.</p>
-              </div>
-            )}
-          </div>
-        </section>
       </div>
     </div>
   );

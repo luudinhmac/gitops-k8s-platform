@@ -14,11 +14,16 @@ export class UsersService {
   private readonly publicSelect = {
     id: true, username: true, email: true, fullname: true,
     avatar: true, profession: true, role: true, phone: true,
-    birthday: true, address: true, created_at: true,
+    birthday: true, address: true, created_at: true, 
+    // @ts-ignore
+    is_active: true,
   };
 
   async findAll() {
-    return this.prisma.user.findMany({ select: this.publicSelect });
+    return this.prisma.user.findMany({ 
+      orderBy: { created_at: 'desc' },
+      select: this.publicSelect 
+    });
   }
 
   async findOne(id: number) {
@@ -45,8 +50,10 @@ export class UsersService {
           ...data,
           fullname: (data.fullname && data.fullname.trim()) ? data.fullname : data.username,
           password: hash,
-          role: data.role || 'editor',
+          role: data.role || 'user',
           profession: data.profession || 'Người dùng mới',
+          // @ts-ignore
+          is_active: true,
         },
       });
       // Trả về không có password
@@ -64,9 +71,9 @@ export class UsersService {
     if (currentUser.role !== 'admin' && currentUser.id !== id) {
       throw new ForbiddenException('Bạn không có quyền sửa thông tin này.');
     }
-    // Chỉ admin mới được thay đổi role
-    if (data.role && currentUser.role !== 'admin') {
-      throw new ForbiddenException('Bạn không có quyền thay đổi vai trò người dùng.');
+    // Chỉ admin mới được thay đổi role hoặc status
+    if ((data.role || data.is_active !== undefined) && currentUser.role !== 'admin') {
+      throw new ForbiddenException('Bạn không có quyền thay đổi vai trò hoặc trạng thái người dùng.');
     }
     // Không cho phép tự xóa password qua route này
     const { password, ...safeData } = data;
@@ -89,12 +96,29 @@ export class UsersService {
     if (currentUser.role !== 'admin') {
       throw new ForbiddenException('Chỉ Admin mới có thể thay đổi vai trò.');
     }
-    if (!['admin', 'editor'].includes(role)) {
-      throw new BadRequestException('Vai trò không hợp lệ. Chỉ chấp nhận: admin, editor.');
+    if (!['admin', 'editor', 'user'].includes(role)) {
+      throw new BadRequestException('Vai trò không hợp lệ. Chỉ chấp nhận: admin, editor, user.');
     }
     return this.prisma.user.update({
       where: { id },
       data: { role },
+      select: this.publicSelect,
+    });
+  }
+
+  async updateStatus(id: number, currentUser: any, isActive: boolean) {
+    if (currentUser.role !== 'admin') {
+      throw new ForbiddenException('Chỉ Admin mới có thể thay đổi trạng thái.');
+    }
+    if (currentUser.id === id) {
+      throw new BadRequestException('Bạn không thể tự vô hiệu hóa tài khoản của chính mình.');
+    }
+    return this.prisma.user.update({
+      where: { id },
+      data: { 
+        // @ts-ignore
+        is_active: isActive 
+      },
       select: this.publicSelect,
     });
   }

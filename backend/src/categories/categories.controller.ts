@@ -1,6 +1,8 @@
 import { Controller, Get, Post, Body, Param, Delete, UseGuards, Req, Patch } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { AuthGuard } from '@nestjs/passport';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 
 @Controller('categories')
 export class CategoriesController {
@@ -12,23 +14,23 @@ export class CategoriesController {
   }
 
   @Post()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin', 'editor')
   create(@Req() req: any, @Body() body: { name: string }) {
-    if (req.user.role !== 'admin') throw new Error('Forbidden');
     return this.categoriesService.create(body);
   }
 
   @Patch(':id')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin', 'editor')
   update(@Param('id') id: string, @Req() req: any, @Body() body: { name: string }) {
-    if (req.user.role !== 'admin') throw new Error('Forbidden');
     return this.categoriesService.update(+id, body);
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin', 'editor')
   remove(@Param('id') id: string, @Req() req: any) {
-    if (req.user.role !== 'admin') throw new Error('Forbidden');
     return this.categoriesService.remove(+id);
   }
 }
