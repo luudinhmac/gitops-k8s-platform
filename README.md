@@ -16,8 +16,9 @@ Dự án Portfolio + Blog chuyên nghiệp dành cho Kỹ sư Hệ thống (Syst
 - **Blog System:** Quản trị bài viết kỹ thuật (CRUD), hệ thống thẻ (Tags), phân loại chuyên sâu theo Chuyên mục (Categories) và Chuỗi bài viết (Series).
 - **Advanced Search:** Tìm kiếm mạnh mẽ server-side hỗ trợ lọc theo Tiêu đề, Nội dung, Thẻ, Chuyên mục và Series.
 - **Admin Dashboard:** Giao diện quản trị tập trung, hiện đại và bảo mật.
-- **Interactive UI:** Trang chi tiết bài viết tích hợp Sidebar điều hướng, bộ nút tương tác (Like/Share) và điều hướng Series thông minh.
-- **Authentication:** Quy trình xác thực JWT bền vững với HttpOnly Cookies.
+- **Single Page Application (SPA):** Chuyển đổi điều hướng mượt mà giữa các phần (Giới thiệu, Dự án, Khóa học) bằng cách sử dụng Scrolling Anchors thay vì tải lại toàn bộ trang.
+- **Enhanced Profile Management:** Giao diện quản lý thông tin cá nhân hiện đại với hai chế độ Xem/Sửa riêng biệt, tích hợp bộ chọn ngày sinh (Date Picker) và hiển thị thông tin đầy đủ, bảo mật.
+- **Authentication:** Quy trình xác thực JWT bền vững với HttpOnly Cookies, tự động khôi phục phiên bản hồ sơ người dùng đầy đủ.
 
 ## Project Structure
 ```text
