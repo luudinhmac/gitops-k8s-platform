@@ -1,11 +1,15 @@
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(configService: ConfigService) {
+  constructor(
+    configService: ConfigService,
+    private prisma: PrismaService,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
         (request: any) => {
@@ -18,6 +22,27 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: any) {
-    return { id: payload.id, username: payload.username, role: payload.role };
+    const user = await this.prisma.user.findUnique({
+      where: { id: payload.id },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        fullname: true,
+        avatar: true,
+        role: true,
+        phone: true,
+        profession: true,
+        birthday: true,
+        address: true,
+        created_at: true,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Không tìm thấy người dùng');
+    }
+
+    return user;
   }
 }
