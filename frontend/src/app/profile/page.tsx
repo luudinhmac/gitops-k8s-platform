@@ -19,6 +19,7 @@ export default function ProfilePage() {
   const [profileForm, setProfileForm] = useState({
     fullname: '', email: '', phone: '', address: '', profession: '', birthday: ''
   });
+  const [isEditing, setIsEditing] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
   const [saveMsg, setSaveMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -86,7 +87,8 @@ export default function ProfilePage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || 'Không thể cập nhật thông tin');
       setSaveMsg({ type: 'success', text: 'Đã cập nhật thông tin thành công!' });
-      checkAuth();
+      await checkAuth();
+      setIsEditing(false);
     } catch (err: unknown) {
       setSaveMsg({ type: 'error', text: (err as Error).message });
     } finally {
@@ -141,6 +143,18 @@ export default function ProfilePage() {
     { id: 'password', label: 'Đổi mật khẩu', icon: Lock },
   ];
 
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return 'Chưa cập nhật';
+    try {
+      // Handle YYYY-MM-DD
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return dateStr;
+      return date.toLocaleDateString('vi-VN');
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
   return (
     <div className="pt-24 pb-12 px-4 min-h-screen bg-slate-50 dark:bg-slate-950">
       <div className="max-w-4xl mx-auto">
@@ -170,7 +184,10 @@ export default function ProfilePage() {
           {tabs.map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as 'info' | 'posts' | 'password')}
+              onClick={() => {
+                setActiveTab(tab.id as 'info' | 'posts' | 'password');
+                if (tab.id !== 'info') setIsEditing(false);
+              }}
               className={cn(
                 "flex items-center px-5 py-2.5 rounded-xl text-sm font-bold transition-all",
                 activeTab === tab.id
@@ -188,46 +205,94 @@ export default function ProfilePage() {
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-xl shadow-sm">
           {activeTab === 'info' && (
             <div>
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-8">Chỉnh sửa thông tin</h2>
-              {saveMsg && (
-                <div className={cn("flex items-center space-x-2 p-4 rounded-xl mb-6 text-sm",
-                  saveMsg.type === 'success' ? "bg-emerald-50 border border-emerald-200 text-emerald-600" : "bg-red-50 border border-red-200 text-red-600"
-                )}>
-                  {saveMsg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}
-                  <span>{saveMsg.text}</span>
+              {!isEditing ? (
+                <div className="animate-fade-in">
+                  <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Thông tin cá nhân</h2>
+                    <button 
+                      onClick={() => setIsEditing(true)}
+                      className="flex items-center px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-bold hover:bg-primary hover:text-white transition-all"
+                    >
+                      <Edit size={16} className="mr-2" />
+                      Chỉnh sửa thông tin
+                    </button>
+                  </div>
+                  
+                  {saveMsg && (
+                    <div className={cn("flex items-center space-x-2 p-4 rounded-xl mb-6 text-sm",
+                      saveMsg.type === 'success' ? "bg-emerald-50 border border-emerald-200 text-emerald-600" : "bg-red-50 border border-red-200 text-red-600"
+                    )}>
+                      {saveMsg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}
+                      <span>{saveMsg.text}</span>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {[
+                      { label: 'Họ và tên', value: user?.fullname, icon: UserIcon },
+                      { label: 'Email', value: user?.email, icon: Mail },
+                      { label: 'Số điện thoại', value: user?.phone, icon: Phone },
+                      { label: 'Ngành nghề', value: user?.profession, icon: Briefcase },
+                      { label: 'Ngày sinh', value: formatDate(user?.birthday || ''), icon: Calendar },
+                      { label: 'Địa chỉ', value: user?.address, icon: MapPin },
+                    ].map(field => (
+                      <div key={field.label} className="group">
+                        <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center">
+                          <field.icon size={14} className="mr-2 text-slate-300" />
+                          {field.label}
+                        </label>
+                        <p className="text-slate-700 dark:text-slate-300 font-medium py-1">
+                          {field.value || <span className="text-slate-300 italic">Chưa cập nhật</span>}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="animate-slide-up">
+                  <div className="flex items-center justify-between mb-8">
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Cập nhật thông tin</h2>
+                    <button 
+                      onClick={() => setIsEditing(false)}
+                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all"
+                    >
+                      Hủy bỏ
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSaveProfile} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {[
+                        { label: 'Họ và tên', key: 'fullname', placeholder: 'Nguyễn Văn A', icon: UserIcon },
+                        { label: 'Email', key: 'email', placeholder: 'email@example.com', icon: Mail, type: 'email' },
+                        { label: 'Số điện thoại', key: 'phone', placeholder: '0912 345 678', icon: Phone },
+                        { label: 'Ngành nghề', key: 'profession', placeholder: 'System Engineer', icon: Briefcase },
+                        { label: 'Ngày sinh', key: 'birthday', placeholder: '', icon: Calendar, type: 'date' },
+                        { label: 'Địa chỉ', key: 'address', placeholder: 'Hà Nội, Việt Nam', icon: MapPin },
+                      ].map(field => (
+                        <div key={field.key}>
+                          <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">{field.label}</label>
+                          <div className="relative">
+                            <field.icon size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input
+                              type={field.type || 'text'}
+                              placeholder={field.placeholder}
+                              value={(profileForm as Record<string, string>)[field.key]}
+                              onChange={e => setProfileForm({ ...profileForm, [field.key]: e.target.value })}
+                              className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <button type="submit" disabled={saveLoading}
+                      className="flex items-center px-8 py-4 bg-primary text-white rounded-xl text-base font-bold shadow-xl shadow-primary/30 hover:-translate-y-0.5 transition-all disabled:opacity-50">
+                      {saveLoading ? <Loader2 size={18} className="animate-spin mr-2" /> : <Save size={18} className="mr-2" />}
+                      Cập nhật
+                    </button>
+                  </form>
                 </div>
               )}
-              <form onSubmit={handleSaveProfile} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {[
-                    { label: 'Họ và tên', key: 'fullname', placeholder: 'Nguyễn Văn A', icon: UserIcon },
-                    { label: 'Email', key: 'email', placeholder: 'email@example.com', icon: Mail, type: 'email' },
-                    { label: 'Số điện thoại', key: 'phone', placeholder: '0912 345 678', icon: Phone },
-                    { label: 'Ngành nghề', key: 'profession', placeholder: 'System Engineer', icon: Briefcase },
-                    { label: 'Ngày sinh', key: 'birthday', placeholder: 'DD/MM/YYYY', icon: Calendar },
-                    { label: 'Địa chỉ', key: 'address', placeholder: 'Hà Nội, Việt Nam', icon: MapPin },
-                  ].map(field => (
-                    <div key={field.key}>
-                      <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">{field.label}</label>
-                      <div className="relative">
-                        <field.icon size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input
-                          type={field.key === 'email' ? 'email' : 'text'}
-                          placeholder={field.placeholder}
-                          value={(profileForm as Record<string, string>)[field.key]}
-                          onChange={e => setProfileForm({ ...profileForm, [field.key]: e.target.value })}
-                          className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <button type="submit" disabled={saveLoading}
-                  className="flex items-center px-8 py-4 bg-primary text-white rounded-xl text-base font-bold shadow-xl shadow-primary/30 hover:-translate-y-0.5 transition-all disabled:opacity-50">
-                  {saveLoading ? <Loader2 size={18} className="animate-spin mr-2" /> : <Save size={18} className="mr-2" />}
-                  Lưu thay đổi
-                </button>
-              </form>
             </div>
           )}
 
