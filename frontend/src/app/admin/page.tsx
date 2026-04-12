@@ -6,7 +6,8 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { 
   FileText, Layout, Plus, Settings, Users, Edit, Trash2, Eye,
-  Search, Loader2, LogOut, Tag as TagIcon, EyeOff, Home, Menu, X, PlusCircle
+  Search, Loader2, LogOut, Tag as TagIcon, EyeOff, Home, Menu, X, PlusCircle,
+  MessageSquare, Heart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import AdminSidebar from '@/components/admin/AdminSidebar';
@@ -28,6 +29,10 @@ interface AdminPost {
   Category?: { name: string, slug: string } | null;
   User?: { fullname: string } | null;
   Tag?: { name: string }[];
+  _count?: {
+    Comment: number;
+    PostLike: number;
+  };
 }
 
 export default function AdminDashboardPage() {
@@ -40,6 +45,8 @@ export default function AdminDashboardPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [sortBy, setSortBy] = useState<'date' | 'views' | 'interaction'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   const fetchData = async () => {
     if (!isAuthenticated) return;
@@ -111,6 +118,24 @@ export default function AdminDashboardPage() {
     p.User?.fullname?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const sortedPosts = [...filteredPosts].sort((a, b) => {
+    let valA: number = 0;
+    let valB: number = 0;
+
+    if (sortBy === 'date') {
+      valA = new Date(a.created_at).getTime();
+      valB = new Date(b.created_at).getTime();
+    } else if (sortBy === 'views') {
+      valA = a.views || 0;
+      valB = b.views || 0;
+    } else if (sortBy === 'interaction') {
+      valA = (a.views || 0) + (a._count?.Comment || 0) + (a.likes || 0);
+      valB = (b.views || 0) + (b._count?.Comment || 0) + (b.likes || 0);
+    }
+
+    return sortOrder === 'asc' ? valA - valB : valB - valA;
+  });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -161,26 +186,44 @@ export default function AdminDashboardPage() {
                   <tr className="bg-slate-50/50 dark:bg-slate-800/50 border-b border-slate-200 dark:border-slate-800">
                     <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Bài viết</th>
                     <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden lg:table-cell">Danh mục</th>
-                    <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">Thống kê</th>
+                    <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest hidden md:table-cell">
+                      <div className="flex items-center space-x-1 cursor-pointer hover:text-primary transition-colors"
+                        onClick={() => {
+                          if (sortBy === 'interaction') setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                          else { setSortBy('interaction'); setSortOrder('desc'); }
+                        }}
+                      >
+                        <span>Thống kê</span>
+                        {sortBy === 'interaction' && (sortOrder === 'asc' ? <PlusCircle size={10} className="rotate-180" /> : <PlusCircle size={10} />)}
+                      </div>
+                    </th>
                     <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Trạng thái</th>
                     <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {filteredPosts.length === 0 ? (
+                   {sortedPosts.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
                         Không tìm thấy bài viết nào.
                       </td>
                     </tr>
-                  ) : filteredPosts.map((post) => (
+                  ) : sortedPosts.map((post) => (
                     <tr key={post.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                       <td className="px-6 py-5">
                         <div className="flex items-center space-x-3">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center space-x-2 mb-1">
                               {post.is_pinned && <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[9px] font-bold rounded uppercase">Highlight</span>}
-                              <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate max-w-[240px] md:max-w-md">{post.title}</h4>
+                              <Link 
+                                href={`/${post.Category?.slug || 'uncategorized'}/${post.slug}`}
+                                target="_blank"
+                                className="group/title"
+                              >
+                                <h4 className="text-sm font-bold text-slate-900 dark:text-white truncate max-w-[240px] md:max-w-md group-hover/title:text-primary transition-colors">
+                                  {post.title}
+                                </h4>
+                              </Link>
                             </div>
                             <p className="text-[11px] text-slate-500 flex items-center">
                               <span className="font-medium text-slate-400">{post.Category?.name || 'Chưa phân loại'}</span>
@@ -198,12 +241,15 @@ export default function AdminDashboardPage() {
                         </span>
                       </td>
                       <td className="px-6 py-5 hidden md:table-cell">
-                        <div className="flex items-center space-x-4">
-                          <div className="flex items-center text-slate-500 text-xs">
-                            <Eye size={14} className="mr-1.5" />{post.views || 0}
+                        <div className="flex items-center space-x-3">
+                          <div className="flex items-center text-slate-500 text-[10px] font-medium" title="Lượt xem">
+                            <Eye size={12} className="mr-1 text-slate-400" />{post.views || 0}
                           </div>
-                          <div className="flex items-center text-slate-500 text-xs">
-                            <TagIcon size={14} className="mr-1.5" />{post.Tag?.length || 0}
+                          <div className="flex items-center text-slate-500 text-[10px] font-medium" title="Bình luận">
+                            <MessageSquare size={12} className="mr-1 text-slate-400" />{post._count?.Comment || 0}
+                          </div>
+                          <div className="flex items-center text-slate-500 text-[10px] font-medium" title="Yêu thích">
+                            <Heart size={12} className="mr-1 text-slate-400" />{post.likes || 0}
                           </div>
                         </div>
                       </td>
@@ -217,13 +263,7 @@ export default function AdminDashboardPage() {
                       </td>
                       <td className="px-5 py-3 text-right">
                         <div className="flex items-center justify-end space-x-1 transition-opacity">
-                          <Link 
-                            href={`/${post.Category?.slug || 'uncategorized'}/${post.slug}`} 
-                            target="_blank" 
-                            className="p-1.5 text-slate-400 hover:text-primary hover:bg-primary/5 rounded-lg transition-all"
-                          >
-                            <Eye size={14} />
-                          </Link>
+
                           <Link href={`/admin/posts/edit/${post.id}`} className="p-1.5 text-slate-400 hover:text-indigo-500 hover:bg-indigo-500/5 rounded-lg transition-all">
                             <Edit size={14} />
                           </Link>

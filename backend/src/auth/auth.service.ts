@@ -61,8 +61,10 @@ export class AuthService {
           email: data.email,
           fullname: data.fullname || data.username,
           password: hash,
-          role: 'editor',
-          profession: 'Người dùng mới',
+          role: 'user',
+          phone: data.phone || null,
+          birthday: data.birthday || null,
+          profession: data.profession || 'Người dùng mới',
         },
       });
       const { password, ...result } = user;

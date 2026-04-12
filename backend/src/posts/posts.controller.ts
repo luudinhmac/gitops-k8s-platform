@@ -1,6 +1,8 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { AuthGuard } from '@nestjs/passport';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 
 @Controller('posts')
 export class PostsController {
@@ -12,7 +14,8 @@ export class PostsController {
   }
 
   @Get('admin')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin', 'editor', 'user')
   findAllAdmin(@Req() req: any) {
     return this.postsService.findAll(req.user, true);
   }
@@ -38,31 +41,36 @@ export class PostsController {
   }
 
   @Post()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin', 'editor', 'user')
   create(@Req() req: any, @Body() createPostDto: any) {
     return this.postsService.create(req.user, createPostDto);
   }
 
   @Patch(':id')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin', 'editor', 'user')
   update(@Param('id') id: string, @Req() req: any, @Body() updatePostDto: any) {
     return this.postsService.update(+id, req.user, updatePostDto);
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin', 'editor', 'user')
   remove(@Param('id') id: string, @Req() req: any) {
     return this.postsService.remove(+id, req.user);
   }
 
   @Patch(':id/toggle-pin')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin', 'editor', 'user')
   togglePin(@Param('id') id: string, @Req() req: any) {
     return this.postsService.togglePin(+id, req.user);
   }
 
   @Patch(':id/toggle-publish')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin', 'editor', 'user')
   togglePublish(@Param('id') id: string, @Req() req: any) {
     return this.postsService.togglePublish(+id, req.user);
   }

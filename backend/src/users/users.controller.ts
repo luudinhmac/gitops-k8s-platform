@@ -1,8 +1,12 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { AuthGuard } from '@nestjs/passport';
+import { Roles } from '../auth/roles.decorator';
+import { RolesGuard } from '../auth/roles.guard';
 
 @Controller('users')
+@UseGuards(AuthGuard('jwt'), RolesGuard)
+@Roles('admin')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -33,6 +37,12 @@ export class UsersController {
   @UseGuards(AuthGuard('jwt'))
   updateRole(@Param('id') id: string, @Req() req: any, @Body() body: { role: string }) {
     return this.usersService.updateRole(+id, req.user, body.role);
+  }
+
+  @Patch(':id/status')
+  @UseGuards(AuthGuard('jwt'))
+  updateStatus(@Param('id') id: string, @Req() req: any, @Body() body: { is_active: boolean }) {
+    return this.usersService.updateStatus(+id, req.user, body.is_active);
   }
 
   @Patch(':id/reset-password')

@@ -19,6 +19,7 @@ export default function SeriesAdminPage() {
   const { setSidebarOpen } = useSidebar();
   const [series, setSeries] = useState<{ id: number; name: string; slug: string; description?: string; created_at: string; _count?: { Post: number } }[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
   const [newSeries, setNewSeries] = useState({ name: '', description: '' });
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -26,6 +27,11 @@ export default function SeriesAdminPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const filteredSeries = series.filter(s => 
+    s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    s.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const fetchSeries = async () => {
     setLoading(true);
@@ -114,6 +120,9 @@ export default function SeriesAdminPage() {
       <AdminPageHeader 
         title="Quản lý Series"
         subtitle="Nhóm các bài viết lại với nhau để tạo thành một chuỗi kiến thức."
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Tìm series..."
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -142,16 +151,16 @@ export default function SeriesAdminPage() {
         <div className="lg:col-span-2">
            <AdminCard padding="p-0" title="Danh sách hiện tại" icon={FileText} headerAction={
               <span className="px-2.5 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700 text-[9px] font-bold rounded-full text-slate-500 tracking-tight">
-                 {series.length} series
+                 {filteredSeries.length} series
               </span>
            }>
               <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                 {series.length === 0 ? (
+                 {filteredSeries.length === 0 ? (
                     <div className="p-10 text-center">
                        <Layers size={48} className="mx-auto text-slate-200 mb-4" />
-                       <p className="text-slate-500 font-medium">Bạn chưa tạo series nào.</p>
+                       <p className="text-slate-500 font-medium">Không tìm thấy series nào.</p>
                     </div>
-                 ) : series.map(item => (
+                 ) : filteredSeries.map(item => (
                     <div key={item.id} className="p-6 md:p-8 flex items-center justify-between group hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-all">
                        <div className="flex items-center space-x-4 flex-1 min-w-0">
                           <div className="w-12 h-12 bg-primary/5 rounded-xl flex items-center justify-center text-primary flex-shrink-0 group-hover:scale-110 transition-transform">

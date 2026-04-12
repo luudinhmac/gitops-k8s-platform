@@ -35,12 +35,18 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         profession: true,
         birthday: true,
         address: true,
+        // @ts-ignore
+        is_active: true,
         created_at: true,
       },
     });
 
     if (!user) {
       throw new UnauthorizedException('Không tìm thấy người dùng');
+    }
+
+    if (!(user as any).is_active) {
+      throw new UnauthorizedException('Tài khoản đã bị vô hiệu hóa');
     }
 
     return user;
