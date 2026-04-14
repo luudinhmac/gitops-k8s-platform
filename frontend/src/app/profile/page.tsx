@@ -209,7 +209,7 @@ export default function ProfilePage() {
                 <div className="animate-fade-in">
                   <div className="flex items-center justify-between mb-8">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white">Thông tin cá nhân</h2>
-                    <button 
+                    <button
                       onClick={() => setIsEditing(true)}
                       className="flex items-center px-4 py-2 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-sm font-bold hover:bg-primary hover:text-white transition-all"
                     >
@@ -217,7 +217,7 @@ export default function ProfilePage() {
                       Chỉnh sửa thông tin
                     </button>
                   </div>
-                  
+
                   {saveMsg && (
                     <div className={cn("flex items-center space-x-2 p-4 rounded-xl mb-6 text-sm",
                       saveMsg.type === 'success' ? "bg-emerald-50 border border-emerald-200 text-emerald-600" : "bg-red-50 border border-red-200 text-red-600"
@@ -252,7 +252,7 @@ export default function ProfilePage() {
                 <div className="animate-slide-up">
                   <div className="flex items-center justify-between mb-8">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white">Cập nhật thông tin</h2>
-                    <button 
+                    <button
                       onClick={() => setIsEditing(false)}
                       className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all"
                     >
@@ -268,7 +268,7 @@ export default function ProfilePage() {
                         { label: 'Số điện thoại', key: 'phone', placeholder: '0912 345 678', icon: Phone },
                         { label: 'Ngành nghề', key: 'profession', placeholder: 'System Engineer', icon: Briefcase },
                         { label: 'Ngày sinh', key: 'birthday', placeholder: '', icon: Calendar, type: 'date' },
-                        { label: 'Địa chỉ', key: 'address', placeholder: 'Hà Nội, Việt Nam', icon: MapPin },
+                        { label: 'Địa chỉ', key: 'address', placeholder: 'Hồ Chí Minh, Việt Nam', icon: MapPin },
                       ].map(field => (
                         <div key={field.key}>
                           <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">{field.label}</label>

@@ -71,7 +71,7 @@ export default function AuthorPage({ params }: { params: Promise<{ id: string }>
     return (
       <div className="pt-48 pb-12 px-4 text-center">
         <h2 className="text-2xl font-bold mb-4">Tác giả không tồn tại</h2>
-        <Link href="/blog" className="text-primary hover:underline">Quay lại trang blog</Link>
+        <Link href="/" className="text-primary hover:underline">Quay lại trang chính</Link>
       </div>
     );
   }

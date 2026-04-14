@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import PageHeader from '@/components/layout/PageHeader';
+import { sanitizeHTML } from '@/lib/sanitizer';
 
 interface Comment {
   id: number;
@@ -226,7 +227,7 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
     return (
       <div className="pt-40 text-center">
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Bài viết không tồn tại</h2>
-        <Link href="/blog" className="text-primary hover:underline mt-4 inline-block">Quay lại trang blog</Link>
+        <Link href="/" className="text-primary hover:underline mt-4 inline-block">Quay lại trang chính</Link>
       </div>
     );
   }
@@ -237,7 +238,7 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
         <PageHeader
           title={post.title}
           breadcrumbs={[
-            { label: 'Blog', href: '/blog' },
+            { label: 'Kiến thức', href: '/' },
             { label: post.Category?.name || 'Kỹ thuật' }
           ]}
         >
@@ -250,7 +251,7 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
               </Link>
               {post.Category && (
                 <Link
-                  href={`/blog?q=${post.Category.name}`}
+                  href={`/?q=${post.Category.name}`}
                   className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-full text-[9px] font-bold uppercase tracking-widest hover:bg-primary/10 hover:text-primary transition-colors"
                 >
                   {post.Category.name}
@@ -328,7 +329,7 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
             <div className="max-w-none prose prose-lg dark:prose-invert">
               <div
                 className="rich-text-content admin-content"
-                dangerouslySetInnerHTML={{ __html: post.content }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHTML(post.content) }}
               />
 
               {/* Series Navigation Box */}
@@ -381,7 +382,7 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-2">Tags:</span>
                   {post.Tag.map((tag, i) => (
-                    <Link key={i} href={`/blog?q=${tag.name}`} className="px-3 py-1 bg-slate-50 dark:bg-slate-800 hover:bg-primary/10 hover:text-primary text-slate-500 rounded-full text-[10px] font-bold transition-all border border-slate-100 dark:border-slate-700">
+                    <Link key={i} href={`/?q=${tag.name}`} className="px-3 py-1 bg-slate-50 dark:bg-slate-800 hover:bg-primary/10 hover:text-primary text-slate-500 rounded-full text-[10px] font-bold transition-all border border-slate-100 dark:border-slate-700">
                       #{tag.name}
                     </Link>
                   ))}
@@ -461,10 +462,10 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
                 className="w-full pl-10 pr-10 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm"
                 value={searchValue}
                 onChange={(e) => setSearchValue(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && router.push(`/blog?q=${searchValue}`)}
+                onKeyDown={(e) => e.key === 'Enter' && router.push(`/?q=${searchValue}`)}
               />
               <button
-                onClick={() => router.push(`/blog?q=${searchValue}`)}
+                onClick={() => router.push(`/?q=${searchValue}`)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors"
                 aria-label="Search"
               >
@@ -504,7 +505,7 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
                 <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Danh mục</h3>
                 <div className="space-y-2">
                    {categories.map((cat) => (
-                     <Link key={cat.id} href={`/blog?q=${cat.name}`} 
+                     <Link key={cat.id} href={`/?q=${cat.name}`} 
                         className="flex items-center justify-between p-2.5 bg-slate-50 dark:bg-slate-800/50 rounded-lg hover:shadow-md hover:-translate-y-0.5 transition-all group">
                         <span className="text-[13px] font-bold text-slate-600 dark:text-slate-400 group-hover:text-primary">{cat.name}</span>
                         <span className="bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded-md text-[9px] font-bold text-slate-400">{cat._count?.Post || 0}</span>

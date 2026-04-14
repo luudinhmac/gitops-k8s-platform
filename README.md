@@ -6,33 +6,26 @@ Dự án Portfolio + Blog chuyên nghiệp dành cho Kỹ sư Hệ thống (Syst
 ## Tech Stack
 - **Frontend:** Next.js (App Router)
 - **Backend:** NestJS
-- **Database:** MariaDB/MySQL (Native on VM)
+- **Database:** PostgreSQL (Native on Local/VM)
 - **DevOps:**
   - Docker & Docker Compose
   - Ansible (Automation)
   - Nginx (Reverse Proxy)
 
 ## Features
-- **Blog System:** Quản trị bài viết kỹ thuật (CRUD), hệ thống thẻ (Tags), phân loại chuyên sâu theo Chuyên mục (Categories) và Chuỗi bài viết (Series).
-- **Advanced Search:** Tìm kiếm mạnh mẽ server-side hỗ trợ lọc theo Tiêu đề, Nội dung, Thẻ, Chuyên mục và Series.
-- **Admin Dashboard:** Giao diện quản trị tập trung, hiện đại và bảo mật. Đã nâng cấp hệ thống sắp xếp theo tương tác (Lượt xem + Bình luận + Yêu thích) và bảng thống kê chi tiết.
-- **Role-Based Access Control (RBAC):** Hệ thống phân quyền chuyên sâu (Admin, Editor, User). Admin quản lý toàn diện; Editor quản lý nội dung; User có thể viết bài và quản lý bài viết cá nhân.
-- **Premium Notifications & Modal:** Thay thế hoàn toàn các thông báo trình duyệt mặc định bằng hệ thống `ConfirmationModal` và `StatusMessage` phủ bóng mờ chuyên nghiệp.
-- **Enhanced Registration:** Quy trình đăng ký mở rộng thu thập Số điện thoại, Ngày sinh, Nghề nghiệp và tích hợp xác nhận mật khẩu với bộ lọc bảo mật backend.
-- **Single Page Application (SPA):** Chuyển đổi điều hướng mượt mả giữa các phần (Giới thiệu, Dự án, Khóa học) bằng cách sử dụng Scrolling Anchors thay vì tải lại toàn bộ trang.
-- **Enhanced Profile Management:** Giao diện quản lý thông tin cá nhân hiện đại với hai chế độ Xem/Sửa riêng biệt, tích hợp bộ chọn ngày sinh (Date Picker) và hiển thị thông tin đầy đủ, bảo mật.
+- **Blog-First Architecture:** Hệ thống được cấu trúc với Blog là trang chủ (`/`) để tối ưu việc chia sẻ kiến thức, trong khi các phần Portfolio, Giới thiệu, Dự án được quy hoạch gọn gàng trong mục `/about`.
 - **Authentication:** Quy trình xác thực JWT bền vững với HttpOnly Cookies, tự động khôi phục phiên bản hồ sơ người dùng đầy đủ.
 
 ## Project Structure
 ```text
 frontend/      # Next.js Application
-backend/       # NestJS API (Prisma + MariaDB)
+backend/       # NestJS API (Prisma + PostgreSQL)
 ansible/       # Ansible Playbooks & Inventory
 docs/          # Technical Documentation & Debug Logs
 ```
 
 ## Local Development
-**Yêu cầu:** Node.js (LTS), MariaDB/MySQL.
+**Yêu cầu:** Node.js (LTS), PostgreSQL.
 **Lưu ý:** Tuyệt đối KHÔNG sử dụng Docker cho môi trường Local theo quy tắc dự án.
 
 1. **Cài đặt:**

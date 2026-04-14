@@ -63,7 +63,7 @@ export default function AboutSection() {
               <Link href="#projects" className="px-8 py-4 bg-primary text-white rounded-xl font-bold shadow-xl shadow-primary/30 hover:-translate-y-1 transition-all">
                 Dự án của tôi
               </Link>
-              <Link href="/blog" className="px-8 py-4 glass dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold hover:bg-slate-50 transition-all">
+              <Link href="/" className="px-8 py-4 glass dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold hover:bg-slate-50 transition-all">
                 Đọc Blog
               </Link>
             </div>
