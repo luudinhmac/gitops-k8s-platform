@@ -22,10 +22,10 @@ export default function Navbar() {
 
   const navItems = [
     { name: 'Trang chủ', href: '/' },
-    { name: 'Khóa học', href: '/#courses' },
-    { name: 'Dự án', href: '/#projects' },
-    { name: 'Giới thiệu', href: '/#about' },
-    { name: 'Blog', href: '/blog' },
+    { name: 'Hồ sơ', href: '/about' },
+    { name: 'Khóa học', href: '/about#courses' },
+    { name: 'Dự án', href: '/about#projects' },
+    { name: 'Giới thiệu', href: '/about#about' },
   ];
 
   useEffect(() => {
@@ -76,7 +76,7 @@ export default function Navbar() {
               onChange={(e) => setSearchValue(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
-                  router.push(`/blog?q=${encodeURIComponent(searchValue)}`);
+                  router.push(`/?q=${encodeURIComponent(searchValue)}`);
                 }
               }}
             />

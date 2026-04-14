@@ -60,7 +60,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ slug: s
     return (
       <div className="pt-48 pb-12 px-4 text-center">
         <h2 className="text-2xl font-bold mb-4 font-display">Series không tồn tại</h2>
-        <Link href="/blog" className="text-primary hover:underline">Quay lại trang blog</Link>
+        <Link href="/" className="text-primary hover:underline">Quay lại trang chính</Link>
       </div>
     );
   }
@@ -69,9 +69,9 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ slug: s
     <div className="pt-32 pb-12 px-4 min-h-screen">
       <div className="max-w-4xl mx-auto">
         <nav className="flex items-center space-x-4 mb-12 text-sm">
-          <Link href="/blog" className="group flex items-center text-slate-500 hover:text-primary transition-colors">
+          <Link href="/" className="group flex items-center text-slate-500 hover:text-primary transition-colors">
             <ArrowLeft size={16} className="mr-2 group-hover:-translate-x-1 transition-transform" />
-            Quay lại Blog
+            Quay lại Home
           </Link>
           <span className="text-slate-300">/</span>
           <span className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Series</span>

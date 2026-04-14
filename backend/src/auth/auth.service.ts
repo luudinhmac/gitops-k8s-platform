@@ -9,8 +9,24 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
   ) {}
+  
+  private loginAttempts = new Map<string, { count: number; lastAttempt: number }>();
+  private readonly MAX_ATTEMPTS = 5;
+  private readonly LOCK_TIME = 10 * 60 * 1000; // 10 minutes lock
 
   async validateUser(username: string, pass: string): Promise<any> {
+    const attempt = this.loginAttempts.get(username);
+    const now = Date.now();
+
+    if (attempt && attempt.count >= this.MAX_ATTEMPTS) {
+      if (now - attempt.lastAttempt < this.LOCK_TIME) {
+        throw new UnauthorizedException(`Tài khoản tạm thời bị khóa do nhiều lần đăng nhập thất bại. Vui lòng thử lại sau ${Math.ceil((this.LOCK_TIME - (now - attempt.lastAttempt)) / 60000)} phút.`);
+      } else {
+        // Reset after lock time
+        this.loginAttempts.delete(username);
+      }
+    }
+
     const user = await this.prisma.user.findFirst({
       where: {
         OR: [
@@ -21,9 +37,18 @@ export class AuthService {
     });
 
     if (user && (await bcrypt.compare(pass, user.password))) {
+      this.loginAttempts.delete(username); // Reset on success
       const { password, ...result } = user;
       return result;
     }
+
+    // Record failure
+    const currentAttempt = this.loginAttempts.get(username) || { count: 0, lastAttempt: now };
+    this.loginAttempts.set(username, {
+      count: currentAttempt.count + 1,
+      lastAttempt: now,
+    });
+
     return null;
   }
 

@@ -44,16 +44,13 @@ export default function Footer() {
             </h3>
             <ul className="mt-4 space-y-2">
               <li>
-                <Link href="/" className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Trang chủ</Link>
+                <Link href="/" className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Blog / Bài viết</Link>
               </li>
               <li>
-                <Link href="/blog" className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Blog</Link>
+                <Link href="/about" className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Hồ sơ cá nhân</Link>
               </li>
               <li>
-                <Link href="/about" className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Giới thiệu</Link>
-              </li>
-              <li>
-                <Link href="/projects" className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Dự án</Link>
+                <Link href="/about#projects" className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Dự án</Link>
               </li>
             </ul>
           </div>
