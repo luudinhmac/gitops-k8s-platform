@@ -3,15 +3,14 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
-  Settings, Save, Lock, Bell, Shield, Palette, Globe, 
-  Menu, Home, LogOut, Loader2, AlertCircle, CheckCircle2
+  Save, Lock, Bell, Shield, Palette, Globe, 
+  Loader2, CheckCircle2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
-import AdminSidebar from '@/components/admin/AdminSidebar';
 
 export default function SettingsPage() {
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -34,7 +33,7 @@ export default function SettingsPage() {
 
   return (
     <div className="max-w-4xl mx-auto pb-12">
-      <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+      <header className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-3">
         <div>
           <h1 className="text-3xl font-display font-bold text-slate-900 dark:text-white mb-2">Cài đặt hệ thống</h1>
           <p className="text-slate-500 dark:text-slate-400">Quản lý cấu hình danh mục, bảo mật và giao diện</p>
@@ -56,7 +55,7 @@ export default function SettingsPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* Left Column: Sections Navigation */}
           <div className="space-y-2">
             {[
@@ -76,13 +75,13 @@ export default function SettingsPage() {
           </div>
 
           {/* Right Column: Settings Content */}
-          <div className="md:col-span-2 space-y-6">
-            <div className="bg-white dark:bg-slate-900 rounded-xl p-6 md:p-8 border border-slate-100 dark:border-slate-800 shadow-sm">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-6 flex items-center">
+          <div className="md:col-span-2 space-y-4">
+            <div className="bg-white dark:bg-slate-900 rounded-xl p-5 md:p-6 border border-slate-100 dark:border-slate-800 shadow-sm">
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center">
                   < Globe size={20} className="mr-2 text-primary" />
                   Thông tin Website
                 </h3>
-                <div className="space-y-5">
+                <div className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Tiêu đề Website</label>
                     <input type="text" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-primary/20" defaultValue="Luu Dinh Mac | Portfolio" />

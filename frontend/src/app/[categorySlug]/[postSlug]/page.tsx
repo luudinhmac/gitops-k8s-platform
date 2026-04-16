@@ -3,16 +3,21 @@
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
 import {
-  Calendar, User as UserIcon, Clock, ArrowLeft, Share2,
-  MessageSquare, Heart, Bookmark, Eye, Terminal,
-  ChevronRight, Facebook, Twitter, Link as LinkIcon,
-  Smile, MoreHorizontal, Layers, ChevronLeft, Search
+  Calendar, User as UserIcon, Clock, Share2,
+  MessageSquare, Heart, Eye,
+  ChevronRight, Layers, ChevronLeft, Search, Trash2, Edit2, Check, X
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import PageHeader from '@/components/layout/PageHeader';
 import { sanitizeHTML } from '@/lib/sanitizer';
+import UserAvatar from '@/components/common/UserAvatar';
+import Navbar from '@/components/layout/Navbar';
+import { usePathname, useSearchParams } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
+import Badge from '@/components/common/Badge';
+import FormattedDate from '@/components/common/FormattedDate';
 
 interface Comment {
   id: number;
@@ -20,6 +25,10 @@ interface Comment {
   authorName: string;
   authorEmail: string | null;
   createdAt: string;
+  user_id?: number | null;
+  User?: {
+    avatar: string | null;
+  } | null;
 }
 
 interface Post {
@@ -67,11 +76,13 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
   const [liked, setLiked] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [relatedPosts, setRelatedPosts] = useState<any[]>([]);
-  const [seriesPosts, setSeriesPosts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<{ id: number; name: string; _count?: { Post: number } }[]>([]);
+  const [relatedPosts, setRelatedPosts] = useState<Post[]>([]);
+  const [seriesPosts, setSeriesPosts] = useState<Post[]>([]);
   const [searchValue, setSearchValue] = useState('');
-  const router = useRouter(); // Wait, I need to import useRouter
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editingText, setEditingText] = useState('');
+  const router = useRouter();
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -89,7 +100,7 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
 
         // Map backend comments (snake_case) to frontend (camelCase)
         if (data.Comment && Array.isArray(data.Comment)) {
-          data.Comment = data.Comment.map((c: any) => ({
+          data.Comment = data.Comment.map((c: Comment & { author_name?: string, author_email?: string, created_at?: string }) => ({
             ...c,
             authorName: c.author_name || c.authorName || 'Khách',
             authorEmail: c.author_email || c.authorEmail || null,
@@ -178,6 +189,7 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
       const payload = {
         content: commentText,
         post_id: post.id,
+        user_id: user?.id || null,
         author_name: isAuthenticated ? (user?.fullname || user?.username || 'Thành viên') : 'Khách',
         author_email: user?.email || null
       };
@@ -190,13 +202,15 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
       });
 
       if (response.ok) {
-        const newComment = await response.json();
-        const formattedComment = {
-          id: newComment.id,
-          content: newComment.content,
-          authorName: newComment.author_name,
-          authorEmail: newComment.author_email,
-          createdAt: newComment.created_at
+        const newCommentRaw = await response.json();
+        const formattedComment: Comment = {
+          id: newCommentRaw.id,
+          content: newCommentRaw.content,
+          authorName: newCommentRaw.author_name,
+          authorEmail: newCommentRaw.author_email,
+          createdAt: newCommentRaw.created_at,
+          user_id: newCommentRaw.user_id,
+          User: user?.avatar ? { avatar: user.avatar } : null
         };
         setPost({ ...post, Comment: [formattedComment, ...(post.Comment || [])] });
         setCommentText('');
@@ -205,6 +219,46 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
       console.error('Error submitting comment:', error);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteComment = async (id: number) => {
+    if (!confirm('Bạn có chắc chắn muốn xóa bình luận này?')) return;
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/comments/${id}`, {
+        method: 'DELETE',
+        credentials: 'include'
+      });
+      if (response.ok && post) {
+        setPost({
+          ...post,
+          Comment: post.Comment.filter(c => c.id !== id)
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting comment:', error);
+    }
+  };
+
+  const handleUpdateComment = async (id: number) => {
+    if (!editingText.trim()) return;
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/comments/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ content: editingText })
+      });
+      if (response.ok && post) {
+        setPost({
+          ...post,
+          Comment: post.Comment.map(c => c.id === id ? { ...c, content: editingText } : c)
+        });
+        setEditingCommentId(null);
+        setEditingText('');
+      }
+    } catch (error) {
+      console.error('Error updating comment:', error);
     }
   };
 
@@ -233,7 +287,7 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
   }
 
   return (
-    <div className="pt-24 pb-12 px-4 min-h-screen text-slate-900 dark:text-slate-100">
+    <div className="pt-20 pb-8 px-4 min-h-screen text-slate-900 dark:text-slate-100">
       <div className="max-w-7xl mx-auto">
         <PageHeader
           title={post.title}
@@ -243,34 +297,29 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
           ]}
         >
           {/* Metadata Section */}
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
             <div className="flex flex-wrap items-center gap-3">
-              <Link href={`/author/${post.User?.id || 1}`} className="flex items-center text-primary bg-primary/10 px-3 py-1.5 rounded-xl font-bold uppercase tracking-widest text-[9px] hover:bg-primary/20 transition-all">
-                <UserIcon size={12} className="mr-2" />
+              <Link href={`/author/${post.User?.id || 1}`} className="flex items-center text-primary bg-primary/10 px-2 py-1.5 rounded-xl font-bold uppercase tracking-widest text-[9px] hover:bg-primary/20 transition-all border border-primary/10">
+                <UserAvatar user={post.User} size="xs" className="mr-2 border-none" />
                 {post.User?.fullname || post.User?.username || 'Ẩn danh'}
               </Link>
               {post.Category && (
-                <Link
-                  href={`/?q=${post.Category.name}`}
-                  className="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-full text-[9px] font-bold uppercase tracking-widest hover:bg-primary/10 hover:text-primary transition-colors"
-                >
+                <Badge type="category" size="xs">
                   {post.Category.name}
-                </Link>
+                </Badge>
               )}
               {post.Series && (
-                <Link
-                  href={`/series/${post.Series.slug}`}
-                  className="flex items-center text-indigo-500 bg-indigo-500/10 px-3 py-1.5 rounded-xl font-bold uppercase tracking-widest text-[9px] hover:bg-indigo-500/20 transition-all"
-                >
-                  <Layers size={12} className="mr-2" />
-                  {post.Series.name}
+                <Link href={`/series/${post.Series.slug}`}>
+                  <Badge className="bg-indigo-500/10 text-indigo-500 border-none px-3 py-1.5" size="xs">
+                    <Layers size={12} className="mr-2" />
+                    {post.Series.name}
+                  </Badge>
                 </Link>
               )}
-              <div className="flex items-center space-x-3 text-slate-400 text-[9px] font-bold uppercase tracking-widest border-l border-slate-200 dark:border-slate-800 pl-4 h-5">
+            </div>
+            <div className="flex items-center space-x-3 text-slate-400 text-[9px] font-bold uppercase tracking-widest border-l border-slate-200 dark:border-slate-800 pl-4 h-5">
                 <div className="flex items-center">
-                  <Calendar size={10} className="mr-1.5" />
-                  {new Date(post.created_at).toLocaleDateString('vi-VN', { day: '2-digit', month: 'long', year: 'numeric' })}
-                </div>
+                <FormattedDate date={post.created_at} showIcon iconSize={10} className="text-slate-400" />
                 <div className="flex items-center">
                   <Clock size={10} className="mr-1.5" />
                   {post.readTime || 5} phút đọc
@@ -311,11 +360,12 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
 
         {/* Cover Image */}
         {post.cover_image && (
-          <div className="mb-8">
+          <div className="mb-6">
             <div className="aspect-[21/9] rounded-xl overflow-hidden shadow-xl border border-slate-100 dark:border-slate-800">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${post.cover_image}`}
-                alt={post.title}
+                alt={post.title || 'Blog Post Image'}
                 className="w-full h-full object-cover"
               />
             </div>
@@ -323,7 +373,7 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
         )}
 
         {/* Main Content & Sidebar Flex Layout */}
-        <div className="flex flex-col lg:flex-row gap-8 mb-12">
+        <div className="flex flex-col lg:flex-row gap-6 mb-8">
           {/* Main Content (Fluid) */}
           <div className="flex-1 min-w-0">
             <div className="max-w-none prose prose-lg dark:prose-invert">
@@ -334,7 +384,7 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
 
               {/* Series Navigation Box */}
               {post.Series && (
-                <div className="mt-12 p-6 bg-slate-50 dark:bg-slate-900 rounded-xl">
+                <div className="mt-8 p-5 bg-slate-50 dark:bg-slate-900 rounded-xl">
                   {/* ... existing series nav ... */}
                   <div className="flex items-center justify-between mb-4">
                     <Link href={`/series/${post.Series.slug}`} className="flex items-center space-x-3 group">
@@ -391,8 +441,8 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
             )}
 
             {/* Discussion Section (Moved inside content column) */}
-            <section id="discussion" className="bg-white dark:bg-slate-900 rounded-xl p-6 md:p-8 border border-slate-100 dark:border-slate-800 shadow-sm mt-12">
-              <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-white mb-8 flex items-center">
+            <section id="discussion" className="bg-white dark:bg-slate-900 rounded-xl p-5 md:p-6 border border-slate-100 dark:border-slate-800 shadow-sm mt-8">
+              <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-white mb-6 flex items-center">
                 Thảo luận <span className="ml-3 px-2 py-0.5 bg-primary/10 text-primary text-xs rounded-full">{post.Comment?.length || 0}</span>
               </h2>
 
@@ -420,22 +470,69 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
               </form>
 
               <div className="space-y-6">
-                {post.Comment && post.Comment.length > 0 ? post.Comment.slice(0, 10).map((comment) => (
-                  <div key={comment.id} className="flex space-x-3">
-                    <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 font-bold text-xs uppercase">
-                      {(comment.authorName || 'K')[0]}
+                {post.Comment && post.Comment.length > 0 ? post.Comment.slice(0, 50).map((comment) => (
+                  <div key={comment.id} className="flex space-x-3 group/comment">
+                    <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 font-bold text-xs uppercase overflow-hidden flex-shrink-0">
+                      {comment.User?.avatar ? (
+                        <img src={comment.User.avatar} alt={comment.authorName} className="w-full h-full object-cover" />
+                      ) : (comment.authorName || 'K')[0]}
                     </div>
                     <div className="flex-grow">
                       <div className="bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-100 dark:border-slate-800">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-bold text-slate-900 dark:text-white text-xs">{comment.authorName}</span>
-                          <span className="text-[9px] text-slate-400 font-bold uppercase">
-                            {new Date(comment.createdAt).toLocaleDateString('vi-VN')}
-                          </span>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-2">
+                            <span className="font-bold text-slate-900 dark:text-white text-xs">{comment.authorName}</span>
+                            {comment.user_id && (
+                              <div className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-[8px] font-bold uppercase">Thành viên</div>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <span className="text-[9px] text-slate-400 font-bold uppercase">
+                              {new Date(comment.createdAt).toLocaleDateString('vi-VN')}
+                            </span>
+                            
+                            {/* Management Actions */}
+                            {isAuthenticated && (user?.id === comment.user_id || user?.role === 'admin') && (
+                              <div className="flex items-center space-x-1 opacity-0 group-hover/comment:opacity-100 transition-opacity">
+                                {user?.id === comment.user_id && (
+                                  <button 
+                                    onClick={() => {
+                                      setEditingCommentId(comment.id);
+                                      setEditingText(comment.content);
+                                    }}
+                                    className="p-1 text-slate-400 hover:text-primary transition-colors"
+                                  >
+                                    <Edit2 size={12} />
+                                  </button>
+                                )}
+                                <button 
+                                  onClick={() => handleDeleteComment(comment.id)}
+                                  className="p-1 text-slate-400 hover:text-red-500 transition-colors"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <p className="text-slate-600 dark:text-slate-400 text-[13px] leading-relaxed">
-                          {comment.content}
-                        </p>
+
+                        {editingCommentId === comment.id ? (
+                          <div className="space-y-3">
+                            <textarea
+                              className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary min-h-[80px] text-slate-700 dark:text-slate-300"
+                              value={editingText}
+                              onChange={(e) => setEditingText(e.target.value)}
+                            />
+                            <div className="flex justify-end space-x-2">
+                              <button onClick={() => setEditingCommentId(null)} className="p-1.5 bg-slate-100 dark:bg-slate-800 text-slate-500 rounded-lg"><X size={14} /></button>
+                              <button onClick={() => handleUpdateComment(comment.id)} className="p-1.5 bg-primary text-white rounded-lg"><Check size={14} /></button>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-slate-600 dark:text-slate-400 text-[13px] leading-relaxed whitespace-pre-wrap">
+                            {comment.content}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>

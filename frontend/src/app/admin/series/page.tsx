@@ -1,22 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
 import { 
-  Plus, Trash2, Layers, Loader2, FileText, Menu, Settings
+  Plus, Trash2, Layers, Loader2, FileText, Settings
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import AdminSidebar from '@/components/admin/AdminSidebar';
 import ConfirmationModal from '@/components/admin/ConfirmationModal';
-
-import { useSidebar } from '@/context/SidebarContext';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminCard from '@/components/admin/AdminCard';
 
 export default function SeriesAdminPage() {
-  const { user, isAuthenticated } = useAuth();
-  const { setSidebarOpen } = useSidebar();
   const [series, setSeries] = useState<{ id: number; name: string; slug: string; description?: string; created_at: string; _count?: { Post: number } }[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,8 +31,8 @@ export default function SeriesAdminPage() {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/series`);
       const data = await res.json();
       setSeries(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error('Error fetching series:', err);
+    } catch {
+      console.error('Error fetching series');
     } finally {
       setLoading(false);
     }
@@ -125,10 +117,10 @@ export default function SeriesAdminPage() {
         searchPlaceholder="Tìm series..."
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Form */}
         <div className="lg:col-span-1">
-           <AdminCard title="Tạo Series" icon={Plus} padding="p-5 md:p-6" className="sticky top-24">
+           <AdminCard title="Tạo Series" icon={Plus} className="sticky top-24">
               <form onSubmit={handleAddSeries} className="space-y-4">
                  <div>
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Tên Series</label>
@@ -161,7 +153,7 @@ export default function SeriesAdminPage() {
                        <p className="text-slate-500 font-medium">Không tìm thấy series nào.</p>
                     </div>
                  ) : filteredSeries.map(item => (
-                    <div key={item.id} className="p-6 md:p-8 flex items-center justify-between group hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-all">
+                    <div key={item.id} className="p-4 md:p-6 flex items-center justify-between group hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-all">
                        <div className="flex items-center space-x-4 flex-1 min-w-0">
                           <div className="w-12 h-12 bg-primary/5 rounded-xl flex items-center justify-center text-primary flex-shrink-0 group-hover:scale-110 transition-transform">
                              <Layers size={20} />

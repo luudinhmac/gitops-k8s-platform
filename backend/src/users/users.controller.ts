@@ -1,17 +1,29 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
+import type { AuthenticatedRequest } from './interfaces/user.interface';
+import { CreateUserDto } from './dto/create-user.dto';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Controller('users')
-@UseGuards(AuthGuard('jwt'), RolesGuard)
-@Roles('admin')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin')
   findAll() {
     return this.usersService.findAll();
   }
@@ -23,31 +35,50 @@ export class UsersController {
 
   @Post()
   @UseGuards(AuthGuard('jwt'))
-  create(@Req() req: any, @Body() createUserDto: any) {
+  create(
+    @Req() req: AuthenticatedRequest,
+    @Body() createUserDto: CreateUserDto,
+  ) {
     return this.usersService.create(createUserDto, req.user);
   }
 
   @Patch(':id')
   @UseGuards(AuthGuard('jwt'))
-  update(@Param('id') id: string, @Req() req: any, @Body() updateUserDto: any) {
+  update(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
     return this.usersService.update(+id, req.user, updateUserDto);
   }
 
   @Patch(':id/role')
   @UseGuards(AuthGuard('jwt'))
-  updateRole(@Param('id') id: string, @Req() req: any, @Body() body: { role: string }) {
+  updateRole(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+    @Body() body: { role: string },
+  ) {
     return this.usersService.updateRole(+id, req.user, body.role);
   }
 
   @Patch(':id/status')
   @UseGuards(AuthGuard('jwt'))
-  updateStatus(@Param('id') id: string, @Req() req: any, @Body() body: { is_active: boolean }) {
+  updateStatus(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+    @Body() body: { is_active: boolean },
+  ) {
     return this.usersService.updateStatus(+id, req.user, body.is_active);
   }
 
   @Patch(':id/reset-password')
   @UseGuards(AuthGuard('jwt'))
-  resetPassword(@Param('id') id: string, @Req() req: any, @Body() body: { newPassword: string }) {
+  resetPassword(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+    @Body() body: { newPassword: string },
+  ) {
     return this.usersService.resetPassword(+id, body.newPassword, req.user);
   }
 
@@ -55,15 +86,20 @@ export class UsersController {
   @UseGuards(AuthGuard('jwt'))
   changePassword(
     @Param('id') id: string,
-    @Req() req: any,
-    @Body() body: { oldPassword: string; newPassword: string }
+    @Req() req: AuthenticatedRequest,
+    @Body() body: { oldPassword: string; newPassword: string },
   ) {
-    return this.usersService.changePassword(+id, body.oldPassword, body.newPassword, req.user);
+    return this.usersService.changePassword(
+      +id,
+      body.oldPassword,
+      body.newPassword,
+      req.user,
+    );
   }
 
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'))
-  remove(@Param('id') id: string, @Req() req: any) {
+  remove(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return this.usersService.remove(+id, req.user);
   }
 }

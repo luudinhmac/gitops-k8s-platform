@@ -1,18 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { 
-  FileText, Layout, Plus, Settings, Users, Edit, Trash2, Eye,
-  Search, Loader2, LogOut, Tag as TagIcon, EyeOff, Home, Menu, X, PlusCircle,
-  MessageSquare, Heart
+  FileText, Plus, Edit, Trash2, Eye,
+  Loader2, Tag as TagIcon, MessageSquare, Heart,
+  ChevronUp, ChevronDown, Layout
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import AdminSidebar from '@/components/admin/AdminSidebar';
 import ConfirmationModal from '@/components/admin/ConfirmationModal';
-import { useSidebar } from '@/context/SidebarContext';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminCard from '@/components/admin/AdminCard';
 
@@ -36,8 +33,7 @@ interface AdminPost {
 }
 
 export default function AdminDashboardPage() {
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
-  const { setSidebarOpen } = useSidebar();
+  const { user, isAuthenticated } = useAuth();
   const [posts, setPosts] = useState<AdminPost[]>([]);
   const [categories, setCategories] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
@@ -48,7 +44,7 @@ export default function AdminDashboardPage() {
   const [sortBy, setSortBy] = useState<'date' | 'views' | 'interaction'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!isAuthenticated) return;
     setLoading(true);
     try {
@@ -69,11 +65,11 @@ export default function AdminDashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [isAuthenticated, user?.id, user?.role]);
 
   useEffect(() => {
     fetchData();
-  }, [isAuthenticated, user]);
+  }, [fetchData]);
 
   const handleDeletePost = async () => {
     if (!deleteId) return;
@@ -159,16 +155,16 @@ export default function AdminDashboardPage() {
         }}
       />
 
-      <div className="space-y-6">
+      <div className="space-y-4">
           {/* ── Stats Grid ── */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[
               { label: 'Tổng bài viết', count: posts.length, icon: FileText, color: 'text-blue-500', bg: 'bg-blue-500/10' },
               { label: 'Tổng lượt xem', count: posts.reduce((a, p) => a + (p.views || 0), 0), icon: Eye, color: 'text-purple-500', bg: 'bg-purple-500/10' },
               { label: 'Danh mục', count: categories.length, icon: Layout, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
               { label: 'Thẻ', count: posts.reduce((a, p) => a + (p.Tag?.length || 0), 0), icon: TagIcon, color: 'text-pink-500', bg: 'bg-pink-500/10' },
             ].map((stat, i) => (
-              <div key={i} className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-transform hover:-translate-y-1">
+              <div key={i} className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-transform hover:-translate-y-1">
                 <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center mb-3", stat.bg)}>
                   <stat.icon className={stat.color} size={16} />
                 </div>
@@ -194,7 +190,7 @@ export default function AdminDashboardPage() {
                         }}
                       >
                         <span>Thống kê</span>
-                        {sortBy === 'interaction' && (sortOrder === 'asc' ? <PlusCircle size={10} className="rotate-180" /> : <PlusCircle size={10} />)}
+                        {sortBy === 'interaction' && (sortOrder === 'asc' ? <ChevronUp size={12} /> : <ChevronDown size={12} />)}
                       </div>
                     </th>
                     <th className="px-5 py-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Trạng thái</th>

@@ -2,8 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
-import { Layers, Calendar, Clock, Eye, ChevronRight, ArrowLeft } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Layers, Calendar, Eye, ChevronRight, ArrowLeft } from 'lucide-react';
 
 interface Post {
   id: number;
@@ -66,9 +65,9 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ slug: s
   }
 
   return (
-    <div className="pt-32 pb-12 px-4 min-h-screen">
+    <div className="pt-24 pb-8 px-4 min-h-screen">
       <div className="max-w-4xl mx-auto">
-        <nav className="flex items-center space-x-4 mb-12 text-sm">
+        <nav className="flex items-center space-x-4 mb-8 text-sm">
           <Link href="/" className="group flex items-center text-slate-500 hover:text-primary transition-colors">
             <ArrowLeft size={16} className="mr-2 group-hover:-translate-x-1 transition-transform" />
             Quay lại Home
@@ -77,7 +76,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ slug: s
           <span className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">Series</span>
         </nav>
 
-        <div className="bg-white dark:bg-slate-900 rounded-xl p-8 md:p-8 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden mb-16">
+        <div className="bg-white dark:bg-slate-900 rounded-xl p-5 md:p-6 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden mb-12">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[80px] rounded-full -translate-y-1/2 translate-x-1/2" />
           
           <div className="relative z-10">
@@ -85,7 +84,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ slug: s
               <Layers size={14} />
               <span>Series bài viết</span>
             </div>
-            <h1 className="text-3xl md:text-5xl font-display font-bold text-slate-900 dark:text-white mb-6">
+            <h1 className="text-3xl md:text-5xl font-display font-bold text-slate-900 dark:text-white mb-4">
               {series.name}
             </h1>
             {series.description && (
@@ -99,12 +98,12 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ slug: s
           </div>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-4">
           {series.Post && series.Post.length > 0 ? (
             series.Post.map((post, index) => (
               <Link key={post.id} href={`/${post.Category?.slug || 'uncategorized'}/${post.slug}`} className="block group">
-                <article className="glass p-6 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-primary/30 transition-all hover:shadow-xl hover:shadow-primary/5 flex items-center">
-                  <div className="w-12 h-12 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 font-bold text-lg mr-6 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                <article className="glass p-5 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-primary/30 transition-all hover:shadow-xl hover:shadow-primary/5 flex items-center">
+                  <div className="w-12 h-12 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-slate-400 font-bold text-lg mr-4 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                     {index + 1}
                   </div>
                   <div className="flex-grow">

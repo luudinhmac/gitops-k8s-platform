@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Search, Calendar, User as UserIcon, Clock, ChevronRight, Eye, Terminal, MessageSquare, Tag as TagIcon, Layout } from 'lucide-react';
 import PageHeader from '@/components/layout/PageHeader';
+import UserAvatar from '@/components/common/UserAvatar';
+import Navbar from '@/components/layout/Navbar';
+import { LayoutGrid, Bookmark } from 'lucide-react';
 
 interface Post {
   id: number;
@@ -24,6 +27,7 @@ interface Post {
   User: {
     fullname: string;
     username: string;
+    avatar?: string | null;
   };
   Tag: {
     name: string;
@@ -37,6 +41,8 @@ interface Category {
     Post: number;
   };
 }
+
+import PostCard from '@/components/common/PostCard';
 
 function BlogContent() {
   const [posts, setPosts] = useState<Post[]>([]);
@@ -80,16 +86,16 @@ function BlogContent() {
   const series = Array.from(new Set(posts.map(p => p.series).filter(Boolean))) as string[];
 
   return (
-    <div className="pt-24 pb-12 px-4 min-h-screen">
+    <div className="pt-20 pb-8 px-4 min-h-screen">
       <div className="max-w-7xl mx-auto">
-        <PageHeader 
-          title="Trang chủ & Kiến thức"
+        <PageHeader
+          title="Blog chia sẻ Kiến thức"
           description="Chia sẻ kinh nghiệm về Linux, Cloud, Virtualization và hành trình làm nghề System Engineer."
           centered
           breadcrumbs={[]}
         />
 
-        <div className="flex flex-col lg:flex-row gap-4">
+        <div className="flex flex-col lg:flex-row gap-3">
           {/* Main Content (Posts) */}
           <div className="flex-grow lg:w-3/4">
             {loading ? (
@@ -99,83 +105,9 @@ function BlogContent() {
                 ))}
               </div>
             ) : filteredPosts.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {filteredPosts.map((post) => (
-                  <Link
-                    key={post.id}
-                    href={`/${post.Category?.slug || 'uncategorized'}/${post.slug}`}
-                    className="group flex flex-col bg-white dark:bg-slate-900 rounded-xl overflow-hidden border border-slate-100 dark:border-slate-800 hover-lift shadow-sm hover:shadow-xl transition-all h-full"
-                  >
-                    {/* Image Container */}
-                    <div className="relative h-40 overflow-hidden">
-                      {post.cover_image ? (
-                        <img
-                          src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${post.cover_image}`}
-                          alt={post.title}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center">
-                          <Terminal size={32} className="text-slate-300 dark:text-slate-700" />
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Content */}
-                    <div className="p-4 flex flex-col flex-grow">
-                      {/* Metadata */}
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-                        <div className="flex items-center text-primary bg-primary/5 px-1.5 py-0.5 rounded">
-                          <UserIcon size={10} className="mr-1" />
-                          {post.User?.fullname || post.User?.username || 'Ẩn danh'}
-                        </div>
-                        <div className="flex items-center">
-                          <Calendar size={10} className="mr-1 text-primary" />
-                          {post.created_at ? new Date(post.created_at).toLocaleDateString('vi-VN') : 'Đang cập nhật'}
-                        </div>
-                        <div className="flex items-center">
-                          <Eye size={10} className="mr-1 text-primary" />
-                          {post.views || 0}
-                        </div>
-                        <div className="flex items-center">
-                          <MessageSquare size={10} className="mr-1 text-primary" />
-                          0
-                        </div>
-                      </div>
-
-                      <h3 className="text-[15px] font-bold text-slate-900 dark:text-white mb-2 line-clamp-2 group-hover:text-primary transition-colors leading-snug">
-                        {post.title}
-                      </h3>
-
-                      {/* Badges moved below title */}
-                      <div className="flex flex-wrap gap-1.5 mb-2.5">
-                        {post.Category && (
-                          <span className="px-2 py-0.5 bg-primary/10 rounded-full text-[8px] font-bold uppercase tracking-wider text-primary">
-                            {post.Category.name}
-                          </span>
-                        )}
-                        {post.series && (
-                          <span className="px-2 py-0.5 bg-indigo-500/10 rounded-full text-[8px] font-bold uppercase tracking-wider text-indigo-500">
-                            Series: {post.series}
-                          </span>
-                        )}
-                      </div>
-
-                      <p className="text-slate-500 dark:text-slate-400 text-[10.5px] line-clamp-2 mb-3 leading-relaxed">
-                        {post.excerpt}
-                      </p>
-
-                      <div className="mt-auto flex items-center gap-4 pt-3">
-                        <div className="flex items-center text-[9px] font-bold text-slate-400 uppercase">
-                          <Clock size={10} className="mr-1 text-primary" />
-                          {post.readTime || 5} min
-                        </div>
-                        <div className="text-primary ml-auto group-hover:translate-x-1 transition-transform">
-                          <ChevronRight size={14} />
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                {filteredPosts.map((post, idx) => (
+                  <PostCard key={post.id} post={post} priority={idx < 6} />
                 ))}
               </div>
             ) : (
@@ -188,7 +120,7 @@ function BlogContent() {
           </div>
 
           {/* Sidebar */}
-          <aside className="lg:w-1/4 space-y-6">
+          <aside className="lg:w-1/4 space-y-4">
             {/* Sidebar Search - Refined: No Card, No Title */}
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">

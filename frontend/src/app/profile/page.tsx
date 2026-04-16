@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import { useAuth, User } from '@/context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import {
   User as UserIcon, FileText, Lock, Save, Loader2,
@@ -10,6 +10,11 @@ import {
   Calendar, Phone, MapPin, Briefcase, Mail, Trash2, Edit
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import UserAvatar from '@/components/common/UserAvatar';
+import Navbar from '@/components/layout/Navbar';
+import { User, Key, BookText } from 'lucide-react';
+import Badge from '@/components/common/Badge';
+import FormattedDate from '@/components/common/FormattedDate';
 
 export default function ProfilePage() {
   const { user, isAuthenticated, loading: authLoading, checkAuth } = useAuth();
@@ -22,6 +27,7 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
   const [saveMsg, setSaveMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [avatarLoading, setAvatarLoading] = useState(false);
 
   const [myPosts, setMyPosts] = useState<{
     id: number;
@@ -39,7 +45,7 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
-      router.push('/login');
+      router.push('/login?redirect=/profile');
     }
   }, [authLoading, isAuthenticated, router]);
 
@@ -56,7 +62,7 @@ export default function ProfilePage() {
     }
   }, [user]);
 
-  const fetchMyPosts = async () => {
+  const fetchMyPosts = useCallback(async () => {
     setPostsLoading(true);
     try {
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts/admin`, { credentials: 'include' });
@@ -65,13 +71,13 @@ export default function ProfilePage() {
       setMyPosts(mine);
     } catch (err) { console.error(err); }
     finally { setPostsLoading(false); }
-  };
+  }, [user?.id]);
 
   useEffect(() => {
     if (activeTab === 'posts' && user) {
       fetchMyPosts();
     }
-  }, [activeTab, user]);
+  }, [activeTab, user, fetchMyPosts]);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,6 +100,44 @@ export default function ProfilePage() {
     } finally {
       setSaveLoading(false);
       setTimeout(() => setSaveMsg(null), 4000);
+    }
+  };
+
+  const handleUploadAvatar = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setAvatarLoading(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const uploadRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload?type=avatar`, {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+
+      const uploadData = await uploadRes.json();
+      if (!uploadRes.ok) throw new Error(uploadData.message || 'Upload thất bại');
+
+      const avatarUrl = `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${uploadData.url}`;
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/${user?.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ avatar: avatarUrl })
+      });
+
+      if (!res.ok) throw new Error('Cập nhật avatar thất bại');
+      
+      await checkAuth();
+    } catch (err) {
+      alert((err as Error).message);
+    } finally {
+      setAvatarLoading(false);
+      if (e.target) e.target.value = '';
     }
   };
 
@@ -130,7 +174,7 @@ export default function ProfilePage() {
         method: 'DELETE', credentials: 'include'
       });
       fetchMyPosts();
-    } catch (err) { alert('Không thể xóa bài viết'); }
+    } catch { alert('Không thể xóa bài viết'); }
   };
 
   if (authLoading) {
@@ -143,44 +187,34 @@ export default function ProfilePage() {
     { id: 'password', label: 'Đổi mật khẩu', icon: Lock },
   ];
 
-  const formatDate = (dateStr: string) => {
-    if (!dateStr) return 'Chưa cập nhật';
-    try {
-      // Handle YYYY-MM-DD
-      const date = new Date(dateStr);
-      if (isNaN(date.getTime())) return dateStr;
-      return date.toLocaleDateString('vi-VN');
-    } catch (e) {
-      return dateStr;
-    }
-  };
-
   return (
-    <div className="pt-24 pb-12 px-4 min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="pt-20 pb-8 px-4 min-h-screen bg-slate-50 dark:bg-slate-950">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="flex items-center space-x-4 mb-10">
+        <div className="flex items-center space-x-4 mb-8">
           <Link href="/" className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-primary transition-all">
             <ArrowLeft size={20} />
           </Link>
-          <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center text-white text-2xl font-bold shadow-lg shadow-primary/30 overflow-hidden">
-              {user?.avatar ? <img src={user.avatar} alt={user.fullname} className="w-full h-full object-cover" /> : (user?.fullname || user?.username)?.[0]?.toUpperCase()}
+          <div className="flex flex-col md:flex-row items-center gap-6">
+            <div className="relative group/avatar cursor-pointer">
+              <UserAvatar user={user} size="xl" className="rounded-2xl border-4 border-white dark:border-slate-800 shadow-xl" />
+              <label className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover/avatar:opacity-100 rounded-2xl transition-opacity cursor-pointer">
+                {avatarLoading ? <Loader2 size={24} className="text-white animate-spin" /> : <Edit size={24} className="text-white drop-shadow-md" />}
+                <span className="text-[10px] text-white font-bold uppercase mt-1">Đổi ảnh</span>
+                <input type="file" className="hidden" accept="image/*" onChange={handleUploadAvatar} disabled={avatarLoading} />
+              </label>
             </div>
             <div>
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{user?.fullname || user?.username}</h1>
-              <div className={cn(
-                "inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider mt-1",
-                user?.role === 'admin' ? "bg-amber-100 text-amber-700" : "bg-blue-100 text-blue-700"
-              )}>
+              <Badge type="role" variant={user?.role as any} size="sm" className="mt-1">
                 {user?.role || 'editor'}
-              </div>
+              </Badge>
             </div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-2 mb-8 bg-white dark:bg-slate-900 p-1.5 rounded-xl w-fit shadow-sm border border-slate-200 dark:border-slate-800">
+        <div className="flex space-x-2 mb-6 bg-white dark:bg-slate-900 p-1.5 rounded-xl w-fit shadow-sm border border-slate-200 dark:border-slate-800">
           {tabs.map(tab => (
             <button
               key={tab.id}
@@ -189,7 +223,7 @@ export default function ProfilePage() {
                 if (tab.id !== 'info') setIsEditing(false);
               }}
               className={cn(
-                "flex items-center px-5 py-2.5 rounded-xl text-sm font-bold transition-all",
+                "flex items-center px-5 py-2 rounded-xl text-sm font-bold transition-all",
                 activeTab === tab.id
                   ? "bg-primary text-white shadow-lg shadow-primary/20"
                   : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
@@ -202,12 +236,12 @@ export default function ProfilePage() {
         </div>
 
         {/* Tab content area */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-xl shadow-sm">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-xl shadow-sm">
           {activeTab === 'info' && (
             <div>
               {!isEditing ? (
                 <div className="animate-fade-in">
-                  <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white">Thông tin cá nhân</h2>
                     <button
                       onClick={() => setIsEditing(true)}
@@ -227,13 +261,13 @@ export default function ProfilePage() {
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {[
                       { label: 'Họ và tên', value: user?.fullname, icon: UserIcon },
                       { label: 'Email', value: user?.email, icon: Mail },
                       { label: 'Số điện thoại', value: user?.phone, icon: Phone },
                       { label: 'Ngành nghề', value: user?.profession, icon: Briefcase },
-                      { label: 'Ngày sinh', value: formatDate(user?.birthday || ''), icon: Calendar },
+                      { label: 'Ngày sinh', value: <FormattedDate date={user?.birthday || ''} />, icon: Calendar },
                       { label: 'Địa chỉ', value: user?.address, icon: MapPin },
                     ].map(field => (
                       <div key={field.label} className="group">
@@ -250,7 +284,7 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <div className="animate-slide-up">
-                  <div className="flex items-center justify-between mb-8">
+                  <div className="flex items-center justify-between mb-6">
                     <h2 className="text-xl font-bold text-slate-900 dark:text-white">Cập nhật thông tin</h2>
                     <button
                       onClick={() => setIsEditing(false)}
@@ -260,7 +294,7 @@ export default function ProfilePage() {
                     </button>
                   </div>
 
-                  <form onSubmit={handleSaveProfile} className="space-y-6">
+                  <form onSubmit={handleSaveProfile} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {[
                         { label: 'Họ và tên', key: 'fullname', placeholder: 'Nguyễn Văn A', icon: UserIcon },

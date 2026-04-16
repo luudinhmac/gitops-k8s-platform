@@ -1,8 +1,19 @@
-import { Controller, Get, Post, Body, Param, Delete, UseGuards, Req, Patch, ForbiddenException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Param,
+  Delete,
+  UseGuards,
+  Patch,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { SeriesService } from './series.service';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
+import { CreateSeriesDto, UpdateSeriesDto } from './dto/series.dto';
 
 @Controller('series')
 export class SeriesController {
@@ -21,21 +32,24 @@ export class SeriesController {
   @Post()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin', 'editor')
-  create(@Req() req: any, @Body() body: { name: string; description?: string }) {
-    return this.seriesService.create(body);
+  create(@Body() createSeriesDto: CreateSeriesDto) {
+    return this.seriesService.create(createSeriesDto);
   }
 
   @Patch(':id')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin', 'editor')
-  update(@Param('id') id: string, @Req() req: any, @Body() body: { name?: string; description?: string }) {
-    return this.seriesService.update(+id, body);
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body() updateSeriesDto: UpdateSeriesDto,
+  ) {
+    return this.seriesService.update(id, updateSeriesDto);
   }
 
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin', 'editor')
-  remove(@Param('id') id: string, @Req() req: any) {
-    return this.seriesService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.seriesService.remove(id);
   }
 }

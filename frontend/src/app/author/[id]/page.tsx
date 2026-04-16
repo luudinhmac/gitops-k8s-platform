@@ -2,8 +2,7 @@
 
 import { useState, useEffect, use } from 'react';
 import Link from 'next/link';
-import { Calendar, Clock, ChevronRight, User as UserIcon, Mail, Eye } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Calendar, User as UserIcon, Mail, Eye } from 'lucide-react';
 
 interface Post {
   id: number;
@@ -86,7 +85,14 @@ export default function AuthorPage({ params }: { params: Promise<{ id: string }>
            <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-500/5 blur-[60px] rounded-full" />
            
            <div className="w-24 h-24 md:w-32 md:h-32 rounded-full bg-gradient-to-tr from-primary to-indigo-500 flex items-center justify-center text-white text-3xl md:text-5xl font-bold mb-6 relative z-10 shadow-xl shadow-primary/20">
-             {author.avatar ? <img src={author.avatar} className="w-full h-full rounded-full object-cover" /> : (author.fullname || author.username)?.[0]?.toUpperCase()}
+             {author.avatar ? (
+               // eslint-disable-next-line @next/next/no-img-element
+               <img 
+                 src={author.avatar} 
+                 alt={author.fullname || author.username} 
+                 className="w-full h-full rounded-full object-cover" 
+               />
+             ) : (author.fullname || author.username)?.[0]?.toUpperCase()}
            </div>
            
            <h1 className="text-2xl md:text-3xl font-display font-bold text-slate-900 dark:text-white mb-1.5 relative z-10">

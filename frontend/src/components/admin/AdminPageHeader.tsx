@@ -44,12 +44,13 @@ export default function AdminPageHeader({
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
   const headerClasses = cn(
     "z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-all",
-    sticky ? "sticky top-0 mb-6" : "mb-6"
+    sticky ? "sticky top-0 mb-4" : "mb-4"
   );
 
   const containerClasses = cn(

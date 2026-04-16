@@ -63,14 +63,14 @@ export default function RegisterPage() {
       <div className="max-w-2xl w-full">
         <Link 
           href="/" 
-          className="inline-flex items-center text-sm text-slate-500 hover:text-primary transition-colors mb-8 group"
+          className="inline-flex items-center text-sm text-slate-500 hover:text-primary transition-colors mb-6 group"
         >
           <ArrowLeft size={16} className="mr-2 group-hover:-translate-x-1 transition-transform" />
           Quay lại trang chủ
         </Link>
 
-        <div className="glass p-8 md:p-10 rounded-xl shadow-2xl overflow-hidden">
-          <div className="text-center mb-10">
+        <div className="glass p-6 md:p-8 rounded-xl shadow-2xl overflow-hidden">
+          <div className="text-center mb-8">
             <h1 className="text-3xl font-display font-bold text-slate-900 dark:text-white mb-2">
               Tạo tài khoản
             </h1>
@@ -79,7 +79,7 @@ export default function RegisterPage() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive text-sm text-center">
                 {error}

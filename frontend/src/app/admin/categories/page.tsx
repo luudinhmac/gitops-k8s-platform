@@ -1,21 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
 import { 
-  ArrowLeft, Plus, Trash2, Layout, Loader2, FileText, Search, Menu, Home, LogOut, Users, Settings
+  Plus, Trash2, Layout, Loader2, FileText, Settings
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import AdminSidebar from '@/components/admin/AdminSidebar';
 import ConfirmationModal from '@/components/admin/ConfirmationModal';
-import { useSidebar } from '@/context/SidebarContext';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminCard from '@/components/admin/AdminCard';
 
 export default function CategoriesPage() {
-  const { user, isAuthenticated } = useAuth();
-  const { setSidebarOpen } = useSidebar();
   const [categories, setCategories] = useState<{ id: number; name: string; created_at?: string; _count?: { Post: number } }[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -123,10 +116,10 @@ export default function CategoriesPage() {
         searchPlaceholder="Tìm danh mục..."
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Form */}
         <div className="lg:col-span-1">
-           <AdminCard title="Tạo mới" icon={Plus} padding="p-5 md:p-6" className="sticky top-24">
+           <AdminCard title="Tạo mới" icon={Plus} className="sticky top-24">
               <form onSubmit={handleAddCategory} className="space-y-4">
                  <div>
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Tên danh mục</label>
@@ -154,7 +147,7 @@ export default function CategoriesPage() {
                        <p className="text-slate-500 font-medium">Không tìm thấy danh mục nào.</p>
                     </div>
                  ) : filteredCategories.map(cat => (
-                    <div key={cat.id} className="p-6 md:p-8 flex items-center justify-between group hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-all">
+                    <div key={cat.id} className="p-4 md:p-6 flex items-center justify-between group hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-all">
                        <div className="flex items-center space-x-4 flex-1 min-w-0">
                           <div className="w-12 h-12 bg-primary/5 rounded-xl flex items-center justify-center text-primary flex-shrink-0 group-hover:scale-110 transition-transform">
                              <FileText size={20} />

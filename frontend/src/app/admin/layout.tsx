@@ -9,7 +9,7 @@ import { SidebarProvider, useSidebar } from '@/context/SidebarContext';
 import { cn } from '@/lib/utils';
 
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, loading, user } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
   const { sidebarOpen, setSidebarOpen, isCollapsed } = useSidebar();
   const pathname = usePathname();
@@ -17,7 +17,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!loading) {
       if (!isAuthenticated) {
-        router.push('/login');
+        router.push(`/login?redirect=${pathname}`);
       }
     }
   }, [isAuthenticated, loading, router]);
@@ -45,7 +45,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
         "flex-1 w-full relative min-h-screen transition-all duration-300",
         isCollapsed ? "lg:ml-20" : "lg:ml-64"
       )}>
-        <div className="p-4 md:p-6 lg:p-8 max-w-[1400px] mx-auto">
+        <div className="p-3 md:p-4 lg:p-6 max-w-[1400px] mx-auto">
           {children}
         </div>
       </main>

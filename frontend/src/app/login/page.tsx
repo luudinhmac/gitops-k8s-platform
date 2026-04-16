@@ -1,13 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Lock, Mail, Eye, EyeOff, Loader2, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { Suspense } from 'react';
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectPath = searchParams.get('redirect') || '/admin';
   const { login, isAuthenticated, loading: authLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -16,9 +19,9 @@ export default function LoginPage() {
   // Auto-redirect if already logged in
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      router.push('/admin');
+      router.push(redirectPath);
     }
-  }, [authLoading, isAuthenticated, router]);
+  }, [authLoading, isAuthenticated, router, redirectPath]);
   
   const [formData, setFormData] = useState({
     username: '',
@@ -46,6 +49,7 @@ export default function LoginPage() {
 
       // Đăng nhập thành công - Cập nhật AuthContext
       login(data.user);
+      router.push(redirectPath);
     } catch (err: unknown) {
       setError((err as Error).message);
     } finally {
@@ -63,15 +67,15 @@ export default function LoginPage() {
         {/* Back to Home */}
         <Link 
           href="/" 
-          className="inline-flex items-center text-sm text-slate-500 hover:text-primary transition-colors mb-8 group"
+          className="inline-flex items-center text-sm text-slate-500 hover:text-primary transition-colors mb-6 group"
         >
           <ArrowLeft size={16} className="mr-2 group-hover:-translate-x-1 transition-transform" />
           Quay lại trang chủ
         </Link>
 
         {/* Login Card */}
-        <div className="glass p-8 md:p-10 rounded-xl shadow-2xl">
-          <div className="text-center mb-10">
+        <div className="glass p-6 md:p-8 rounded-xl shadow-2xl">
+          <div className="text-center mb-8">
             <h1 className="text-3xl font-display font-bold text-slate-900 dark:text-white mb-2">
               Chào mừng trở lại
             </h1>
@@ -80,7 +84,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-xl text-destructive text-sm text-center">
                 {error}
@@ -157,5 +161,13 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-950"><Loader2 size={40} className="animate-spin text-primary" /></div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

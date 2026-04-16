@@ -1,77 +1,107 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Req,
+  Query,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { AuthGuard } from '@nestjs/passport';
-import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
+import type { AuthenticatedRequest } from '../users/interfaces/user.interface';
+import { CreatePostDto, UpdatePostDto } from './dto/create-post.dto';
 
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Get()
-  findAll(@Query('q') q: string) {
-    return this.postsService.findAll(null, false, q);
+  findAll(@Query('q') query?: string) {
+    return this.postsService.findAll(undefined, false, query);
   }
 
   @Get('admin')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('admin', 'editor', 'user')
-  findAllAdmin(@Req() req: any) {
-    return this.postsService.findAll(req.user, true);
+  findAllAdmin(@Req() req: AuthenticatedRequest, @Query('q') query?: string) {
+    return this.postsService.findAll(req.user, true, query);
   }
 
   @Get(':idOrSlug')
-  findOne(@Param('idOrSlug') idOrSlug: string, @Query('action') action: string) {
-    const isView = action === 'view';
-    return this.postsService.findOne(idOrSlug, isView);
-  }
-
-  @Get(':id/like-status')
-  @UseGuards(AuthGuard('jwt'))
-  checkLikeStatus(@Param('id') id: string, @Req() req: any) {
-    // Call a new service method or just query directly if we injected Prisma.
-    // Let's add checkLikeStatus in service.
-    return this.postsService.checkLikeStatus(+id, req.user.id);
-  }
-
-  @Post(':id/like')
-  @UseGuards(AuthGuard('jwt'))
-  toggleLike(@Param('id') id: string, @Req() req: any) {
-    return this.postsService.toggleLike(+id, req.user.id);
+  findOne(
+    @Param('idOrSlug') idOrSlug: string,
+    @Query('action') action?: string,
+  ) {
+    const incrementView = action === 'view';
+    return this.postsService.findOne(idOrSlug, incrementView);
   }
 
   @Post()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('admin', 'editor', 'user')
-  create(@Req() req: any, @Body() createPostDto: any) {
+  create(
+    @Req() req: AuthenticatedRequest,
+    @Body() createPostDto: CreatePostDto,
+  ) {
     return this.postsService.create(req.user, createPostDto);
   }
 
   @Patch(':id')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('admin', 'editor', 'user')
-  update(@Param('id') id: string, @Req() req: any, @Body() updatePostDto: any) {
-    return this.postsService.update(+id, req.user, updatePostDto);
+  update(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: AuthenticatedRequest,
+    @Body() updatePostDto: UpdatePostDto,
+  ) {
+    return this.postsService.update(id, req.user, updatePostDto);
   }
 
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('admin', 'editor', 'user')
-  remove(@Param('id') id: string, @Req() req: any) {
-    return this.postsService.remove(+id, req.user);
+  remove(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.postsService.remove(id, req.user);
   }
 
-  @Patch(':id/toggle-pin')
+  @Post(':id/pin')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('admin', 'editor', 'user')
-  togglePin(@Param('id') id: string, @Req() req: any) {
-    return this.postsService.togglePin(+id, req.user);
+  togglePin(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.postsService.togglePin(id, req.user);
   }
 
-  @Patch(':id/toggle-publish')
+  @Post(':id/publish')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('admin', 'editor', 'user')
-  togglePublish(@Param('id') id: string, @Req() req: any) {
-    return this.postsService.togglePublish(+id, req.user);
+  togglePublish(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.postsService.togglePublish(id, req.user);
+  }
+
+  @Post(':id/like')
+  @UseGuards(AuthGuard('jwt'))
+  toggleLike(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.postsService.toggleLike(id, req.user.id);
+  }
+
+  @Get(':id/like-status')
+  @UseGuards(AuthGuard('jwt'))
+  checkLikeStatus(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: AuthenticatedRequest,
+  ) {
+    return this.postsService.checkLikeStatus(id, req.user.id);
   }
 }

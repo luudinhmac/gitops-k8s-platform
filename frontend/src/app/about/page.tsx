@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronRight, Code2, Layers, Cpu, Globe, Rocket, Terminal, Database, Shield, Zap, Sparkles, Cloud } from 'lucide-react';
+import { ChevronRight, Terminal, Database, Sparkles, Cloud } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import AboutSection from '@/components/home/AboutSection';
+import ResumeTimeline from '@/components/home/ResumeTimeline';
 import ProjectsSection from '@/components/home/ProjectsSection';
 import CoursesSection from '@/components/home/CoursesSection';
 
@@ -35,7 +36,7 @@ export default function AboutPortfolioPage() {
   return (
     <div suppressHydrationWarning={true} className="relative overflow-hidden">
       {/* Hero Section */}
-      <section className="relative pt-32 pb-12 lg:pt-48 lg:pb-32 px-4 overflow-hidden">
+      <section className="relative pt-24 pb-8 lg:pt-36 lg:pb-24 px-4 overflow-hidden">
         {/* Animated Background Shapes */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none">
           <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px] animate-pulse" />
@@ -44,7 +45,7 @@ export default function AboutPortfolioPage() {
 
         <div suppressHydrationWarning={true} className="max-w-7xl mx-auto">
           <div suppressHydrationWarning={true} className="text-center">
-            <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800 mb-8 animate-fade-in">
+            <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800 mb-6 animate-fade-in">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
@@ -52,12 +53,12 @@ export default function AboutPortfolioPage() {
               <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Sẵn sàng cho những dự án mới</span>
             </div>
 
-            <h1 className="text-xl md:text-2xl lg:text-4xl font-display font-bold text-slate-900 dark:text-white mb-8 tracking-tight leading-[1.1]">
+            <h1 className="text-xl md:text-2xl lg:text-4xl font-display font-bold text-slate-900 dark:text-white mb-6 tracking-tight leading-[1.1]">
               Xin chào, tôi là <br />
               <span className="text-primary drop-shadow-sm">LƯU ĐÌNH MÁC</span>
             </h1>
 
-            <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed mb-12 animate-slide-up delay-200">
+            <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed mb-8 animate-slide-up delay-200">
               chuyên về Hạ tầng Đám mây & Tự động hóa. Tôi xây dựng, tối ưu hóa và duy trì các hệ thống hạ tầng sẵn sàng cao (High Availability) cho doanh nghiệp.
             </p>
 
@@ -77,19 +78,19 @@ export default function AboutPortfolioPage() {
       {/* Services/Features Grid */}
       <section className="py-12 px-4 bg-slate-50/50 dark:bg-slate-900/20">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {services.map((service, index) => (
               <div
                 key={service.title}
                 className={cn(
-                  "p-8 rounded-xl glass hover-lift group animate-slide-up",
+                  "p-6 rounded-xl glass hover-lift group animate-slide-up",
                   index === 0 ? "delay-100" : index === 1 ? "delay-200" : "delay-300"
                 )}
               >
-                <div className={cn("w-14 h-14 rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform", service.bg, service.color)}>
+                <div className={cn("w-14 h-14 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform", service.bg, service.color)}>
                   <service.icon size={28} />
                 </div>
-                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-4 italic italic--vibrant">
+                <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2 italic italic--vibrant">
                   {service.title}
                 </h3>
                 <p className="text-slate-600 dark:text-slate-400 leading-relaxed italic--vibrant">
@@ -104,6 +105,11 @@ export default function AboutPortfolioPage() {
       {/* About Section */}
       <section id="about">
         <AboutSection />
+      </section>
+
+      {/* Resume & Roadmap Section */}
+      <section id="resume">
+        <ResumeTimeline />
       </section>
 
       {/* Projects Section */}

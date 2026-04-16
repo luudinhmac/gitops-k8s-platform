@@ -3,17 +3,18 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  Users, Plus, Search, Loader2, Edit, Trash2, Shield, User as UserIcon,
-  Mail, Lock, Eye, EyeOff, AlertCircle, Check, X, Menu,
+  Users, Plus, Loader2, Trash2, User as UserIcon,
+  Mail, Lock, Eye, EyeOff, AlertCircle, Check, X,
   Phone, Briefcase, Calendar, MapPin
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
-import AdminSidebar from '@/components/admin/AdminSidebar';
 import ConfirmationModal from '@/components/admin/ConfirmationModal';
-import { useSidebar } from '@/context/SidebarContext';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminCard from '@/components/admin/AdminCard';
+import UserAvatar from '@/components/common/UserAvatar';
+import Badge from '@/components/common/Badge';
+import FormattedDate from '@/components/common/FormattedDate';
 
 interface AdminUser {
   id: number;
@@ -33,7 +34,6 @@ interface AdminUser {
 
 export default function UsersPage() {
   const { user: currentUser, isAuthenticated, loading: authLoading } = useAuth();
-  const { setSidebarOpen } = useSidebar();
   const router = useRouter();
 
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -63,7 +63,7 @@ export default function UsersPage() {
     if (!authLoading && (!isAuthenticated || currentUser?.role !== 'admin')) {
       router.push('/admin');
     }
-  }, [authLoading, isAuthenticated, currentUser]);
+  }, [authLoading, isAuthenticated, currentUser, router]);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -225,7 +225,7 @@ export default function UsersPage() {
 
       {statusMsg && (
         <div className={cn(
-          "mb-6 p-4 rounded-xl text-sm font-bold flex items-center space-x-3 animate-in slide-in-from-top-4 duration-300",
+          "mb-4 p-4 rounded-xl text-sm font-bold flex items-center space-x-3 animate-in slide-in-from-top-4 duration-300",
           statusMsg.type === 'success' ? "bg-emerald-50 text-emerald-600 border border-emerald-100" : "bg-red-50 text-red-600 border border-red-100"
         )}>
           {statusMsg.type === 'success' ? <Check size={18} /> : <AlertCircle size={18} />}
@@ -236,7 +236,7 @@ export default function UsersPage() {
         </div>
       )}
 
-      <div className="space-y-6">
+      <div className="space-y-4">
         <AdminCard padding="p-0" title={`Danh sách thành viên (${filteredUsers.length})`} icon={Users}>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -257,9 +257,7 @@ export default function UsersPage() {
                   )}>
                     <td className="px-6 py-4">
                       <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold overflow-hidden">
-                          {u.avatar ? <img src={u.avatar} alt={u.fullname} className="w-full h-full object-cover" /> : (u.fullname || u.username)?.[0]?.toUpperCase()}
-                        </div>
+                        <UserAvatar user={u} size="md" />
                         <div>
                           <p onClick={() => setViewUser(u)} className="font-bold text-slate-900 dark:text-white hover:text-primary cursor-pointer transition-colors">
                             {u.fullname || u.username}
@@ -270,7 +268,9 @@ export default function UsersPage() {
                     </td>
                     <td className="px-6 py-4">
                       <p className="text-slate-600 dark:text-slate-300">{u.email || 'N/A'}</p>
-                      <p className="text-[10px] text-slate-400 font-medium">Tham gia: {u.created_at ? new Date(u.created_at).toLocaleDateString('vi-VN') : 'N/A'}</p>
+                      <p className="text-[10px] text-slate-400 font-medium">
+                        Tham gia: <FormattedDate date={u.created_at || ''} className="font-bold" />
+                      </p>
                     </td>
                     <td className="px-6 py-4">
                       <select
@@ -342,19 +342,14 @@ export default function UsersPage() {
             </button>
             <div className="px-8 pb-8">
               <div className="flex flex-col sm:flex-row sm:items-end sm:space-x-6 -mt-10 mb-8 px-2">
-                <div className="w-24 h-24 rounded-2xl border-4 border-white dark:border-slate-950 bg-slate-200 dark:bg-slate-800 shadow-xl overflow-hidden flex items-center justify-center">
-                  {viewUser.avatar ? <img src={viewUser.avatar} className="w-full h-full object-cover" /> : <UserIcon size={40} className="text-slate-400" />}
-                </div>
+                <UserAvatar user={viewUser} size="lg" className="border-4 border-white dark:border-slate-950 shadow-xl" />
                 <div className="mt-4 sm:mt-0 pb-1">
                   <h3 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">{viewUser.fullname || viewUser.username}</h3>
                   <div className="flex items-center mt-1 space-x-3">
                     <span className="text-xs font-bold text-slate-400">@{viewUser.username}</span>
-                    <span className={cn(
-                      "px-2 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-widest",
-                      viewUser?.role === 'admin' ? "bg-amber-100 text-amber-600" :
-                        viewUser?.role === 'editor' ? "bg-blue-100 text-blue-600" :
-                          "bg-slate-100 text-slate-600"
-                    )}>{viewUser?.role}</span>
+                    <Badge type="role" variant={viewUser?.role as any} size="xs">
+                      {viewUser?.role}
+                    </Badge>
                   </div>
                 </div>
               </div>
@@ -366,7 +361,7 @@ export default function UsersPage() {
                   { label: 'Ngành nghề', value: viewUser.profession, icon: Briefcase },
                   { label: 'Ngày sinh', value: viewUser?.birthday, icon: Calendar },
                   { label: 'Địa chỉ', value: viewUser?.address, icon: MapPin },
-                  { label: 'Ngày tham gia', value: viewUser?.created_at ? new Date(viewUser.created_at).toLocaleString('vi-VN') : null, icon: Check },
+                  { label: 'Ngày tham gia', value: <FormattedDate date={viewUser?.created_at || ''} />, icon: Check },
                 ].map(item => (
                   <div key={item.label}>
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">{item.label}</label>

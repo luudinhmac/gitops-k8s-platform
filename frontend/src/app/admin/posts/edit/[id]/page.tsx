@@ -187,11 +187,11 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
       />
 
       <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-4">
-            <AdminCard padding="p-5 md:p-6">
-                <div className="mb-5">
+            <AdminCard>
+                <div className="mb-4">
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Tiêu đề bài viết</label>
                   <input type="text" placeholder="Nhập tiêu đề..." value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl outline-none focus:ring-2 focus:ring-primary text-base font-bold placeholder:text-slate-400" />
@@ -270,7 +270,8 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
                 <div className="relative aspect-video bg-slate-50 dark:bg-slate-800 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-slate-400 overflow-hidden group">
                    {formData.cover_image ? (
                      <>
-                       <img src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${formData.cover_image}`} alt="Cover" className="w-full h-full object-cover" />
+                       {/* eslint-disable-next-line @next/next/no-img-element */}
+                       <img src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${formData.cover_image}`} alt="Post Cover" className="w-full h-full object-cover" />
                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                          <span className="text-white text-[10px] font-bold bg-black/50 px-3 py-1.5 rounded-lg cursor-pointer">Thay đổi ảnh</span>
                        </div>
@@ -293,7 +294,7 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
                        form.append('file', file);
                        
                        try {
-                         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload`, {
+                         const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload?type=post`, {
                            method: 'POST',
                            body: form,
                            credentials: 'include'
@@ -304,7 +305,7 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
                          } else {
                            alert(data.message || 'Lỗi tải ảnh lên');
                          }
-                       } catch (err) {
+                       } catch {
                          alert('Không thể tải ảnh lên!');
                        }
                      }}
