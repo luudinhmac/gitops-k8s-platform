@@ -4,7 +4,7 @@ import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  
+
   // Set Global Prefix
   app.setGlobalPrefix('api');
 
@@ -16,9 +16,9 @@ async function bootstrap() {
     'http://localhost:3000',
     'http://localhost:3001',
     'http://127.0.0.1:3000',
-    'http://127.0.0.1:3001'
+    'http://127.0.0.1:3001',
   ];
-  
+
   app.enableCors({
     origin: allowedOrigins,
     credentials: true,
@@ -29,4 +29,6 @@ async function bootstrap() {
   await app.listen(port);
   console.log(`Backend is running at http://localhost:${port}/api`);
 }
-bootstrap();
+bootstrap().catch((err) => {
+  console.error('Error during bootstrap:', err);
+});

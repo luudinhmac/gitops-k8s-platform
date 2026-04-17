@@ -8,9 +8,11 @@ import { Menu, X, ChevronRight, LayoutDashboard, User, LogOut, PenSquare, Chevro
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 
+import UserAvatar from '@/components/common/UserAvatar';
+import Badge from '@/components/common/Badge';
+
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const { user, isAuthenticated, loading, logout } = useAuth();
   const { theme, setTheme } = useTheme();
@@ -34,9 +36,7 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    // Navbar is now permanently fixed at the top
   }, []);
 
   // Đóng dropdown khi click ra ngoài
@@ -53,11 +53,8 @@ export default function Navbar() {
   if (pathname.startsWith('/admin')) return null;
 
   return (
-    <nav className={cn("fixed top-0 left-0 right-0 z-50 transition-all duration-300 px-4", scrolled ? "py-3" : "py-6")}>
-      <div suppressHydrationWarning={true} className={cn(
-        "max-w-7xl mx-auto glass rounded-xl md:rounded-xl px-6 transition-all duration-300",
-        scrolled ? "py-3 shadow-lg" : "py-4 bg-transparent border-transparent"
-      )}>
+    <nav className="fixed top-0 left-0 right-0 z-50">
+      <div suppressHydrationWarning={true} className="max-w-7xl mx-auto glass md:rounded-b-xl px-6 py-2.5 md:py-3.5 shadow-sm border-b md:border-b md:border-x border-slate-200/50 dark:border-slate-800/50 transition-colors">
         <div suppressHydrationWarning={true} className="flex items-center justify-between">
           <Link href="/" className="text-xl md:text-2xl font-display font-bold text-gradient flex-shrink-0">
             Portfolio
@@ -109,11 +106,9 @@ export default function Navbar() {
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex items-center space-x-2.5 pl-1 pr-3 py-1 glass rounded-full hover:shadow-md transition-all group"
+                    className="flex items-center space-x-3 px-1.5 py-1 glass rounded-full hover:shadow-md transition-all group"
                   >
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center text-white text-sm font-bold">
-                      {(user.fullname || user.username)?.[0]?.toUpperCase()}
-                    </div>
+                    <UserAvatar user={user} size="sm" />
                     <span className="text-sm font-semibold text-slate-700 dark:text-slate-200 max-w-[100px] truncate">
                       {user.fullname || user.username}
                     </span>
@@ -126,10 +121,9 @@ export default function Navbar() {
                   )}>
                     <div className="p-3 border-b border-slate-100 dark:border-slate-800">
                       <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{user.fullname || user.username}</p>
-                      <p className={cn(
-                        "text-[10px] font-extrabold uppercase tracking-wider mt-0.5",
-                        user.role === 'admin' ? "text-amber-500" : "text-blue-500"
-                      )}>{user.role}</p>
+                      <Badge type="role" variant={user.role as any} size="xs" className="mt-1">
+                        {user.role}
+                      </Badge>
                     </div>
 
                     <div className="p-2 space-y-0.5">
@@ -160,7 +154,7 @@ export default function Navbar() {
                   </div>
                 </div>
               ) : (
-                <Link href="/login"
+                <Link href={`/login?redirect=${pathname}`}
                   className="px-5 py-2.5 bg-primary text-white rounded-full text-sm font-medium hover:opacity-90 transition-all shadow-md shadow-primary/20 flex items-center group">
                   Đăng nhập
                   <ChevronRight size={16} className="ml-1 group-hover:translate-x-1 transition-transform" />
@@ -204,12 +198,12 @@ export default function Navbar() {
             isAuthenticated && user ? (
               <div className="pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
                 <div className="flex items-center space-x-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center text-white font-bold">
-                    {(user.fullname || user.username)?.[0]?.toUpperCase()}
-                  </div>
+                  <UserAvatar user={user} size="md" />
                   <div>
                     <p className="font-bold text-slate-900 dark:text-white text-sm">{user.fullname || user.username}</p>
-                    <p className="text-xs text-slate-400">{user.role}</p>
+                    <Badge type="role" variant={user.role as any} size="xs" className="mt-1">
+                      {user.role}
+                    </Badge>
                   </div>
                 </div>
                 <Link href="/profile" onClick={() => setIsOpen(false)}

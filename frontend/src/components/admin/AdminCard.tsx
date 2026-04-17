@@ -21,7 +21,7 @@ export default function AdminCard({
   description,
   className,
   headerAction,
-  padding = "p-5 md:p-6"
+  padding = "p-4 md:p-5"
 }: AdminCardProps) {
   return (
     <div className={cn(
@@ -29,7 +29,7 @@ export default function AdminCard({
       className
     )}>
       {(title || Icon || headerAction) && (
-        <div className="px-5 md:px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <div className="px-4 md:px-5 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
           <div className="flex items-center">
             {Icon && <Icon size={14} className="mr-2 text-primary" />}
             <div>

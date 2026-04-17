@@ -22,11 +22,15 @@ interface NavContentProps {
     id: number;
     fullname: string;
     role: string;
+    avatar?: string | null;
   } | null;
   logout: () => void;
   isCollapsed?: boolean;
   setIsCollapsed?: (collapsed: boolean) => void;
 }
+
+import UserAvatar from '@/components/common/UserAvatar';
+import Badge from '@/components/common/Badge';
 
 const NavContent = ({ mobile = false, setSidebarOpen, pathname, user, logout, isCollapsed = false, setIsCollapsed }: NavContentProps) => {
   const menuItems = [
@@ -45,7 +49,7 @@ const NavContent = ({ mobile = false, setSidebarOpen, pathname, user, logout, is
 
   return (
     <>
-      <div className={cn("p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between", mobile && "p-4", !mobile && isCollapsed && "px-0 justify-center")}>
+      <div className={cn("p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between", mobile && "p-3.5", !mobile && isCollapsed && "px-0 justify-center")}>
         <Link
           href="/"
           className={cn("text-lg font-display font-bold text-slate-900 dark:text-white transition-all", mobile && "text-base", !mobile && isCollapsed && "text-[0px] opacity-0 overflow-hidden w-0")}
@@ -68,7 +72,7 @@ const NavContent = ({ mobile = false, setSidebarOpen, pathname, user, logout, is
             title={isCollapsed ? item.label : undefined}
             onClick={() => mobile && setSidebarOpen(false)}
             className={cn(
-              "w-full flex items-center px-3 py-2.5 rounded-xl text-xs font-bold transition-all",
+              "w-full flex items-center px-3 py-2 rounded-xl text-xs font-bold transition-all",
               isCollapsed ? "justify-center px-0" : "space-x-3",
               isActive(item.href)
                 ? "bg-primary/10 text-primary"
@@ -124,28 +128,28 @@ const NavContent = ({ mobile = false, setSidebarOpen, pathname, user, logout, is
       </div>
 
       {/* User Session Info */}
-      <div className={cn(
-        "p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50",
-        isCollapsed && "p-2"
-      )}>
+      <Link 
+        href="/profile"
+        onClick={() => mobile && setSidebarOpen(false)}
+        className={cn(
+          "block p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer",
+          isCollapsed && "p-2"
+        )}
+      >
         <div className={cn("flex items-center space-x-3", isCollapsed && "justify-center space-x-0")}>
-          <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary text-xs font-bold overflow-hidden shrink-0">
-            {(user as any)?.avatar ? <img src={(user as any).avatar} alt={user?.fullname} className="w-full h-full object-cover" /> : (user?.fullname || 'A')?.[0]?.toUpperCase()}
-          </div>
+          <UserAvatar user={user} size="sm" className="rounded-lg" />
           {!isCollapsed && (
             <div className="min-w-0 pr-2">
               <p className="text-[11px] font-bold text-slate-900 dark:text-white truncate">{user?.fullname}</p>
               <div className="flex items-center mt-0.5">
-                <div className={cn(
-                  "w-1.5 h-1.5 rounded-full mr-1.5",
-                  user?.role === 'admin' ? "bg-amber-400" : "bg-blue-400"
-                )} />
-                <p className="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest">{user?.role}</p>
+                <Badge type="role" variant={user?.role as any} size="xs">
+                  {user?.role}
+                </Badge>
               </div>
             </div>
           )}
         </div>
-      </div>
+      </Link>
     </>
   );
 };

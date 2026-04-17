@@ -128,5 +128,20 @@ Thiết kế này tối ưu hóa hiệu năng bằng cách chạy Database Nativ
 - Cookie định danh được cấu hình `httpOnly` và `SameSite: Lax`.
 - Chỉ cho phép các domain được định nghĩa trong `ALLOWED_ORIGINS` truy cập API.
 
+
+# Database & Seeding
+npx prisma db push
+npx ts-node seed_admin.ts
+
+# Git Sync
+git add .
+git commit -m "feat(core): migrate to PostgreSQL and restructure routing"
+git push origin dev
+git checkout main
+git merge dev
+git push origin main
+git checkout dev
+
+
 ## Author
 **LƯU ĐÌNH MÁC** - System Engineer & Linux Expert.

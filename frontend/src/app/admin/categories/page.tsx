@@ -1,22 +1,29 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { useAuth } from '@/context/AuthContext';
+import { useState, useEffect, useCallback } from 'react';
 import { 
-  ArrowLeft, Plus, Trash2, Layout, Loader2, FileText, Search, Menu, Home, LogOut, Users, Settings
+  Plus, Trash2, Layout, Loader2, FileText, Settings, Search
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import AdminSidebar from '@/components/admin/AdminSidebar';
-import ConfirmationModal from '@/components/admin/ConfirmationModal';
-import { useSidebar } from '@/context/SidebarContext';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminCard from '@/components/admin/AdminCard';
+import Button from '@/components/ui/Button';
+import IconBadge from '@/components/ui/IconBadge';
+import AnimateList from '@/components/ui/AnimateList';
+import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
+
+// Modular Services
+import { categoryService } from '@/services/categoryService';
+
+interface Category {
+  id: number;
+  name: string;
+  created_at?: string;
+  _count?: { Post: number };
+}
 
 export default function CategoriesPage() {
-  const { user, isAuthenticated } = useAuth();
-  const { setSidebarOpen } = useSidebar();
-  const [categories, setCategories] = useState<{ id: number; name: string; created_at?: string; _count?: { Post: number } }[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [newCategory, setNewCategory] = useState('');
@@ -27,41 +34,34 @@ export default function CategoriesPage() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const filteredCategories = categories.filter(cat => 
-    cat.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const fetchCategories = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`);
-      const data = await res.json();
+      const data = await categoryService.getAll();
       setCategories(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching categories:', err);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchCategories();
-  }, []);
+    fetchData();
+  }, [fetchData]);
+
+  const filteredCategories = categories.filter(cat => 
+    cat.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleAddCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCategory.trim()) return;
     setSubmitting(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ name: newCategory.trim() })
-      });
-      if (!res.ok) throw new Error();
+      await categoryService.create(newCategory.trim());
       setNewCategory('');
-      fetchCategories();
+      fetchData();
     } catch {
       alert('Lỗi: Danh mục có thể đã tồn tại');
     } finally {
@@ -72,15 +72,9 @@ export default function CategoriesPage() {
   const handleUpdate = async (id: number) => {
     if (!editName.trim()) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ name: editName.trim() })
-      });
-      if (!res.ok) throw new Error();
+      await categoryService.update(id, editName.trim());
       setEditingId(null);
-      fetchCategories();
+      fetchData();
     } catch {
       alert('Có lỗi xảy ra khi cập nhật danh mục');
     }
@@ -90,14 +84,10 @@ export default function CategoriesPage() {
     if (!deleteId) return;
     setIsDeleting(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories/${deleteId}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-      if (!res.ok) throw new Error();
+      await categoryService.delete(deleteId);
       setIsDeleteModalOpen(false);
       setDeleteId(null);
-      fetchCategories();
+      fetchData();
     } catch {
       alert('Có lỗi xảy ra khi xóa danh mục');
     } finally {
@@ -126,16 +116,16 @@ export default function CategoriesPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Form */}
         <div className="lg:col-span-1">
-           <AdminCard title="Tạo mới" icon={Plus} padding="p-5 md:p-6" className="sticky top-24">
+           <AdminCard title="Tạo mới" icon={Plus} className="sticky top-24">
               <form onSubmit={handleAddCategory} className="space-y-4">
                  <div>
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Tên danh mục</label>
                     <input type="text" placeholder="Ví dụ: Công nghệ, Đời sống..." value={newCategory} onChange={e => setNewCategory(e.target.value)} required
                       className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all" />
                  </div>
-                 <button type="submit" disabled={submitting} className="w-full py-3.5 bg-primary text-white rounded-xl text-xs font-bold shadow-lg shadow-primary/30 transition-all hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 flex items-center justify-center">
-                    {submitting ? <Loader2 size={18} className="animate-spin" /> : 'Lưu danh mục'}
-                 </button>
+                 <Button type="submit" isLoading={submitting} className="w-full" size="lg">
+                    Lưu danh mục
+                 </Button>
               </form>
            </AdminCard>
         </div>
@@ -147,18 +137,16 @@ export default function CategoriesPage() {
                  {filteredCategories.length} mục
               </span>
            }>
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              <AnimateList component="div" className="divide-y divide-slate-100 dark:divide-slate-800">
                  {filteredCategories.length === 0 ? (
                     <div className="p-10 text-center">
                        <Layout size={48} className="mx-auto text-slate-200 mb-4" />
                        <p className="text-slate-500 font-medium">Không tìm thấy danh mục nào.</p>
                     </div>
                  ) : filteredCategories.map(cat => (
-                    <div key={cat.id} className="p-6 md:p-8 flex items-center justify-between group hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-all">
+                    <div key={cat.id} className="p-4 md:p-6 flex items-center justify-between group hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-all">
                        <div className="flex items-center space-x-4 flex-1 min-w-0">
-                          <div className="w-12 h-12 bg-primary/5 rounded-xl flex items-center justify-center text-primary flex-shrink-0 group-hover:scale-110 transition-transform">
-                             <FileText size={20} />
-                          </div>
+                          <IconBadge icon={FileText} color="blue" size="md" className="group-hover:scale-110" />
                           <div className="flex-grow min-w-0">
                              {editingId === cat.id ? (
                                <div className="flex items-center space-x-2 w-full max-w-md animate-in fade-in slide-in-from-left-2 transition-all">
@@ -170,8 +158,8 @@ export default function CategoriesPage() {
                                     onKeyDown={(e) => e.key === 'Enter' && handleUpdate(cat.id)}
                                     className="flex-grow px-4 py-2 bg-white dark:bg-slate-800 border-2 border-primary/50 rounded-xl text-sm outline-none shadow-lg shadow-primary/5"
                                   />
-                                  <button onClick={() => handleUpdate(cat.id)} className="px-4 py-2 bg-primary text-white rounded-xl text-[10px] font-bold hover:bg-primary/90 transition-all shadow-md active:scale-95">Lưu</button>
-                                  <button onClick={() => setEditingId(null)} className="px-4 py-2 bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 rounded-xl text-[10px] font-bold hover:bg-slate-300 dark:hover:bg-slate-600 transition-all active:scale-95">Hủy</button>
+                                  <Button onClick={() => handleUpdate(cat.id)} size="sm">Lưu</Button>
+                                  <Button variant="ghost" onClick={() => setEditingId(null)} size="sm">Hủy</Button>
                                </div>
                              ) : (
                                <div className="animate-in fade-in duration-500">
@@ -191,32 +179,41 @@ export default function CategoriesPage() {
                        <div className="flex items-center space-x-2 ml-4">
                           {!editingId && (
                             <>
-                              <button onClick={() => { setEditingId(cat.id); setEditName(cat.name); }} 
-                                className="p-2.5 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl transition-all" title="Sửa">
-                                 <Settings size={18} />
-                              </button>
-                              <button onClick={() => { setDeleteId(cat.id); setIsDeleteModalOpen(true); }} 
-                                className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all" title="Xóa">
-                                 <Trash2 size={18} />
-                              </button>
+                              <Button 
+                                variant="outline" 
+                                size="icon" 
+                                className="h-9 w-9 hover:border-amber-200"
+                                onClick={() => { setEditingId(cat.id); setEditName(cat.name); }}
+                              >
+                                <Settings size={18} className="text-amber-500" />
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="icon" 
+                                className="h-9 w-9 hover:border-red-200"
+                                onClick={() => { setDeleteId(cat.id); setIsDeleteModalOpen(true); }}
+                              >
+                                <Trash2 size={18} className="text-red-500" />
+                              </Button>
                             </>
                           )}
                        </div>
                     </div>
                  ))}
-              </div>
+              </AnimateList>
            </AdminCard>
         </div>
       </div>
 
-      <ConfirmationModal
+      <ConfirmationDialog
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDelete}
-        loading={isDeleting}
+        isLoading={isDeleting}
         title="Xóa danh mục"
         message="Bạn có chắc chắn muốn xóa danh mục này? Tất cả bài viết thuộc danh mục này sẽ được chuyển về trạng thái 'Chưa phân loại'."
       />
     </>
   );
 }
+

@@ -27,13 +27,16 @@ model Series {
 model Comment {
   id           Int      @id @default(autoincrement())
   post_id      Int?
+  user_id      Int?
   author_name  String?  @db.Text
   author_email String?  @db.Text
   content      String?  @db.Text
   created_at   DateTime @default(now())
   Post         Post?    @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  User         User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
 
   @@index([post_id])
+  @@index([user_id])
 }
 
 model Post {
@@ -62,6 +65,7 @@ model Post {
   @@index([author_id])
   @@index([category_id])
   @@index([series_id])
+  @@index([is_published, is_pinned, created_at])
 }
 
 model PostLike {
@@ -104,4 +108,5 @@ model User {
   created_at         DateTime   @default(now())
   Post               Post[]
   PostLike           PostLike[]
+  Comment            Comment[]
 }

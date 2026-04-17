@@ -3,15 +3,16 @@
 import { useState, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import 'react-quill-new/dist/quill.snow.css';
-import { FileUp, Loader2, Sun, Moon } from 'lucide-react';
+import { FileUp, Loader2 } from 'lucide-react';
 import * as mammoth from 'mammoth';
-import { useTheme } from 'next-themes';
+
 
 // Register fonts in Quill
 const registerQuill = async () => {
     const Quill = (await import('react-quill-new')).default.Quill;
-    const Font = Quill.import('formats/font') as any;
+    const Font = Quill.import('formats/font') as { whitelist: string[] };
     Font.whitelist = ['inter', 'roboto', 'georgia', 'times-new-roman', 'courier-new'];
+    // @ts-expect-error - Quill type definition doesn't fully match the dynamically imported Font module
     Quill.register(Font, true);
 };
 registerQuill();
@@ -34,7 +35,6 @@ interface RichEditorProps {
 export default function RichEditor({ value, onChange, placeholder }: RichEditorProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [importing, setImporting] = useState(false);
-    const { theme, setTheme } = useTheme();
 
     const modules = useMemo(() => ({
         toolbar: {
@@ -51,6 +51,41 @@ export default function RichEditor({ value, onChange, placeholder }: RichEditorP
                 ['link', 'image', 'video'],
                 ['clean']
             ],
+            handlers: {
+                image: function() {
+                    const input = document.createElement('input');
+                    input.setAttribute('type', 'file');
+                    input.setAttribute('accept', 'image/*');
+                    input.click();
+
+                    input.onchange = async () => {
+                        const file = input.files?.[0];
+                        if (!file) return;
+
+                        const formData = new FormData();
+                        formData.append('file', file);
+
+                        try {
+                            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload?type=content`, {
+                                method: 'POST',
+                                body: formData,
+                                credentials: 'include'
+                            });
+                            const data = await res.json();
+                            
+                            if (data.success && data.url) {
+                                // @ts-ignore - this context points to the Quill editor
+                                const quill = this.quill;
+                                const range = quill.getSelection();
+                                quill.insertEmbed(range.index, 'image', `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${data.url}`);
+                            }
+                        } catch (error) {
+                            console.error('Lỗi khi upload ảnh:', error);
+                            alert('Không thể upload ảnh vào bài viết');
+                        }
+                    };
+                }
+            }
         },
         clipboard: {
             matchVisual: false,
@@ -103,74 +138,121 @@ export default function RichEditor({ value, onChange, placeholder }: RichEditorP
     };
 
     return (
-        <div className="relative rich-editor-container">
-            <div className="absolute right-2 top-2 z-10 flex items-center space-x-2">
-                <button
-                    type="button"
-                    onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                    className="p-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-500 hover:text-primary transition-colors shadow-sm"
-                    title="Đổi giao diện"
-                >
-                    {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
-                </button>
-                <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center space-x-2 px-3 py-1.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-500 hover:text-primary transition-colors shadow-sm"
-                    disabled={importing}
-                >
-                    {importing ? <Loader2 size={14} className="animate-spin" /> : <FileUp size={14} />}
-                    <span>NHẬP TỪ FILE</span>
-                </button>
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileImport}
-                    accept=".txt,.html,.md,.docx"
-                    className="hidden"
-                />
+        <div className="rich-editor-container border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50/50 dark:bg-slate-950/50">
+            {/* Auxiliary Actions Header */}
+            <div className="flex items-center justify-between p-3 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
+                <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Trình soạn thảo bài viết</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                    <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="flex items-center space-x-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-primary hover:bg-primary/5 transition-all shadow-sm"
+                        disabled={importing}
+                    >
+                        {importing ? <Loader2 size={14} className="animate-spin" /> : <FileUp size={14} />}
+                        <span>NHẬP TỪ FILE</span>
+                    </button>
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleFileImport}
+                        accept=".txt,.html,.md,.docx"
+                        className="hidden"
+                    />
+                </div>
             </div>
             
-            <ReactQuill
-                theme="snow"
-                value={value}
-                onChange={onChange}
-                modules={modules}
-                formats={formats}
-                placeholder={placeholder || 'Bắt đầu viết nội dung bài viết của bạn...'}
-                className="bg-white dark:bg-slate-900 rounded-xl overflow-hidden min-h-[400px]"
-            />
+            <div className="relative">
+                <ReactQuill
+                    theme="snow"
+                    value={value}
+                    onChange={onChange}
+                    modules={modules}
+                    formats={formats}
+                    placeholder={placeholder || 'Bắt đầu viết nội dung bài viết của bạn...'}
+                    className="bg-white dark:bg-slate-900 min-h-[400px]"
+                />
+            </div>
 
             <style jsx global>{`
                 .ql-toolbar.ql-snow {
                     border: none !important;
-                    background: #f8fafc;
-                    padding: 12px !important;
+                    background: #f8fafc !important;
+                    padding: 10px 14px !important;
                     border-bottom: 1px solid #e2e8f0 !important;
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 4px;
                 }
                 .dark .ql-toolbar.ql-snow {
-                    background: #0f172a;
+                    background: #111827 !important;
                     border-bottom-color: #1e293b !important;
                 }
                 .ql-container.ql-snow {
                     border: none !important;
-                    font-family: var(--font-sans) !important;
+                    font-family: 'Inter', sans-serif !important;
                     font-size: 16px !important;
                 }
                 .ql-editor {
-                    min-h-[350px];
+                    min-height: 400px;
                     line-height: 1.8;
-                    padding: 24px !important;
+                    padding: 32px !important;
+                    font-family: 'Inter', sans-serif;
                 }
+                
+                /* FIX: Font Picker Width and Display */
+                .ql-snow .ql-picker.ql-font {
+                    width: 140px !important; /* Increased width */
+                }
+                .ql-snow .ql-picker.ql-font .ql-picker-label {
+                    padding: 0 8px !important;
+                    display: flex;
+                    align-items: center;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 6px;
+                    background: white;
+                }
+                .dark .ql-snow .ql-picker.ql-font .ql-picker-label {
+                    border-color: #334155;
+                    background: #1e293b;
+                }
+                .ql-snow .ql-picker.ql-font .ql-picker-label::before {
+                    line-height: 24px;
+                    margin-right: 20px;
+                }
+                
                 .ql-editor p {
                     margin-bottom: 1.5rem;
                 }
+                
                 /* Font Whitelist Classes */
                 .ql-font-inter { font-family: 'Inter', sans-serif !important; }
                 .ql-font-roboto { font-family: 'Roboto', sans-serif !important; }
                 .ql-font-georgia { font-family: 'Georgia', serif !important; }
                 .ql-font-times-new-roman { font-family: 'Times New Roman', serif !important; }
                 .ql-font-courier-new { font-family: 'Courier New', monospace !important; }
+
+                /* Show Font Names in Picker */
+                .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="inter"]::before,
+                .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="inter"]::before { content: 'Inter'; font-family: 'Inter', sans-serif; }
+                
+                .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="roboto"]::before,
+                .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="roboto"]::before { content: 'Roboto'; font-family: 'Roboto', sans-serif; }
+                
+                .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="georgia"]::before,
+                .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="georgia"]::before { content: 'Georgia'; font-family: 'Georgia', serif; }
+                
+                .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="times-new-roman"]::before,
+                .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="times-new-roman"]::before { content: 'Times New Roman'; font-family: 'Times New Roman', serif; }
+                
+                .ql-snow .ql-picker.ql-font .ql-picker-label[data-value="courier-new"]::before,
+                .ql-snow .ql-picker.ql-font .ql-picker-item[data-value="courier-new"]::before { content: 'Courier New'; font-family: 'Courier New', monospace; }
+
+                .ql-snow .ql-picker.ql-font .ql-picker-label:not([data-value])::before,
+                .ql-snow .ql-picker.ql-font .ql-picker-item:not([data-value])::before { content: 'Inter'; }
 
                 .dark .ql-snow .ql-stroke {
                     stroke: #94a3b8 !important;
@@ -185,13 +267,41 @@ export default function RichEditor({ value, onChange, placeholder }: RichEditorP
                     background-color: #0f172a !important;
                     border-color: #1e293b !important;
                     color: #94a3b8 !important;
+                    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+                    border-radius: 8px;
+                    padding: 4px !important;
                 }
                 .ql-editor.ql-blank::before {
                     color: #94a3b8 !important;
                     font-style: normal !important;
+                    left: 32px !important;
                 }
                 .dark .ql-editor.ql-blank::before {
                     color: #475569 !important;
+                }
+                
+                /* Toolbar buttons hover */
+                .ql-snow.ql-toolbar button:hover,
+                .ql-snow .ql-toolbar button:hover,
+                .ql-snow.ql-toolbar button:focus,
+                .ql-snow .ql-toolbar button:focus,
+                .ql-snow.ql-toolbar .ql-picker-label:hover,
+                .ql-snow .ql-toolbar .ql-picker-label:hover,
+                .ql-snow.ql-toolbar .ql-picker-item:hover,
+                .ql-snow .ql-toolbar .ql-picker-item:hover {
+                    color: #3b82f6 !important;
+                    background: rgba(59, 130, 246, 0.05) !important;
+                    border-radius: 4px;
+                }
+                .ql-snow.ql-toolbar button.ql-active,
+                .ql-snow .ql-toolbar button.ql-active,
+                .ql-snow.ql-toolbar .ql-picker-label.ql-active,
+                .ql-snow .ql-toolbar .ql-picker-label.ql-active,
+                .ql-snow.ql-toolbar .ql-picker-item.ql-selected,
+                .ql-snow .ql-toolbar .ql-picker-item.ql-selected {
+                    color: #3b82f6 !important;
+                    background: rgba(59, 130, 246, 0.1) !important;
+                    border-radius: 4px;
                 }
             `}</style>
         </div>
