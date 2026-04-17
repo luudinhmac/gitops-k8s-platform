@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Terminal, Eye, MessageSquare, Clock, ChevronRight, Bookmark } from 'lucide-react';
+import { Terminal, Eye, MessageSquare, Clock, ChevronRight, Bookmark, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import UserAvatar from './UserAvatar';
 import FormattedDate from './FormattedDate';
@@ -39,81 +39,86 @@ const PostCard: React.FC<PostCardProps> = ({ post, className, priority = false }
   return (
     <Link 
       href={`/${categorySlug}/${post.slug}`} 
-      className={cn("group flex flex-col bg-white dark:bg-slate-900 rounded-xl overflow-hidden border border-slate-100 dark:border-slate-800 hover-lift shadow-sm hover:shadow-xl transition-all h-full relative", className)}
+      className={cn(
+        "group flex flex-col bg-transparent rounded-3xl overflow-hidden transition-all duration-500 h-full relative", 
+        className
+      )}
     >
       {/* Pinned Badge */}
       {post.is_pinned && (
-        <div className="absolute top-3 left-3 z-10 bg-amber-500 text-white text-[7px] font-black uppercase tracking-widest px-2 py-1 rounded-md shadow-lg flex items-center gap-1 animate-in zoom-in-50 duration-500">
-          <Bookmark size={8} className="fill-white" /> Cố định
+        <div className="absolute top-4 left-4 z-10 bg-amber-500/90 backdrop-blur-md text-white text-[8px] font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-xl shadow-xl flex items-center gap-2 animate-in zoom-in-50 duration-500 border border-white/20">
+          <Sparkles size={10} className="fill-white" /> CỐ ĐỊNH
         </div>
       )}
 
-      {/* Image Container */}
-      <div className="relative h-44 overflow-hidden bg-slate-100 dark:bg-slate-800">
+      {/* Image Container - Premium Look */}
+      <div className="relative h-56 overflow-hidden rounded-[2rem] bg-slate-100 dark:bg-slate-800 shadow-sm group-hover:shadow-2xl group-hover:shadow-primary/20 transition-all duration-500">
         {post.cover_image ? (
           <Image
             src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${post.cover_image}`}
             alt={post.title}
             fill
             priority={priority}
-            className="object-cover group-hover:scale-110 transition-transform duration-500"
+            className="object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-900 flex items-center justify-center">
-            <Terminal size={32} className="text-slate-300 dark:text-slate-700" />
+          <div className="w-full h-full bg-gradient-to-br from-slate-50 to-slate-200 dark:from-slate-900 dark:to-slate-950 flex items-center justify-center">
+            <Terminal size={40} className="text-slate-200 dark:text-slate-800 opacity-50" />
           </div>
         )}
+        
+        {/* Overlay gradient on hover */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
       </div>
 
-      {/* Content */}
-      <div className="p-3 flex flex-col flex-grow">
+      {/* Content - No box, just clean typography */}
+      <div className="pt-6 pb-2 px-1 flex flex-col flex-grow">
         {/* Metadata */}
-        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-2">
-          <div className="flex items-center text-primary bg-primary/5 px-1 py-0.5 rounded border border-primary/5">
-            <UserAvatar user={post.User} size="xs" className="mr-1.5 border-none" />
-            {post.User?.fullname || post.User?.username || 'Ẩn danh'}
+        <div className="flex items-center gap-4 text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-4">
+          <div className="flex items-center text-primary group-hover:text-primary/80 transition-colors">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary mr-2 shadow-[0_0_8px_rgba(var(--primary),0.5)]" />
+            {post.User?.fullname || post.User?.username || 'GHOST AUTHOR'}
           </div>
-          <FormattedDate date={post.created_at} showIcon iconSize={10} className="text-slate-400" />
-          <div className="flex items-center">
-            <Eye size={10} className="mr-1 text-primary" />
-            {post.views || 0}
-          </div>
-          <div className="flex items-center">
-            <MessageSquare size={10} className="mr-1 text-primary" />
-            0
-          </div>
+          <FormattedDate date={post.created_at} className="opacity-80" />
         </div>
 
-        <h3 className="text-[15px] font-bold text-slate-900 dark:text-white mb-1.5 line-clamp-2 group-hover:text-primary transition-colors leading-snug">
+        <h3 className="text-xl font-display font-bold text-slate-900 dark:text-white mb-3 line-clamp-2 group-hover:text-primary transition-colors leading-tight decoration-primary/30 decoration-2 group-hover:underline underline-offset-4">
           {post.title}
         </h3>
 
         {/* Badges */}
-        <div className="flex flex-wrap gap-1.5 mb-2">
+        <div className="flex flex-wrap gap-2 mb-4">
           {post.Category && (
-            <Badge type="category">{post.Category.name}</Badge>
+            <Badge type="category" size="xs">{post.Category.name}</Badge>
           )}
           {post.series && (
-            <Badge className="bg-indigo-500/10 text-indigo-500 border-indigo-500/5">
-              Series: {post.series}
+            <Badge size="xs" className="bg-indigo-500/10 text-indigo-600 border-indigo-100 dark:border-indigo-900/50">
+              {post.series}
             </Badge>
           )}
         </div>
 
         {post.excerpt && (
-          <p className="text-slate-500 dark:text-slate-400 text-[10.5px] line-clamp-2 mb-4 leading-relaxed">
+          <p className="text-slate-500 dark:text-slate-400 text-xs line-clamp-2 mb-6 leading-relaxed opacity-80 group-hover:opacity-100 transition-opacity">
             {post.excerpt}
           </p>
         )}
 
-        <div className="mt-auto flex items-center justify-between pt-2 border-t border-slate-50 dark:border-slate-800/50">
-          <div className="flex items-center text-[9px] font-bold text-slate-400 uppercase tracking-widest">
-            <Clock size={10} className="mr-1 text-primary" />
-            {post.readTime || 5} min read
+        {/* Footer Stats */}
+        <div className="mt-auto flex items-center justify-between pt-5 border-t border-slate-100 dark:border-slate-800/80">
+          <div className="flex items-center gap-5">
+            <div className="flex items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              <Eye size={12} className="mr-1.5 text-primary" />
+              {post.views || 0}
+            </div>
+            <div className="flex items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              <Clock size={12} className="mr-1.5" />
+              {post.readTime || 5} min
+            </div>
           </div>
-          <div className="text-primary group-hover:translate-x-1 transition-transform">
-            <ChevronRight size={14} />
+          <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all transform group-hover:translate-x-1 shadow-sm">
+            <ChevronRight size={16} />
           </div>
         </div>
       </div>
@@ -122,3 +127,4 @@ const PostCard: React.FC<PostCardProps> = ({ post, className, priority = false }
 };
 
 export default PostCard;
+

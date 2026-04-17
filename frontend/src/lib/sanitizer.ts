@@ -19,5 +19,8 @@ export function sanitizeHTML(html: string): string {
   const jsProtocolRegex = /href\s*=\s*(['"])javascript:.*?\1/gim;
   sanitized = sanitized.replace(jsProtocolRegex, 'href="#"');
 
+  // Normalize non-breaking spaces to allow correct word wrapping
+  sanitized = sanitized.replace(/&nbsp;|&#160;|\u00A0/g, ' ');
+
   return sanitized;
 }

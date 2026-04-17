@@ -121,6 +121,7 @@
 .rich-text-content {
   line-height: 1.8;
   color: hsl(var(--foreground) / 0.9);
+  overflow-wrap: break-word;
 }
 
 .rich-text-content p {

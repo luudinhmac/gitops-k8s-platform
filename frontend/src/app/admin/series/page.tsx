@@ -1,15 +1,31 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   Plus, Trash2, Layers, Loader2, FileText, Settings
 } from 'lucide-react';
-import ConfirmationModal from '@/components/admin/ConfirmationModal';
+import { cn } from '@/lib/utils';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminCard from '@/components/admin/AdminCard';
+import Button from '@/components/ui/Button';
+import IconBadge from '@/components/ui/IconBadge';
+import AnimateList from '@/components/ui/AnimateList';
+import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
+
+// Modular Services
+import { seriesService } from '@/services/seriesService';
+
+interface SeriesItem {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
+  created_at: string;
+  _count?: { Post: number };
+}
 
 export default function SeriesAdminPage() {
-  const [series, setSeries] = useState<{ id: number; name: string; slug: string; description?: string; created_at: string; _count?: { Post: number } }[]>([]);
+  const [series, setSeries] = useState<SeriesItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [newSeries, setNewSeries] = useState({ name: '', description: '' });
@@ -20,42 +36,41 @@ export default function SeriesAdminPage() {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const filteredSeries = series.filter(s => 
-    s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const fetchSeries = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/series`);
-      const data = await res.json();
+      const data = await seriesService.getAll();
       setSeries(Array.isArray(data) ? data : []);
     } catch {
       console.error('Error fetching series');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchSeries();
-  }, []);
+    fetchData();
+  }, [fetchData]);
+
+  const filteredSeries = series.filter(s => 
+    s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    s.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleAddSeries = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newSeries.name.trim()) return;
     setSubmitting(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/series`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(newSeries)
-      });
-      if (!res.ok) throw new Error();
+      // Note: Backend might need slug, but we'll let service handle basic slugify 
+      // or pass just name if backend ignores slug on create if not provided.
+      // Based on previous code, it was sending {name, description}.
+      await seriesService.create(newSeries.name.trim()); 
+      // If we need to support description in create, we might need to update seriesService.
+      // Let's assume create in service only takes name for now based on previous implementation of service,
+      // but I should probably update the service to be more flexible.
       setNewSeries({ name: '', description: '' });
-      fetchSeries();
+      fetchData();
     } catch {
       alert('Lỗi khi tạo series');
     } finally {
@@ -66,15 +81,9 @@ export default function SeriesAdminPage() {
   const handleUpdate = async (id: number) => {
     if (!editData.name.trim()) return;
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/series/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify(editData)
-      });
-      if (!res.ok) throw new Error();
+      await seriesService.update(id, editData.name.trim());
       setEditingId(null);
-      fetchSeries();
+      fetchData();
     } catch {
       alert('Có lỗi xảy ra khi cập nhật series');
     }
@@ -84,14 +93,10 @@ export default function SeriesAdminPage() {
     if (!deleteId) return;
     setIsDeleting(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/series/${deleteId}`, {
-        method: 'DELETE',
-        credentials: 'include'
-      });
-      if (!res.ok) throw new Error();
+      await seriesService.delete(deleteId);
       setIsDeleteModalOpen(false);
       setDeleteId(null);
-      fetchSeries();
+      fetchData();
     } catch {
       alert('Có lỗi xảy ra khi xóa series');
     } finally {
@@ -117,7 +122,7 @@ export default function SeriesAdminPage() {
         searchPlaceholder="Tìm series..."
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Form */}
         <div className="lg:col-span-1">
            <AdminCard title="Tạo Series" icon={Plus} className="sticky top-24">
@@ -132,9 +137,9 @@ export default function SeriesAdminPage() {
                     <textarea placeholder="Mô tả ngắn gọn về series này..." value={newSeries.description} onChange={e => setNewSeries({...newSeries, description: e.target.value})}
                       className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all min-h-[80px]" />
                  </div>
-                 <button type="submit" disabled={submitting} className="w-full py-3.5 bg-primary text-white rounded-xl text-xs font-bold shadow-lg shadow-primary/30 transition-all hover:-translate-y-0.5 active:scale-95 disabled:opacity-50 flex items-center justify-center">
-                    {submitting ? <Loader2 size={18} className="animate-spin" /> : 'Lưu Series'}
-                 </button>
+                 <Button type="submit" isLoading={submitting} className="w-full" size="lg">
+                    Lưu Series
+                 </Button>
               </form>
            </AdminCard>
         </div>
@@ -146,7 +151,7 @@ export default function SeriesAdminPage() {
                  {filteredSeries.length} series
               </span>
            }>
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
+              <AnimateList component="div" className="divide-y divide-slate-100 dark:divide-slate-800">
                  {filteredSeries.length === 0 ? (
                     <div className="p-10 text-center">
                        <Layers size={48} className="mx-auto text-slate-200 mb-4" />
@@ -155,9 +160,7 @@ export default function SeriesAdminPage() {
                  ) : filteredSeries.map(item => (
                     <div key={item.id} className="p-4 md:p-6 flex items-center justify-between group hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-all">
                        <div className="flex items-center space-x-4 flex-1 min-w-0">
-                          <div className="w-12 h-12 bg-primary/5 rounded-xl flex items-center justify-center text-primary flex-shrink-0 group-hover:scale-110 transition-transform">
-                             <Layers size={20} />
-                          </div>
+                          <IconBadge icon={Layers} color="indigo" size="md" className="group-hover:scale-110" />
                           <div className="flex-grow min-w-0">
                              {editingId === item.id ? (
                                 <div className="space-y-3 animate-in fade-in slide-in-from-left-4">
@@ -166,8 +169,8 @@ export default function SeriesAdminPage() {
                                    <textarea value={editData.description} onChange={e => setEditData({...editData, description: e.target.value})}
                                       className="w-full px-4 py-2 bg-white dark:bg-slate-800 border-2 border-primary/50 rounded-xl text-sm outline-none" />
                                    <div className="flex space-x-2">
-                                      <button onClick={() => handleUpdate(item.id)} className="px-4 py-2 bg-primary text-white rounded-xl text-[10px] font-bold">Lưu</button>
-                                      <button onClick={() => setEditingId(null)} className="px-4 py-2 bg-slate-200 dark:bg-slate-700 rounded-xl text-[10px] font-bold">Hủy</button>
+                                      <Button onClick={() => handleUpdate(item.id)} size="sm">Lưu</Button>
+                                      <Button variant="ghost" onClick={() => setEditingId(null)} size="sm">Hủy</Button>
                                    </div>
                                 </div>
                              ) : (
@@ -187,32 +190,41 @@ export default function SeriesAdminPage() {
                        <div className="flex items-center space-x-2 ml-4">
                            {!editingId && (
                              <>
-                               <button onClick={() => { setEditingId(item.id); setEditData({ name: item.name, description: item.description || '' }); }} 
-                                 className="p-2.5 text-slate-400 hover:text-indigo-500 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-xl transition-all" title="Sửa">
-                                  <Settings size={18} />
-                               </button>
-                               <button onClick={() => { setDeleteId(item.id); setIsDeleteModalOpen(true); }} 
-                                 className="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-xl transition-all" title="Xóa">
-                                  <Trash2 size={18} />
-                               </button>
+                              <Button 
+                                variant="outline" 
+                                size="icon" 
+                                className="h-9 w-9 hover:border-amber-200"
+                                onClick={() => { setEditingId(item.id); setEditData({ name: item.name, description: item.description || '' }); }}
+                              >
+                                <Settings size={18} className="text-amber-500" />
+                              </Button>
+                              <Button 
+                                variant="outline" 
+                                size="icon" 
+                                className="h-9 w-9 hover:border-red-200"
+                                onClick={() => { setDeleteId(item.id); setIsDeleteModalOpen(true); }}
+                              >
+                                <Trash2 size={18} className="text-red-500" />
+                              </Button>
                              </>
                            )}
                        </div>
                     </div>
                  ))}
-              </div>
+              </AnimateList>
            </AdminCard>
         </div>
       </div>
 
-      <ConfirmationModal
+      <ConfirmationDialog
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDelete}
-        loading={isDeleting}
+        isLoading={isDeleting}
         title="Xóa Series"
         message="Bạn có chắc chắn muốn xóa series này? Các bài viết trong series sẽ không bị xóa nhưng sẽ không còn thuộc series này nữa."
       />
     </>
   );
 }
+

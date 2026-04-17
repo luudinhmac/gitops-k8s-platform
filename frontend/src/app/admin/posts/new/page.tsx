@@ -1,12 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { Save, Loader2, Image as ImageIcon, Layout } from 'lucide-react';
+import { slugify } from '@/lib/utils';
 import RichEditor from '@/components/admin/RichEditor';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminCard from '@/components/admin/AdminCard';
+import Button from '@/components/ui/Button';
+
+// Modular Services
+import { postService } from '@/services/postService';
+import { categoryService } from '@/services/categoryService';
+import { seriesService } from '@/services/seriesService';
+import { uploadService } from '@/services/uploadService';
 
 interface Category {
   id: number;
@@ -33,29 +41,28 @@ export default function NewPostPage() {
     is_pinned: false
   });
 
+  const fetchInitialData = useCallback(async () => {
+    try {
+      const [catsData, seriesData] = await Promise.all([
+        categoryService.getAll(),
+        seriesService.getAll()
+      ]);
+      setCategories(Array.isArray(catsData) ? catsData : []);
+      setSeriesList(Array.isArray(seriesData) ? seriesData : []);
+    } catch {
+      console.error('Error fetching initial data');
+    }
+  }, []);
+
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       router.push(`/login?redirect=${pathname}`);
     }
-  }, [authLoading, isAuthenticated, router]);
+  }, [authLoading, isAuthenticated, router, pathname]);
 
   useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        const [catsRes, seriesRes] = await Promise.all([
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`),
-          fetch(`${process.env.NEXT_PUBLIC_API_URL}/series`)
-        ]);
-        const catsData = await catsRes.json();
-        const seriesData = await seriesRes.json();
-        setCategories(Array.isArray(catsData) ? catsData : []);
-        setSeriesList(Array.isArray(seriesData) ? seriesData : []);
-      } catch {
-        console.error('Error fetching initial data');
-      }
-    };
     fetchInitialData();
-  }, []);
+  }, [fetchInitialData]);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -68,32 +75,18 @@ export default function NewPostPage() {
         if (existing) {
           finalSeriesId = existing.id;
         } else {
-          const sRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/series`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({ name: formData.series_name, slug: formData.series_name.toLowerCase().replace(/\s+/g, '-') }),
-          });
-          if (sRes.ok) {
-            const newS = await sRes.json();
-            finalSeriesId = newS.id;
-          }
+          // Note: In a real scenario, we might want to prompt before creating new series
+          const newS = await seriesService.create(formData.series_name);
+          finalSeriesId = newS.id;
         }
       }
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          ...formData,
-          series_id: finalSeriesId,
-          series_order: parseInt(formData.series_order) || 0,
-          category_id: formData.category_id ? parseInt(formData.category_id) : null
-        }),
+      await postService.create({
+        ...formData,
+        series_id: finalSeriesId,
+        series_order: parseInt(formData.series_order) || 0,
+        category_id: formData.category_id ? parseInt(formData.category_id) : null
       });
-
-      if (!response.ok) throw new Error('Không thể tạo bài viết');
 
       router.push('/admin');
       router.refresh();
@@ -101,6 +94,18 @@ export default function NewPostPage() {
       alert('Có lỗi xảy ra khi tạo bài viết');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const data = await uploadService.uploadImage(file, 'post');
+      setFormData({ ...formData, cover_image: data.url });
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Không thể tải ảnh lên!');
     }
   };
 
@@ -122,7 +127,7 @@ export default function NewPostPage() {
       />
 
       <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-4">
             <AdminCard>
               <div className="mb-4">
@@ -133,13 +138,11 @@ export default function NewPostPage() {
                   value={formData.title}
                   onChange={(e) => {
                     const newTitle = e.target.value;
-                    const suggestedSlug = newTitle.toLowerCase()
-                      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-                      .replace(/[đĐ]/g, 'd')
-                      .replace(/[^a-z0-9\s-]/g, '')
-                      .trim()
-                      .replace(/\s+/g, '-');
-                    setFormData({ ...formData, title: newTitle, slug: suggestedSlug });
+                    setFormData({ 
+                      ...formData, 
+                      title: newTitle, 
+                      slug: slugify(newTitle) 
+                    });
                   }}
                   className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl outline-none focus:ring-2 focus:ring-primary text-base font-bold placeholder:text-slate-400"
                 />
@@ -160,7 +163,7 @@ export default function NewPostPage() {
                 <div>
                   <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1.5 ml-1">Danh mục</label>
                   <select value={formData.category_id} onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs appearance-none outline-none">
+                    className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs appearance-none outline-none focus:ring-2 focus:ring-primary">
                     <option value="">Chọn danh mục</option>
                     {categories.map(cat => (<option key={cat.id} value={cat.id}>{cat.name}</option>))}
                   </select>
@@ -168,7 +171,7 @@ export default function NewPostPage() {
                 <div>
                   <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1.5 ml-1">Thẻ (ngăn cách bởi dấu phẩy)</label>
                   <input type="text" placeholder="tag1, tag2..." value={formData.tags} onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs outline-none" />
+                    className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs outline-none focus:ring-2 focus:ring-primary" />
                 </div>
                 <div>
                   <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1.5 ml-1">Đường dẫn (Slug)</label>
@@ -188,7 +191,7 @@ export default function NewPostPage() {
                     placeholder="Chọn hoặc nhập tên Series mới..."
                     value={formData.series_name}
                     onChange={(e) => setFormData({ ...formData, series_name: e.target.value })}
-                    className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs outline-none"
+                    className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs outline-none focus:ring-2 focus:ring-primary"
                   />
                   <datalist id="series-options">
                     {seriesList.map(s => (<option key={s.id} value={s.name} />))}
@@ -201,7 +204,7 @@ export default function NewPostPage() {
                   <div className="animate-in slide-in-from-top-2 duration-300">
                     <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1.5 ml-1">Thứ tự bài trong Series</label>
                     <input type="number" placeholder="0" value={formData.series_order} onChange={(e) => setFormData({ ...formData, series_order: e.target.value })}
-                      className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs outline-none" />
+                      className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs outline-none focus:ring-2 focus:ring-primary" />
                   </div>
                 )}
                 <div className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
@@ -212,18 +215,21 @@ export default function NewPostPage() {
             </AdminCard>
 
             <AdminCard title="Ảnh bìa" icon={ImageIcon} padding="p-5 md:p-6">
-              <div className="relative aspect-video bg-slate-50 dark:bg-slate-800 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-slate-400 overflow-hidden group">
+              <div className="relative aspect-video bg-slate-50 dark:bg-slate-800 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 flex flex-col items-center justify-center text-slate-400 overflow-hidden group hover:border-primary transition-colors">
                 {formData.cover_image ? (
                   <>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${formData.cover_image}`} alt="Post Cover" className="w-full h-full object-cover" />
+                    <img 
+                      src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${formData.cover_image}`} 
+                      alt="Post Cover" 
+                      className="w-full h-full object-cover" 
+                    />
                     <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <span className="text-white text-[10px] font-bold bg-black/50 px-3 py-1.5 rounded-lg cursor-pointer">Thay đổi ảnh</span>
+                      <span className="text-white text-[10px] font-bold bg-black/30 backdrop-blur-md border border-white/20 px-4 py-2 rounded-xl cursor-pointer shadow-lg">Thay đổi ảnh</span>
                     </div>
                   </>
                 ) : (
                   <div className="text-center p-4">
-                    <ImageIcon size={24} className="mb-2 mx-auto opacity-50" />
+                    <ImageIcon size={24} className="mb-2 mx-auto opacity-50 text-slate-400" />
                     <span className="text-[10px] font-bold uppercase tracking-widest block text-slate-500">Chọn ảnh bài viết</span>
                   </div>
                 )}
@@ -231,29 +237,7 @@ export default function NewPostPage() {
                   type="file"
                   accept="image/*"
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0];
-                    if (!file) return;
-
-                    const form = new FormData();
-                    form.append('file', file);
-
-                    try {
-                      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload?type=post`, {
-                        method: 'POST',
-                        body: form,
-                        credentials: 'include'
-                      });
-                      const data = await res.json();
-                      if (res.ok) {
-                        setFormData({ ...formData, cover_image: data.url });
-                      } else {
-                        alert(data.message || 'Lỗi tải ảnh lên');
-                      }
-                    } catch {
-                      alert('Không thể tải ảnh lên!');
-                    }
-                  }}
+                  onChange={handleFileUpload}
                 />
               </div>
             </AdminCard>
@@ -263,3 +247,4 @@ export default function NewPostPage() {
     </div>
   );
 }
+

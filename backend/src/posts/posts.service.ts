@@ -117,6 +117,7 @@ export class PostsService {
         views: true,
         likes: true,
         created_at: true,
+        author_id: true,
         series_id: true,
         series_order: true,
         Category: true,
