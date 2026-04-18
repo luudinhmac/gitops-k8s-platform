@@ -95,7 +95,7 @@ export default function RichEditor({ value, onChange, placeholder }: RichEditorP
     const formats = [
         'header', 'font', 'size',
         'bold', 'italic', 'underline', 'strike', 'blockquote',
-        'list', 'indent',
+        'list', 'indent', 'script', 'direction',
         'link', 'image', 'video', 'color', 'background', 'align', 'code-block'
     ];
 
