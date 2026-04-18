@@ -22,12 +22,12 @@ export default function SettingsAdminPage() {
   
   // Local form states for editable tabs
   const [generalForm, setGeneralForm] = useState<Record<string, string>>({
-    site_title: '',
-    site_tagline: '',
+    site_title: 'LƯU ĐÌNH MÁC | System Engineer',
+    site_tagline: 'Portfolio giới thiệu các dự án và kỹ năng chuyên môn về System Engineering và Web Development.',
     default_lang: 'vi',
     timezone: 'Asia/Ho_Chi_Minh',
     comments_enabled: 'true',
-    footer_copyright: '',
+    footer_copyright: '© 2026 Lưu Đình Mác. All rights reserved.',
   });
 
   const [marketingForm, setMarketingForm] = useState<Record<string, string>>({

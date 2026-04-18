@@ -5,7 +5,8 @@ import Link from 'next/link';
 import {
   Calendar, User as UserIcon, Clock, Share2,
   MessageSquare, Heart, Eye,
-  ChevronRight, Layers, ChevronLeft, Search, Trash2, Edit2, Check, X, Tag as TagIcon
+  ChevronRight, Layers, ChevronLeft, Search, Trash2, Edit2, Check, X, Tag as TagIcon,
+  Facebook, Twitter, Linkedin, Link2, AlertCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
@@ -32,6 +33,32 @@ import { Post, Comment as CommentType } from '@/types/post';
 
 // Using global types from @/types/post
 
+const buildCommentTree = (comments: CommentType[]) => {
+  const map = new Map<number, CommentType>();
+  const roots: CommentType[] = [];
+
+  comments.forEach(c => {
+    map.set(c.id, { ...c, Replies: [] });
+  });
+
+  comments.forEach(c => {
+    const node = map.get(c.id);
+    if (!node) return;
+    if (c.parent_id) {
+      const parent = map.get(c.parent_id);
+      if (parent) {
+        parent.Replies!.push(node);
+      } else {
+        roots.push(node);
+      }
+    } else {
+      roots.push(node);
+    }
+  });
+
+  return roots;
+};
+
 export default function PostSlugDetailPage({ params }: { params: Promise<{ categorySlug: string, postSlug: string }> }) {
   const { categorySlug, postSlug } = use(params);
   const { user, isAuthenticated } = useAuth();
@@ -40,12 +67,16 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
   const [liked, setLiked] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [replyingTo, setReplyingTo] = useState<number | null>(null);
+  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [categories, setCategories] = useState<{ id: number; name: string; _count?: { Post: number } }[]>([]);
   const [relatedPosts, setRelatedPosts] = useState<Post[]>([]);
   const [seriesPosts, setSeriesPosts] = useState<Post[]>([]);
   const [searchValue, setSearchValue] = useState('');
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editingText, setEditingText] = useState('');
+  const [commentError, setCommentError] = useState<string | null>(null);
   const router = useRouter();
 
   const fetchPostData = useCallback(async () => {
@@ -130,6 +161,7 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
       const newCommentRaw = await commentService.create({
         content: commentText,
         post_id: post.id,
+        parent_id: replyingTo,
         user_id: user?.id || null,
         author_name: isAuthenticated ? (user?.fullname || user?.username || 'Thành viên') : 'Khách',
         author_email: user?.email || null
@@ -142,20 +174,22 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
         author_email: newCommentRaw.author_email,
         created_at: newCommentRaw.created_at,
         user_id: newCommentRaw.user_id,
+        parent_id: newCommentRaw.parent_id,
         User: user?.avatar ? { avatar: user.avatar } : null
       };
 
       setPost({ ...post, Comment: [formattedComment, ...(post.Comment || [])] });
       setCommentText('');
-    } catch (error) {
-      console.error('Comment error:', error);
+      setReplyingTo(null);
+      setCommentError(null);
+    } catch (error: any) {
+      setCommentError(error.response?.data?.message || 'Có lỗi xảy ra khi thực hiện bình luận.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleDeleteComment = async (id: number) => {
-    if (!confirm('Bạn có chắc chắn muốn xóa bình luận này?')) return;
     try {
       await commentService.delete(id);
       if (post) {
@@ -164,6 +198,7 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
           Comment: (post.Comment || []).filter(c => c.id !== id)
         });
       }
+      setDeleteConfirmId(null);
     } catch (error) {
       console.error('Delete comment error:', error);
     }
@@ -235,14 +270,18 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
                 </Link>
                 <div className="w-px h-3 bg-slate-200 dark:bg-slate-800" />
                 {post.Category && (
-                  <Badge type="category" size="xs">
-                    {post.Category.name}
-                  </Badge>
+                  <Link href={`/?q=${encodeURIComponent(post.Category.name)}`} className="hover:opacity-80 transition-opacity">
+                    <Badge type="category" size="xs">
+                      {post.Category.name}
+                    </Badge>
+                  </Link>
                 )}
                 {post.Tag && post.Tag.slice(0, 2).map((tag, i) => (
-                  <Badge key={i} type="tag" size="xs">
-                    {tag.name}
-                  </Badge>
+                  <Link key={i} href={`/?q=${encodeURIComponent(tag.name)}`} className="hover:opacity-80 transition-opacity">
+                    <Badge type="tag" size="xs">
+                      {tag.name}
+                    </Badge>
+                  </Link>
                 ))}
                 <div className="w-px h-3 bg-slate-200 dark:bg-slate-800" />
                 <div className="flex items-center gap-4 text-slate-400 text-[9px] font-bold uppercase tracking-widest">
@@ -268,9 +307,28 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
                   <MessageSquare size={12} />
                   <span className="text-[9px] font-bold">{post.Comment?.length || 0}</span>
                 </button>
-                <button className="p-1 px-2 text-slate-500 hover:text-primary transition-all">
-                  <Share2 size={12} />
-                </button>
+                <div className="relative">
+                  <button onClick={() => setShowShareMenu(!showShareMenu)} className="p-1 px-2 text-slate-500 hover:text-primary transition-all rounded-md">
+                    <Share2 size={12} />
+                  </button>
+                  {showShareMenu && (
+                    <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 py-2 z-50 animate-in fade-in slide-in-from-top-2">
+                       <button onClick={() => { window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`); setShowShareMenu(false); }} className="w-full flex items-center px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                         <Facebook size={14} className="mr-3 text-blue-600" /> Facebook
+                       </button>
+                       <button onClick={() => { window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}&text=${encodeURIComponent(post.title)}`); setShowShareMenu(false); }} className="w-full flex items-center px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                         <Twitter size={14} className="mr-3 text-sky-500" /> Twitter
+                       </button>
+                       <button onClick={() => { window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`); setShowShareMenu(false); }} className="w-full flex items-center px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                         <Linkedin size={14} className="mr-3 text-blue-700" /> LinkedIn
+                       </button>
+                       <div className="h-px bg-slate-100 dark:bg-slate-700 my-1 mx-2" />
+                       <button onClick={() => { navigator.clipboard.writeText(typeof window !== 'undefined' ? window.location.href : ''); alert('Đã copy link!'); setShowShareMenu(false); }} className="w-full flex items-center px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                         <Link2 size={14} className="mr-3 text-slate-500" /> Copy Link
+                       </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -361,95 +419,123 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
                 </h2>
               </div>
 
-              <form onSubmit={handleComment} className="mb-12 relative bg-slate-50/50 dark:bg-slate-950/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-800">
-                <div className="relative mb-6">
-                  <textarea
-                    placeholder="Hãy chia sẻ ý kiến của bạn tại đây..."
-                    className="w-full px-6 py-5 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all min-h-[120px] text-sm resize-none shadow-sm"
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3 text-[11px] text-slate-500 font-bold uppercase tracking-widest">
-                    <UserIcon size={14} className="text-slate-400" />
-                    <span>Hành động với tư cách: <b className="text-primary">{isAuthenticated ? user?.fullname || user?.username : 'Khách'}</b></span>
+              {replyingTo === null && (
+                <form onSubmit={handleComment} className="mb-10 relative bg-slate-50/50 dark:bg-slate-950/50 p-5 rounded-3xl border border-slate-100 dark:border-slate-800">
+                  <div className="relative mb-4">
+                    <textarea
+                      placeholder="Hãy chia sẻ ý kiến của bạn tại đây..."
+                      className="w-full px-5 py-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all min-h-[100px] text-sm resize-none shadow-sm"
+                      value={commentText}
+                      onChange={(e) => { setCommentText(e.target.value); setCommentError(null); }}
+                    />
                   </div>
-                  <Button type="submit" isLoading={isSubmitting} disabled={!commentText.trim()} size="lg">
-                    Gửi bình luận
-                  </Button>
-                </div>
-              </form>
-
-              <AnimateList className="space-y-8">
-                {post.Comment && post.Comment.length > 0 ? post.Comment.slice(0, 50).map((comment) => (
-                  <div key={comment.id} className="flex space-x-5 group/comment">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 font-bold text-sm uppercase overflow-hidden flex-shrink-0 shadow-inner border border-white dark:border-slate-700">
-                      {comment.User?.avatar ? (
-                        <img src={comment.User.avatar} alt={comment.author_name} className="w-full h-full object-cover" />
-                      ) : (comment.author_name || 'K')[0]}
+                  {commentError && <div className="mb-4 px-4 py-3 bg-red-50 text-red-600 border border-red-100 rounded-xl text-sm font-bold flex items-center shadow-sm animate-in fade-in zoom-in-95"><AlertCircle size={16} className="mr-2" />{commentError}</div>}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-3 text-[11px] text-slate-500 font-bold uppercase tracking-widest pl-2">
+                      <UserIcon size={14} className="text-slate-400" />
+                      <span>Hành động với tư cách: <b className="text-primary">{isAuthenticated ? user?.fullname || user?.username : 'Khách'}</b></span>
                     </div>
-                    <div className="flex-grow">
-                      <div className="bg-slate-50/50 dark:bg-slate-950/50 p-6 rounded-2xl border border-slate-100 dark:border-slate-800 relative transition-all hover:bg-slate-50 dark:hover:bg-slate-900">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center space-x-3">
-                            <span className="font-bold text-slate-900 dark:text-white text-[14px]">{comment.author_name}</span>
-                          </div>
-                          <div className="flex items-center space-x-4">
-                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                              {new Date(comment.created_at).toLocaleDateString('vi-VN')}
-                            </span>
+                    <Button type="submit" isLoading={isSubmitting} disabled={!commentText.trim()} size="sm">
+                      Gửi bình luận
+                    </Button>
+                  </div>
+                </form>
+              )}
 
-                            {/* Management Actions */}
-                            {isAuthenticated && (user?.id === comment.user_id || user?.role === 'admin') && (
-                              <div className="flex items-center space-x-1 opacity-0 group-hover/comment:opacity-100 transition-opacity">
-                                {user?.id === comment.user_id && (
-                                  <button
-                                    onClick={() => {
-                                      setEditingCommentId(comment.id);
-                                      setEditingText(comment.content);
-                                    }}
-                                    className="p-1.5 text-slate-400 hover:text-primary hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-all"
-                                  >
-                                    <Edit2 size={14} />
-                                  </button>
-                                )}
-                                <button
-                                  onClick={() => handleDeleteComment(comment.id)}
-                                  className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-all"
-                                >
-                                  <Trash2 size={14} />
-                                </button>
+              <AnimateList className="space-y-1">
+                {post.Comment && post.Comment.length > 0 ? (
+                  (() => {
+                    const tree = buildCommentTree(post.Comment);
+                    const renderComments = (commentsList: CommentType[], isReply = false): React.ReactNode => {
+                      return commentsList.map(comment => (
+                        <div key={comment.id} className={cn("group/comment relative", isReply ? "ml-6 md:ml-10 mt-3 md:mt-4 before:content-[''] before:absolute before:-left-4 md:before:-left-6 before:top-4 before:w-3 md:before:w-4 before:h-px before:bg-slate-200 dark:before:bg-slate-700 before:z-0 after:content-[''] after:absolute after:-left-4 md:after:-left-6 after:-top-6 after:h-10 after:w-px after:bg-slate-200 dark:after:bg-slate-700 after:z-0" : "mb-6")}>
+                           <div className="flex space-x-3 relative z-10">
+                              {/* Avatar */}
+                              <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 font-bold text-xs uppercase overflow-hidden flex-shrink-0 border border-slate-200 dark:border-slate-700">
+                                  {comment.User?.avatar ? (
+                                    <img src={comment.User.avatar} alt={comment.author_name} className="w-full h-full object-cover" />
+                                  ) : (comment.author_name || 'K')[0]}
                               </div>
-                            )}
-                          </div>
-                        </div>
+                              {/* Body */}
+                              <div className="flex-grow min-w-0">
+                                 <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-2xl rounded-tl-sm border border-slate-100 dark:border-slate-800 transition-all">
+                                    <div className="flex items-center justify-between mb-1.5">
+                                       <span className="font-bold text-slate-900 dark:text-white text-[13px]">{comment.author_name}</span>
+                                       <span className="text-[10px] text-slate-400 font-medium">
+                                          {new Date(comment.created_at).toLocaleDateString('vi-VN')}
+                                       </span>
+                                    </div>
+                                    {editingCommentId === comment.id ? (
+                                       <div className="mt-2 space-y-3">
+                                          <textarea
+                                            className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary min-h-[80px]"
+                                            value={editingText}
+                                            onChange={(e) => setEditingText(e.target.value)}
+                                          />
+                                          <div className="flex justify-end space-x-2">
+                                            <Button variant="outline" size="sm" onClick={() => setEditingCommentId(null)}>Hủy</Button>
+                                            <Button size="sm" onClick={() => handleUpdateComment(comment.id)}>Lưu</Button>
+                                          </div>
+                                       </div>
+                                    ) : (
+                                       <p className="text-slate-700 dark:text-slate-300 text-[13.5px] leading-relaxed break-words whitespace-pre-wrap">
+                                          {comment.content}
+                                       </p>
+                                    )}
+                                 </div>
 
-                        {editingCommentId === comment.id ? (
-                          <div className="mt-4 space-y-4">
-                            <textarea
-                              className="w-full p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary min-h-[100px] text-slate-700 dark:text-slate-300"
-                              value={editingText}
-                              onChange={(e) => setEditingText(e.target.value)}
-                            />
-                            <div className="flex justify-end space-x-2">
-                              <Button variant="outline" size="sm" onClick={() => setEditingCommentId(null)}>Hủy</Button>
-                              <Button size="sm" onClick={() => handleUpdateComment(comment.id)}>Cập nhật</Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <p className="text-slate-600 dark:text-slate-400 text-[14px] leading-relaxed whitespace-pre-wrap">
-                            {comment.content}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )) : (
-                  <div className="text-center py-20 bg-slate-50/50 dark:bg-slate-950/50 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-3xl">
-                    <MessageSquare size={48} className="mx-auto text-slate-200 dark:text-slate-800 mb-6" />
+                                 {/* Action bar */}
+                                 <div className="flex items-center space-x-4 mt-1.5 ml-2 opacity-80 hover:opacity-100 transition-opacity">
+                                   <button onClick={() => { setReplyingTo(replyingTo === comment.id ? null : comment.id); setCommentText(''); }} className="text-[11px] font-bold text-slate-500 hover:text-primary transition-colors">
+                                     Phản hồi
+                                   </button>
+                                   {isAuthenticated && (user?.id === comment.user_id || user?.role === 'admin') && (
+                                      <>
+                                        {user?.id === comment.user_id && <button onClick={() => { setEditingCommentId(comment.id); setEditingText(comment.content); }} className="text-[11px] font-bold text-slate-500 hover:text-primary transition-colors">Sửa</button>}
+                                        {deleteConfirmId === comment.id ? (
+                                          <div className="flex items-center space-x-2 text-[10px] bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded border border-red-100 dark:border-red-900/30">
+                                            <span className="text-red-500 font-bold">Xóa?</span>
+                                            <button onClick={() => handleDeleteComment(comment.id)} className="text-red-600 hover:text-red-700 font-bold">Có</button>
+                                            <button onClick={() => setDeleteConfirmId(null)} className="text-slate-500 hover:text-slate-700">Không</button>
+                                          </div>
+                                        ) : (
+                                          <button onClick={() => setDeleteConfirmId(comment.id)} className="text-[11px] font-bold text-slate-500 hover:text-red-500 transition-colors">Xóa</button>
+                                        )}
+                                      </>
+                                   )}
+                                 </div>
+                                 
+                                 {/* Reply Input Box */}
+                                 {replyingTo === comment.id && (
+                                   <div className="mt-3 mb-2 animate-in fade-in slide-in-from-top-2">
+                                      <form onSubmit={handleComment} className="flex flex-col space-y-2 p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl relative shadow-sm">
+                                         <input type="text" autoFocus value={commentText} onChange={(e) => { setCommentText(e.target.value); setCommentError(null); }} onKeyDown={(e) => { if (e.key === 'Escape') setReplyingTo(null); }} placeholder={`Trả lời ${comment.author_name}...`} className="w-full bg-transparent text-[13px] outline-none px-2 py-1 placeholder:text-slate-400" />
+                                         <div className="flex justify-between items-center px-1">
+                                           <span className="text-[10px] text-slate-400 ml-1">Nhấn Esc để hủy</span>
+                                           <Button type="submit" size="sm" isLoading={isSubmitting} disabled={!commentText.trim()} className="h-7 text-[11px] px-3">Gửi</Button>
+                                         </div>
+                                      </form>
+                                       {commentError && <div className="mt-2 px-2 py-1.5 bg-red-50 text-red-600 rounded-lg text-[11px] font-bold border border-red-100 flex items-center"><AlertCircle size={12} className="inline mr-1" />{commentError}</div>}
+                                   </div>
+                                 )}
+                              </div>
+                           </div>
+                           {comment.Replies && comment.Replies.length > 0 && (
+                              <div className="mt-1 relative">
+                                 {/* Optional vertical line extension here if depth is deep */}
+                                 {renderComments(comment.Replies, true)}
+                              </div>
+                           )}
+                        </div>
+                      ));
+                    };
+                    return <>{renderComments(tree)}</>;
+                  })()
+                ) : (
+                  <div className="text-center py-16 bg-slate-50/50 dark:bg-slate-950/50 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-3xl">
+                    <MessageSquare size={40} className="mx-auto text-slate-200 dark:text-slate-800 mb-4" />
                     <p className="text-slate-400 text-sm font-bold uppercase tracking-widest">Chưa có bình luận nào.</p>
-                    <p className="text-slate-500 text-xs mt-2">Hãy là người đầu tiên chia sẻ cảm nghĩ!</p>
+                    <p className="text-slate-500 text-[11px] mt-2">Hãy là người đầu tiên chia sẻ cảm nghĩ!</p>
                   </div>
                 )}
               </AnimateList>

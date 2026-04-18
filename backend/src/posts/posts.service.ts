@@ -171,6 +171,11 @@ export class PostsService {
             author_name: true,
             author_email: true,
             created_at: true,
+            user_id: true,
+            parent_id: true,
+            User: {
+              select: { avatar: true, fullname: true, username: true }
+            }
           },
         },
         _count: {
@@ -233,6 +238,9 @@ export class PostsService {
   }
 
   async create(user: User, data: CreatePostDto): Promise<PostInterface> {
+    if (!(user as any).can_post) {
+      throw new ForbiddenException('Tài khoản của bạn đã bị cấm đăng bài.');
+    }
     const {
       title,
       content,
@@ -305,6 +313,10 @@ export class PostsService {
   ): Promise<PostInterface> {
     const post = await this.prisma.post.findUnique({ where: { id } });
     if (!post) throw new NotFoundException('Post not found');
+
+    if (!(user as any).can_post) {
+      throw new ForbiddenException('Tài khoản của bạn đã bị cấm sửa bài.');
+    }
 
     if (post.author_id !== user.id) {
       throw new ForbiddenException(

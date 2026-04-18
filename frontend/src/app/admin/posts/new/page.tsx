@@ -25,6 +25,7 @@ export default function NewPostPage() {
   const router = useRouter();
   const pathname = usePathname();
   const { loading: authLoading, isAuthenticated } = useAuth() as { loading: boolean; isAuthenticated: boolean };
+  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [seriesList, setSeriesList] = useState<{ id: number; name: string }[]>([]);
@@ -90,8 +91,8 @@ export default function NewPostPage() {
 
       router.push('/admin');
       router.refresh();
-    } catch {
-      alert('Có lỗi xảy ra khi tạo bài viết');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Có lỗi xảy ra khi tạo bài viết');
     } finally {
       setLoading(false);
     }
@@ -129,6 +130,7 @@ export default function NewPostPage() {
       <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-1">
           <div className="lg:col-span-2 space-y-1">
+            {error && <div className="p-4 bg-red-50 text-red-600 border border-red-100 font-bold rounded-2xl text-sm mb-4 animate-in fade-in slide-in-from-top-2">{error}</div>}
             <AdminCard>
               <div className="mb-1">
                 <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Tiêu đề</label>

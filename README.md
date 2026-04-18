@@ -19,6 +19,7 @@ Dự án Portfolio + Blog chuyên nghiệp dành cho Kỹ sư Hệ thống (Syst
 - **Advanced Search:** Tính năng tìm kiếm Real-time (debounced), tìm kiếm chéo tag, category, series không phân biệt chữ hoa chữ thường.
 - **Blue/Sky UI Identity:** Giao diện được tối ưu hóa đồng nhất bằng tông màu Xanh chuyên nghiệp, với bảng thiết kế tinh gọn cho trải nghiệm Dev/Tech content.
 - **Authentication:** Quy trình xác thực JWT bền vững với HttpOnly Cookies, tự động khôi phục phiên bản hồ sơ người dùng đầy đủ.
+- **Advanced User Management:** Quản trị viên có thể kiểm soát chi tiết quyền hạn của từng người dùng thông qua Settings Box: cấm đăng nhập (Khóa tài khoản), cấm bình luận, cấm đăng bài, và thay đổi vai trò trực quan.
 
 ## Project Structure
 ```text

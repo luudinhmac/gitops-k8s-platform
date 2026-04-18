@@ -69,7 +69,16 @@ export class UsersController {
     @Req() req: AuthenticatedRequest,
     @Body() body: { is_active: boolean },
   ) {
-    return this.usersService.updateStatus(+id, req.user, body.is_active);
+  }
+
+  @Patch(':id/permissions')
+  @UseGuards(AuthGuard('jwt'))
+  updatePermissions(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+    @Body() body: { role?: string; is_active?: boolean; can_comment?: boolean; can_post?: boolean },
+  ) {
+    return this.usersService.updatePermissions(+id, req.user, body);
   }
 
   @Patch(':id/reset-password')

@@ -28,12 +28,15 @@ model Comment {
   id           Int      @id @default(autoincrement())
   post_id      Int?
   user_id      Int?
+  parent_id    Int?
   author_name  String?  @db.Text
   author_email String?  @db.Text
   content      String?  @db.Text
   created_at   DateTime @default(now())
   Post         Post?    @relation(fields: [post_id], references: [id], onDelete: Cascade)
   User         User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
+  Parent       Comment? @relation("CommentToComment", fields: [parent_id], references: [id], onDelete: Cascade)
+  Replies      Comment[] @relation("CommentToComment")
 
   @@index([post_id])
   @@index([user_id])
@@ -105,6 +108,8 @@ model User {
   reset_token        String?
   reset_token_expiry DateTime?
   is_active          Boolean    @default(true)
+  can_comment        Boolean    @default(true)
+  can_post           Boolean    @default(true)
   created_at         DateTime   @default(now())
   Post               Post[]
   PostLike           PostLike[]

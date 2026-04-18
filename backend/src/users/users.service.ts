@@ -42,6 +42,8 @@ export class UsersService {
     address: true,
     created_at: true,
     is_active: true,
+    can_comment: true,
+    can_post: true,
   };
 
   async findAll(): Promise<Partial<User>[]> {
@@ -173,6 +175,35 @@ export class UsersService {
       where: { id },
       data: {
         is_active: isActive,
+      },
+      select: this.publicSelect,
+    });
+  }
+
+  async updatePermissions(
+    id: number,
+    currentUser: User,
+    data: { role?: string; is_active?: boolean; can_comment?: boolean; can_post?: boolean },
+  ) {
+    if (currentUser.role !== (UserRole.ADMIN as string)) {
+      throw new ForbiddenException('Chỉ Admin mới có thể thay đổi quyền hạn.');
+    }
+    
+    if (currentUser.id === id && data.is_active === false) {
+      throw new BadRequestException('Bạn không thể tự vô hiệu hóa tài khoản của chính mình.');
+    }
+
+    if (data.role && !Object.values(UserRole).includes(data.role as UserRole)) {
+      throw new BadRequestException('Vai trò không hợp lệ.');
+    }
+
+    return this.prisma.user.update({
+      where: { id },
+      data: {
+        ...(data.role !== undefined && { role: data.role }),
+        ...(data.is_active !== undefined && { is_active: data.is_active }),
+        ...(data.can_comment !== undefined && { can_comment: data.can_comment }),
+        ...(data.can_post !== undefined && { can_post: data.can_post }),
       },
       select: this.publicSelect,
     });

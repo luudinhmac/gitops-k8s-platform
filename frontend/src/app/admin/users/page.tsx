@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import {
   Users, Plus, Loader2, Trash2, User as UserIcon,
   Mail, Lock, Eye, EyeOff, AlertCircle, Check, X,
-  Phone, Briefcase, Calendar, MapPin
+  Phone, Briefcase, Calendar, MapPin,
+  Settings, Shield, ShieldAlert, ShieldOff, MessageSquareOff, Edit3
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
@@ -38,6 +39,7 @@ export default function UsersPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [resetModal, setResetModal] = useState<{ open: boolean; userId: number | null; username: string }>({ open: false, userId: null, username: '' });
+  const [settingsMenuId, setSettingsMenuId] = useState<number | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [showNewPass, setShowNewPass] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
@@ -85,11 +87,18 @@ export default function UsersPage() {
     }
   };
 
-  const handleChangeRole = async (userId: number, newRole: string) => {
+  const handleUpdatePermissions = async (userId: number, fields: { role?: string; is_active?: boolean; can_comment?: boolean; can_post?: boolean }) => {
     try {
-      await userService.updateRole(userId, newRole);
-      setUsers(users.map(u => u.id === userId ? { ...u, role: newRole as any } : u));
-    } catch (err) { console.error(err); }
+      if (fields.is_active === false && userId === currentUser?.id) {
+        setStatusMsg({ type: 'error', text: 'Bạn không thể tự khóa tài khoản của mình!' });
+        return;
+      }
+      await userService.updatePermissions(userId, fields);
+      setUsers(users.map(u => u.id === userId ? { ...u, ...fields } as AdminUser : u));
+      setStatusMsg({ type: 'success', text: 'Đã cập nhật quyền hạn thành công' });
+    } catch (err: any) { 
+      setStatusMsg({ type: 'error', text: err.response?.data?.message || 'Không thể cập nhật quyền hạn' });
+    }
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {
@@ -227,45 +236,77 @@ export default function UsersPage() {
                       </p>
                     </td>
                     <td className="px-6 py-4">
-                      <select
-                        value={u.role || 'user'}
-                        disabled={u.id === currentUser?.id}
-                        onChange={(e) => handleChangeRole(u.id, e.target.value)}
-                        className={cn(
-                          "px-3 py-1.5 rounded-lg text-[10px] font-bold outline-none transition-all cursor-pointer border border-transparent hover:border-slate-200 dark:hover:border-slate-700",
-                          u.role === 'admin' ? "bg-amber-100 text-amber-700" :
-                            u.role === 'editor' ? "bg-blue-100 text-blue-700" :
-                              "bg-slate-100 text-slate-600"
-                        )}>
-                        <option value="admin">Admin</option>
-                        <option value="editor">Editor</option>
-                        <option value="user">User</option>
-                      </select>
+                      <Badge type="role" variant={u.role as any}>{u.role}</Badge>
                     </td>
-                    <td className="px-6 py-4 text-center">
-                      <button
-                        onClick={() => handleToggleStatus(u)}
-                        disabled={u.id === currentUser?.id}
-                        className={cn(
-                          "px-3 py-1 rounded-full text-[10px] font-bold transition-all shadow-sm",
-                          u.is_active ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700",
-                          u.id !== currentUser?.id && "hover:scale-105 active:scale-95"
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col gap-1 items-center">
+                        <span className={cn("px-2 py-[3px] rounded-md text-[10px] font-bold min-w-20 text-center shadow-sm", u.is_active ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700")}>
+                          {u.is_active ? "Hoạt động" : "Bị chặn Login"}
+                        </span>
+                        {(!u.can_comment || !u.can_post) && (
+                           <div className="flex gap-1 justify-center mt-0.5">
+                             {!u.can_comment && <span className="bg-orange-100/80 text-orange-700 px-1.5 py-[2px] text-[9px] rounded font-bold" title="Cấm bình luận"><MessageSquareOff size={8} className="inline mr-1" />Cmt</span>}
+                             {!u.can_post && <span className="bg-orange-100/80 text-orange-700 px-1.5 py-[2px] text-[9px] rounded font-bold" title="Cấm đăng bài"><Edit3 size={8} className="inline mr-1" />Bài</span>}
+                           </div>
                         )}
-                      >
-                        {u.is_active ? "Hoạt động" : "Bị chặn"}
-                      </button>
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end space-x-1">
+                      <div className="flex items-center justify-end space-x-1 relative">
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-8 w-8"
-                          onClick={() => setResetModal({ open: true, userId: u.id, username: u.username })}
+                          className={cn("h-8 w-8 transition-all", settingsMenuId === u.id && "bg-slate-100 dark:bg-slate-800")}
+                          onClick={() => setSettingsMenuId(settingsMenuId === u.id ? null : u.id)}
                           disabled={u.id === currentUser?.id}
                         >
-                          <Lock size={14} className="text-slate-400" />
+                          <Settings size={14} className="text-slate-400" />
                         </Button>
+
+                        {settingsMenuId === u.id && (
+                          <div className="absolute right-10 top-2 mt-0 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 py-1.5 z-50 text-left animate-in fade-in zoom-in-95 overflow-hidden origin-top-right">
+                            <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-700 mb-1 flex items-center justify-between">
+                              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Box Cài Đặt</span>
+                              <button onClick={() => setSettingsMenuId(null)} className="text-slate-400 hover:text-red-500"><X size={12}/></button>
+                            </div>
+
+                            <button className="w-full flex items-center px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors" onClick={() => { setResetModal({ open: true, userId: u.id, username: u.username }); setSettingsMenuId(null); }}>
+                              <Lock size={12} className="mr-2 text-slate-400" /> Đổi mật khẩu
+                            </button>
+
+                            <div className="mx-2 my-1 h-px bg-slate-100 dark:bg-slate-700" />
+
+                            <button className="w-full justify-between flex items-center px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors" onClick={() => handleUpdatePermissions(u.id, { role: u.role === 'admin' ? 'user' : 'admin' })}>
+                              <div className="flex items-center"><Shield size={12} className="mr-2 text-blue-500" /> Quyền Admin</div>
+                              <div className={cn("w-6 h-3 rounded-full transition-colors relative", u.role === 'admin' ? "bg-primary" : "bg-slate-200 dark:bg-slate-600")}>
+                                <div className={cn("absolute top-0.5 w-2 h-2 rounded-full bg-white transition-all", u.role === 'admin' ? "right-0.5" : "left-0.5")} />
+                              </div>
+                            </button>
+
+                            <div className="mx-2 my-1 h-px bg-slate-100 dark:bg-slate-700" />
+
+                            <button className="w-full justify-between flex items-center px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors" onClick={() => handleUpdatePermissions(u.id, { is_active: !u.is_active })}>
+                              <div className="flex items-center"><ShieldAlert size={12} className="mr-2 text-red-500" /> Khóa Đăng nhập</div>
+                              <div className={cn("w-6 h-3 rounded-full transition-colors relative", !u.is_active ? "bg-red-500" : "bg-slate-200 dark:bg-slate-600")}>
+                                <div className={cn("absolute top-0.5 w-2 h-2 rounded-full bg-white transition-all", !u.is_active ? "right-0.5" : "left-0.5")} />
+                              </div>
+                            </button>
+
+                            <button className="w-full justify-between flex items-center px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors" onClick={() => handleUpdatePermissions(u.id, { can_comment: !u.can_comment })}>
+                              <div className="flex items-center"><MessageSquareOff size={12} className="mr-2 text-orange-500" /> Cấm Bình luận</div>
+                              <div className={cn("w-6 h-3 rounded-full transition-colors relative", !u.can_comment ? "bg-orange-500" : "bg-slate-200 dark:bg-slate-600")}>
+                                <div className={cn("absolute top-0.5 w-2 h-2 rounded-full bg-white transition-all", !u.can_comment ? "right-0.5" : "left-0.5")} />
+                              </div>
+                            </button>
+                            
+                            <button className="w-full justify-between flex items-center px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors" onClick={() => handleUpdatePermissions(u.id, { can_post: !u.can_post })}>
+                              <div className="flex items-center"><Edit3 size={12} className="mr-2 text-orange-500" /> Cấm Đăng bài</div>
+                              <div className={cn("w-6 h-3 rounded-full transition-colors relative", !u.can_post ? "bg-orange-500" : "bg-slate-200 dark:bg-slate-600")}>
+                                <div className={cn("absolute top-0.5 w-2 h-2 rounded-full bg-white transition-all", !u.can_post ? "right-0.5" : "left-0.5")} />
+                              </div>
+                            </button>
+                          </div>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"

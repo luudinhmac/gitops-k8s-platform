@@ -19,6 +19,8 @@ export interface User {
   birthday?: string;
   address?: string;
   is_active: boolean;
+  can_comment: boolean;
+  can_post: boolean;
   created_at: Date;
 }
 
