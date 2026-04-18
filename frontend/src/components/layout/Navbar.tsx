@@ -129,7 +129,7 @@ export default function Navbar() {
                         <User size={16} className="mr-2.5" /> Hồ sơ cá nhân
                       </Link>
 
-                      <Link href="/admin/posts/new" onClick={() => setDropdownOpen(false)}
+                      <Link href="/write" onClick={() => setDropdownOpen(false)}
                         className="flex items-center px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary hover:bg-primary/5 rounded-xl transition-all">
                         <PenSquare size={16} className="mr-2.5" /> Viết bài mới
                       </Link>
@@ -204,7 +204,7 @@ export default function Navbar() {
                   className="flex items-center w-full py-3 px-4 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-medium">
                   <User size={18} className="mr-3" /> Hồ sơ cá nhân
                 </Link>
-                <Link href="/admin/posts/new" onClick={() => setIsOpen(false)}
+                <Link href="/write" onClick={() => setIsOpen(false)}
                   className="flex items-center w-full py-3 px-4 rounded-xl bg-primary/10 text-primary font-medium">
                   <PenSquare size={18} className="mr-3" /> Viết bài mới
                 </Link>
