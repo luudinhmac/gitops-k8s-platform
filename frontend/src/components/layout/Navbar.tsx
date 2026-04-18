@@ -121,9 +121,6 @@ export default function Navbar() {
                   )}>
                     <div className="p-3 border-b border-slate-100 dark:border-slate-800">
                       <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{user.fullname || user.username}</p>
-                      <Badge type="role" variant={user.role as any} size="xs" className="mt-1">
-                        {user.role}
-                      </Badge>
                     </div>
 
                     <div className="p-2 space-y-0.5">
@@ -201,9 +198,6 @@ export default function Navbar() {
                   <UserAvatar user={user} size="md" />
                   <div>
                     <p className="font-bold text-slate-900 dark:text-white text-sm">{user.fullname || user.username}</p>
-                    <Badge type="role" variant={user.role as any} size="xs" className="mt-1">
-                      {user.role}
-                    </Badge>
                   </div>
                 </div>
                 <Link href="/profile" onClick={() => setIsOpen(false)}

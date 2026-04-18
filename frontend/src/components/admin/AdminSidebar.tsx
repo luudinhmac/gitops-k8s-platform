@@ -141,11 +141,6 @@ const NavContent = ({ mobile = false, setSidebarOpen, pathname, user, logout, is
           {!isCollapsed && (
             <div className="min-w-0 pr-2">
               <p className="text-[11px] font-bold text-slate-900 dark:text-white truncate">{user?.fullname}</p>
-              <div className="flex items-center mt-0.5">
-                <Badge type="role" variant={user?.role as any} size="xs">
-                  {user?.role}
-                </Badge>
-              </div>
             </div>
           )}
         </div>
