@@ -18,7 +18,7 @@ function LoginContent() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   const [formData, setFormData] = useState({
     username: '',
     password: '',
@@ -38,7 +38,7 @@ function LoginContent() {
 
     try {
       const data = await authService.login(formData);
-      
+
       // Update AuthContext and redirect
       login(data.user);
       router.push(redirectPath);
@@ -46,6 +46,27 @@ function LoginContent() {
       setError(err.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      const form = (e.currentTarget as HTMLElement).closest('form');
+      if (form) {
+        const elements = Array.from(form.querySelectorAll('input, select, textarea, button:not([tabindex="-1"])'))
+          .filter(el => {
+            const style = window.getComputedStyle(el);
+            return style.display !== 'none' && style.visibility !== 'hidden';
+          }) as HTMLElement[];
+        const index = elements.indexOf(e.currentTarget as HTMLElement);
+        if (index > -1 && index < elements.length - 1) {
+          const nextElement = elements[index + 1];
+          if (nextElement.getAttribute('type') !== 'submit') {
+            e.preventDefault();
+            nextElement.focus();
+          }
+        }
+      }
     }
   };
 
@@ -57,8 +78,8 @@ function LoginContent() {
 
       <div className="max-w-md w-full relative z-10">
         {/* Back to Home */}
-        <Link 
-          href="/" 
+        <Link
+          href="/"
           className="inline-flex items-center text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-primary transition-all mb-8 group"
         >
           <ArrowLeft size={16} className="mr-2 group-hover:-translate-x-1 transition-transform" />
@@ -67,18 +88,15 @@ function LoginContent() {
 
         {/* Login Card */}
         <div className="bg-white dark:bg-slate-900 p-8 md:p-10 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xl relative overflow-hidden">
-           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/50 via-primary to-primary/50" />
-           
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/50 via-primary to-primary/50" />
+
           <div className="text-center mb-10">
             <div className="w-16 h-16 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner border border-primary/10">
-               <ShieldCheck size={32} />
+              <ShieldCheck size={32} />
             </div>
             <h1 className="text-3xl font-display font-bold text-slate-900 dark:text-white mb-3">
               Chào mừng trở lại
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">
-              Đăng nhập để quản trị hệ thống của bạn
-            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -103,6 +121,7 @@ function LoginContent() {
                   placeholder="Nhập tên đăng nhập..."
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  onKeyDown={handleKeyDown}
                 />
               </div>
             </div>
@@ -122,9 +141,11 @@ function LoginContent() {
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  onKeyDown={handleKeyDown}
                 />
                 <button
                   type="button"
+                  tabIndex={-1}
                   className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-primary transition-colors"
                   onClick={() => setShowPassword(!showPassword)}
                 >
@@ -136,9 +157,8 @@ function LoginContent() {
             <Button
               type="submit"
               isLoading={loading}
-              className="w-full py-7 text-base rounded-2xl shadow-xl shadow-primary/20"
-            >
-              Đăng nhập ngay
+              className="w-full py-2 text-base rounded-2xl shadow-xl shadow-primary/20">
+              Đăng nhập
             </Button>
           </form>
 
