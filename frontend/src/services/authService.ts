@@ -1,12 +1,12 @@
 import api from '../lib/axios';
 
 export const authService = {
-  login: async (formData: any) => {
+  login: async (formData: Record<string, unknown>) => {
     const response = await api.post('/auth/login', formData);
     return response.data;
   },
 
-  register: async (formData: any) => {
+  register: async (formData: Record<string, unknown>) => {
     const response = await api.post('/auth/register', formData);
     return response.data;
   },

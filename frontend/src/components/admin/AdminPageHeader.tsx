@@ -50,11 +50,11 @@ export default function AdminPageHeader({
 
   const headerClasses = cn(
     "z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-all",
-    sticky ? "sticky top-0 mb-4" : "mb-4"
+    sticky ? "sticky top-0 mb-1" : "mb-1"
   );
 
   const containerClasses = cn(
-    "mx-auto px-4 lg:px-6 py-3 flex items-center justify-between",
+    "mx-auto px-4 lg:px-6 py-1 flex items-center justify-between",
     maxWidth === "1400px" ? "max-w-[1400px]" : "max-w-full"
   );
 

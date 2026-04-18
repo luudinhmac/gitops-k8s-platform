@@ -113,11 +113,11 @@ export default function CategoriesPage() {
         searchPlaceholder="Tìm danh mục..."
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-1">
         {/* Form */}
         <div className="lg:col-span-1">
-           <AdminCard title="Tạo mới" icon={Plus} className="sticky top-24">
-              <form onSubmit={handleAddCategory} className="space-y-4">
+           <AdminCard title="Tạo mới" icon={Plus} className="sticky top-12">
+              <form onSubmit={handleAddCategory} className="space-y-1">
                  <div>
                     <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Tên danh mục</label>
                     <input type="text" placeholder="Ví dụ: Công nghệ, Đời sống..." value={newCategory} onChange={e => setNewCategory(e.target.value)} required
@@ -139,12 +139,12 @@ export default function CategoriesPage() {
            }>
               <AnimateList component="div" className="divide-y divide-slate-100 dark:divide-slate-800">
                  {filteredCategories.length === 0 ? (
-                    <div className="p-10 text-center">
+                    <div className="p-4 text-center">
                        <Layout size={48} className="mx-auto text-slate-200 mb-4" />
                        <p className="text-slate-500 font-medium">Không tìm thấy danh mục nào.</p>
                     </div>
                  ) : filteredCategories.map(cat => (
-                    <div key={cat.id} className="p-4 md:p-6 flex items-center justify-between group hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-all">
+                    <div key={cat.id} className="p-1 flex items-center justify-between group hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-all">
                        <div className="flex items-center space-x-4 flex-1 min-w-0">
                           <IconBadge icon={FileText} color="blue" size="md" className="group-hover:scale-110" />
                           <div className="flex-grow min-w-0">

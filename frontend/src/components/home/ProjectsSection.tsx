@@ -107,8 +107,8 @@ export default function ProjectsSection() {
   return (
     <section id="projects" className="py-24 px-4 bg-slate-50/50 dark:bg-slate-900/20 relative">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl lg:text-6xl font-display font-bold text-slate-900 dark:text-white mb-6">
+        <div className="text-center mb-8">
+          <h2 className="text-3xl md:text-5xl lg:text-6xl font-display font-bold text-slate-900 dark:text-white mb-1">
             Dự án <span className="text-primary">Thực tế</span>
           </h2>
           <p className="text-base md:text-lg text-slate-500 max-w-2xl mx-auto leading-relaxed">
@@ -117,7 +117,7 @@ export default function ProjectsSection() {
         </div>
 
         {/* Filters */}
-        <div className="flex flex-wrap justify-center gap-2 md:gap-3 mb-12">
+        <div className="flex flex-wrap justify-center gap-1 mb-1">
           {filters.map((filter) => (
             <button
               key={filter.value}
@@ -135,14 +135,13 @@ export default function ProjectsSection() {
         </div>
 
         {/* Projects Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1">
           {filteredProjects.map((project, i) => (
             <div 
-              key={i}
-              className="group glass rounded-xl p-6 md:p-8 hover-lift flex flex-col h-full border border-slate-100 dark:border-slate-800 hover:border-primary/20"
+              key={i} className="glass p-2 rounded-xl flex flex-col hover-lift group border border-slate-100 dark:border-slate-800 hover:border-primary/20 transition-all"
             >
-              <div className="mb-6 flex items-start justify-between">
-                <div className="p-3 md:p-4 bg-primary/10 rounded-xl text-primary">
+              <div className="mb-2 flex items-start justify-between">
+                <div className="p-2 bg-primary/10 rounded-xl text-primary">
                   <project.icon size={28} />
                 </div>
                 <div className="flex space-x-2">

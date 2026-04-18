@@ -14,7 +14,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -28,7 +28,7 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (formData.password !== formData.confirmPassword) {
       setError('Mật khẩu xác nhận không khớp.');
       return;
@@ -48,6 +48,27 @@ export default function RegisterPage() {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      const form = (e.currentTarget as HTMLElement).closest('form');
+      if (form) {
+        const elements = Array.from(form.querySelectorAll('input, select, textarea, button:not([tabindex="-1"])'))
+          .filter(el => {
+            const style = window.getComputedStyle(el);
+            return style.display !== 'none' && style.visibility !== 'hidden';
+          }) as HTMLElement[];
+        const index = elements.indexOf(e.currentTarget as HTMLElement);
+        if (index > -1 && index < elements.length - 1) {
+          const nextElement = elements[index + 1];
+          if (nextElement.getAttribute('type') !== 'submit') {
+            e.preventDefault();
+            nextElement.focus();
+          }
+        }
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden bg-slate-50/50 dark:bg-slate-950">
       {/* Decorative Elements */}
@@ -56,8 +77,8 @@ export default function RegisterPage() {
 
       <div className="max-w-2xl w-full relative z-10">
         {/* Back to Home */}
-        <Link 
-          href="/" 
+        <Link
+          href="/"
           className="inline-flex items-center text-[10px] font-bold uppercase tracking-widest text-slate-400 hover:text-primary transition-all mb-8 group"
         >
           <ArrowLeft size={16} className="mr-2 group-hover:-translate-x-1 transition-transform" />
@@ -66,18 +87,15 @@ export default function RegisterPage() {
 
         {/* Register Card */}
         <div className="bg-white dark:bg-slate-900 p-8 md:p-12 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-2xl relative overflow-hidden">
-           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/50 via-primary to-primary/50" />
-           
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary/50 via-primary to-primary/50" />
+
           <div className="text-center mb-10">
             <div className="w-16 h-16 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner border border-primary/10 text-primary">
-               <UserPlus size={32} />
+              <UserPlus size={32} />
             </div>
             <h1 className="text-3xl font-display font-bold text-slate-900 dark:text-white mb-3">
               Tham gia cộng đồng
             </h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm">
-              Kiến tạo tương lai số cùng nền tảng quản trị thông minh
-            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
@@ -100,9 +118,10 @@ export default function RegisterPage() {
                     type="text"
                     required
                     className="w-full pl-11 pr-4 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
-                    placeholder="johndoe"
+                    placeholder="Tên đăng nhập"
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                    onKeyDown={handleKeyDown}
                   />
                 </div>
               </div>
@@ -119,9 +138,10 @@ export default function RegisterPage() {
                     type="text"
                     required
                     className="w-full pl-11 pr-4 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
-                    placeholder="Nguyễn Văn A"
+                    placeholder="Họ và tên"
                     value={formData.fullname}
                     onChange={(e) => setFormData({ ...formData, fullname: e.target.value })}
+                    onKeyDown={handleKeyDown}
                   />
                 </div>
               </div>
@@ -139,9 +159,10 @@ export default function RegisterPage() {
                   type="email"
                   required
                   className="w-full pl-11 pr-4 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
-                  placeholder="john@example.com"
+                  placeholder="Nhập email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onKeyDown={handleKeyDown}
                 />
               </div>
             </div>
@@ -161,6 +182,7 @@ export default function RegisterPage() {
                     placeholder="0987xxxxxx"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    onKeyDown={handleKeyDown}
                   />
                 </div>
               </div>
@@ -178,6 +200,7 @@ export default function RegisterPage() {
                     className="w-full pl-11 pr-4 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
                     value={formData.birthday}
                     onChange={(e) => setFormData({ ...formData, birthday: e.target.value })}
+                    onKeyDown={handleKeyDown}
                   />
                 </div>
               </div>
@@ -197,6 +220,7 @@ export default function RegisterPage() {
                   placeholder="Kỹ sư hệ thống, DevOps, Developer..."
                   value={formData.profession}
                   onChange={(e) => setFormData({ ...formData, profession: e.target.value })}
+                  onKeyDown={handleKeyDown}
                 />
               </div>
             </div>
@@ -217,9 +241,11 @@ export default function RegisterPage() {
                     placeholder="••••••••"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    onKeyDown={handleKeyDown}
                   />
                   <button
                     type="button"
+                    tabIndex={-1}
                     className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-primary transition-colors"
                     onClick={() => setShowPassword(!showPassword)}
                   >
@@ -243,6 +269,7 @@ export default function RegisterPage() {
                     placeholder="••••••••"
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                    onKeyDown={handleKeyDown}
                   />
                 </div>
               </div>
@@ -251,9 +278,9 @@ export default function RegisterPage() {
             <Button
               type="submit"
               isLoading={loading}
-              className="w-full py-7 text-base rounded-2xl shadow-xl shadow-primary/20"
+              className="w-full py-2 text-base rounded-2xl shadow-xl shadow-primary/20"
             >
-              Khởi tạo tài khoản
+              Đăng ký
             </Button>
           </form>
 

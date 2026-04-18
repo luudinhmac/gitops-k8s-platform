@@ -117,7 +117,7 @@ export default function UsersPage() {
       setIsDeleteModalOpen(false);
       setUserToDelete(null);
       setStatusMsg({ type: 'success', text: 'Đã xóa người dùng thành công' });
-    } catch (err: any) { 
+    } catch (err: any) {
       setStatusMsg({ type: 'error', text: err.response?.data?.message || 'Không thể xóa người dùng' });
     } finally {
       setIsDeleting(false);
@@ -190,7 +190,7 @@ export default function UsersPage() {
         </div>
       )}
 
-      <div className="space-y-6">
+      <div className="space-y-1">
         <AdminCard padding="p-0" title={`Danh sách thành viên (${filteredUsers.length})`} icon={Users}>
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
@@ -257,18 +257,18 @@ export default function UsersPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end space-x-1">
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           className="h-8 w-8"
                           onClick={() => setResetModal({ open: true, userId: u.id, username: u.username })}
                           disabled={u.id === currentUser?.id}
                         >
                           <Lock size={14} className="text-slate-400" />
                         </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           className="h-8 w-8 hover:text-red-600 hover:bg-red-50"
                           onClick={() => openDeleteModal(u)}
                         >
@@ -300,9 +300,6 @@ export default function UsersPage() {
                   <h3 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">{viewUser.fullname || viewUser.username}</h3>
                   <div className="flex items-center mt-1 space-x-3">
                     <span className="text-xs font-bold text-slate-400">@{viewUser.username}</span>
-                    <Badge type="role" variant={viewUser?.role as any} size="xs">
-                      {viewUser?.role}
-                    </Badge>
                   </div>
                 </div>
               </div>
@@ -369,18 +366,9 @@ export default function UsersPage() {
                   <input required type="password" placeholder="••••••••" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
                     value={createForm.password} onChange={e => setCreateForm({ ...createForm, password: e.target.value })} />
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Vai trò</label>
-                  <select className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl text-sm appearance-none focus:ring-2 focus:ring-primary outline-none transition-all"
-                    value={createForm.role} onChange={e => setCreateForm({ ...createForm, role: e.target.value })}>
-                    <option value="user">User</option>
-                    <option value="editor">Editor</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
               </div>
               <Button type="submit" isLoading={createLoading} className="w-full" size="lg">
-                Tạo tài khoản ngay
+                Tạo tài khoản
               </Button>
             </form>
           </div>

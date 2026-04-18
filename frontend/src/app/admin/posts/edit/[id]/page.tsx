@@ -178,11 +178,11 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
       />
 
       <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-1">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-1">
             <AdminCard>
-                <div className="mb-4">
+                <div className="mb-1">
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Tiêu đề bài viết</label>
                   <input 
                     type="text" 
@@ -209,9 +209,9 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
             </AdminCard>
           </div>
 
-          <div className="space-y-4 pb-10">
+          <div className="space-y-1 pb-10">
              <AdminCard title="Cài đặt bài viết" icon={Layout} padding="p-5 md:p-6">
-                <div className="space-y-4">
+                <div className="space-y-1">
                    <div>
                       <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1.5 ml-1">Danh mục</label>
                       <select value={formData.category_id} onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
