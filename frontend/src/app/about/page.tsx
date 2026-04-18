@@ -20,8 +20,8 @@ const services = [
     title: 'Làm chủ Frontend',
     desc: 'Tạo ra các giao diện người dùng sống động với Next.js và Tailwind CSS.',
     icon: Terminal,
-    color: 'text-purple-500',
-    bg: 'bg-purple-500/10'
+    color: 'text-sky-500',
+    bg: 'bg-sky-500/10'
   },
   {
     title: 'Hạ tầng Đám mây',
@@ -40,7 +40,7 @@ export default function AboutPortfolioPage() {
         {/* Animated Background Shapes */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full -z-10 pointer-events-none">
           <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 rounded-full blur-[120px] animate-pulse" />
-          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-500/20 rounded-full blur-[120px] animate-pulse delay-700" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-500/20 rounded-full blur-[120px] animate-pulse delay-700" />
         </div>
 
         <div suppressHydrationWarning={true} className="max-w-7xl mx-auto">

@@ -16,9 +16,13 @@ export interface Comment {
   author_email: string | null;
   created_at: string;
   user_id?: number | null;
+  parent_id?: number | null;
   User?: {
     avatar: string | null;
+    fullname?: string;
+    username?: string;
   } | null;
+  Replies?: Comment[];
 }
 
 export interface Post {

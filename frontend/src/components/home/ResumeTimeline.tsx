@@ -91,7 +91,7 @@ const StatusBadge = ({ status }: { status?: string }) => {
   const styles = {
     PRESENT: 'bg-green-500/10 text-green-500 border-green-500/20',
     COMPLETED: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-    IN_PROGRESS: 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20',
+    IN_PROGRESS: 'bg-sky-500/10 text-sky-500 border-sky-500/20',
     PLANNED: 'bg-slate-500/10 text-slate-500 border-slate-500/20',
   };
 
@@ -144,7 +144,7 @@ export default function ResumeTimeline() {
                   {/* Point */}
                   <div className={cn(
                     "absolute -left-[30px] top-1.5 w-4 h-4 rounded-full border-4 border-slate-50 dark:border-slate-950 z-10",
-                    item.status === 'PRESENT' ? "bg-primary shadow-[0_0_12px_rgba(124,58,237,0.6)]" : "bg-slate-300 dark:bg-slate-700 hover:bg-primary transition-colors duration-300"
+                    item.status === 'PRESENT' ? "bg-primary shadow-[0_0_12px_rgba(37,99,235,0.6)]" : "bg-slate-300 dark:bg-slate-700 hover:bg-primary transition-colors duration-300"
                   )} />
                   
                   <div className="glass p-6 md:p-8 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-primary/40 transition-all duration-300 group hover:shadow-lg hover:shadow-primary/5">
@@ -177,7 +177,7 @@ export default function ResumeTimeline() {
           {/* Education & Learning Column */}
           <div className="space-y-8">
             <div className="flex items-center space-x-3 mb-8">
-              <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 shadow-sm border border-indigo-500/10">
+              <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 shadow-sm border border-blue-500/10">
                 <GraduationCap size={22} />
               </div>
               <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">Lộ trình học tập</h3>
@@ -189,19 +189,19 @@ export default function ResumeTimeline() {
                   {/* Point */}
                   <div className={cn(
                     "absolute -left-[30px] top-1.5 w-4 h-4 rounded-full border-4 border-slate-50 dark:border-slate-950 z-10",
-                    item.status === 'IN_PROGRESS' ? "bg-indigo-500 shadow-[0_0_12px_rgba(99,102,241,0.6)] animate-pulse" : "bg-slate-300 dark:bg-slate-700 group-hover/item:bg-indigo-500 transition-colors duration-300"
+                    item.status === 'IN_PROGRESS' ? "bg-sky-500 shadow-[0_0_12px_rgba(14,165,233,0.6)] animate-pulse" : "bg-slate-300 dark:bg-slate-700 group-hover/item:bg-sky-500 transition-colors duration-300"
                   )} />
                   
-                  <div className="glass p-6 md:p-8 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-indigo-500/40 transition-all duration-300 group hover:shadow-lg hover:shadow-indigo-500/5">
+                  <div className="glass p-6 md:p-8 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-sky-500/40 transition-all duration-300 group hover:shadow-lg hover:shadow-sky-500/5">
                     <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                       <div className="flex items-center space-x-2 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
-                        {item.type === 'EDUCATION' ? <GraduationCap size={14} className="text-indigo-500/70" /> : <Award size={14} className="text-indigo-500/70" />}
+                        {item.type === 'EDUCATION' ? <GraduationCap size={14} className="text-blue-500/70" /> : <Award size={14} className="text-blue-500/70" />}
                         <span>{item.period}</span>
                       </div>
                       <StatusBadge status={item.status} />
                     </div>
-                    <h4 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white mb-1 group-hover:text-indigo-500 transition-colors">{item.title}</h4>
-                    <p className="text-sm font-bold text-indigo-500/80 mb-4">{item.subtitle}</p>
+                    <h4 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white mb-1 group-hover:text-blue-500 transition-colors">{item.title}</h4>
+                    <p className="text-sm font-bold text-blue-500/80 mb-4">{item.subtitle}</p>
                     {Array.isArray(item.description) ? (
                       <ul className="space-y-1.5 list-disc list-outside ml-4 mt-2">
                         {item.description.map((desc, i) => (
@@ -218,7 +218,7 @@ export default function ResumeTimeline() {
               ))}
 
               {/* Call to action card in education column */}
-              <div className="mt-12 p-8 rounded-3xl bg-gradient-to-br from-indigo-600 to-primary text-white shadow-2xl shadow-primary/20 relative overflow-hidden group/cta ring-1 ring-white/20">
+              <div className="mt-12 p-8 rounded-3xl bg-gradient-to-br from-blue-600 to-sky-500 text-white shadow-2xl shadow-primary/20 relative overflow-hidden group/cta ring-1 ring-white/20">
                 <div className="absolute top-0 right-0 p-4 opacity-10 group-hover/cta:scale-125 group-hover/cta:rotate-12 transition-all duration-700">
                    <Rocket size={120} />
                 </div>
@@ -229,7 +229,7 @@ export default function ResumeTimeline() {
                   Tôi luôn cởi mở để chia sẻ kiến thức và thảo luận về các giải pháp Cloud Native & DevOps hiện đại.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 relative z-10">
-                  <a href="/CV-Eng.md" target="_blank" className="flex-1 px-6 py-3.5 bg-white text-indigo-600 rounded-2xl text-sm font-display font-bold flex items-center justify-center hover:bg-slate-50 transition-all hover:scale-[1.02] shadow-sm">
+                  <a href="/CV-Eng.md" target="_blank" className="flex-1 px-6 py-3.5 bg-white text-blue-600 rounded-2xl text-sm font-display font-bold flex items-center justify-center hover:bg-slate-50 transition-all hover:scale-[1.02] shadow-sm">
                     Gửi yêu cầu
                     <ExternalLink size={16} className="ml-2" />
                   </a>

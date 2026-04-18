@@ -1,0 +1,39 @@
+import { Controller, Get, Put, Body, Post, UseGuards } from '@nestjs/common';
+import { SettingsService } from './settings.service';
+import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/roles.decorator';
+
+@Controller('settings')
+export class SettingsController {
+  constructor(private readonly settingsService: SettingsService) {}
+
+  @Get('public')
+  async getPublicSettings() {
+    return this.settingsService.getPublicSettings();
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin', 'editor')
+  @Get('admin')
+  async getAllSettings() {
+    return this.settingsService.getAllSettings();
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin') // Only admins can update settings
+  @Put('admin')
+  async updateSettings(@Body() data: { items: { key: string; value: string; group?: string; is_public?: boolean }[] }) {
+    if (!data.items || !Array.isArray(data.items)) {
+      return { message: 'Invalid data format' };
+    }
+    return this.settingsService.updateSettings(data.items);
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin')
+  @Post('admin/flush-cache')
+  async flushCache() {
+    return this.settingsService.flushCache();
+  }
+}

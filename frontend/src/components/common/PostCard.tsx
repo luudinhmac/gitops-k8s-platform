@@ -63,8 +63,8 @@ const PostCard: React.FC<PostCardProps> = ({ post, className, priority = false }
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-slate-50 to-slate-200 dark:from-slate-900 dark:to-slate-950 flex items-center justify-center">
-            <Terminal size={40} className="text-slate-200 dark:text-slate-800 opacity-50" />
+          <div className="w-full h-full bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-950/20 flex items-center justify-center">
+            <Terminal size={40} className="text-blue-200 dark:text-blue-800 opacity-50" />
           </div>
         )}
         
@@ -93,7 +93,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, className, priority = false }
             <Badge type="category" size="xs">{post.Category.name}</Badge>
           )}
           {post.series && (
-            <Badge size="xs" className="bg-indigo-500/10 text-indigo-600 border-indigo-100 dark:border-indigo-900/50">
+            <Badge size="xs" className="bg-blue-500/10 text-blue-600 border-blue-100 dark:border-blue-900/50">
               {post.series}
             </Badge>
           )}

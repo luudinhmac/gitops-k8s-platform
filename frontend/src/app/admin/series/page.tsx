@@ -160,7 +160,7 @@ export default function SeriesAdminPage() {
                  ) : filteredSeries.map(item => (
                     <div key={item.id} className="p-1 flex items-center justify-between group hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-all">
                        <div className="flex items-center space-x-4 flex-1 min-w-0">
-                          <IconBadge icon={Layers} color="indigo" size="md" className="group-hover:scale-110" />
+                          <IconBadge icon={Layers} color="cyan" size="md" className="group-hover:scale-110" />
                           <div className="flex-grow min-w-0">
                              {editingId === item.id ? (
                                 <div className="space-y-3 animate-in fade-in slide-in-from-left-4">

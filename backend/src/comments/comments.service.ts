@@ -9,7 +9,7 @@ import { User } from '@prisma/client';
 
 @Injectable()
 export class CommentsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async create(data: CreateCommentDto) {
     const post = await this.prisma.post.findUnique({
@@ -17,10 +17,18 @@ export class CommentsService {
     });
     if (!post) throw new NotFoundException('Post not found');
 
+    if (data.user_id) {
+      const user = await this.prisma.user.findUnique({ where: { id: data.user_id } });
+      if (user && !user.can_comment) {
+        throw new ForbiddenException('Tài khoản của bạn đã bị cấm bình luận. Vui lòng liên hệ Admin để được mở khóa');
+      }
+    }
+
     return this.prisma.comment.create({
       data: {
         post_id: data.post_id,
         user_id: data.user_id,
+        parent_id: data.parent_id,
         author_name: data.author_name,
         author_email: data.author_email,
         content: data.content,
@@ -54,6 +62,10 @@ export class CommentsService {
     // Only author can edit
     if (comment.user_id !== user.id) {
       throw new ForbiddenException('You can only edit your own comments');
+    }
+
+    if (!(user as any).can_comment) {
+      throw new ForbiddenException('Tài khoản của bạn đã bị cấm bình luận. Vui lòng liên hệ Admin để được mở khóa');
     }
 
     return this.prisma.comment.update({

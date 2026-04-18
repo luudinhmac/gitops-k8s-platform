@@ -56,6 +56,12 @@ export const userService = {
     return response.data;
   },
 
+  // Admin: Update permissions
+  async updatePermissions(id: number, data: { role?: string; is_active?: boolean; can_comment?: boolean; can_post?: boolean }) {
+    const response = await api.patch(`/users/${id}/permissions`, data);
+    return response.data;
+  },
+
   // Admin: Reset password
   async resetPassword(id: number, data: Record<string, unknown>) {
     const response = await api.patch(`/users/${id}/reset-password`, data);

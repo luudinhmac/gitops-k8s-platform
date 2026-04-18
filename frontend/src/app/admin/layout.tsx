@@ -9,7 +9,7 @@ import { SidebarProvider, useSidebar } from '@/context/SidebarContext';
 import { cn } from '@/lib/utils';
 
 function AdminLayoutContent({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
   const router = useRouter();
   const { sidebarOpen, setSidebarOpen, isCollapsed } = useSidebar();
   const pathname = usePathname();
@@ -18,15 +18,23 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
     if (!loading) {
       if (!isAuthenticated) {
         router.push(`/login?redirect=${pathname}`);
+      } else if (user && user.role === 'user') {
+        // Only kick regular users out of purely administrative areas
+        const forbiddenRoutes = /^\/admin\/(users|categories|series|settings)/;
+        if (forbiddenRoutes.test(pathname)) {
+          router.push('/?error=unauthorized');
+        }
       }
     }
-  }, [isAuthenticated, loading, router]);
+  }, [isAuthenticated, loading, router, user, pathname]);
 
   useEffect(() => {
     setSidebarOpen(false);
   }, [pathname, setSidebarOpen]);
 
-  if (loading || !isAuthenticated) {
+  const isForbiddenForUser = user && user.role === 'user' && /^\/admin\/(users|categories|series|settings)/.test(pathname);
+
+  if (loading || !isAuthenticated || isForbiddenForUser) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
         <Loader2 className="w-10 h-10 text-primary animate-spin" />

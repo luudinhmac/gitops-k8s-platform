@@ -123,9 +123,9 @@ export default function AdminDashboardPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-1">
           {[
             { label: 'Tổng bài viết', count: posts.length, icon: FileText, color: 'blue' as const },
-            { label: 'Tổng lượt xem', count: posts.reduce((a, p) => a + (p.views || 0), 0), icon: Eye, color: 'purple' as const },
-            { label: 'Danh mục', count: categories.length, icon: Layout, color: 'indigo' as const },
-            { label: 'Thẻ', count: posts.reduce((a, p) => a + (p.Tag?.length || 0), 0), icon: TagIcon, color: 'pink' as const },
+            { label: 'Tổng lượt xem', count: posts.reduce((a, p) => a + (p.views || 0), 0), icon: Eye, color: 'sky' as const },
+            { label: 'Danh mục', count: categories.length, icon: Layout, color: 'cyan' as const },
+            { label: 'Thẻ', count: posts.reduce((a, p) => a + (p.Tag?.length || 0), 0), icon: TagIcon, color: 'cyan' as const },
           ].map((stat, i) => (
             <motion.div
               key={i}
@@ -198,7 +198,7 @@ export default function AdminDashboardPage() {
                     <td className="px-6 py-5 hidden md:table-cell">
                       <div className="flex items-center space-x-4">
                         <div className="flex items-center text-slate-500 text-[11px] font-medium" title="Lượt xem">
-                          <IconBadge icon={Eye} color="purple" size="sm" animate={false} className="mr-1.5 bg-transparent p-0 w-auto h-auto opacity-70" />
+                          <IconBadge icon={Eye} color="sky" size="sm" animate={false} className="mr-1.5 bg-transparent p-0 w-auto h-auto opacity-70" />
                           {post.views || 0}
                         </div>
                         <div className="flex items-center text-slate-500 text-[11px] font-medium" title="Bình luận">

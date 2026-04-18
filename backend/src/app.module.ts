@@ -10,6 +10,7 @@ import { CategoriesModule } from './categories/categories.module';
 import { CommentsModule } from './comments/comments.module';
 import { UploadModule } from './upload/upload.module';
 import { SeriesModule } from './series/series.module';
+import { SettingsModule } from './settings/settings.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { SeriesModule } from './series/series.module';
     CommentsModule,
     UploadModule,
     SeriesModule,
+    SettingsModule,
   ],
   controllers: [],
   providers: [],

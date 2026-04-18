@@ -35,7 +35,7 @@ const Button = React.forwardRef<any, ButtonProps>(
 
     const variantStyles = {
       primary: "bg-primary text-white shadow-lg shadow-primary/20 hover:bg-primary/90",
-      secondary: "bg-indigo-500 text-white shadow-lg shadow-indigo-500/20 hover:bg-indigo-600",
+      secondary: "bg-sky-500 text-white shadow-lg shadow-sky-500/20 hover:bg-sky-600",
       success: "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20 hover:bg-emerald-600",
       danger: "bg-red-500 text-white shadow-lg shadow-red-500/20 hover:bg-red-600",
       warning: "bg-amber-500 text-white shadow-lg shadow-amber-500/20 hover:bg-amber-600",

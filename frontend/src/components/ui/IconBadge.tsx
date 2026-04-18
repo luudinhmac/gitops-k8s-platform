@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
 import { motion } from "framer-motion";
 
-export type IconColor = "purple" | "blue" | "emerald" | "amber" | "rose" | "indigo" | "pink" | "slate" | "red";
+export type IconColor = "sky" | "blue" | "emerald" | "amber" | "rose" | "cyan" | "indigo" | "slate" | "red";
 
 interface IconBadgeProps {
   icon: LucideIcon;
@@ -16,14 +16,14 @@ interface IconBadgeProps {
 
 const IconBadge = ({ icon: Icon, color = "slate", size = "md", className, animate = true }: IconBadgeProps) => {
   const colorStyles = {
-    purple: "bg-purple-500/10 text-purple-500",
+    sky: "bg-sky-500/10 text-sky-500",
     blue: "bg-blue-500/10 text-blue-500",
     emerald: "bg-emerald-500/10 text-emerald-500",
     amber: "bg-amber-500/10 text-amber-500",
     rose: "bg-rose-500/10 text-rose-500",
     red: "bg-red-500/10 text-red-500",
     indigo: "bg-indigo-500/10 text-indigo-500",
-    pink: "bg-pink-500/10 text-pink-500",
+    cyan: "bg-cyan-500/10 text-cyan-500",
     slate: "bg-slate-500/10 text-slate-500",
   };
 

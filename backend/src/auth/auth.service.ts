@@ -52,6 +52,9 @@ export class AuthService {
     });
 
     if (user && (await bcrypt.compare(pass, user.password))) {
+      if (!user.is_active) {
+        throw new UnauthorizedException('Tài khoản của bạn đã bị vô hiệu hóa.');
+      }
       this.loginAttempts.delete(username); // Reset on success
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password: _, ...result } = user;
