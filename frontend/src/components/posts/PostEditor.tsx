@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { Save, Loader2, Image as ImageIcon, Tag, Layout, AlertCircle, ArrowLeft, FileText } from 'lucide-react';
-import { slugify } from '@/lib/utils';
+import { Save, Loader2, Image as ImageIcon, Tag, Layout, AlertCircle, ArrowLeft, FileText, Check } from 'lucide-react';
+import { slugify, cn } from '@/lib/utils';
 import RichEditor from '@/components/admin/RichEditor';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminCard from '@/components/admin/AdminCard';
@@ -42,6 +42,7 @@ export default function PostEditor({ postId }: PostEditorProps) {
   const [seriesList, setSeriesList] = useState<{ id: number; name: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [permissionError, setPermissionError] = useState<string | null>(null);
+  const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -140,12 +141,17 @@ export default function PostEditor({ postId }: PostEditorProps) {
 
       if (isEditMode && postId) {
         await postService.update(postId, postData);
+        setStatusMsg({ type: 'success', text: 'Đã cập nhật bài viết thành công!' });
       } else {
         await postService.create(postData);
+        setStatusMsg({ type: 'success', text: 'Đã đăng bài viết thành công!' });
       }
 
-      router.push('/profile?tab=posts');
-      router.refresh();
+      // Short delay to show success message before redirecting
+      setTimeout(() => {
+        router.push('/profile?tab=posts');
+        router.refresh();
+      }, 1500);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Có lỗi xảy ra khi lưu bài viết');
     } finally {
@@ -208,7 +214,21 @@ export default function PostEditor({ postId }: PostEditorProps) {
       <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-1">
           <div className="lg:col-span-2 space-y-1">
-            {error && <div className="p-4 bg-red-50 text-red-600 border border-red-100 font-bold rounded-2xl text-sm mb-4 animate-in fade-in slide-in-from-top-2">{error}</div>}
+            {error && <div className="p-4 bg-red-50 text-red-600 border border-red-100 font-bold rounded-2xl text-sm mb-4 animate-in fade-in slide-in-from-top-2 flex items-center">
+              <AlertCircle size={18} className="mr-2 shrink-0" />
+              {error}
+            </div>}
+            
+            {statusMsg && (
+              <div className={cn(
+                "p-4 rounded-2xl text-sm mb-4 animate-in fade-in slide-in-from-top-2 flex items-center font-bold shadow-sm border",
+                statusMsg.type === 'success' ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-red-50 text-red-600 border-red-100"
+              )}>
+                {statusMsg.type === 'success' ? <Check size={18} className="mr-2 shrink-0" /> : <AlertCircle size={18} className="mr-2 shrink-0" />}
+                {statusMsg.text}
+              </div>
+            )}
+            
             <AdminCard>
                 <div className="mb-1 flex items-center justify-between">
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Tiêu đề bài viết</label>

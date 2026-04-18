@@ -45,6 +45,7 @@ function ProfilePageContent() {
   const [myPosts, setMyPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('latest');
+  const [postFilter, setPostFilter] = useState<'all' | 'published' | 'draft'>('all');
 
   const [passForm, setPassForm] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
   const [showPass, setShowPass] = useState({ old: false, new: false, confirm: false });
@@ -197,7 +198,13 @@ function ProfilePageContent() {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 size={40} className="animate-spin text-primary" /></div>;
   }
 
-  const sortedPosts = [...myPosts].sort((a, b) => {
+  const filteredPosts = myPosts.filter(post => {
+    if (postFilter === 'published') return post.is_published;
+    if (postFilter === 'draft') return !post.is_published;
+    return true;
+  });
+
+  const sortedPosts = [...filteredPosts].sort((a, b) => {
     if (sortBy === 'views') return (b.views || 0) - (a.views || 0);
     if (sortBy === 'likes') return (b.likes || 0) - (a.likes || 0);
     if (sortBy === 'comments') return (b.comment_count || 0) - (a.comment_count || 0);
@@ -368,8 +375,27 @@ function ProfilePageContent() {
                         key={opt.id}
                         onClick={() => setSortBy(opt.id as any)}
                         className={cn(
-                          "px-2.5 py-1.5 rounded-lg transition-all",
+                          "px-2.5 py-1.5 rounded-lg transition-all whitespace-nowrap",
                           sortBy === opt.id ? "bg-white dark:bg-slate-700 text-primary shadow-sm" : "hover:text-slate-700 dark:hover:text-slate-300"
+                        )}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-1 text-[10px] font-bold text-slate-500">
+                    {[
+                      { id: 'all', label: 'Tất cả' },
+                      { id: 'published', label: 'Đang hiển thị' },
+                      { id: 'draft', label: 'Bản nháp' },
+                    ].map(opt => (
+                      <button
+                        key={opt.id}
+                        onClick={() => setPostFilter(opt.id as any)}
+                        className={cn(
+                          "px-2.5 py-1.5 rounded-lg transition-all whitespace-nowrap",
+                          postFilter === opt.id ? "bg-white dark:bg-slate-700 text-primary shadow-sm" : "hover:text-slate-700 dark:hover:text-slate-300"
                         )}
                       >
                         {opt.label}
@@ -384,10 +410,14 @@ function ProfilePageContent() {
               </div>
               {postsLoading ? (
                 <div className="flex justify-center py-12"><Loader2 className="animate-spin text-primary" size={32} /></div>
-              ) : myPosts.length === 0 ? (
+              ) : filteredPosts.length === 0 ? (
                 <div className="text-center py-16 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-xl">
                   <FileText size={40} className="mx-auto text-slate-200 dark:text-slate-800 mb-4" />
-                  <p className="text-slate-500">Bạn chưa có bài viết nào.</p>
+                  <p className="text-slate-500">
+                    {postFilter === 'draft' ? 'Bạn không có bản nháp nào.' : 
+                     postFilter === 'published' ? 'Bạn không có bài viết nào đang hiển thị.' : 
+                     'Bạn chưa có bài viết nào.'}
+                  </p>
                 </div>
               ) : (
                 <AnimateList className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -395,7 +425,7 @@ function ProfilePageContent() {
                     <div key={post.id} className="flex items-center justify-between py-1 group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 px-2 -mx-2 rounded-xl transition-all">
                       <div className="flex-1 min-w-0 pr-4">
                         <div className="flex items-center space-x-2 mb-1.5">
-                          {!post.is_published && <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 text-[9px] font-bold rounded uppercase">Ẩn</span>}
+                          {!post.is_published && <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[9px] font-bold rounded uppercase">Bản nháp</span>}
                           <h3 className="font-bold text-slate-900 dark:text-white text-sm truncate group-hover:text-primary transition-colors cursor-pointer">{post.title}</h3>
                         </div>
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-500">
