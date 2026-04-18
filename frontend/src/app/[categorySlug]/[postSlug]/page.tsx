@@ -211,82 +211,71 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
   return (
     <div className="pt-20 pb-12 px-4 min-h-screen text-slate-900 dark:text-slate-100 bg-slate-50/30 dark:bg-slate-950/30">
       <div className="max-w-7xl mx-auto">
-        <PageHeader
-          title={post.title}
-          breadcrumbs={[
-            { label: 'Kiến thức', href: '/' },
-            { label: post.Category?.name || 'Chưa phân loại' }
-          ]}
-        >
-          {/* Metadata Section */}
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-            <div className="flex flex-wrap items-center gap-3">
-              <Link href={`/author/${post.User?.id || 1}`} className="flex items-center text-primary bg-primary/5 px-3 py-2 rounded-xl font-bold uppercase tracking-widest text-[10px] hover:bg-primary/10 transition-all border border-primary/10">
-                <UserAvatar user={post.User} size="xs" className="mr-2.5 border-none" />
-                {post.User?.fullname || post.User?.username || 'Ẩn danh'}
-              </Link>
-              {post.Category && (
-                <Badge type="category" size="xs" className="px-3 py-2">
-                  {post.Category.name}
-                </Badge>
-              )}
-              {post.Series && (
-                <Link href={`/series/${post.Series.slug}`}>
-                  <Badge className="bg-indigo-500/5 text-indigo-500 border-indigo-500/10 px-3 py-2" size="xs">
-                    <Layers size={12} className="mr-2" />
-                    {post.Series.name}
-                  </Badge>
-                </Link>
-              )}
-            </div>
+        <div className="flex flex-col lg:flex-row gap-1">
+          {/* Main Content */}
+          <div className="lg:w-9/12 w-full min-w-0">
+            {/* Breadcrumbs Inline */}
+            <nav className="flex items-center space-x-2 mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+               <Link href="/" className="hover:text-primary transition-colors flex items-center">Kiến thức</Link>
+               < ChevronRight size={10} className="text-slate-300" />
+               <span className="text-slate-500 truncate">{post.Category?.name || 'Chưa phân loại'}</span>
+            </nav>
 
-            <div className="flex items-center space-x-6 text-slate-400 text-[10px] font-bold uppercase tracking-widest border-l border-slate-200 dark:border-slate-800 pl-6">
-              <div className="flex items-center gap-4">
-                <FormattedDate date={post.created_at} showIcon iconSize={12} />
-                <div className="flex items-center">
-                  <Clock size={12} className="mr-2" />
-                  {post.readTime || 5} phút đọc
+            {/* Title - Limited Area as requested */}
+            <h1 className="text-2xl md:text-3xl lg:text-4xl font-display font-bold text-slate-900 dark:text-white tracking-tight leading-tight mb-2 max-w-4xl">
+              {post.title}
+            </h1>
+
+            {/* Horizontal Metabar Row */}
+            <div className="flex flex-wrap items-center justify-between gap-1 mb-1 py-1 border-y border-slate-100 dark:border-slate-800/50">
+              <div className="flex flex-wrap items-center gap-3">
+                <Link href={`/author/${post.User?.id || 1}`} className="flex items-center text-primary font-bold uppercase tracking-widest text-[9px] hover:text-primary/80 transition-all">
+                  <UserAvatar user={post.User} size="xs" className="mr-2" />
+                  {post.User?.fullname || post.User?.username || 'Ẩn danh'}
+                </Link>
+                <div className="w-px h-3 bg-slate-200 dark:bg-slate-800" />
+                {post.Category && (
+                  <Badge type="category" size="xs">
+                    {post.Category.name}
+                  </Badge>
+                )}
+                {post.Tag && post.Tag.slice(0, 2).map((tag, i) => (
+                  <Badge key={i} type="tag" size="xs">
+                    {tag.name}
+                  </Badge>
+                ))}
+                <div className="w-px h-3 bg-slate-200 dark:bg-slate-800" />
+                <div className="flex items-center gap-4 text-slate-400 text-[9px] font-bold uppercase tracking-widest">
+                  <FormattedDate date={post.created_at} showIcon iconSize={10} />
+                  <div className="flex items-center">
+                    <Clock size={10} className="mr-1.5" />
+                    {post.readTime || 5} PHÚT ĐỌC
+                  </div>
+                  <div className="flex items-center text-primary/70">
+                    <Eye size={10} className="mr-1.5" />
+                    {post.views || 0} LƯỢT XEM
+                  </div>
                 </div>
-                <div className="flex items-center text-primary">
-                  <Eye size={12} className="mr-2" />
-                  {post.views || 0} lượt xem
-                </div>
+              </div>
+
+              {/* Social Actions - Compact Bar */}
+              <div className="flex items-center border border-slate-100 dark:border-slate-800 rounded-lg bg-white/50 dark:bg-slate-900/50 p-0.5">
+                <button onClick={handleLike} className={cn("flex items-center space-x-1.5 px-3 py-1 rounded-md font-bold text-[9px] transition-all", liked ? "bg-red-500 text-white" : "text-slate-500 hover:text-red-500 hover:bg-red-50/50")}>
+                  <Heart size={12} className={cn(liked && "fill-current")} />
+                  <span>{post.likes || 0}</span>
+                </button>
+                <button onClick={() => document.getElementById('discussion')?.scrollIntoView({ behavior: 'smooth' })} className="flex items-center space-x-1.5 px-2 py-1 text-slate-500 hover:text-primary transition-all">
+                  <MessageSquare size={12} />
+                  <span className="text-[9px] font-bold">{post.Comment?.length || 0}</span>
+                </button>
+                <button className="p-1 px-2 text-slate-500 hover:text-primary transition-all">
+                  <Share2 size={12} />
+                </button>
               </div>
             </div>
 
-            <div className="flex items-center p-1 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm">
-              <button
-                onClick={handleLike}
-                className={cn(
-                  "flex items-center space-x-2 px-4 py-2 rounded-lg font-bold text-[10px] transition-all",
-                  liked ? "bg-red-500 text-white shadow-lg shadow-red-500/20" : "text-slate-500 hover:text-red-500 hover:bg-red-50/50"
-                )}
-              >
-                <Heart size={14} className={cn(liked && "fill-current")} />
-                <span>{post.likes || 0} thích</span>
-              </button>
-              <div className="w-px h-4 bg-slate-100 dark:bg-slate-800 mx-1" />
-              <button
-                onClick={() => document.getElementById('discussion')?.scrollIntoView({ behavior: 'smooth' })}
-                className="p-2 text-slate-500 hover:text-primary transition-all flex items-center space-x-2 px-4"
-              >
-                <MessageSquare size={14} />
-                <span className="text-[10px] font-bold">{post.Comment?.length || 0}</span>
-              </button>
-              <div className="w-px h-4 bg-slate-100 dark:bg-slate-800 mx-1" />
-              <button className="p-2 text-slate-500 hover:text-primary transition-all px-4 group">
-                <Share2 size={14} className="group-hover:rotate-12 transition-transform" />
-              </button>
-            </div>
-          </div>
-        </PageHeader>
 
-
-        {/* Main Content & Sidebar Flex Layout */}
-        <div className="flex flex-col lg:flex-row gap-8 mb-12">
-          {/* Main Content */}
-          <div className="lg:w-9/12 w-full min-w-0">
-            <article className="w-full overflow-hidden max-w-none bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-800/50">
+            <article className="w-full overflow-hidden max-w-none bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800/50">
               {/* Cover Image relocated here */}
               {post.cover_image && (
                 <div className="w-full aspect-[21/9] border-b border-slate-100/50 dark:border-slate-800/50 relative overflow-hidden">
@@ -306,9 +295,8 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
                   dangerouslySetInnerHTML={{ __html: sanitizeHTML(post.content || '') }}
                 />
 
-                {/* Series Navigation Box */}
                 {post.Series && (
-                  <div className="mt-12 p-8 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                  <div className="mt-1 p-8 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-800">
                     <div className="flex items-center justify-between mb-8">
                       <Link href={`/series/${post.Series.slug}`} className="flex items-center space-x-4 group">
                         <div className="p-3 bg-primary/10 text-primary rounded-xl group-hover:bg-primary transition-all group-hover:text-white group-hover:shadow-lg group-hover:shadow-primary/20">
@@ -348,9 +336,8 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
                   </div>
                 )}
 
-                {/* Tags Section */}
                 {post.Tag && post.Tag.length > 0 && (
-                  <div className="mt-12 pt-10 border-t border-slate-100 dark:border-slate-800">
+                  <div className="mt-1 pt-1 border-t border-slate-100 dark:border-slate-800">
                     <div className="flex flex-wrap items-center gap-3">
                       <IconBadge icon={TagIcon} color="blue" size="sm" className="mr-2" />
                       {post.Tag.map((tag, i) => (
@@ -365,7 +352,7 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
             </article>
 
             {/* Discussion Section */}
-            <section id="discussion" className="bg-white dark:bg-slate-900 rounded-3xl p-8 md:p-10 border border-slate-100 dark:border-slate-800/50 shadow-sm mt-10">
+            <section id="discussion" className="bg-white dark:bg-slate-900 rounded-3xl p-8 md:p-10 border border-slate-100 dark:border-slate-800/50 shadow-sm mt-1">
               <div className="flex items-center justify-between mb-10">
                 <h2 className="text-2xl font-display font-bold text-slate-900 dark:text-white flex items-center">
                   <MessageSquare className="mr-4 text-primary" />
@@ -407,9 +394,6 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
                         <div className="flex items-center justify-between mb-3">
                           <div className="flex items-center space-x-3">
                             <span className="font-bold text-slate-900 dark:text-white text-[14px]">{comment.author_name}</span>
-                            {comment.user_id && (
-                              <Badge type="role" variant="user" size="xs" className="px-2 py-0.5 rounded-md">Thành viên</Badge>
-                            )}
                           </div>
                           <div className="flex items-center space-x-4">
                             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
@@ -473,7 +457,7 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
           </div>
 
       {/* Sidebar */}
-      <aside className="lg:w-3/12 w-full flex-shrink-0 space-y-6 lg:sticky lg:top-32 h-fit">
+      <aside className="lg:w-3/12 w-full flex-shrink-0 space-y-1 lg:sticky lg:top-24 h-fit">
         {/* Search Box */}
         <div className="relative group">
           <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-all">
