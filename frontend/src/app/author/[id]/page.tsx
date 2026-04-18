@@ -107,11 +107,11 @@ export default function AuthorPage({ params }: { params: Promise<{ id: string }>
         {/* Author Profile Card */}
         <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 md:p-12 border border-slate-100 dark:border-slate-800/50 shadow-2xl shadow-slate-200/50 dark:shadow-none flex flex-col items-center mb-16 relative overflow-hidden animate-in fade-in zoom-in-95 duration-700">
            <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-[80px] rounded-full -translate-y-12 translate-x-12 pointer-events-none" />
-           <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/5 blur-[80px] rounded-full translate-y-12 -translate-x-12 pointer-events-none" />
+           <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/5 blur-[80px] rounded-full translate-y-12 -translate-x-12 pointer-events-none" />
            
            <div className="relative mb-8 group">
               <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl group-hover:bg-primary/30 transition-all duration-500 animate-pulse" />
-              <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2rem] bg-gradient-to-tr from-primary to-indigo-500 p-1 relative z-10 shadow-2xl">
+              <div className="w-32 h-32 md:w-40 md:h-40 rounded-[2rem] bg-gradient-to-tr from-primary to-blue-500 p-1 relative z-10 shadow-2xl">
                 <div className="w-full h-full rounded-[1.8rem] bg-white dark:bg-slate-900 flex items-center justify-center overflow-hidden">
                   {author.avatar ? (
                     // eslint-disable-next-line @next/next/no-img-element
@@ -121,7 +121,7 @@ export default function AuthorPage({ params }: { params: Promise<{ id: string }>
                       className="w-full h-full object-cover" 
                     />
                   ) : (
-                    <span className="text-4xl md:text-5xl font-display font-bold bg-gradient-to-tr from-primary to-indigo-500 bg-clip-text text-transparent">
+                    <span className="text-4xl md:text-5xl font-display font-bold bg-gradient-to-tr from-primary to-blue-500 bg-clip-text text-transparent">
                       {(author.fullname || author.username)?.[0]?.toUpperCase()}
                     </span>
                   )}

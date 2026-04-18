@@ -396,7 +396,7 @@ export default function ProfilePage() {
                             {new Date(post.created_at).toLocaleDateString('vi-VN')}
                           </span>
                           <span className="flex items-center">
-                            <IconBadge icon={Eye} color="purple" size="sm" animate={false} className="mr-1 bg-transparent p-0 w-auto h-auto opacity-70" />
+                            <IconBadge icon={Eye} color="sky" size="sm" animate={false} className="mr-1 bg-transparent p-0 w-auto h-auto opacity-70" />
                             {post.views || 0} <span className="ml-1 hidden xs:inline">lượt xem</span>
                           </span>
                           <span className="flex items-center font-medium">

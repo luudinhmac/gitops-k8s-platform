@@ -89,7 +89,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ slug: s
 
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 md:p-12 border border-slate-100 dark:border-slate-800 shadow-sm relative overflow-hidden mb-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/5 blur-[80px] rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/5 blur-[80px] rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none" />
           
           <div className="relative z-10 text-center md:text-left">
             <div className="inline-flex items-center space-x-3 px-4 py-2 bg-primary/10 text-primary rounded-2xl text-[10px] font-bold uppercase tracking-widest mb-8 border border-primary/10 shadow-sm">

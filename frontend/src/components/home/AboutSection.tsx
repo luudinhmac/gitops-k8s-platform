@@ -9,8 +9,8 @@ import Link from 'next/link';
 export default function AboutSection() {
   const stats = [
     { label: 'Năm kinh nghiệm', value: '4+', icon: Award, color: 'text-blue-500' },
-    { label: 'Dự án đã triển khai', value: '20+', icon: Rocket, color: 'text-indigo-500' },
-    { label: 'Chứng chỉ chuyên môn', value: '15+', icon: FileCode, color: 'text-purple-500' },
+    { label: 'Dự án đã triển khai', value: '20+', icon: Rocket, color: 'text-blue-500' },
+    { label: 'Chứng chỉ chuyên môn', value: '15+', icon: FileCode, color: 'text-sky-500' },
     { label: 'Tách trà mỗi năm', value: '1000+', icon: Coffee, color: 'text-amber-500' },
   ];
 
@@ -72,7 +72,7 @@ export default function AboutSection() {
           <div className="lg:w-1/2 relative w-full max-w-md lg:max-w-none mx-auto">
              <div className="relative z-10 rounded-xl overflow-hidden border-8 border-white dark:border-slate-900 shadow-2xl skew-y-0 hover:skew-y-1 transition-transform duration-500">
                 <div className="aspect-square bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-indigo-600/20" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-blue-600/20" />
                   <UserIcon size={120} className="text-slate-300 dark:text-slate-700" />
                 </div>
              </div>
@@ -115,7 +115,7 @@ export default function AboutSection() {
           ))}
         </div>
         
-        <div className="mt-16 p-6 md:p-8 glass rounded-xl bg-gradient-to-br from-primary/5 to-indigo-500/5 border border-primary/10">
+        <div className="mt-16 p-6 md:p-8 glass rounded-xl bg-gradient-to-br from-primary/5 to-blue-500/5 border border-primary/10">
            <h4 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white mb-4 italic">&quot;Duy trì tính sẵn sàng cao là ưu tiên hàng đầu.&quot;</h4>
            <p className="text-slate-500 text-xs md:text-sm leading-relaxed max-w-4xl">
              &quot;Học tập là hạt giống của kiến thức, kiến thức là hạt giống của hạnh phúc.&quot; Tôi cam kết tối ưu hóa hạ tầng và tự động hóa quy trình để đạt được hiệu quả vận hành tối đa cho doanh nghiệp.

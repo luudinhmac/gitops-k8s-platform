@@ -289,7 +289,7 @@ export default function UsersPage() {
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setViewUser(null)} />
           <div className="relative w-full max-w-2xl bg-white dark:bg-slate-950 rounded-2xl p-0 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="h-24 bg-gradient-to-r from-primary to-indigo-600 w-full" />
+            <div className="h-24 bg-gradient-to-r from-primary to-blue-600 w-full" />
             <button onClick={() => setViewUser(null)} className="absolute right-4 top-4 p-2 bg-white/20 hover:bg-white/40 text-white rounded-full transition-all">
               <X size={20} />
             </button>

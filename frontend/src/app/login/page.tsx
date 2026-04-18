@@ -74,7 +74,7 @@ function LoginContent() {
     <div className="min-h-screen flex items-center justify-center px-4 py-12 relative overflow-hidden bg-slate-50/50 dark:bg-slate-950">
       {/* Decorative Elements */}
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-500/5 blur-[120px] rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/5 blur-[120px] rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none" />
 
       <div className="max-w-md w-full relative z-10">
         {/* Back to Home */}

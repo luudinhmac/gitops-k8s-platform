@@ -16,7 +16,7 @@ export default function TermsPage() {
 
         {/* Header Section */}
         <div className="mb-2">
-          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-indigo-500/5 border border-indigo-500/10 mb-2 text-indigo-500">
+          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-blue-500/5 border border-blue-500/10 mb-2 text-blue-500">
             <FileText size={14} />
             <span className="text-[10px] font-bold uppercase tracking-widest">Điều khoản & Điều kiện</span>
           </div>
