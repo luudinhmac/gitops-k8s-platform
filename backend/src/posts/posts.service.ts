@@ -84,21 +84,21 @@ export class PostsService {
 
     if (query) {
       where.OR = [
-        { title: { contains: query } },
-        { content: { contains: query } },
+        { title: { contains: query, mode: 'insensitive' } },
+        { content: { contains: query, mode: 'insensitive' } },
         {
           Tag: {
-            some: { name: { contains: query } },
+            some: { name: { contains: query, mode: 'insensitive' } },
           },
         },
         {
           Category: {
-            name: { contains: query },
+            name: { contains: query, mode: 'insensitive' },
           },
         },
         {
           Series: {
-            name: { contains: query },
+            name: { contains: query, mode: 'insensitive' },
           },
         },
       ];

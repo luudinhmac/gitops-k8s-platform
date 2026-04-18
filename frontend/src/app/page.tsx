@@ -96,6 +96,16 @@ function BlogContent() {
     fetchData();
   }, [fetchData]);
 
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      if (searchTerm !== q) {
+        router.push(searchTerm ? `/?q=${encodeURIComponent(searchTerm)}` : '/');
+      }
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm, q, router]);
+
   return (
     <div className="pt-20 pb-16 px-4 min-h-screen bg-slate-50/30 dark:bg-slate-950/30">
       <div className="max-w-7xl mx-auto">
@@ -109,7 +119,15 @@ function BlogContent() {
              <div className="mt-6 flex items-center justify-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Kết quả tìm kiếm cho:</span>
                 <span className="px-3 py-1 bg-primary text-white text-[10px] font-bold rounded-full shadow-lg shadow-primary/20">{q}</span>
-                <button onClick={() => router.push('/')} className="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors ml-2 uppercase tracking-widest hover:underline">Xóa lọc</button>
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    router.push('/');
+                  }}
+                  className="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors ml-2 uppercase tracking-widest hover:underline"
+                >
+                  Xóa lọc
+                </button>
              </div>
            )}
         </PageHeader>
@@ -136,7 +154,10 @@ function BlogContent() {
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Không tìm thấy bài viết</h3>
                 <p className="text-slate-500 dark:text-slate-400 text-sm max-w-md mx-auto">Chúng tôi không tìm thấy nội dung nào phù hợp với từ khóa <b className="text-primary">"{q}"</b>. Hãy thử tìm kiếm với từ khóa khác hoặc khám phá qua danh mục.</p>
-                <Button variant="outline" className="mt-8" onClick={() => router.push('/')}>Xem tất cả bài viết</Button>
+                <Button variant="outline" className="mt-8" onClick={() => {
+                  setSearchTerm('');
+                  router.push('/');
+                }}>Xem tất cả bài viết</Button>
               </div>
             )}
           </div>
@@ -154,14 +175,8 @@ function BlogContent() {
                 className="w-full pl-11 pr-11 py-3.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm group-hover:shadow-md"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    router.push(`/?q=${encodeURIComponent(searchTerm)}`);
-                  }
-                }}
               />
               <button
-                onClick={() => router.push(`/?q=${encodeURIComponent(searchTerm)}`)}
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-all p-1"
                 aria-label="Search"
               >
