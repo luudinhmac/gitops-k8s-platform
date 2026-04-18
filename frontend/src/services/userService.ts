@@ -21,7 +21,7 @@ export const userService = {
   },
 
   // Change password
-  async changePassword(id: number, data: any) {
+  async changePassword(id: number, data: Record<string, unknown>) {
     const response = await api.patch(`/users/${id}/change-password`, data);
     return response.data;
   },
@@ -33,7 +33,7 @@ export const userService = {
   },
 
   // Admin: Create user
-  async create(data: any) {
+  async create(data: Record<string, unknown>) {
     const response = await api.post<User>('/auth/register', data);
     return response.data;
   },
@@ -57,7 +57,7 @@ export const userService = {
   },
 
   // Admin: Reset password
-  async resetPassword(id: number, data: any) {
+  async resetPassword(id: number, data: Record<string, unknown>) {
     const response = await api.patch(`/users/${id}/reset-password`, data);
     return response.data;
   },

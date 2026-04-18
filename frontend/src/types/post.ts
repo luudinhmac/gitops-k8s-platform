@@ -38,6 +38,7 @@ export interface Post {
   series_id?: number | null;
   series_order?: number;
   Category?: Category | null;
+  category_id?: number | null;
   Series?: {
     id: number;
     name: string;
@@ -52,8 +53,8 @@ export interface Post {
   } | null;
   Tag?: Tag[];
   Comment?: Comment[];
-  prevPost?: any | null;
-  nextPost?: any | null;
+  prevPost?: Partial<Post> | null;
+  nextPost?: Partial<Post> | null;
   _count?: {
     Comment: number;
     PostLike: number;

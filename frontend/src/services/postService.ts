@@ -26,7 +26,7 @@ export const postService = {
     return response.data;
   },
 
-  async create(data: any) {
+  async create(data: Partial<Post>) {
     const response = await api.post<Post>('/posts', data);
     return response.data;
   },
@@ -39,18 +39,18 @@ export const postService = {
 
   // Toggle publish status
   async togglePublish(id: number) {
-    const response = await api.patch(`/posts/${id}/publish`);
+    const response = await api.post(`/posts/${id}/publish`);
     return response.data;
   },
 
   // Toggle pin status
   async togglePin(id: number) {
-    const response = await api.patch(`/posts/${id}/pin`);
+    const response = await api.post(`/posts/${id}/pin`);
     return response.data;
   },
 
   // Edit/Update post
-  async update(id: number, data: any) {
+  async update(id: number, data: Partial<Post>) {
     const response = await api.patch<Post>(`/posts/${id}`, data);
     return response.data;
   },
