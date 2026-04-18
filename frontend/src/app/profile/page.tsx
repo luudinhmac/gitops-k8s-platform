@@ -369,7 +369,7 @@ export default function ProfilePage() {
                     ))}
                   </div>
 
-                  <Link href="/admin/posts/new" className="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/30 hover:-translate-y-0.5 transition-all flex items-center shrink-0">
+                  <Link href="/write" className="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/30 hover:-translate-y-0.5 transition-all flex items-center shrink-0">
                     <Edit size={16} className="mr-2" /> Viết bài mới
                   </Link>
                 </div>
@@ -410,7 +410,7 @@ export default function ProfilePage() {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2 shrink-0">
-                        <Link href={`/admin/posts/edit/${post.id}`}>
+                        <Link href={`/posts/${post.id}/edit`}>
                           <Button variant="outline" size="icon" className="hover:border-amber-200">
                             <Edit size={18} className="text-amber-500" />
                           </Button>

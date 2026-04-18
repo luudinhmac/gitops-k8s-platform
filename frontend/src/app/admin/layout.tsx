@@ -18,12 +18,9 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
     if (!loading) {
       if (!isAuthenticated) {
         router.push(`/login?redirect=${pathname}`);
-      } else if (user && user.role === 'user') {
-        // Only kick regular users out of purely administrative areas
-        const forbiddenRoutes = /^\/admin\/(users|categories|series|settings)/;
-        if (forbiddenRoutes.test(pathname)) {
-          router.push('/?error=unauthorized');
-        }
+      } else if (user && user.role !== 'admin') {
+        // Silent Redirect for non-admins to keep admin area hidden
+        router.push('/');
       }
     }
   }, [isAuthenticated, loading, router, user, pathname]);
@@ -32,7 +29,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
     setSidebarOpen(false);
   }, [pathname, setSidebarOpen]);
 
-  const isForbiddenForUser = user && user.role === 'user' && /^\/admin\/(users|categories|series|settings)/.test(pathname);
+  const isForbiddenForUser = user && user.role !== 'admin';
 
   if (loading || !isAuthenticated || isForbiddenForUser) {
     return (

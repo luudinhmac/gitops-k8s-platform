@@ -114,7 +114,7 @@ export default function AdminDashboardPage() {
         primaryAction={{
           label: "Viết bài",
           icon: Plus,
-          href: "/admin/posts/new"
+          href: "/write"
         }}
       />
 
@@ -221,7 +221,7 @@ export default function AdminDashboardPage() {
                     </td>
                     <td className="px-5 py-3 text-right">
                       <div className="flex items-center justify-end space-x-2">
-                        <Link href={`/admin/posts/edit/${post.id}`}>
+                        <Link href={`/posts/${post.id}/edit`}>
                           <Button variant="outline" size="icon" className="h-8 w-8 hover:border-amber-200">
                             <Edit size={14} className="text-amber-500" />
                           </Button>
