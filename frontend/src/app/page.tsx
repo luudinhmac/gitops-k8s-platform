@@ -114,17 +114,17 @@ function BlogContent() {
            )}
         </PageHeader>
 
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-1">
           {/* Main Content (Posts) */}
           <div className="flex-grow lg:w-3/4">
             {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1">
                 {[1, 2, 3, 4, 5, 6].map(i => (
                   <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl h-[400px] animate-pulse border border-slate-100 dark:border-slate-800 shadow-sm" />
                 ))}
               </div>
             ) : posts.length > 0 ? (
-              <AnimateList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <AnimateList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1">
                 {posts.map((post, idx) => (
                   <PostCard key={post.id} post={post} priority={idx < 6} />
                 ))}
@@ -142,7 +142,7 @@ function BlogContent() {
           </div>
 
           {/* Sidebar */}
-          <aside className="lg:w-1/4 space-y-8">
+          <aside className="lg:w-1/4 space-y-1">
             {/* Search Box */}
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">

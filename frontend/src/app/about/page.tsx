@@ -45,7 +45,7 @@ export default function AboutPortfolioPage() {
 
         <div suppressHydrationWarning={true} className="max-w-7xl mx-auto">
           <div suppressHydrationWarning={true} className="text-center">
-            <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800 mb-6 animate-fade-in">
+            <div className="inline-flex items-center space-x-2 px-4 py-2 rounded-full bg-white dark:bg-slate-900 shadow-sm border border-slate-100 dark:border-slate-800 mb-1 animate-fade-in">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
@@ -53,12 +53,12 @@ export default function AboutPortfolioPage() {
               <span className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-widest">Sẵn sàng cho những dự án mới</span>
             </div>
 
-            <h1 className="text-xl md:text-2xl lg:text-4xl font-display font-bold text-slate-900 dark:text-white mb-6 tracking-tight leading-[1.1]">
+            <h1 className="text-xl md:text-2xl lg:text-4xl font-display font-bold text-slate-900 dark:text-white mb-1 tracking-tight leading-[1.1]">
               Xin chào, tôi là <br />
               <span className="text-primary drop-shadow-sm">LƯU ĐÌNH MÁC</span>
             </h1>
 
-            <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed mb-8 animate-slide-up delay-200">
+            <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed mb-1 animate-slide-up delay-200">
               chuyên về Hạ tầng Đám mây & Tự động hóa. Tôi xây dựng, tối ưu hóa và duy trì các hệ thống hạ tầng sẵn sàng cao (High Availability) cho doanh nghiệp.
             </p>
 
@@ -78,7 +78,7 @@ export default function AboutPortfolioPage() {
       {/* Services/Features Grid */}
       <section className="py-12 px-4 bg-slate-50/50 dark:bg-slate-900/20">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-1">
             {services.map((service, index) => (
               <div
                 key={service.title}
@@ -125,10 +125,10 @@ export default function AboutPortfolioPage() {
       {/* Stats/Call to Action */}
       <section className="py-16 px-4 relative overflow-hidden text-center">
         <div className="max-w-5xl mx-auto relative z-10">
-          <h2 className="text-xl md:text-2xl font-display font-bold mb-6 text-slate-900 dark:text-white">
+          <h2 className="text-xl md:text-2xl font-display font-bold mb-1 text-slate-900 dark:text-white">
             Bắt đầu hành trình <br /> <span className="text-primary">cùng nhau ngay hôm nay.</span>
           </h2>
-          <p className="text-slate-600 dark:text-slate-400 text-base mb-10 max-w-2xl mx-auto">
+          <p className="text-slate-600 dark:text-slate-400 text-base mb-1 max-w-2xl mx-auto">
             Sẵn sàng để đưa ý tưởng của bạn thành hiện thực với giải pháp hạ tầng và phần mềm tối ưu.
           </p>
           <button className="inline-flex items-center px-8 py-4 bg-primary text-white rounded-xl font-bold hover:scale-105 active:scale-95 transition-all shadow-lg shadow-primary/20">

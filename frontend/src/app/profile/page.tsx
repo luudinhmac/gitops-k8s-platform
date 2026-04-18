@@ -78,14 +78,14 @@ export default function ProfilePage() {
     setPostsLoading(true);
     try {
       const data = await postService.getAdminPosts();
-      const mine = Array.isArray(data) 
+      const mine = Array.isArray(data)
         ? data
-            .filter((p: Post) => p.author_id === user?.id)
-            .map((p: any) => ({
-              ...p,
-              likes: p.likes || 0,
-              comment_count: p._count?.Comment || 0
-            }))
+          .filter((p: Post) => p.author_id === user?.id)
+          .map((p: any) => ({
+            ...p,
+            likes: p.likes || 0,
+            comment_count: p._count?.Comment || 0
+          }))
         : [];
       setMyPosts(mine);
     } catch (err) { console.error('Failed to fetch posts:', err); }
@@ -124,7 +124,7 @@ export default function ProfilePage() {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      
+
       const uploadData = await userService.uploadAvatar(formData);
       const avatarUrl = `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${uploadData.url}`;
 
@@ -148,9 +148,9 @@ export default function ProfilePage() {
     setPassLoading(true);
     setPassMsg(null);
     try {
-      await userService.changePassword(user.id, { 
-        oldPassword: passForm.oldPassword, 
-        newPassword: passForm.newPassword 
+      await userService.changePassword(user.id, {
+        oldPassword: passForm.oldPassword,
+        newPassword: passForm.newPassword
       });
       setPassMsg({ type: 'success', text: 'Đã đổi mật khẩu thành công!' });
       setPassForm({ oldPassword: '', newPassword: '', confirmPassword: '' });
@@ -158,6 +158,29 @@ export default function ProfilePage() {
       setPassMsg({ type: 'error', text: err.response?.data?.message || 'Không thể đổi mật khẩu' });
     } finally {
       setPassLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      const form = (e.currentTarget as HTMLElement).closest('form');
+      if (form) {
+        const elements = Array.from(form.querySelectorAll('input, select, textarea, button:not([tabindex="-1"])'))
+          .filter(el => {
+            const style = window.getComputedStyle(el);
+            return style.display !== 'none' && style.visibility !== 'hidden';
+          }) as HTMLElement[];
+        const index = elements.indexOf(e.currentTarget as HTMLElement);
+        if (index > -1 && index < elements.length - 1) {
+          const nextElement = elements[index + 1];
+          // If the next element is the submit button, let the default Enter behavior (submit) happen
+          // Unless we want to explicitly focus it first. User said "nhập ô tiếp theo", implying focus.
+          if (nextElement.getAttribute('type') !== 'submit') {
+            e.preventDefault();
+            nextElement.focus();
+          }
+        }
+      }
     }
   };
 
@@ -180,10 +203,10 @@ export default function ProfilePage() {
   ];
 
   return (
-    <div className="pt-20 pb-8 px-4 min-h-screen bg-slate-50 dark:bg-slate-950">
+    <div className="pt-20 pb-1 px-4 min-h-screen bg-slate-50 dark:bg-slate-950">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="flex items-center space-x-4 mb-8">
+        <div className="flex items-center space-x-4 mb-1">
           <Link href="/" className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-500 hover:text-primary transition-all">
             <ArrowLeft size={20} />
           </Link>
@@ -198,15 +221,12 @@ export default function ProfilePage() {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{user?.fullname || user?.username}</h1>
-              <Badge type="role" variant={user?.role as any} size="sm" className="mt-1">
-                {user?.role || 'editor'}
-              </Badge>
             </div>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-2 mb-6 bg-white dark:bg-slate-900 p-1.5 rounded-xl w-fit shadow-sm border border-slate-200 dark:border-slate-800">
+        <div className="flex space-x-2 mb-1 bg-white dark:bg-slate-900 p-1.5 rounded-xl w-fit shadow-sm border border-slate-200 dark:border-slate-800">
           {tabs.map(tab => (
             <button
               key={tab.id}
@@ -228,7 +248,7 @@ export default function ProfilePage() {
         </div>
 
         {/* Tab content area */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-xl shadow-sm">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-xl shadow-sm">
           {activeTab === 'info' && (
             <div>
               {!isEditing ? (
@@ -324,9 +344,9 @@ export default function ProfilePage() {
 
           {activeTab === 'posts' && (
             <div>
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-1">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">Bài viết của tôi ({myPosts.length})</h2>
-                
+
                 <div className="flex items-center space-x-3">
                   <div className="hidden sm:flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-1 text-[10px] font-bold text-slate-500">
                     <span className="px-2 text-slate-400">Sắp xếp:</span>
@@ -364,7 +384,7 @@ export default function ProfilePage() {
               ) : (
                 <AnimateList className="divide-y divide-slate-100 dark:divide-slate-800">
                   {sortedPosts.map(post => (
-                    <div key={post.id} className="flex items-center justify-between py-5 group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 px-2 -mx-2 rounded-xl transition-all">
+                    <div key={post.id} className="flex items-center justify-between py-1 group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 px-2 -mx-2 rounded-xl transition-all">
                       <div className="flex-1 min-w-0 pr-4">
                         <div className="flex items-center space-x-2 mb-1.5">
                           {!post.is_published && <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 text-[9px] font-bold rounded uppercase">Ẩn</span>}
@@ -395,9 +415,9 @@ export default function ProfilePage() {
                             <Edit size={18} className="text-amber-500" />
                           </Button>
                         </Link>
-                        <Button 
-                          variant="outline" 
-                          size="icon" 
+                        <Button
+                          variant="outline"
+                          size="icon"
                           className="hover:border-red-200"
                           onClick={() => {
                             setPostToDelete(post.id);
@@ -416,16 +436,16 @@ export default function ProfilePage() {
 
           {activeTab === 'password' && (
             <div className="max-w-md mx-auto py-4">
-              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-8 text-center">Đổi mật khẩu bảo mật</h2>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1 text-center">Đổi mật khẩu bảo mật</h2>
               {passMsg && (
-                <div className={cn("flex items-center space-x-2 p-4 rounded-xl mb-6 text-sm",
+                <div className={cn("flex items-center space-x-2 p-4 rounded-xl mb-1 text-sm",
                   passMsg.type === 'success' ? "bg-emerald-50 text-emerald-600" : "bg-red-50 text-red-600"
                 )}>
                   {passMsg.type === 'success' ? <Check size={16} /> : <AlertCircle size={16} />}
                   <span>{passMsg.text}</span>
                 </div>
               )}
-              <form onSubmit={handleChangePassword} className="space-y-5">
+              <form onSubmit={handleChangePassword} className="space-y-1">
                 {[
                   { label: 'Mật khẩu hiện tại', key: 'oldPassword', show: showPass.old, toggle: () => setShowPass({ ...showPass, old: !showPass.old }) },
                   { label: 'Mật khẩu mới', key: 'newPassword', show: showPass.new, toggle: () => setShowPass({ ...showPass, new: !showPass.new }) },
@@ -440,17 +460,18 @@ export default function ProfilePage() {
                         placeholder="••••••••"
                         value={(passForm as Record<string, string>)[field.key]}
                         onChange={e => setPassForm({ ...passForm, [field.key]: e.target.value })}
+                        onKeyDown={handleKeyDown}
                         className="w-full px-4 py-3.5 pr-12 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary focus:border-primary transition-all"
                       />
-                      <button type="button" onClick={field.toggle} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                      <button type="button" onClick={field.toggle} tabIndex={-1} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
                         {field.show ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
                   </div>
                 ))}
                 <Button type="submit" isLoading={passLoading} className="w-full py-6 mt-4 shadow-primary/30">
-                  <Lock size={18} className="mr-2" />
-                  Xác nhận đổi mật khẩu
+                  <Lock size={14} className="mr-2" />
+                  Đổi mật khẩu
                 </Button>
               </form>
             </div>

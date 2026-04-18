@@ -45,7 +45,7 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
         "flex-1 w-full relative min-h-screen transition-all duration-300",
         isCollapsed ? "lg:ml-20" : "lg:ml-64"
       )}>
-        <div className="p-3 md:p-4 lg:p-6 max-w-[1400px] mx-auto">
+        <div className="p-1 max-w-[1400px] mx-auto">
           {children}
         </div>
       </main>

@@ -73,7 +73,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, className, priority = false }
       </div>
 
       {/* Content - No box, just clean typography */}
-      <div className="pt-6 pb-2 px-1 flex flex-col flex-grow">
+      <div className="pt-2 pb-1 px-1 flex flex-col flex-grow">
         {/* Metadata */}
         <div className="flex items-center gap-4 text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-4">
           <div className="flex items-center text-primary group-hover:text-primary/80 transition-colors">
@@ -106,7 +106,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, className, priority = false }
         )}
 
         {/* Footer Stats */}
-        <div className="mt-auto flex items-center justify-between pt-5 border-t border-slate-100 dark:border-slate-800/80">
+        <div className="mt-auto flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/80">
           <div className="flex items-center gap-5">
             <div className="flex items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
               <Eye size={12} className="mr-1.5 text-primary" />
