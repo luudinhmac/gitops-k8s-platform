@@ -24,6 +24,14 @@ interface AdminPageHeaderProps {
     loading?: boolean;
     disabled?: boolean;
   };
+  secondaryAction?: {
+    label: string;
+    icon: LucideIcon;
+    onClick?: () => void;
+    href?: string;
+    loading?: boolean;
+    disabled?: boolean;
+  };
   sticky?: boolean;
   maxWidth?: string;
 }
@@ -37,6 +45,7 @@ export default function AdminPageHeader({
   onSearchChange,
   searchPlaceholder = "Tìm kiếm...",
   primaryAction,
+  secondaryAction,
   sticky = true,
   maxWidth = "1400px"
 }: AdminPageHeaderProps) {
@@ -122,6 +131,27 @@ export default function AdminPageHeader({
             >
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
+          )}
+
+          {secondaryAction && (
+            secondaryAction.href ? (
+              <Link 
+                href={secondaryAction.href}
+                className="px-4 py-2 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-[11px] font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center"
+              >
+                <secondaryAction.icon size={14} className="md:mr-2" />
+                <span className="hidden md:inline">{secondaryAction.label}</span>
+              </Link>
+            ) : (
+              <button 
+                onClick={secondaryAction.onClick}
+                disabled={secondaryAction.disabled || secondaryAction.loading}
+                className="px-4 py-2 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-[11px] font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center disabled:opacity-50"
+              >
+                <secondaryAction.icon size={14} className={cn("md:mr-2", secondaryAction.loading && "animate-spin")} />
+                <span className="hidden md:inline">{secondaryAction.label}</span>
+              </button>
+            )
           )}
 
           {primaryAction && (

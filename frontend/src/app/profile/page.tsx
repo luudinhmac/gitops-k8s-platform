@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   User as UserIcon, FileText, Lock, Save, Loader2,
   ArrowLeft, Eye, EyeOff, AlertCircle, Check,
@@ -26,10 +26,12 @@ import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 import { Post, SortOption } from '@/types/post';
 import { User as UserType } from '@/types/user';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Suspense } from 'react';
 
-export default function ProfilePage() {
+function ProfilePageContent() {
   const { user, isAuthenticated, loading: authLoading, checkAuth } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [activeTab, setActiveTab] = useState<'info' | 'posts' | 'password'>('info');
   const [profileForm, setProfileForm] = useState({
@@ -58,7 +60,13 @@ export default function ProfilePage() {
     if (!authLoading && !isAuthenticated) {
       router.push('/login?redirect=/profile');
     }
-  }, [authLoading, isAuthenticated, router]);
+    
+    // Check for tab parameter
+    const tab = searchParams.get('tab');
+    if (tab === 'posts' || tab === 'info' || tab === 'password') {
+      setActiveTab(tab as any);
+    }
+  }, [authLoading, isAuthenticated, router, searchParams]);
 
   useEffect(() => {
     if (user) {
@@ -492,5 +500,17 @@ export default function ProfilePage() {
         message="Bạn có chắc chắn muốn xóa bài viết này? Hành động này không thể hoàn tác và bài viết sẽ bị gỡ bỏ vĩnh viễn."
       />
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <Loader2 className="w-10 h-10 text-primary animate-spin" />
+      </div>
+    }>
+      <ProfilePageContent />
+    </Suspense>
   );
 }

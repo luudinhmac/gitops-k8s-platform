@@ -4,12 +4,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { Save, Loader2, Image as ImageIcon, Tag, Layout, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Save, Loader2, Image as ImageIcon, Tag, Layout, AlertCircle, ArrowLeft, FileText } from 'lucide-react';
 import { slugify } from '@/lib/utils';
 import RichEditor from '@/components/admin/RichEditor';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminCard from '@/components/admin/AdminCard';
 import Button from '@/components/ui/Button';
+import Badge from '@/components/common/Badge';
 
 // Modular Services
 import { postService } from '@/services/postService';
@@ -51,7 +52,8 @@ export default function PostEditor({ postId }: PostEditorProps) {
     series_name: '',
     series_order: '0',
     cover_image: '',
-    is_pinned: false
+    is_pinned: false,
+    is_published: true
   });
 
   // Security check for can_post
@@ -94,7 +96,8 @@ export default function PostEditor({ postId }: PostEditorProps) {
           series_name: post.Series?.name || '',
           series_order: post.series_order?.toString() || '0',
           cover_image: post.cover_image || '',
-          is_pinned: post.is_pinned || false
+          is_pinned: post.is_pinned || false,
+          is_published: post.is_published ?? true
         });
       }
     } catch (err: any) {
@@ -111,8 +114,7 @@ export default function PostEditor({ postId }: PostEditorProps) {
     }
   }, [fetchData, isAuthenticated]);
 
-  const handleSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  const handleSubmit = async (publishedState?: boolean) => {
     setSubmitting(true);
     setError(null);
 
@@ -130,6 +132,7 @@ export default function PostEditor({ postId }: PostEditorProps) {
 
       const postData = {
         ...formData,
+        is_published: publishedState !== undefined ? publishedState : formData.is_published,
         series_id: finalSeriesId,
         series_order: parseInt(formData.series_order) || 0,
         category_id: formData.category_id ? parseInt(formData.category_id) : null
@@ -141,7 +144,7 @@ export default function PostEditor({ postId }: PostEditorProps) {
         await postService.create(postData);
       }
 
-      router.push('/profile');
+      router.push('/profile?tab=posts');
       router.refresh();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Có lỗi xảy ra khi lưu bài viết');
@@ -187,9 +190,16 @@ export default function PostEditor({ postId }: PostEditorProps) {
         showBack={true}
         backHref="/profile"
         primaryAction={{
-          label: isEditMode ? "Lưu thay đổi" : "Xuất bản bài viết",
+          label: isEditMode ? "Cập nhật bài viết" : "Xuất bản bài viết",
           icon: Save,
-          onClick: handleSubmit,
+          onClick: () => handleSubmit(true),
+          loading: submitting,
+          disabled: !!error
+        }}
+        secondaryAction={{
+          label: "Lưu bản nháp",
+          icon: FileText,
+          onClick: () => handleSubmit(false),
           loading: submitting,
           disabled: !!error
         }}
@@ -200,8 +210,13 @@ export default function PostEditor({ postId }: PostEditorProps) {
           <div className="lg:col-span-2 space-y-1">
             {error && <div className="p-4 bg-red-50 text-red-600 border border-red-100 font-bold rounded-2xl text-sm mb-4 animate-in fade-in slide-in-from-top-2">{error}</div>}
             <AdminCard>
-                <div className="mb-1">
+                <div className="mb-1 flex items-center justify-between">
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Tiêu đề bài viết</label>
+                  {!formData.is_published && (
+                    <Badge variant="warning" className="mb-2 text-[8px] px-2 py-0.5">Bản nháp</Badge>
+                  )}
+                </div>
+                <div className="mb-1">
                   <input 
                     type="text" 
                     placeholder="Nhập tiêu đề..." 
