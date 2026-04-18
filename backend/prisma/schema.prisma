@@ -110,3 +110,11 @@ model User {
   PostLike           PostLike[]
   Comment            Comment[]
 }
+
+model Setting {
+  key         String   @id        
+  value       String?  @db.Text   
+  group       String   @default("general") 
+  is_public   Boolean  @default(true)      
+  updated_at  DateTime @default(now()) @updatedAt
+}
