@@ -14,6 +14,9 @@ export interface User {
   address?: string;
   profession?: string;
   birthday?: string;
+  is_active?: boolean;
+  can_comment?: boolean;
+  can_post?: boolean;
   created_at?: string;
 }
 
