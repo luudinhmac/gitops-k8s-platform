@@ -36,6 +36,7 @@ export interface Post {
   readTime?: number;
   created_at: string;
   is_published: boolean;
+  is_blocked?: boolean;
   excerpt?: string;
   is_pinned?: boolean;
   author_id: number;

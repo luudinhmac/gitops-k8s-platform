@@ -93,7 +93,20 @@ export default function UsersPage() {
         setStatusMsg({ type: 'error', text: 'Bạn không thể tự khóa tài khoản của mình!' });
         return;
       }
-      await userService.updatePermissions(userId, fields);
+
+      // Check if we are restricting permissions (blocking)
+      const isRestricting = fields.is_active === false || fields.can_comment === false || fields.can_post === false;
+      let reason: string | undefined = undefined;
+      
+      if (isRestricting) {
+        const input = window.prompt('Nhập lý do thực hiện hành động này (tùy chọn):');
+        if (input === null) return; // User cancelled
+        reason = input;
+      }
+
+      const updateData = { ...fields, reason };
+      await userService.updatePermissions(userId, updateData);
+      
       setUsers(users.map(u => u.id === userId ? { ...u, ...fields } as AdminUser : u));
       setStatusMsg({ type: 'success', text: 'Đã cập nhật quyền hạn thành công' });
     } catch (err: any) { 

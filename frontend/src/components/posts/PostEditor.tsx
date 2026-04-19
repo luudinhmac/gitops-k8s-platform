@@ -57,13 +57,34 @@ export default function PostEditor({ postId }: PostEditorProps) {
     is_published: true
   });
 
-  // Security check for can_post
+  // Security check for can_post & Maintenance
   useEffect(() => {
-    if (!authLoading && isAuthenticated && user) {
-      if (!user.can_post) {
-        setPermissionError('Thông báo không có quyền hoặc bị chặn, vui lòng liên hệ quản trị viên để unlock.');
+    const checkStatus = async () => {
+      if (!authLoading && isAuthenticated && user) {
+        // 1. Check user permissions
+        if (user.can_post === false || user.is_active === false) {
+          setPermissionError('Thông báo không có quyền hoặc bị chặn, vui lòng liên hệ quản trị viên để unlock.');
+          return;
+        }
+
+        // 2. Check Maintenance Mode (Only for non-admins)
+        if (user.role !== 'admin') {
+          try {
+            const { settingsService } = await import('@/services/settingsService');
+            const settings = await settingsService.getPublicSettings();
+            if (settings.maintenance_posts === 'true') {
+              setPermissionError('Tính năng viết bài đang trong quá trình bảo trì. Vui lòng quay lại sau nhé!');
+              return;
+            }
+          } catch (err) {
+            console.error('Failed to check maintenance status:', err);
+          }
+        }
+        
+        setPermissionError(null);
       }
-    }
+    };
+    checkStatus();
   }, [authLoading, isAuthenticated, user]);
 
   const fetchData = useCallback(async () => {

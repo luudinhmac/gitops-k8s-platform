@@ -199,8 +199,12 @@ function ProfilePageContent() {
   }
 
   const filteredPosts = myPosts.filter(post => {
-    if (postFilter === 'published') return post.is_published;
-    if (postFilter === 'draft') return !post.is_published;
+    const isPub = post.is_published === true;
+    const isBlk = post.is_blocked === true;
+    
+    if (postFilter === 'published') return isPub && !isBlk;
+    if (postFilter === 'draft') return !isPub && !isBlk;
+    if (postFilter === 'blocked') return isBlk;
     return true;
   });
 
@@ -389,6 +393,7 @@ function ProfilePageContent() {
                       { id: 'all', label: 'Tất cả' },
                       { id: 'published', label: 'Đang hiển thị' },
                       { id: 'draft', label: 'Bản nháp' },
+                      { id: 'blocked', label: 'Bị chặn' },
                     ].map(opt => (
                       <button
                         key={opt.id}
@@ -423,30 +428,46 @@ function ProfilePageContent() {
                 <AnimateList className="divide-y divide-slate-100 dark:divide-slate-800">
                   {sortedPosts.map(post => (
                     <div key={post.id} className="flex items-center justify-between py-1 group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 px-2 -mx-2 rounded-xl transition-all">
-                      <div className="flex-1 min-w-0 pr-4">
-                        <div className="flex items-center space-x-2 mb-1.5">
-                          {!post.is_published && <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[9px] font-bold rounded uppercase">Bản nháp</span>}
-                          <h3 className="font-bold text-slate-900 dark:text-white text-sm truncate group-hover:text-primary transition-colors cursor-pointer">{post.title}</h3>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-500">
-                          <span className="flex items-center">
-                            <IconBadge icon={Calendar} color="slate" size="sm" animate={false} className="mr-1 bg-transparent p-0 w-auto h-auto" />
-                            {new Date(post.created_at).toLocaleDateString('vi-VN')}
-                          </span>
-                          <span className="flex items-center">
-                            <IconBadge icon={Eye} color="sky" size="sm" animate={false} className="mr-1 bg-transparent p-0 w-auto h-auto opacity-70" />
-                            {post.views || 0} <span className="ml-1 hidden xs:inline">lượt xem</span>
-                          </span>
-                          <span className="flex items-center font-medium">
-                            <IconBadge icon={Heart} color="rose" size="sm" animate={false} className="mr-1 bg-transparent p-0 w-auto h-auto" />
-                            {post.likes || 0}
-                          </span>
-                          <span className="flex items-center font-medium">
-                            <IconBadge icon={MessageSquare} color="blue" size="sm" animate={false} className="mr-1 bg-transparent p-0 w-auto h-auto" />
-                            {post.comment_count || 0}
-                          </span>
-                        </div>
-                      </div>
+                      {(() => {
+                        const isPub = !!post.is_published;
+                        const isBlk = !!post.is_blocked;
+                        return (
+                          <>
+                            <div className="flex-1 min-w-0 pr-4">
+                              <div className="flex items-center space-x-2 mb-1.5">
+                                {isBlk && <span className="px-1.5 py-0.5 bg-red-100 text-red-700 text-[9px] font-bold rounded uppercase">Bị chặn</span>}
+                                {!isPub && !isBlk && <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[9px] font-bold rounded uppercase">Bản nháp</span>}
+                                <h3 className="font-bold text-slate-900 dark:text-white text-sm truncate group-hover:text-primary transition-colors cursor-pointer">{post.title}</h3>
+                              </div>
+                              {isPub && !isBlk ? (
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-500">
+                                  <span className="flex items-center">
+                                    <IconBadge icon={Calendar} color="slate" size="sm" animate={false} className="mr-1 bg-transparent p-0 w-auto h-auto" />
+                                    {new Date(post.created_at).toLocaleDateString('vi-VN')}
+                                  </span>
+                                  <span className="flex items-center">
+                                    <IconBadge icon={Eye} color="sky" size="sm" animate={false} className="mr-1 bg-transparent p-0 w-auto h-auto opacity-70" />
+                                    {post.views || 0} <span className="ml-1 hidden xs:inline">lượt xem</span>
+                                  </span>
+                                  <span className="flex items-center font-medium">
+                                    <IconBadge icon={Heart} color="rose" size="sm" animate={false} className="mr-1 bg-transparent p-0 w-auto h-auto" />
+                                    {post.likes || 0}
+                                  </span>
+                                  <span className="flex items-center font-medium">
+                                    <IconBadge icon={MessageSquare} color="blue" size="sm" animate={false} className="mr-1 bg-transparent p-0 w-auto h-auto" />
+                                    {post.comment_count || 0}
+                                  </span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center text-[11px] text-slate-400">
+                                   <Calendar size={12} className="mr-1" />
+                                   Cập nhật: {new Date(post.updated_at || post.created_at).toLocaleDateString('vi-VN')}
+                                </div>
+                              )}
+                            </div>
+                          </>
+                        );
+                      })()}
                       <div className="flex items-center space-x-2 shrink-0">
                         <Link href={`/posts/${post.id}/edit`}>
                           <Button variant="outline" size="icon" className="hover:border-amber-200">

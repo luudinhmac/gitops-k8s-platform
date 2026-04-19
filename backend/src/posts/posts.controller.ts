@@ -83,8 +83,9 @@ export class PostsController {
   togglePublish(
     @Param('id', ParseIntPipe) id: number,
     @Req() req: AuthenticatedRequest,
+    @Body('reason') reason?: string,
   ) {
-    return this.postsService.togglePublish(id, req.user);
+    return this.postsService.togglePublish(id, req.user, reason);
   }
 
   @Post(':id/like')

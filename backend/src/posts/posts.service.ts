@@ -11,12 +11,14 @@ import { Post as PostInterface } from './interfaces/post.interface';
 import { CreatePostDto, UpdatePostDto } from './dto/create-post.dto';
 import { Prisma } from '@prisma/client';
 import { FileService } from '../upload/file.service';
+import { NotificationsService } from '../notifications/notifications.service';
 
 @Injectable()
 export class PostsService {
   constructor(
     private prisma: PrismaService,
     private fileService: FileService,
+    private notificationsService: NotificationsService,
   ) {}
 
   private sanitizeOptions = {
@@ -78,8 +80,16 @@ export class PostsService {
     const where: Prisma.PostWhereInput = {};
     if (!isAdmin) {
       where.is_published = true;
-    } else if (user && user.role !== (UserRole.ADMIN as string)) {
-      where.author_id = user.id;
+      where.is_blocked = false;
+    } else if (user) {
+      if (user.role === (UserRole.ADMIN as string)) {
+        where.OR = [
+          { author_id: user.id }, // Own drafts
+          { is_published: true }, // Published posts of others (including blocked ones)
+        ];
+      } else {
+        where.author_id = user.id; // User sees all their own posts (Draft/Published/Blocked)
+      }
     }
 
     if (query) {
@@ -104,32 +114,42 @@ export class PostsService {
       ];
     }
 
-    const posts = await this.prisma.post.findMany({
+    const select: any = {
+      id: true,
+      title: true,
+      slug: true,
+      cover_image: true,
+      is_pinned: true,
+      is_published: true,
+      is_blocked: true,
+      views: true,
+      likes: true,
+      created_at: true,
+      updated_at: true,
+      author_id: true,
+      series_id: true,
+      series_order: true,
+      Category: {
+        select: { id: true, name: true, slug: true }
+      },
+      User: {
+        select: { id: true, fullname: true, username: true, avatar: true },
+      },
+      Tag: {
+        select: { id: true, name: true }
+      },
+      Series: {
+        select: { id: true, name: true, slug: true }
+      },
+      _count: {
+        select: { Comment: true, PostLike: true },
+      },
+    };
+
+    const posts = await (this.prisma.post as any).findMany({
       where,
       orderBy: [{ is_pinned: 'desc' }, { created_at: 'desc' }],
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        cover_image: true,
-        is_pinned: true,
-        is_published: true,
-        views: true,
-        likes: true,
-        created_at: true,
-        author_id: true,
-        series_id: true,
-        series_order: true,
-        Category: true,
-        User: {
-          select: { id: true, fullname: true, username: true, avatar: true },
-        },
-        Tag: true,
-        Series: true,
-        _count: {
-          select: { Comment: true, PostLike: true },
-        },
-      },
+      select,
     });
     return posts as unknown as PostInterface[];
   }
@@ -154,34 +174,58 @@ export class PostsService {
       }
     }
 
-    const post = await this.prisma.post.findUnique({
-      where,
-      include: {
-        Category: true,
-        User: {
-          select: { fullname: true, avatar: true, username: true },
-        },
-        Tag: true,
-        Series: true,
-        Comment: {
-          orderBy: { created_at: 'desc' },
-          select: {
-            id: true,
-            content: true,
-            author_name: true,
-            author_email: true,
-            created_at: true,
-            user_id: true,
-            parent_id: true,
-            User: {
-              select: { avatar: true, fullname: true, username: true }
-            }
+    const select: any = {
+      id: true,
+      title: true,
+      content: true,
+      slug: true,
+      cover_image: true,
+      is_pinned: true,
+      is_published: true,
+      is_blocked: true,
+      views: true,
+      likes: true,
+      created_at: true,
+      updated_at: true,
+      series_id: true,
+      series_order: true,
+      category_id: true,
+      author_id: true,
+      Category: {
+        select: { id: true, name: true, slug: true }
+      },
+      User: {
+        select: { fullname: true, avatar: true, username: true },
+      },
+      Tag: {
+        select: { id: true, name: true }
+      },
+      Series: {
+        select: { id: true, name: true, slug: true }
+      },
+      Comment: {
+        orderBy: { created_at: 'desc' },
+        select: {
+          id: true,
+          content: true,
+          author_name: true,
+          author_email: true,
+          created_at: true,
+          user_id: true,
+          parent_id: true,
+          User: {
+            select: { avatar: true, fullname: true, username: true },
           },
         },
-        _count: {
-          select: { Comment: true, PostLike: true },
-        },
       },
+      _count: {
+        select: { Comment: true, PostLike: true },
+      },
+    };
+
+    const post = await (this.prisma.post as any).findUnique({
+      where,
+      select,
     });
     if (!post) throw new NotFoundException('Post not found');
 
@@ -311,7 +355,10 @@ export class PostsService {
     user: User,
     data: UpdatePostDto,
   ): Promise<PostInterface> {
-    const post = await this.prisma.post.findUnique({ where: { id } });
+    const post = await this.prisma.post.findUnique({
+      where: { id },
+      select: { id: true, author_id: true, content: true, slug: true, is_pinned: true, cover_image: true, series_order: true },
+    });
     if (!post) throw new NotFoundException('Post not found');
 
     if (!(user as any).can_post) {
@@ -339,6 +386,7 @@ export class PostsService {
       while (true) {
         const existing = await this.prisma.post.findFirst({
           where: { slug: tempSlug, NOT: { id } },
+          select: { id: true },
         });
         if (!existing) break;
         count++;
@@ -397,12 +445,16 @@ export class PostsService {
     const updatedPost = await this.prisma.post.update({
       where: { id },
       data: updateData,
+      select: { id: true, title: true, slug: true, created_at: true },
     });
     return updatedPost as unknown as PostInterface;
   }
 
   async remove(id: number, user: User) {
-    const post = await this.prisma.post.findUnique({ where: { id } });
+    const post = await this.prisma.post.findUnique({
+      where: { id },
+      select: { id: true, author_id: true, cover_image: true },
+    });
     if (!post) throw new NotFoundException('Post not found');
     if (
       user.role !== (UserRole.ADMIN as string) &&
@@ -419,7 +471,10 @@ export class PostsService {
   }
 
   async togglePin(id: number, user: User) {
-    const post = await this.prisma.post.findUnique({ where: { id } });
+    const post = await this.prisma.post.findUnique({
+      where: { id },
+      select: { id: true, author_id: true, is_pinned: true },
+    });
     if (!post) throw new NotFoundException('Post not found');
 
     if (
@@ -432,11 +487,15 @@ export class PostsService {
     return this.prisma.post.update({
       where: { id },
       data: { is_pinned: !post.is_pinned },
+      select: { id: true, is_pinned: true },
     });
   }
 
   async toggleLike(id: number, userId: number) {
-    const post = await this.prisma.post.findUnique({ where: { id } });
+    const post = await this.prisma.post.findUnique({
+      where: { id },
+      select: { id: true },
+    });
     if (!post) throw new NotFoundException('Post not found');
 
     const existingLike = await this.prisma.postLike.findUnique({
@@ -469,8 +528,11 @@ export class PostsService {
     return { liked: !!existingLike };
   }
 
-  async togglePublish(id: number, user: User) {
-    const post = await this.prisma.post.findUnique({ where: { id } });
+  async togglePublish(id: number, user: User, reason?: string) {
+    const post = await (this.prisma.post as any).findUnique({
+      where: { id },
+      select: { id: true, title: true, author_id: true, is_published: true, is_blocked: true },
+    });
     if (!post) throw new NotFoundException('Post not found');
 
     if (
@@ -482,9 +544,40 @@ export class PostsService {
       );
     }
 
-    return this.prisma.post.update({
+    // Logic: If Admin is hiding another user's post -> Block it
+    // If Admin/User is hiding their own post -> Unpublish (Draft)
+    const updates: any = {};
+    if (user.role === (UserRole.ADMIN as string) && user.id !== post.author_id) {
+      updates.is_blocked = !post.is_blocked;
+    } else {
+      updates.is_published = !post.is_published;
+    }
+
+    const updatedPost = await (this.prisma.post as any).update({
       where: { id },
-      data: { is_published: !post.is_published },
+      data: updates,
+      select: { id: true, title: true, slug: true, is_published: true, is_blocked: true, author_id: true },
     });
+
+    // --- TRIGGER NOTIFICATIONS ---
+    try {
+      if (updates.is_blocked !== undefined && user.id !== post.author_id) {
+        const reasonText = reason ? ` Lý do: ${reason}` : '';
+        await this.notificationsService.create({
+          recipient_id: post.author_id,
+          sender_id: user.id,
+          type: 'POST_BLOCKED',
+          title: updates.is_blocked ? 'Bài viết bị khóa' : 'Bài viết đã mở khóa',
+          content: updates.is_blocked 
+            ? `Bài viết "${post.title}" của bạn đã bị quản trị viên khóa.${reasonText}` 
+            : `Bài viết "${post.title}" của bạn đã được quản trị viên mở khóa.`,
+          link: updates.is_blocked ? '/profile?tab=posts' : `/posts/${updatedPost.slug}`,
+        });
+      }
+    } catch (err) {
+      console.error('Failed to trigger post notification:', err);
+    }
+
+    return updatedPost;
   }
 }
