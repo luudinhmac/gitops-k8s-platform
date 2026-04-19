@@ -14,6 +14,7 @@ export interface Post {
   likes: number;
   created_at: Date;
   updated_at: Date;
+  is_blocked: boolean;
   category_id?: number;
   author_id?: number;
   User?: Partial<User>;

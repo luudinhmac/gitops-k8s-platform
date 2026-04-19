@@ -13,6 +13,12 @@ export class SettingsController {
     return this.settingsService.getPublicSettings();
   }
 
+  @Post('verify-maintenance-passcode')
+  async verifyMaintenancePasscode(@Body('passcode') passcode: string) {
+    const isValid = await this.settingsService.verifyMaintenancePasscode(passcode);
+    return { success: isValid };
+  }
+
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin', 'editor')
   @Get('admin')

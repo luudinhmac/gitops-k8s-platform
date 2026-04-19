@@ -28,7 +28,8 @@ export const settingService = {
   // Get all settings (for admin dashboard)
   getAllSettings: async (): Promise<SettingsConfig> => {
     try {
-      const response = await api.get('/settings/admin');
+      // Add timestamp to bypass any browser or server caching
+      const response = await api.get(`/settings/admin?t=${Date.now()}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching admin settings:', error);

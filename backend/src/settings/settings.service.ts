@@ -17,6 +17,20 @@ export class SettingsService {
     }, {});
   }
 
+  async getSettingByKey(key: string) {
+    const setting = await this.prisma.setting.findUnique({
+      where: { key },
+    });
+    return setting?.value || null;
+  }
+
+  async verifyMaintenancePasscode(passcode: string) {
+    const savedPasscode = await this.getSettingByKey('maintenance_passcode');
+    // For now, simplicity is key, but we ensure it fails if not set
+    if (!savedPasscode) return false;
+    return savedPasscode === passcode;
+  }
+
   async getAllSettings() {
     const settings = await this.prisma.setting.findMany();
     

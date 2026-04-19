@@ -15,7 +15,9 @@ import type {
   User,
   AuthenticatedRequest,
 } from '../users/interfaces/user.interface';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}

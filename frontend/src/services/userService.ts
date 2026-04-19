@@ -57,7 +57,7 @@ export const userService = {
   },
 
   // Admin: Update permissions
-  async updatePermissions(id: number, data: { role?: string; is_active?: boolean; can_comment?: boolean; can_post?: boolean }) {
+  async updatePermissions(id: number, data: { role?: string; is_active?: boolean; can_comment?: boolean; can_post?: boolean; reason?: string }) {
     const response = await api.patch(`/users/${id}/permissions`, data);
     return response.data;
   },

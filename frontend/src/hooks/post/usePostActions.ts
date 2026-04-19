@@ -22,10 +22,10 @@ export const usePostActions = (onSuccess?: () => void) => {
     }
   };
 
-  const togglePublish = async (id: number) => {
+  const togglePublish = async (id: number, reason?: string) => {
     setIsActionLoading(true);
     try {
-      const updated = await postService.togglePublish(id);
+      const updated = await postService.togglePublish(id, reason);
       onSuccess?.();
       return updated;
     } catch (err: any) {

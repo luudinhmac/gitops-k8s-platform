@@ -1,15 +1,16 @@
 'use client';
 
-import { useState, useEffect, use, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { Save, Loader2, Image as ImageIcon, Tag, Layout, AlertCircle } from 'lucide-react';
-import { slugify } from '@/lib/utils';
+import { Save, Loader2, Image as ImageIcon, Tag, Layout, AlertCircle, ArrowLeft, FileText, Check } from 'lucide-react';
+import { slugify, cn } from '@/lib/utils';
 import RichEditor from '@/components/admin/RichEditor';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminCard from '@/components/admin/AdminCard';
 import Button from '@/components/ui/Button';
+import Badge from '@/components/common/Badge';
 
 // Modular Services
 import { postService } from '@/services/postService';
@@ -26,16 +27,22 @@ interface PostTag {
   name: string;
 }
 
-export default function EditPostPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+interface PostEditorProps {
+  postId?: number;
+}
+
+export default function PostEditor({ postId }: PostEditorProps) {
+  const isEditMode = !!postId;
   const router = useRouter();
-  const { user, loading: authLoading, isAuthenticated } = useAuth() as { user: { role: string; id: number } | null; loading: boolean; isAuthenticated: boolean };
+  const { user, loading: authLoading, isAuthenticated } = useAuth() as { user: any; loading: boolean; isAuthenticated: boolean };
   
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isEditMode);
   const [submitting, setSubmitting] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [seriesList, setSeriesList] = useState<{ id: number; name: string }[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
+  const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -46,63 +53,92 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
     series_name: '',
     series_order: '0',
     cover_image: '',
-    is_pinned: false
+    is_pinned: false,
+    is_published: true
   });
 
+  // Security check for can_post & Maintenance
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push('/login');
-    }
-  }, [authLoading, isAuthenticated, router]);
+    const checkStatus = async () => {
+      if (!authLoading && isAuthenticated && user) {
+        // 1. Check user permissions
+        if (user.can_post === false || user.is_active === false) {
+          setPermissionError('Thông báo không có quyền hoặc bị chặn, vui lòng liên hệ quản trị viên để unlock.');
+          return;
+        }
+
+        // 2. Check Maintenance Mode (Only for non-admins)
+        if (user.role !== 'admin') {
+          try {
+            const { settingsService } = await import('@/services/settingsService');
+            const settings = await settingsService.getPublicSettings();
+            if (settings.maintenance_posts === 'true') {
+              setPermissionError('Tính năng viết bài đang trong quá trình bảo trì. Vui lòng quay lại sau nhé!');
+              return;
+            }
+          } catch (err) {
+            console.error('Failed to check maintenance status:', err);
+          }
+        }
+        
+        setPermissionError(null);
+      }
+    };
+    checkStatus();
+  }, [authLoading, isAuthenticated, user]);
 
   const fetchData = useCallback(async () => {
     if (!isAuthenticated || !user) return;
-    setLoading(true);
+    if (isEditMode) setLoading(true);
+    
     try {
-      const [post, cats, seriesData] = await Promise.all([
-        postService.getById(parseInt(id)),
+      const [cats, seriesData] = await Promise.all([
         categoryService.getAll(),
         seriesService.getAll()
       ]);
 
-      if (post.author_id !== user.id) {
-         setError('Bạn không có quyền chỉnh sửa bài viết của người khác.');
-         return;
-      }
-
       setCategories(Array.isArray(cats) ? cats : []);
       setSeriesList(Array.isArray(seriesData) ? seriesData : []);
-      
-      setFormData({
-        title: post.title || '',
-        slug: post.slug || '',
-        content: post.content || '',
-        category_id: (post as any).category_id?.toString() || post.Category?.id?.toString() || '',
-        tags: post.Tag?.map((t: PostTag) => t.name).join(', ') || '',
-        series_name: post.Series?.name || '',
-        series_order: post.series_order?.toString() || '0',
-        cover_image: post.cover_image || '',
-        is_pinned: post.is_pinned || false
-      });
+
+      if (isEditMode && postId) {
+        const post = await postService.getById(postId);
+        
+        // Ownership check: only author or admin can edit
+        if (post.author_id !== user.id && user.role !== 'admin') {
+           setPermissionError('Bạn không có quyền chỉnh sửa bài viết của người khác.');
+           return;
+        }
+
+        setFormData({
+          title: post.title || '',
+          slug: post.slug || '',
+          content: post.content || '',
+          category_id: (post as any).category_id?.toString() || post.Category?.id?.toString() || '',
+          tags: post.Tag?.map((t: PostTag) => t.name).join(', ') || '',
+          series_name: post.Series?.name || '',
+          series_order: post.series_order?.toString() || '0',
+          cover_image: post.cover_image || '',
+          is_pinned: post.is_pinned || false,
+          is_published: post.is_published ?? true
+        });
+      }
     } catch (err: any) {
       console.error(err);
-      if (err.response?.status === 403) {
-         setError('Bạn không có quyền chỉnh sửa bài viết này.');
-      } else {
-         setError('Có lỗi xảy ra khi tải dữ liệu bài viết.');
-      }
+      setError('Có lỗi xảy ra khi tải dữ liệu bài viết.');
     } finally {
       setLoading(false);
     }
-  }, [id, isAuthenticated, user]);
+  }, [postId, isEditMode, isAuthenticated, user]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    if (isAuthenticated) {
+        fetchData();
+    }
+  }, [fetchData, isAuthenticated]);
 
-  const handleSubmit = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
+  const handleSubmit = async (publishedState?: boolean) => {
     setSubmitting(true);
+    setError(null);
 
     try {
       let finalSeriesId = null;
@@ -116,17 +152,29 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
         }
       }
 
-      await postService.update(parseInt(id), {
+      const postData = {
         ...formData,
+        is_published: publishedState !== undefined ? publishedState : formData.is_published,
         series_id: finalSeriesId,
         series_order: parseInt(formData.series_order) || 0,
         category_id: formData.category_id ? parseInt(formData.category_id) : null
-      });
+      };
 
-      router.push('/admin');
-      router.refresh();
+      if (isEditMode && postId) {
+        await postService.update(postId, postData);
+        setStatusMsg({ type: 'success', text: 'Đã cập nhật bài viết thành công!' });
+      } else {
+        await postService.create(postData);
+        setStatusMsg({ type: 'success', text: 'Đã đăng bài viết thành công!' });
+      }
+
+      // Short delay to show success message before redirecting
+      setTimeout(() => {
+        router.push('/profile?tab=posts');
+        router.refresh();
+      }, 1500);
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Có lỗi xảy ra khi cập nhật bài viết');
+      setError(err.response?.data?.message || 'Có lỗi xảy ra khi lưu bài viết');
     } finally {
       setSubmitting(false);
     }
@@ -144,18 +192,18 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
     }
   };
 
-  if (loading || authLoading) {
+  if (authLoading || (isEditMode && loading)) {
     return <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950"><Loader2 size={40} className="animate-spin text-primary" /></div>;
   }
 
-  if (error) {
+  if (permissionError) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-6">
          <div className="bg-white dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xl max-w-md w-full text-center">
             <AlertCircle size={48} className="mx-auto text-red-500 mb-4" />
             <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Truy cập bị chặn</h2>
-            <p className="text-slate-500 mb-6 text-sm">{error}</p>
-            <Button component={Link} href="/admin" className="w-full">Quay lại Dashboard</Button>
+            <p className="text-slate-500 mb-6 text-sm">{permissionError}</p>
+            <Button component={Link} href="/" variant="outline" className="w-full">Quay lại trang chủ</Button>
          </div>
       </div>
     );
@@ -164,14 +212,21 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <AdminPageHeader 
-        title="Chỉnh sửa bài viết"
-        subtitle={`ID: #${id} • ${formData.title ? 'Đang chỉnh sửa...' : 'Tải nội dung...'}`}
+        title={isEditMode ? "Chỉnh sửa bài viết" : "Viết bài mới"}
+        subtitle={isEditMode ? `ID: #${postId} • ${formData.title || 'Đang soạn thảo'}` : "Bắt đầu chia sẻ kiến thức của bạn"}
         showBack={true}
-        backHref="/admin"
+        backHref="/profile"
         primaryAction={{
-          label: "Lưu thay đổi",
+          label: isEditMode ? "Cập nhật bài viết" : "Xuất bản bài viết",
           icon: Save,
-          onClick: handleSubmit,
+          onClick: () => handleSubmit(true),
+          loading: submitting,
+          disabled: !!error
+        }}
+        secondaryAction={{
+          label: "Lưu bản nháp",
+          icon: FileText,
+          onClick: () => handleSubmit(false),
           loading: submitting,
           disabled: !!error
         }}
@@ -179,11 +234,30 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
 
       <div className="max-w-[1400px] mx-auto px-4 lg:px-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-1">
-          {/* Main Content */}
           <div className="lg:col-span-2 space-y-1">
+            {error && <div className="p-4 bg-red-50 text-red-600 border border-red-100 font-bold rounded-2xl text-sm mb-4 animate-in fade-in slide-in-from-top-2 flex items-center">
+              <AlertCircle size={18} className="mr-2 shrink-0" />
+              {error}
+            </div>}
+            
+            {statusMsg && (
+              <div className={cn(
+                "p-4 rounded-2xl text-sm mb-4 animate-in fade-in slide-in-from-top-2 flex items-center font-bold shadow-sm border",
+                statusMsg.type === 'success' ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-red-50 text-red-600 border-red-100"
+              )}>
+                {statusMsg.type === 'success' ? <Check size={18} className="mr-2 shrink-0" /> : <AlertCircle size={18} className="mr-2 shrink-0" />}
+                {statusMsg.text}
+              </div>
+            )}
+            
             <AdminCard>
-                <div className="mb-1">
+                <div className="mb-1 flex items-center justify-between">
                   <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Tiêu đề bài viết</label>
+                  {!formData.is_published && (
+                    <Badge variant="warning" className="mb-2 text-[8px] px-2 py-0.5">Bản nháp</Badge>
+                  )}
+                </div>
+                <div className="mb-1">
                   <input 
                     type="text" 
                     placeholder="Nhập tiêu đề..." 
@@ -210,7 +284,7 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
           </div>
 
           <div className="space-y-1 pb-10">
-             <AdminCard title="Cài đặt bài viết" icon={Layout} padding="p-5 md:p-6">
+             <AdminCard title="Cài đặt" icon={Layout} padding="p-5 md:p-6">
                 <div className="space-y-1">
                    <div>
                       <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1.5 ml-1">Danh mục</label>
@@ -237,13 +311,12 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
                         onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                         className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm" 
                       />
-                      <p className="text-[8px] text-slate-400 mt-1 ml-1 italic">SEO URL: /category/<b>{formData.slug || 'slug'}</b></p>
                    </div>
                    <div>
-                      <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1.5 ml-1">Series bài viết (chọn hoặc nhập mới)</label>
+                      <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1.5 ml-1">Series bài viết</label>
                       <input 
                         list="series-options"
-                        placeholder="Chọn hoặc nhập tên Series mới..."
+                        placeholder="Chọn hoặc nhập mới..."
                         value={formData.series_name}
                         onChange={(e) => setFormData({ ...formData, series_name: e.target.value })}
                         className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm"
@@ -251,21 +324,20 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
                       <datalist id="series-options">
                         {seriesList.map(s => ( <option key={s.id} value={s.name} /> ))}
                       </datalist>
-                      {formData.series_name && !seriesList.some(s => s.name.toLowerCase() === formData.series_name.toLowerCase()) && (
-                        <p className="text-[8px] text-primary mt-1 ml-1 font-bold italic">Sẽ tạo Series mới: {formData.series_name}</p>
-                      )}
                    </div>
                    {formData.series_name && (
                      <div className="animate-in slide-in-from-top-2 duration-300">
-                        <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1.5 ml-1">Thứ tự bài trong Series</label>
+                        <label className="block text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1.5 ml-1">Thứ tự trong Series</label>
                         <input type="number" placeholder="0" value={formData.series_order} onChange={(e) => setFormData({ ...formData, series_order: e.target.value })}
                           className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm" />
                      </div>
                    )}
-                   <div className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                      <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tight">Ghim lên đầu Blog</span>
-                      <input type="checkbox" className="w-4 h-4 accent-primary cursor-pointer" checked={formData.is_pinned} onChange={(e) => setFormData({ ...formData, is_pinned: e.target.checked })} />
-                   </div>
+                   {user?.role === 'admin' && (
+                     <div className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
+                        <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tight">Ghim bài viết</span>
+                        <input type="checkbox" className="w-4 h-4 accent-primary cursor-pointer" checked={formData.is_pinned} onChange={(e) => setFormData({ ...formData, is_pinned: e.target.checked })} />
+                     </div>
+                   )}
                 </div>
              </AdminCard>
 
@@ -285,7 +357,7 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
                    ) : (
                      <div className="text-center p-4">
                        <ImageIcon size={24} className="mb-2 mx-auto opacity-50 text-slate-400" />
-                       <span className="text-[10px] font-bold uppercase tracking-widest block text-slate-500">Chọn ảnh bài viết</span>
+                       <span className="text-[10px] font-bold uppercase tracking-widest block text-slate-500">Chọn ảnh bìa</span>
                      </div>
                    )}
                    <input
@@ -302,4 +374,3 @@ export default function EditPostPage({ params }: { params: Promise<{ id: string 
     </div>
   );
 }
-

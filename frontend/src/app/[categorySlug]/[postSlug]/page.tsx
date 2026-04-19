@@ -77,7 +77,44 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
   const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
   const [editingText, setEditingText] = useState('');
   const [commentError, setCommentError] = useState<string | null>(null);
+  const [activeHash, setActiveHash] = useState<string>('');
+  const [isMaintenanceComments, setIsMaintenanceComments] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const checkMaintenance = async () => {
+      try {
+        const { settingsService } = await import('@/services/settingsService');
+        const settings = await settingsService.getPublicSettings();
+        if (settings.maintenance_comments === 'true' && user?.role !== 'admin') {
+          setIsMaintenanceComments(true);
+        }
+      } catch (err) {
+        console.error('Failed to check maintenance status:', err);
+      }
+    };
+    checkMaintenance();
+  }, [user]);
+
+  useEffect(() => {
+    const handleHashChange = () => setActiveHash(window.location.hash);
+    handleHashChange(); // Initial check
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // Scroll to comment if hash changes
+  useEffect(() => {
+    if (activeHash && activeHash.startsWith('#comment-')) {
+      const id = activeHash.substring(1);
+      const element = document.getElementById(id);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 300); // Small delay to ensure content is fully rendered
+      }
+    }
+  }, [activeHash, loading]);
 
   const fetchPostData = useCallback(async () => {
     try {
@@ -419,7 +456,15 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
                 </h2>
               </div>
 
-              {replyingTo === null && (
+              {isMaintenanceComments ? (
+                <div className="mb-10 p-8 text-center bg-slate-50 dark:bg-slate-950/50 border border-slate-100 dark:border-slate-800 rounded-3xl animate-in zoom-in duration-300">
+                  <div className="inline-flex p-4 bg-primary/10 rounded-2xl mb-4">
+                    <AlertCircle className="text-primary w-8 h-8" />
+                  </div>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Tính năng bình luận đang bảo trì</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">Chúng tôi đang cập nhật hệ thống bình luận. Vui lòng quay lại sau nhé!</p>
+                </div>
+              ) : replyingTo === null && (
                 <form onSubmit={handleComment} className="mb-10 relative bg-slate-50/50 dark:bg-slate-950/50 p-5 rounded-3xl border border-slate-100 dark:border-slate-800">
                   <div className="relative mb-4">
                     <textarea
@@ -447,8 +492,19 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
                   (() => {
                     const tree = buildCommentTree(post.Comment);
                     const renderComments = (commentsList: CommentType[], isReply = false): React.ReactNode => {
-                      return commentsList.map(comment => (
-                        <div key={comment.id} className={cn("group/comment relative", isReply ? "ml-6 md:ml-10 mt-3 md:mt-4 before:content-[''] before:absolute before:-left-4 md:before:-left-6 before:top-4 before:w-3 md:before:w-4 before:h-px before:bg-slate-200 dark:before:bg-slate-700 before:z-0 after:content-[''] after:absolute after:-left-4 md:after:-left-6 after:-top-6 after:h-10 after:w-px after:bg-slate-200 dark:after:bg-slate-700 after:z-0" : "mb-6")}>
+                      return commentsList.map(comment => {
+                        const isTarget = activeHash === `#comment-${comment.id}`;
+                        
+                        return (
+                          <div 
+                            key={comment.id} 
+                            id={`comment-${comment.id}`}
+                            className={cn(
+                              "group/comment relative transition-all duration-700", 
+                              isReply ? "ml-6 md:ml-10 mt-3 md:mt-4 before:content-[''] before:absolute before:-left-4 md:before:-left-6 before:top-4 before:w-3 md:before:w-4 before:h-px before:bg-slate-200 dark:before:bg-slate-700 before:z-0 after:content-[''] after:absolute after:-left-4 md:after:-left-6 after:-top-6 after:h-10 after:w-px after:bg-slate-200 dark:after:bg-slate-700 after:z-0" : "mb-6",
+                              isTarget && "ring-2 ring-primary/40 ring-offset-8 rounded-3xl bg-primary/5 p-4 -m-4 shadow-xl shadow-primary/5 z-20"
+                            )}
+                          >
                            <div className="flex space-x-3 relative z-10">
                               {/* Avatar */}
                               <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 font-bold text-xs uppercase overflow-hidden flex-shrink-0 border border-slate-200 dark:border-slate-700">
@@ -527,7 +583,8 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
                               </div>
                            )}
                         </div>
-                      ));
+                        );
+                      });
                     };
                     return <>{renderComments(tree)}</>;
                   })()

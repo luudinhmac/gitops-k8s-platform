@@ -6,6 +6,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { PostsModule } from './posts/posts.module';
+import { NotificationsModule } from './notifications/notifications.module';
 import { CategoriesModule } from './categories/categories.module';
 import { CommentsModule } from './comments/comments.module';
 import { UploadModule } from './upload/upload.module';
@@ -25,6 +26,7 @@ import { SettingsModule } from './settings/settings.module';
     AuthModule,
     UsersModule,
     PostsModule,
+    NotificationsModule,
     CategoriesModule,
     CommentsModule,
     UploadModule,

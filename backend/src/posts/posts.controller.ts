@@ -16,7 +16,9 @@ import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
 import type { AuthenticatedRequest } from '../users/interfaces/user.interface';
 import { CreatePostDto, UpdatePostDto } from './dto/create-post.dto';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
+@ApiTags('Posts')
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
@@ -83,8 +85,9 @@ export class PostsController {
   togglePublish(
     @Param('id', ParseIntPipe) id: number,
     @Req() req: AuthenticatedRequest,
+    @Body('reason') reason?: string,
   ) {
-    return this.postsService.togglePublish(id, req.user);
+    return this.postsService.togglePublish(id, req.user, reason);
   }
 
   @Post(':id/like')

@@ -38,8 +38,8 @@ export const postService = {
   },
 
   // Toggle publish status
-  async togglePublish(id: number) {
-    const response = await api.post(`/posts/${id}/publish`);
+  async togglePublish(id: number, reason?: string) {
+    const response = await api.post(`/posts/${id}/publish`, { reason });
     return response.data;
   },
 

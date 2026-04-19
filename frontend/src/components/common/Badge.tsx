@@ -6,7 +6,7 @@ type BadgeType = 'role' | 'category' | 'tag';
 interface BadgeProps {
   children: React.ReactNode;
   type?: BadgeType;
-  variant?: 'admin' | 'editor' | 'user' | 'default';
+  variant?: 'admin' | 'editor' | 'user' | 'warning' | 'success' | 'info' | 'default';
   className?: string;
   size?: 'xs' | 'sm' | 'md';
 }
@@ -39,6 +39,10 @@ const Badge: React.FC<BadgeProps> = ({
   };
 
   const getStyle = () => {
+    if (variant === 'warning') return "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-500 border border-amber-200/50 dark:border-amber-800/50";
+    if (variant === 'success') return "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-500 border border-emerald-200/50 dark:border-emerald-800/50";
+    if (variant === 'info') return "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-500 border border-sky-200/50 dark:border-sky-800/50";
+    
     if (type === 'role') {
       return typeStyles.role[variant as keyof typeof typeStyles.role] || typeStyles.role.default;
     }

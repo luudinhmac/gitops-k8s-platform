@@ -5,6 +5,7 @@ import { Search, ArrowLeft, Sun, Moon, LucideIcon, Menu } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useSidebar } from '@/context/SidebarContext';
 
 interface AdminPageHeaderProps {
@@ -16,6 +17,14 @@ interface AdminPageHeaderProps {
   onSearchChange?: (value: string) => void;
   searchPlaceholder?: string;
   primaryAction?: {
+    label: string;
+    icon: LucideIcon;
+    onClick?: () => void;
+    href?: string;
+    loading?: boolean;
+    disabled?: boolean;
+  };
+  secondaryAction?: {
     label: string;
     icon: LucideIcon;
     onClick?: () => void;
@@ -36,11 +45,13 @@ export default function AdminPageHeader({
   onSearchChange,
   searchPlaceholder = "Tìm kiếm...",
   primaryAction,
+  secondaryAction,
   sticky = true,
   maxWidth = "1400px"
 }: AdminPageHeaderProps) {
   const { theme, setTheme } = useTheme();
   const { setSidebarOpen } = useSidebar();
+  const pathname = usePathname();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -48,9 +59,14 @@ export default function AdminPageHeader({
     setMounted(true);
   }, []);
 
+  const isStandalone = !pathname.startsWith('/admin');
+  
   const headerClasses = cn(
     "z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-all",
-    sticky ? "sticky top-0 mb-1" : "mb-1"
+    sticky ? cn(
+      "sticky mb-1",
+      isStandalone ? "top-[68px] md:top-[80px]" : "top-0"
+    ) : "mb-1"
   );
 
   const containerClasses = cn(
@@ -107,7 +123,7 @@ export default function AdminPageHeader({
             </div>
           )}
 
-          {mounted && (
+          {mounted && !isStandalone && (
             <button
               onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
               className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 hover:text-primary transition-all shadow-sm"
@@ -115,6 +131,27 @@ export default function AdminPageHeader({
             >
               {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
             </button>
+          )}
+
+          {secondaryAction && (
+            secondaryAction.href ? (
+              <Link 
+                href={secondaryAction.href}
+                className="px-4 py-2 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-[11px] font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center"
+              >
+                <secondaryAction.icon size={14} className="md:mr-2" />
+                <span className="hidden md:inline">{secondaryAction.label}</span>
+              </Link>
+            ) : (
+              <button 
+                onClick={secondaryAction.onClick}
+                disabled={secondaryAction.disabled || secondaryAction.loading}
+                className="px-4 py-2 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-[11px] font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center disabled:opacity-50"
+              >
+                <secondaryAction.icon size={14} className={cn("md:mr-2", secondaryAction.loading && "animate-spin")} />
+                <span className="hidden md:inline">{secondaryAction.label}</span>
+              </button>
+            )
           )}
 
           {primaryAction && (

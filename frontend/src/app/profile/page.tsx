@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import {
   User as UserIcon, FileText, Lock, Save, Loader2,
   ArrowLeft, Eye, EyeOff, AlertCircle, Check,
@@ -26,10 +26,12 @@ import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 import { Post, SortOption } from '@/types/post';
 import { User as UserType } from '@/types/user';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Suspense } from 'react';
 
-export default function ProfilePage() {
+function ProfilePageContent() {
   const { user, isAuthenticated, loading: authLoading, checkAuth } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [activeTab, setActiveTab] = useState<'info' | 'posts' | 'password'>('info');
   const [profileForm, setProfileForm] = useState({
@@ -43,6 +45,7 @@ export default function ProfilePage() {
   const [myPosts, setMyPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('latest');
+  const [postFilter, setPostFilter] = useState<'all' | 'published' | 'draft'>('all');
 
   const [passForm, setPassForm] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
   const [showPass, setShowPass] = useState({ old: false, new: false, confirm: false });
@@ -58,7 +61,13 @@ export default function ProfilePage() {
     if (!authLoading && !isAuthenticated) {
       router.push('/login?redirect=/profile');
     }
-  }, [authLoading, isAuthenticated, router]);
+    
+    // Check for tab parameter
+    const tab = searchParams.get('tab');
+    if (tab === 'posts' || tab === 'info' || tab === 'password') {
+      setActiveTab(tab as any);
+    }
+  }, [authLoading, isAuthenticated, router, searchParams]);
 
   useEffect(() => {
     if (user) {
@@ -189,7 +198,17 @@ export default function ProfilePage() {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 size={40} className="animate-spin text-primary" /></div>;
   }
 
-  const sortedPosts = [...myPosts].sort((a, b) => {
+  const filteredPosts = myPosts.filter(post => {
+    const isPub = post.is_published === true;
+    const isBlk = post.is_blocked === true;
+    
+    if (postFilter === 'published') return isPub && !isBlk;
+    if (postFilter === 'draft') return !isPub && !isBlk;
+    if (postFilter === 'blocked') return isBlk;
+    return true;
+  });
+
+  const sortedPosts = [...filteredPosts].sort((a, b) => {
     if (sortBy === 'views') return (b.views || 0) - (a.views || 0);
     if (sortBy === 'likes') return (b.likes || 0) - (a.likes || 0);
     if (sortBy === 'comments') return (b.comment_count || 0) - (a.comment_count || 0);
@@ -360,7 +379,7 @@ export default function ProfilePage() {
                         key={opt.id}
                         onClick={() => setSortBy(opt.id as any)}
                         className={cn(
-                          "px-2.5 py-1.5 rounded-lg transition-all",
+                          "px-2.5 py-1.5 rounded-lg transition-all whitespace-nowrap",
                           sortBy === opt.id ? "bg-white dark:bg-slate-700 text-primary shadow-sm" : "hover:text-slate-700 dark:hover:text-slate-300"
                         )}
                       >
@@ -369,48 +388,88 @@ export default function ProfilePage() {
                     ))}
                   </div>
 
-                  <Link href="/admin/posts/new" className="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/30 hover:-translate-y-0.5 transition-all flex items-center shrink-0">
+                  <div className="flex items-center bg-slate-100 dark:bg-slate-800 rounded-xl p-1 text-[10px] font-bold text-slate-500">
+                    {[
+                      { id: 'all', label: 'Tất cả' },
+                      { id: 'published', label: 'Đang hiển thị' },
+                      { id: 'draft', label: 'Bản nháp' },
+                      { id: 'blocked', label: 'Bị chặn' },
+                    ].map(opt => (
+                      <button
+                        key={opt.id}
+                        onClick={() => setPostFilter(opt.id as any)}
+                        className={cn(
+                          "px-2.5 py-1.5 rounded-lg transition-all whitespace-nowrap",
+                          postFilter === opt.id ? "bg-white dark:bg-slate-700 text-primary shadow-sm" : "hover:text-slate-700 dark:hover:text-slate-300"
+                        )}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <Link href="/write" className="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-bold shadow-lg shadow-primary/30 hover:-translate-y-0.5 transition-all flex items-center shrink-0">
                     <Edit size={16} className="mr-2" /> Viết bài mới
                   </Link>
                 </div>
               </div>
               {postsLoading ? (
                 <div className="flex justify-center py-12"><Loader2 className="animate-spin text-primary" size={32} /></div>
-              ) : myPosts.length === 0 ? (
+              ) : filteredPosts.length === 0 ? (
                 <div className="text-center py-16 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-xl">
                   <FileText size={40} className="mx-auto text-slate-200 dark:text-slate-800 mb-4" />
-                  <p className="text-slate-500">Bạn chưa có bài viết nào.</p>
+                  <p className="text-slate-500">
+                    {postFilter === 'draft' ? 'Bạn không có bản nháp nào.' : 
+                     postFilter === 'published' ? 'Bạn không có bài viết nào đang hiển thị.' : 
+                     'Bạn chưa có bài viết nào.'}
+                  </p>
                 </div>
               ) : (
                 <AnimateList className="divide-y divide-slate-100 dark:divide-slate-800">
                   {sortedPosts.map(post => (
                     <div key={post.id} className="flex items-center justify-between py-1 group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 px-2 -mx-2 rounded-xl transition-all">
-                      <div className="flex-1 min-w-0 pr-4">
-                        <div className="flex items-center space-x-2 mb-1.5">
-                          {!post.is_published && <span className="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 text-[9px] font-bold rounded uppercase">Ẩn</span>}
-                          <h3 className="font-bold text-slate-900 dark:text-white text-sm truncate group-hover:text-primary transition-colors cursor-pointer">{post.title}</h3>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-500">
-                          <span className="flex items-center">
-                            <IconBadge icon={Calendar} color="slate" size="sm" animate={false} className="mr-1 bg-transparent p-0 w-auto h-auto" />
-                            {new Date(post.created_at).toLocaleDateString('vi-VN')}
-                          </span>
-                          <span className="flex items-center">
-                            <IconBadge icon={Eye} color="sky" size="sm" animate={false} className="mr-1 bg-transparent p-0 w-auto h-auto opacity-70" />
-                            {post.views || 0} <span className="ml-1 hidden xs:inline">lượt xem</span>
-                          </span>
-                          <span className="flex items-center font-medium">
-                            <IconBadge icon={Heart} color="rose" size="sm" animate={false} className="mr-1 bg-transparent p-0 w-auto h-auto" />
-                            {post.likes || 0}
-                          </span>
-                          <span className="flex items-center font-medium">
-                            <IconBadge icon={MessageSquare} color="blue" size="sm" animate={false} className="mr-1 bg-transparent p-0 w-auto h-auto" />
-                            {post.comment_count || 0}
-                          </span>
-                        </div>
-                      </div>
+                      {(() => {
+                        const isPub = !!post.is_published;
+                        const isBlk = !!post.is_blocked;
+                        return (
+                          <>
+                            <div className="flex-1 min-w-0 pr-4">
+                              <div className="flex items-center space-x-2 mb-1.5">
+                                {isBlk && <span className="px-1.5 py-0.5 bg-red-100 text-red-700 text-[9px] font-bold rounded uppercase">Bị chặn</span>}
+                                {!isPub && !isBlk && <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[9px] font-bold rounded uppercase">Bản nháp</span>}
+                                <h3 className="font-bold text-slate-900 dark:text-white text-sm truncate group-hover:text-primary transition-colors cursor-pointer">{post.title}</h3>
+                              </div>
+                              {isPub && !isBlk ? (
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-500">
+                                  <span className="flex items-center">
+                                    <IconBadge icon={Calendar} color="slate" size="sm" animate={false} className="mr-1 bg-transparent p-0 w-auto h-auto" />
+                                    {new Date(post.created_at).toLocaleDateString('vi-VN')}
+                                  </span>
+                                  <span className="flex items-center">
+                                    <IconBadge icon={Eye} color="sky" size="sm" animate={false} className="mr-1 bg-transparent p-0 w-auto h-auto opacity-70" />
+                                    {post.views || 0} <span className="ml-1 hidden xs:inline">lượt xem</span>
+                                  </span>
+                                  <span className="flex items-center font-medium">
+                                    <IconBadge icon={Heart} color="rose" size="sm" animate={false} className="mr-1 bg-transparent p-0 w-auto h-auto" />
+                                    {post.likes || 0}
+                                  </span>
+                                  <span className="flex items-center font-medium">
+                                    <IconBadge icon={MessageSquare} color="blue" size="sm" animate={false} className="mr-1 bg-transparent p-0 w-auto h-auto" />
+                                    {post.comment_count || 0}
+                                  </span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center text-[11px] text-slate-400">
+                                   <Calendar size={12} className="mr-1" />
+                                   Cập nhật: {new Date(post.updated_at || post.created_at).toLocaleDateString('vi-VN')}
+                                </div>
+                              )}
+                            </div>
+                          </>
+                        );
+                      })()}
                       <div className="flex items-center space-x-2 shrink-0">
-                        <Link href={`/admin/posts/edit/${post.id}`}>
+                        <Link href={`/posts/${post.id}/edit`}>
                           <Button variant="outline" size="icon" className="hover:border-amber-200">
                             <Edit size={18} className="text-amber-500" />
                           </Button>
@@ -492,5 +551,17 @@ export default function ProfilePage() {
         message="Bạn có chắc chắn muốn xóa bài viết này? Hành động này không thể hoàn tác và bài viết sẽ bị gỡ bỏ vĩnh viễn."
       />
     </div>
+  );
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <Loader2 className="w-10 h-10 text-primary animate-spin" />
+      </div>
+    }>
+      <ProfilePageContent />
+    </Suspense>
   );
 }

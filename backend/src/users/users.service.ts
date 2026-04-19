@@ -17,11 +17,14 @@ interface PrismaError {
   code: string;
 }
 
+import { NotificationsService } from '../notifications/notifications.service';
+
 @Injectable()
 export class UsersService {
   constructor(
     private prisma: PrismaService,
     private fileService: FileService,
+    private notificationsService: NotificationsService,
   ) {}
 
   private validatePassword(password: string): boolean {
@@ -183,7 +186,13 @@ export class UsersService {
   async updatePermissions(
     id: number,
     currentUser: User,
-    data: { role?: string; is_active?: boolean; can_comment?: boolean; can_post?: boolean },
+    data: { 
+      role?: string; 
+      is_active?: boolean; 
+      can_comment?: boolean; 
+      can_post?: boolean;
+      reason?: string; 
+    },
   ) {
     if (currentUser.role !== (UserRole.ADMIN as string)) {
       throw new ForbiddenException('Chỉ Admin mới có thể thay đổi quyền hạn.');
@@ -197,16 +206,81 @@ export class UsersService {
       throw new BadRequestException('Vai trò không hợp lệ.');
     }
 
-    return this.prisma.user.update({
+    const { reason, ...dbData } = data;
+
+    const updatedUser = await this.prisma.user.update({
       where: { id },
       data: {
-        ...(data.role !== undefined && { role: data.role }),
-        ...(data.is_active !== undefined && { is_active: data.is_active }),
-        ...(data.can_comment !== undefined && { can_comment: data.can_comment }),
-        ...(data.can_post !== undefined && { can_post: data.can_post }),
+        ...(dbData.role !== undefined && { role: dbData.role }),
+        ...(dbData.is_active !== undefined && { is_active: dbData.is_active }),
+        ...(dbData.can_comment !== undefined && { can_comment: dbData.can_comment }),
+        ...(dbData.can_post !== undefined && { can_post: dbData.can_post }),
       },
       select: this.publicSelect,
     });
+
+    // --- TRIGGER NOTIFICATIONS ---
+    try {
+      const reasonText = reason ? ` Lý do: ${reason}` : '';
+      
+      if (data.is_active === false) {
+        await this.notificationsService.create({
+          recipient_id: id,
+          sender_id: currentUser.id,
+          type: 'USER_STATUS_CHANGE',
+          title: 'Tài khoản bị khóa',
+          content: `Tài khoản của bạn đã bị quản trị viên tạm khóa.${reasonText}`,
+        });
+      } else if (data.is_active === true) {
+        await this.notificationsService.create({
+          recipient_id: id,
+          sender_id: currentUser.id,
+          type: 'USER_STATUS_CHANGE',
+          title: 'Tài khoản đã mở',
+          content: 'Tài khoản của bạn đã được kích hoạt trở lại.',
+        });
+      }
+
+      if (data.can_comment === false) {
+        await this.notificationsService.create({
+          recipient_id: id,
+          sender_id: currentUser.id,
+          type: 'USER_PERMISSION_CHANGE',
+          title: 'Hạn chế bình luận',
+          content: `Bạn đã bị quản trị viên chặn quyền bình luận.${reasonText}`,
+        });
+      } else if (data.can_comment === true) {
+        await this.notificationsService.create({
+          recipient_id: id,
+          sender_id: currentUser.id,
+          type: 'USER_PERMISSION_CHANGE',
+          title: 'Đã mở khóa bình luận',
+          content: 'Bạn đã có thể bình luận trở lại.',
+        });
+      }
+
+      if (data.can_post === false) {
+        await this.notificationsService.create({
+          recipient_id: id,
+          sender_id: currentUser.id,
+          type: 'USER_PERMISSION_CHANGE',
+          title: 'Hạn chế đăng bài',
+          content: `Bạn đã bị quản trị viên chặn quyền đăng bài viết.${reasonText}`,
+        });
+      } else if (data.can_post === true) {
+        await this.notificationsService.create({
+          recipient_id: id,
+          sender_id: currentUser.id,
+          type: 'USER_PERMISSION_CHANGE',
+          title: 'Đã mở khóa đăng bài',
+          content: 'Bạn đã có thể đăng bài viết trở lại.',
+        });
+      }
+    } catch (err) {
+      console.error('Failed to trigger user notification:', err);
+    }
+
+    return updatedUser;
   }
 
   async resetPassword(id: number, newPassword: string, currentUser: User) {

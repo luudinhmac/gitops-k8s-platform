@@ -5,11 +5,15 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCommentDto } from './dto/comment.dto';
+import { NotificationsService } from '../notifications/notifications.service';
 import { User } from '@prisma/client';
 
 @Injectable()
 export class CommentsService {
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService,
+  ) {}
 
   async create(data: CreateCommentDto) {
     const post = await this.prisma.post.findUnique({
@@ -18,13 +22,17 @@ export class CommentsService {
     if (!post) throw new NotFoundException('Post not found');
 
     if (data.user_id) {
-      const user = await this.prisma.user.findUnique({ where: { id: data.user_id } });
+      const user = await this.prisma.user.findUnique({
+        where: { id: data.user_id },
+      });
       if (user && !user.can_comment) {
-        throw new ForbiddenException('Tài khoản của bạn đã bị cấm bình luận. Vui lòng liên hệ Admin để được mở khóa');
+        throw new ForbiddenException(
+          'Tài khoản của bạn đã bị cấm bình luận. Vui lòng liên hệ Admin để được mở khóa',
+        );
       }
     }
 
-    return this.prisma.comment.create({
+    const comment = await this.prisma.comment.create({
       data: {
         post_id: data.post_id,
         user_id: data.user_id,
@@ -33,7 +41,53 @@ export class CommentsService {
         author_email: data.author_email,
         content: data.content,
       },
+      include: {
+        User: {
+          select: { id: true, fullname: true, username: true }
+        }
+      }
     });
+
+    // --- TRIGGER NOTIFICATIONS ---
+    try {
+      const commenterName = comment.User?.fullname || comment.author_name || 'Ai đó';
+      
+      if (comment.parent_id) {
+        // REPLY case: Notify parent comment author
+        const parentComment = await this.prisma.comment.findUnique({
+          where: { id: comment.parent_id },
+          select: { user_id: true }
+        });
+        
+        if (parentComment?.user_id && parentComment.user_id !== comment.user_id) {
+          await this.notificationsService.create({
+            recipient_id: parentComment.user_id,
+            sender_id: comment.user_id || undefined,
+            type: 'REPLY_TO_COMMENT',
+            title: 'Phản hồi mới',
+            content: `${commenterName} đã phản hồi bình luận của bạn`,
+            link: `/posts/${post.slug}#comment-${comment.id}`,
+          });
+        }
+      } else {
+        // NEW COMMENT case: Notify post author
+        if (post.author_id && post.author_id !== comment.user_id) {
+          await this.notificationsService.create({
+            recipient_id: post.author_id,
+            sender_id: comment.user_id || undefined,
+            type: 'COMMENT_ON_POST',
+            title: 'Bình luận mới',
+            content: `${commenterName} đã bình luận về bài viết "${post.title}"`,
+            link: `/posts/${post.slug}#comment-${comment.id}`,
+          });
+        }
+      }
+    } catch (err) {
+      console.error('Failed to trigger notification:', err);
+      // Don't fail the comment creation if notification fails
+    }
+
+    return comment;
   }
 
   async findByPost(postId: number) {

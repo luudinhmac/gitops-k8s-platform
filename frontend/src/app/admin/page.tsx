@@ -65,7 +65,17 @@ export default function AdminDashboardPage() {
 
   const handleTogglePublish = async (id: number) => {
     try {
-      await togglePublish(id);
+      const post = posts.find(p => p.id === id);
+      const isBlocking = user?.role === 'admin' && post?.author_id !== user?.id && !post?.is_blocked;
+      
+      let reason: string | undefined = undefined;
+      if (isBlocking) {
+        const input = window.prompt('Nhập lý do chặn bài viết này (tùy chọn):');
+        if (input === null) return; // Cancelled
+        reason = input;
+      }
+
+      await togglePublish(id, reason);
     } catch (err: any) {
       alert(err.message || 'Lỗi khi thay đổi trạng thái bài viết');
     }
@@ -114,7 +124,7 @@ export default function AdminDashboardPage() {
         primaryAction={{
           label: "Viết bài",
           icon: Plus,
-          href: "/admin/posts/new"
+          href: "/write"
         }}
       />
 
@@ -212,16 +222,42 @@ export default function AdminDashboardPage() {
                       </div>
                     </td>
                     <td className="px-6 py-5">
-                      <button onClick={() => handleTogglePublish(post.id)}
-                        className={cn("px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all",
-                          post.is_published ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"
-                        )}>
-                        {post.is_published ? 'Công khai' : 'Ẩn bài'}
-                      </button>
+                      {(() => {
+                        const isOwn = post.author_id === user?.id;
+                        const isPub = !!post.is_published;
+                        const isBlk = !!post.is_blocked;
+
+                        if (isBlk) {
+                          return (
+                            <button onClick={() => handleTogglePublish(post.id)}
+                              className="px-3 py-1.5 rounded-lg text-[10px] font-bold bg-red-100 text-red-700 hover:bg-red-200 transition-all">
+                              Bị chặn
+                            </button>
+                          );
+                        }
+
+                        if (isOwn) {
+                          return (
+                            <button onClick={() => handleTogglePublish(post.id)}
+                              className={cn("px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all",
+                                isPub ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"
+                              )}>
+                              {isPub ? 'Công khai' : 'Bản nháp'}
+                            </button>
+                          );
+                        }
+
+                        return (
+                          <button onClick={() => handleTogglePublish(post.id)}
+                            className="px-3 py-1.5 rounded-lg text-[10px] font-bold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-all">
+                            Đang hiển thị
+                          </button>
+                        );
+                      })()}
                     </td>
                     <td className="px-5 py-3 text-right">
                       <div className="flex items-center justify-end space-x-2">
-                        <Link href={`/admin/posts/edit/${post.id}`}>
+                        <Link href={`/posts/${post.id}/edit`}>
                           <Button variant="outline" size="icon" className="h-8 w-8 hover:border-amber-200">
                             <Edit size={14} className="text-amber-500" />
                           </Button>
