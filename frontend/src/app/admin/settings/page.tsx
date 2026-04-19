@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { 
   Settings, Globe, Server, Shield, TrendingUp, Save, Loader2, Image as ImageIcon, 
-  Trash2, AlertCircle, Check, Link as LinkIcon, Database, HardDrive, ShieldCheck, Lock
+  Trash2, AlertCircle, Check, Link as LinkIcon, Database, HardDrive, ShieldCheck, Lock, ShieldAlert, Key
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
@@ -12,7 +12,7 @@ import { settingService, SettingsConfig } from '@/services/settingService';
 import Link from 'next/link';
 
 export default function SettingsAdminPage() {
-  const [activeTab, setActiveTab] = useState<'general' | 'system' | 'security' | 'marketing'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'system' | 'security' | 'marketing' | 'maintenance'>('general');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -39,6 +39,13 @@ export default function SettingsAdminPage() {
     adsense_snippet: '',
   });
 
+  const [maintenanceForm, setMaintenanceForm] = useState<Record<string, string>>({
+    maintenance_global: 'false',
+    maintenance_posts: 'false',
+    maintenance_comments: 'false',
+    maintenance_passcode: '123456',
+  });
+
   useEffect(() => {
     fetchSettings();
   }, []);
@@ -55,6 +62,9 @@ export default function SettingsAdminPage() {
       if (data.dbConfig?.marketing) {
         setMarketingForm(prev => ({ ...prev, ...data.dbConfig.marketing }));
       }
+      if (data.dbConfig?.maintenance) {
+        setMaintenanceForm(prev => ({ ...prev, ...data.dbConfig.maintenance }));
+      }
     } catch (error) {
       console.error('Failed to parse settings', error);
     } finally {
@@ -62,11 +72,14 @@ export default function SettingsAdminPage() {
     }
   };
 
-  const handleSaveGroup = async (group: 'general' | 'marketing') => {
+  const handleSaveGroup = async (group: 'general' | 'marketing' | 'maintenance') => {
     setSaving(true);
     setStatusMsg(null);
     try {
-      const targetForm = group === 'general' ? generalForm : marketingForm;
+      let targetForm;
+      if (group === 'general') targetForm = generalForm;
+      else if (group === 'marketing') targetForm = marketingForm;
+      else targetForm = maintenanceForm;
       const items = Object.entries(targetForm).map(([key, value]) => ({
         key,
         value,
@@ -96,6 +109,7 @@ export default function SettingsAdminPage() {
 
   const tabs = [
     { id: 'general', label: 'Cấu hình Website', icon: Globe },
+    { id: 'maintenance', label: 'Bảo trì hệ thống', icon: ShieldAlert },
     { id: 'system', label: 'Hệ thống (System)', icon: Server },
     { id: 'security', label: 'Bảo mật & Users', icon: Shield },
     { id: 'marketing', label: 'Marketing & SEO', icon: TrendingUp },
@@ -334,6 +348,119 @@ export default function SettingsAdminPage() {
                 <div className="flex justify-end pt-6 border-t border-slate-100 dark:border-slate-800">
                   <Button onClick={() => handleSaveGroup('marketing')} isLoading={saving} size="lg">
                     <Save size={18} className="mr-2" /> Lưu cấu hình
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: MAINTENANCE */}
+            {activeTab === 'maintenance' && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1 tracking-tight flex items-center gap-2">
+                    <ShieldAlert className="text-primary" />
+                    Bảo trì hệ thống
+                  </h2>
+                  <p className="text-sm text-slate-500">Kiểm soát trạng thái hoạt động của các phân vùng trên website.</p>
+                </div>
+
+                <div className="space-y-6">
+                   {/* Global Maintenance */}
+                   <div className={cn(
+                     "p-6 rounded-[2rem] border transition-all duration-300",
+                     maintenanceForm.maintenance_global === 'true' 
+                        ? "bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/30" 
+                        : "bg-slate-50 dark:bg-slate-950/50 border-slate-100 dark:border-slate-800"
+                   )}>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-4">
+                           <div className={cn("p-3 rounded-2xl", maintenanceForm.maintenance_global === 'true' ? "bg-red-500 text-white" : "bg-slate-200 dark:bg-slate-800 text-slate-500")}>
+                             <Server size={24} />
+                           </div>
+                           <div>
+                              <h3 className="font-bold text-slate-900 dark:text-white">Bảo trì toàn bộ (Global)</h3>
+                              <p className="text-xs text-slate-500">Chuyển hướng tất cả khách viếng thăm về trang bảo trì.</p>
+                           </div>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input type="checkbox" className="sr-only peer" checked={maintenanceForm.maintenance_global === 'true'} onChange={e => setMaintenanceForm({...maintenanceForm, maintenance_global: e.target.checked ? 'true' : 'false'})} />
+                          <div className="w-14 h-7 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-red-500"></div>
+                        </label>
+                      </div>
+                      {maintenanceForm.maintenance_global === 'true' && (
+                        <div className="mt-4 p-4 bg-white/50 dark:bg-slate-900/50 rounded-2xl border border-red-100 dark:border-red-500/10 text-[11px] text-red-600 font-bold flex items-center gap-2">
+                          <AlertCircle size={14} /> Hệ thống đang trong trạng thái LOCK DOWN. Chỉ Admin có passcode mới có thể truy cập qua cửa bí mật.
+                        </div>
+                      )}
+                   </div>
+
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Post Maintenance */}
+                      <div className="p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
+                        <div className="flex items-center justify-between">
+                           <div className="flex items-center gap-3">
+                              <div className="p-2 bg-amber-500/10 text-amber-500 rounded-xl">
+                                <TrendingUp size={20} />
+                              </div>
+                              <h4 className="font-bold text-sm dark:text-white">Bảo trì Viết bài</h4>
+                           </div>
+                           <label className="relative inline-flex items-center cursor-pointer scale-75">
+                            <input type="checkbox" className="sr-only peer" checked={maintenanceForm.maintenance_posts === 'true'} onChange={e => setMaintenanceForm({...maintenanceForm, maintenance_posts: e.target.checked ? 'true' : 'false'})} />
+                            <div className="w-14 h-7 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-amber-500"></div>
+                          </label>
+                        </div>
+                        <p className="text-[10px] text-slate-400 mt-2">Chặn tính năng đăng và chỉnh sửa bài viết.</p>
+                      </div>
+
+                      {/* Comment Maintenance */}
+                      <div className="p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
+                        <div className="flex items-center justify-between">
+                           <div className="flex items-center gap-3">
+                              <div className="p-2 bg-blue-500/10 text-blue-500 rounded-xl">
+                                <Globe size={20} />
+                              </div>
+                              <h4 className="font-bold text-sm dark:text-white">Bảo trì Bình luận</h4>
+                           </div>
+                           <label className="relative inline-flex items-center cursor-pointer scale-75">
+                            <input type="checkbox" className="sr-only peer" checked={maintenanceForm.maintenance_comments === 'true'} onChange={e => setMaintenanceForm({...maintenanceForm, maintenance_comments: e.target.checked ? 'true' : 'false'})} />
+                            <div className="w-14 h-7 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-blue-500"></div>
+                          </label>
+                        </div>
+                        <p className="text-[10px] text-slate-400 mt-2">Dừng tiếp nhận bình luận mới từ người dùng.</p>
+                      </div>
+                   </div>
+
+                   {/* Passcode Config */}
+                   <div className="p-8 bg-slate-950 rounded-[2.5rem] border border-white/5 relative overflow-hidden group">
+                      <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
+                         <Key size={80} className="text-white" />
+                      </div>
+                      <div className="relative z-10">
+                        <h3 className="text-white font-bold mb-2 flex items-center gap-2">
+                           Mã truy cập vượt rào (Bypass Passcode)
+                        </h3>
+                        <p className="text-slate-400 text-xs mb-6 max-w-md">
+                          Mã này dùng để đăng nhập vào trang quản trị thông qua "Cửa bí mật" khi hệ thống đang ở chế độ bảo trì toàn bộ.
+                        </p>
+                        <div className="flex items-center gap-4">
+                           <input 
+                             type="text" 
+                             value={maintenanceForm.maintenance_passcode || ''} 
+                             onChange={e => setMaintenanceForm({...maintenanceForm, maintenance_passcode: e.target.value})}
+                             placeholder="VD: 123456"
+                             className="bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white text-xl font-mono tracking-widest focus:ring-2 focus:ring-primary outline-none transition-all w-full max-w-[240px]"
+                           />
+                           <div className="hidden sm:block text-[10px] text-slate-500 font-bold uppercase tracking-tighter">
+                             Nhấn giữ icon ShieldAlert <br/> trên trang bảo trì 5 lần để nhập mã.
+                           </div>
+                        </div>
+                      </div>
+                   </div>
+                </div>
+
+                <div className="flex justify-end pt-6 border-t border-slate-100 dark:border-slate-800">
+                  <Button onClick={() => handleSaveGroup('maintenance')} isLoading={saving} size="lg" className="rounded-2xl px-12">
+                    <Save size={18} className="mr-2" /> Lưu cấu hình bảo trì
                   </Button>
                 </div>
               </div>

@@ -4,12 +4,14 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { Menu, X, ChevronRight, LayoutDashboard, User, LogOut, PenSquare, ChevronDown, Moon, Sun, Search } from 'lucide-react';
+import { Menu, X, ChevronRight, LayoutDashboard, User, LogOut, PenSquare, ChevronDown, Moon, Sun, Search, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
+import NotificationBell from '@/components/notifications/NotificationBell';
 
 import UserAvatar from '@/components/common/UserAvatar';
 import Badge from '@/components/common/Badge';
+import ErrorBoundary from '@/components/common/ErrorBoundary';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -50,7 +52,7 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  if (pathname.startsWith('/admin')) return null;
+  if (pathname.startsWith('/admin') || pathname === '/maintenance') return null;
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50">
@@ -97,6 +99,11 @@ export default function Navbar() {
                 >
                   {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
                 </button>
+                {isAuthenticated && (
+                  <ErrorBoundary featureName="Thông báo" fallback={<div className="p-2 opacity-50"><Bell size={18} /></div>}>
+                    <NotificationBell />
+                  </ErrorBoundary>
+                )}
               </div>
             )}
 
@@ -163,12 +170,19 @@ export default function Navbar() {
           {/* Mobile Toggle & Theme */}
           <div className="md:hidden flex items-center space-x-2">
             {mounted && (
-              <button
-                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                className="p-2 text-slate-600 dark:text-slate-300"
-              >
-                {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                  className="p-2 text-slate-600 dark:text-slate-300"
+                >
+                  {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
+                </button>
+                {isAuthenticated && (
+                  <ErrorBoundary featureName="Thông báo" fallback={<div className="p-2 opacity-50"><Bell size={18} /></div>}>
+                    <NotificationBell />
+                  </ErrorBoundary>
+                )}
+              </div>
             )}
             <button className="p-2 text-slate-600 dark:text-slate-300" onClick={() => setIsOpen(!isOpen)}>
               {isOpen ? <X size={24} /> : <Menu size={24} />}
