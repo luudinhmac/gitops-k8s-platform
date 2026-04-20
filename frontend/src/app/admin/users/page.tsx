@@ -120,6 +120,9 @@ export default function UsersPage() {
       await userService.updatePermissions(userId, updateData);
       
       setUsers(users.map(u => u.id === userId ? { ...u, ...fields } as AdminUser : u));
+      if (settingsUser?.id === userId) {
+        setSettingsUser(prev => prev ? { ...prev, ...fields } : null);
+      }
       setStatusMsg({ type: 'success', text: 'Đã cập nhật quyền hạn thành công' });
       setPromptData({ ...promptData, isOpen: false });
     } catch (err: any) { 
@@ -179,7 +182,11 @@ export default function UsersPage() {
     if (user.id === currentUser?.id) return;
     try {
       await userService.toggleStatus(user.id, user.is_active || false);
-      setUsers(users.map(u => u.id === user.id ? { ...u, is_active: !u.is_active } : u));
+      const updatedUser = { ...user, is_active: !user.is_active };
+      setUsers(users.map(u => u.id === user.id ? updatedUser : u));
+      if (settingsUser?.id === user.id) {
+        setSettingsUser(updatedUser);
+      }
     } catch (err) { console.error(err); }
   };
 
