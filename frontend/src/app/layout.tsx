@@ -21,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
   let siteDesc = 'Portfolio giới thiệu các dự án và kỹ năng chuyên môn về System Engineering và Web Development.';
   
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+    const apiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
     const res = await fetch(`${apiUrl}/settings/public`, { next: { revalidate: 10 } });
     if (res.ok) {
       const data = await res.json();

@@ -21,7 +21,7 @@ export async function middleware(request: NextRequest) {
   
   // 3. Fetch Maintenance Status
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3001/api';
+    const apiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3001/api';
     const fetchUrl = `${apiUrl.replace(/\/$/, '')}/settings/public`;
     
     console.log(`[Middleware] Checking maintenance at: ${fetchUrl}`);

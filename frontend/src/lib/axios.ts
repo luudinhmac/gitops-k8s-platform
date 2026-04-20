@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+const isServer = typeof window === 'undefined';
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
+  baseURL: isServer 
+    ? (process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api')
+    : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'),
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',

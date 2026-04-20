@@ -45,7 +45,7 @@ function ProfilePageContent() {
   const [myPosts, setMyPosts] = useState<Post[]>([]);
   const [postsLoading, setPostsLoading] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('latest');
-  const [postFilter, setPostFilter] = useState<'all' | 'published' | 'draft'>('all');
+  const [postFilter, setPostFilter] = useState<'all' | 'published' | 'draft' | 'blocked'>('all');
 
   const [passForm, setPassForm] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
   const [showPass, setShowPass] = useState({ old: false, new: false, confirm: false });
