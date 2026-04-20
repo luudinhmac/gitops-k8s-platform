@@ -1,12 +1,38 @@
 'use client';
 
 import Link from 'next/link';
-import { Github, Linkedin, Mail } from 'lucide-react';
+import { Github, Linkedin, Mail, Users, BarChart3 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { useState, useEffect } from 'react';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
   const pathname = usePathname();
+  const [stats, setStats] = useState<{ onlineCount: number; totalVisits: number } | null>(null);
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  useEffect(() => {
+    if (pathname.startsWith('/admin') || pathname === '/maintenance') return;
+
+    const fetchStats = async () => {
+      try {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stats/counters`);
+        if (res.ok) {
+          const data = await res.json();
+          setStats(data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch stats', error);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
+    fetchStats();
+    // Poll every 30s for online status
+    const interval = setInterval(fetchStats, 30000);
+    return () => clearInterval(interval);
+  }, [pathname]);
 
   if (pathname.startsWith('/admin') || pathname === '/maintenance') {
     return null;
@@ -72,7 +98,22 @@ export default function Footer() {
         </div>
 
         <div suppressHydrationWarning={true} className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 text-sm text-slate-500">
-          <p>© {currentYear} Macld. Bản quyền đã được bảo hộ.</p>
+          <div className="flex flex-col md:flex-row items-center md:space-x-8 space-y-2 md:space-y-0">
+             <p>© {currentYear} Macld. Bản quyền đã được bảo hộ.</p>
+             {!loadingStats && stats && (
+               <div className="flex items-center space-x-4 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                    <span>{stats.onlineCount} Đang trực tuyến</span>
+                  </div>
+                  <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700" />
+                  <div className="flex items-center gap-1.5">
+                    <BarChart3 size={12} />
+                    <span>{stats.totalVisits.toLocaleString()} Lượt truy cập</span>
+                  </div>
+               </div>
+             )}
+          </div>
           <div className="flex space-x-6">
             <Link href="/privacy" className="hover:text-primary transition-colors">Quyền riêng tư</Link>
             <Link href="/terms" className="hover:text-primary transition-colors">Điều khoản</Link>
