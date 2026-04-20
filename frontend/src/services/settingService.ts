@@ -68,5 +68,27 @@ export const settingService = {
       console.error('Error testing telegram connection:', error);
       throw error;
     }
+  },
+
+  // Test MS Teams connection
+  testTeams: async (webhookUrl: string) => {
+    try {
+      const response = await api.post('/settings/admin/test-teams', { webhookUrl });
+      return response.data;
+    } catch (error) {
+      console.error('Error testing MS Teams connection:', error);
+      throw error;
+    }
+  },
+
+  // Test Email connection
+  testEmail: async (config: { host: string; port: string; user: string; pass: string; to: string }) => {
+    try {
+      const response = await api.post('/settings/admin/test-email', config);
+      return response.data;
+    } catch (error) {
+      console.error('Error testing Email connection:', error);
+      throw error;
+    }
   }
 };

@@ -2,10 +2,14 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import slugify from 'slugify';
 import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
+import { AdminAlertService } from '../admin-alert/admin-alert.service';
 
 @Injectable()
 export class CategoriesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private adminAlertService: AdminAlertService,
+  ) {}
 
   async findAll() {
     return this.prisma.category.findMany({
@@ -39,9 +43,20 @@ export class CategoriesService {
       count++;
       finalSlug = `${slug}-${count}`;
     }
-    return this.prisma.category.create({
+    const category = await this.prisma.category.create({
       data: { ...data, slug: finalSlug },
     });
+
+    // Notify info
+    this.adminAlertService.sendAlert({
+      subject: `📂 Danh mục mới: ${category.name}`,
+      text: `📂 <b>Danh mục mới đã được tạo</b>\n\n` +
+            `• <b>Tên:</b> ${category.name}\n` +
+            `• <b>Slug:</b> ${category.slug}\n` +
+            `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}`,
+    });
+
+    return category;
   }
 
   async update(id: number, data: UpdateCategoryDto) {

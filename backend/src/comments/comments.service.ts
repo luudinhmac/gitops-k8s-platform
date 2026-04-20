@@ -6,7 +6,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCommentDto } from './dto/comment.dto';
 import { NotificationsService } from '../notifications/notifications.service';
-import { TelegramService } from '../telegram/telegram.service';
+import { AdminAlertService } from '../admin-alert/admin-alert.service';
 import { User } from '@prisma/client';
 
 @Injectable()
@@ -14,7 +14,7 @@ export class CommentsService {
   constructor(
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
-    private telegramService: TelegramService,
+    private adminAlertService: AdminAlertService,
   ) {}
 
   async create(data: CreateCommentDto) {
@@ -85,14 +85,15 @@ export class CommentsService {
         }
       }
 
-      // Notify admin via Telegram
-      this.telegramService.sendSystemNotification(
-        `💬 <b>Bình luận mới</b>\n\n` +
-        `• <b>Người gửi:</b> ${commenterName}\n` +
-        `• <b>Bài viết:</b> ${post.title}\n` +
-        `• <b>Nội dung:</b> ${(comment.content || '').substring(0, 100)}${(comment.content || '').length > 100 ? '...' : ''}\n` +
-        `• <b>Link:</b> <a href="${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}/posts/${post.slug}#comment-${comment.id}">Xem bài viết</a>`
-      );
+      // Notify admin via multi-channel alerts
+      this.adminAlertService.sendAlert({
+        subject: `💬 Bình luận mới từ ${commenterName} trên bài "${post.title}"`,
+        text: `💬 <b>Bình luận mới</b>\n\n` +
+              `• <b>Người gửi:</b> ${commenterName}\n` +
+              `• <b>Bài viết:</b> ${post.title}\n` +
+              `• <b>Nội dung:</b> ${(comment.content || '').substring(0, 100)}${(comment.content || '').length > 100 ? '...' : ''}\n` +
+              `• <b>Link:</b> <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/posts/${post.slug}#comment-${comment.id}">Xem bài viết</a>`,
+      });
     } catch (err) {
       console.error('Failed to trigger notification:', err);
       // Don't fail the comment creation if notification fails

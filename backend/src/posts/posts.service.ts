@@ -12,6 +12,7 @@ import { CreatePostDto, UpdatePostDto } from './dto/create-post.dto';
 import { Prisma } from '@prisma/client';
 import { FileService } from '../upload/file.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { AdminAlertService } from '../admin-alert/admin-alert.service';
 
 @Injectable()
 export class PostsService {
@@ -19,6 +20,7 @@ export class PostsService {
     private prisma: PrismaService,
     private fileService: FileService,
     private notificationsService: NotificationsService,
+    private adminAlertService: AdminAlertService,
   ) {}
 
   private sanitizeOptions = {
@@ -223,10 +225,19 @@ export class PostsService {
       },
     };
 
-    const post = await (this.prisma.post as any).findUnique({
+    let post = await (this.prisma.post as any).findUnique({
       where,
       select,
     });
+
+    // If numeric slug and not found by ID, try searching by slug
+    if (!post && isId) {
+      post = await (this.prisma.post as any).findUnique({
+        where: { slug: String(idOrSlug) },
+        select,
+      });
+    }
+
     if (!post) throw new NotFoundException('Post not found');
 
     // Fetch next/prev posts if in a series
@@ -450,7 +461,7 @@ export class PostsService {
     return updatedPost as unknown as PostInterface;
   }
 
-  async remove(id: number, user: User) {
+  async remove(id: number, user: User, ip?: string) {
     const post = await this.prisma.post.findUnique({
       where: { id },
       select: { id: true, author_id: true, cover_image: true },
@@ -467,13 +478,28 @@ export class PostsService {
       await this.fileService.deleteFile(post.cover_image);
     }
 
-    return this.prisma.post.delete({ where: { id } });
+    await this.prisma.post.delete({ where: { id } });
+
+    // --- AUDIT ALERT ---
+    const username = user.username || 'Hệ thống';
+    const userIp = ip || 'unknown';
+
+    this.adminAlertService.sendAlert({
+      subject: `🗑️ Bài viết bị xóa: ${post.id}`,
+      text: `🗑️ <b>BÀI VIẾT BỊ XÓA</b>\n\n` +
+            `• <b>Hành động:</b> Đã xóa bài viết ID #${post.id}\n` +
+            `• <b>IP:</b> ${userIp}\n` +
+            `• <b>User:</b> ${username}\n` +
+            `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}`,
+    });
+
+    return { success: true };
   }
 
-  async togglePin(id: number, user: User) {
+  async togglePin(id: number, user: User, ip?: string) {
     const post = await this.prisma.post.findUnique({
       where: { id },
-      select: { id: true, author_id: true, is_pinned: true },
+      select: { id: true, title: true, author_id: true, is_pinned: true },
     });
     if (!post) throw new NotFoundException('Post not found');
 
@@ -484,11 +510,27 @@ export class PostsService {
       throw new ForbiddenException('Bạn không có quyền ghim bài viết này.');
     }
 
-    return this.prisma.post.update({
+    const updated = await this.prisma.post.update({
       where: { id },
       data: { is_pinned: !post.is_pinned },
-      select: { id: true, is_pinned: true },
+      select: { id: true, title: true, is_pinned: true },
     });
+
+    // --- AUDIT ALERT ---
+    const username = user.username || 'Hệ thống';
+    const userIp = ip || 'unknown';
+    const action = updated.is_pinned ? 'Ghim bài viết' : 'Bỏ ghim bài viết';
+
+    this.adminAlertService.sendAlert({
+      subject: `📌 ${action}: ${updated.title}`,
+      text: `📌 <b>THAY ĐỔI GHIM BÀI VIẾT</b>\n\n` +
+            `• <b>Hành động:</b> ${action} "${updated.title}"\n` +
+            `• <b>IP:</b> ${userIp}\n` +
+            `• <b>User:</b> ${username}\n` +
+            `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}`,
+    });
+
+    return updated;
   }
 
   async toggleLike(id: number, userId: number) {
@@ -528,7 +570,7 @@ export class PostsService {
     return { liked: !!existingLike };
   }
 
-  async togglePublish(id: number, user: User, reason?: string) {
+  async togglePublish(id: number, user: User, ip?: string, reason?: string) {
     const post = await (this.prisma.post as any).findUnique({
       where: { id },
       select: { id: true, title: true, author_id: true, is_published: true, is_blocked: true },
@@ -559,7 +601,26 @@ export class PostsService {
       select: { id: true, title: true, slug: true, is_published: true, is_blocked: true, author_id: true },
     });
 
-    // --- TRIGGER NOTIFICATIONS ---
+    // --- AUDIT ALERT ---
+    const username = user.username || 'Hệ thống';
+    const userIp = ip || 'unknown';
+    let action = '';
+    if (updates.is_blocked !== undefined) {
+      action = updates.is_blocked ? 'Khóa bài viết' : 'Mở khóa bài viết';
+    } else {
+      action = updates.is_published ? 'Công khai bài viết' : 'Gỡ bài viết (Lưu nháp)';
+    }
+
+    this.adminAlertService.sendAlert({
+      subject: `📝 ${action}: ${updatedPost.title}`,
+      text: `📝 <b>THAY ĐỔI TRẠNG THÁI BÀI VIẾT</b>\n\n` +
+            `• <b>Hành động:</b> ${action} "${updatedPost.title}"\n` +
+            `• <b>IP:</b> ${userIp}\n` +
+            `• <b>User:</b> ${username}\n` +
+            `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}`,
+    });
+
+    // --- TRIGGER NOTIFICATIONS (Legacy) ---
     try {
       if (updates.is_blocked !== undefined && user.id !== post.author_id) {
         const reasonText = reason ? ` Lý do: ${reason}` : '';

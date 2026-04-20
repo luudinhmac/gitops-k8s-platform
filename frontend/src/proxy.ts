@@ -21,10 +21,9 @@ export async function proxy(request: NextRequest) {
   
     // 3. Fetch Maintenance Status
     try {
-      const rawApiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3001/api';
-      // Force 127.0.0.1 for local dev to avoid IPv6/IPv4 mismatch (ECONNREFUSED)
-      const apiUrl = rawApiUrl.replace('localhost', '127.0.0.1');
-      const fetchUrl = `${apiUrl.replace(/\/$/, '')}/settings/public`;
+      // Always call backend directly on port 3001 from the server-side proxy
+      // to avoid infinite loops if NEXT_PUBLIC_API_URL points to the frontend itself.
+      const fetchUrl = 'http://127.0.0.1:3001/api/settings/public';
       
       console.log(`[Proxy] Checking maintenance at: ${fetchUrl}`);
 

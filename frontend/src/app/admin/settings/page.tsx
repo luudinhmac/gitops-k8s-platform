@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { 
   Settings, Globe, Server, Shield, TrendingUp, Save, Loader2, Image as ImageIcon, 
-  Trash2, AlertCircle, Check, Link as LinkIcon, Database, HardDrive, ShieldCheck, Lock, ShieldAlert, Key, Send
+  Trash2, AlertCircle, Check, Link as LinkIcon, Database, HardDrive, ShieldCheck, Lock, ShieldAlert, Key, Send,
+  Eye, EyeOff
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
@@ -12,11 +13,16 @@ import { settingService, SettingsConfig } from '@/services/settingService';
 import Link from 'next/link';
 
 export default function SettingsAdminPage() {
-  const [activeTab, setActiveTab] = useState<'general' | 'system' | 'security' | 'marketing' | 'maintenance' | 'telegram'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'system' | 'security' | 'marketing' | 'maintenance' | 'alerts'>('general');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
+
+  const toggleSecret = (key: string) => {
+    setShowSecrets(prev => ({ ...prev, [key]: !prev[key] }));
+  };
 
   // Settings State mapped from API
   const [settings, setSettings] = useState<SettingsConfig | null>(null);
@@ -47,10 +53,19 @@ export default function SettingsAdminPage() {
     maintenance_passcode: '123456',
   });
   
-  const [telegramForm, setTelegramForm] = useState<Record<string, string>>({
+  const [alertsForm, setAlertsForm] = useState<Record<string, string>>({
     telegram_enabled: 'false',
     telegram_bot_token: '',
     telegram_chat_id: '',
+    teams_enabled: 'false',
+    teams_webhook_url: '',
+    mail_enabled: 'false',
+    mail_host: '',
+    mail_port: '587',
+    mail_user: '',
+    mail_pass: '',
+    mail_from: '',
+    mail_admin_recipient: '',
   });
 
   useEffect(() => {
@@ -72,8 +87,13 @@ export default function SettingsAdminPage() {
       if (data.dbConfig?.maintenance) {
         setMaintenanceForm(prev => ({ ...prev, ...data.dbConfig.maintenance }));
       }
-      if (data.dbConfig?.telegram) {
-        setTelegramForm(prev => ({ ...prev, ...data.dbConfig.telegram }));
+      if (data.dbConfig?.telegram || data.dbConfig?.teams || data.dbConfig?.mail) {
+        setAlertsForm(prev => ({ 
+          ...prev, 
+          ...data.dbConfig.telegram,
+          ...data.dbConfig.teams,
+          ...data.dbConfig.mail,
+        }));
       }
     } catch (error) {
       console.error('Failed to parse settings', error);
@@ -82,20 +102,31 @@ export default function SettingsAdminPage() {
     }
   };
 
-  const handleSaveGroup = async (group: 'general' | 'marketing' | 'maintenance') => {
+  const handleSaveGroup = async (group: 'general' | 'marketing' | 'maintenance' | 'alerts') => {
     setSaving(true);
     setStatusMsg(null);
     try {
-      let targetForm;
+      let targetForm: any;
       if (group === 'general') targetForm = generalForm;
       else if (group === 'marketing') targetForm = marketingForm;
-      else if (group === 'telegram') targetForm = telegramForm;
+      else if (group === 'alerts') targetForm = alertsForm;
       else targetForm = maintenanceForm;
-      const items = Object.entries(targetForm).map(([key, value]) => ({
-        key,
-        value,
-        group,
-      }));
+      
+      const items = Object.entries(targetForm).map(([key, value]) => {
+        // Decide group based on prefix
+        let effectiveGroup: string = group;
+        if (group === 'alerts') {
+          if (key.startsWith('telegram_')) effectiveGroup = 'telegram';
+          else if (key.startsWith('teams_')) effectiveGroup = 'teams';
+          else if (key.startsWith('mail_')) effectiveGroup = 'mail';
+        }
+        
+        return {
+          key,
+          value: String(value),
+          group: effectiveGroup,
+        };
+      });
       
       await settingService.updateSettings(items);
       setStatusMsg({ type: 'success', text: 'Đã lưu cấu hình thành công!' });
@@ -119,21 +150,70 @@ export default function SettingsAdminPage() {
   };
 
   const handleTestTelegram = async () => {
-    if (!telegramForm.telegram_bot_token || !telegramForm.telegram_chat_id) {
+    if (!alertsForm.telegram_bot_token || !alertsForm.telegram_chat_id) {
        setStatusMsg({ type: 'error', text: 'Vui lòng nhập Token và Chat ID trước khi test.' });
        return;
     }
     setTesting(true);
     setStatusMsg(null);
     try {
-       const result = await settingService.testTelegram(telegramForm.telegram_bot_token, telegramForm.telegram_chat_id);
+       const result = await settingService.testTelegram(alertsForm.telegram_bot_token, alertsForm.telegram_chat_id);
        if (result.success) {
-         setStatusMsg({ type: 'success', text: 'Đã gửi tin nhắn test thành công! Hãy kiểm tra Telegram của bạn.' });
+         setStatusMsg({ type: 'success', text: 'Đã gửi tin nhắn test thành công! Hãy kiểm tra Telegram.' });
        } else {
-         setStatusMsg({ type: 'error', text: `Lỗi API: ${result.error?.description || 'Không thể gửi tin nhắn'}` });
+         setStatusMsg({ type: 'error', text: `Lỗi: ${result.error?.description || 'Không thể gửi tin'}` });
        }
     } catch (error) {
-       setStatusMsg({ type: 'error', text: 'Lỗi khi kết nối tới Telegram API.' });
+       setStatusMsg({ type: 'error', text: 'Lỗi kết nối tới Telegram API.' });
+    } finally {
+       setTesting(false);
+    }
+  };
+
+  const handleTestTeams = async () => {
+    if (!alertsForm.teams_webhook_url) {
+       setStatusMsg({ type: 'error', text: 'Vui lòng nhập Webhook URL trước khi test.' });
+       return;
+    }
+    setTesting(true);
+    setStatusMsg(null);
+    try {
+       const result = await settingService.testTeams(alertsForm.teams_webhook_url);
+       if (result.success) {
+         setStatusMsg({ type: 'success', text: 'Đã gửi tin nhắn test thành công! Hãy kiểm tra MS Teams.' });
+       } else {
+         setStatusMsg({ type: 'error', text: `Lỗi: ${result.error || 'Không thể gửi tin'}` });
+       }
+    } catch (error) {
+       setStatusMsg({ type: 'error', text: 'Lỗi kết nối tới MS Teams Webhook.' });
+    } finally {
+       setTesting(false);
+    }
+  };
+
+  const handleTestEmail = async () => {
+    const { mail_host, mail_port, mail_user, mail_pass, mail_admin_recipient } = alertsForm;
+    if (!mail_host || !mail_port || !mail_user || !mail_pass || !mail_admin_recipient) {
+       setStatusMsg({ type: 'error', text: 'Vui lòng nhập đầy đủ cấu hình Email và người nhận trước khi test.' });
+       return;
+    }
+    setTesting(true);
+    setStatusMsg(null);
+    try {
+       const result = await settingService.testEmail({
+         host: mail_host,
+         port: mail_port,
+         user: mail_user,
+         pass: mail_pass,
+         to: mail_admin_recipient
+       });
+       if (result.success) {
+         setStatusMsg({ type: 'success', text: 'Đã gửi Email test thành công! Hãy kiểm tra hộp thư của bạn.' });
+       } else {
+         setStatusMsg({ type: 'error', text: `Lỗi: ${result.error || 'Không thể gửi Email'}` });
+       }
+    } catch (error) {
+       setStatusMsg({ type: 'error', text: 'Lỗi kết nối tới máy chủ Email.' });
     } finally {
        setTesting(false);
     }
@@ -145,7 +225,7 @@ export default function SettingsAdminPage() {
     { id: 'system', label: 'Hệ thống (System)', icon: Server },
     { id: 'security', label: 'Bảo mật & Users', icon: Shield },
     { id: 'marketing', label: 'Marketing & SEO', icon: TrendingUp },
-    { id: 'telegram', label: 'Thông báo Telegram', icon: Send },
+    { id: 'alerts', label: 'Cảnh báo Admin', icon: Send },
   ];
 
   if (loading) {
@@ -475,14 +555,21 @@ export default function SettingsAdminPage() {
                         <p className="text-slate-400 text-xs mb-6 max-w-md">
                           Mã này dùng để đăng nhập vào trang quản trị thông qua "Cửa bí mật" khi hệ thống đang ở chế độ bảo trì toàn bộ.
                         </p>
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-4 relative group">
                            <input 
-                             type="text" 
+                             type={showSecrets['maintenance_passcode'] ? 'text' : 'password'} 
                              value={maintenanceForm.maintenance_passcode || ''} 
                              onChange={e => setMaintenanceForm({...maintenanceForm, maintenance_passcode: e.target.value})}
                              placeholder="VD: 123456"
-                             className="bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white text-xl font-mono tracking-widest focus:ring-2 focus:ring-primary outline-none transition-all w-full max-w-[240px]"
+                             className="bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white text-xl font-mono tracking-widest focus:ring-2 focus:ring-primary outline-none transition-all w-full max-w-[240px] pr-12"
                            />
+                           <button 
+                             type="button"
+                             onClick={() => toggleSecret('maintenance_passcode')}
+                             className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                           >
+                             {showSecrets['maintenance_passcode'] ? <EyeOff size={18} /> : <Eye size={18} />}
+                           </button>
                            <div className="hidden sm:block text-[10px] text-slate-500 font-bold uppercase tracking-tighter">
                              Nhấn giữ icon ShieldAlert <br/> trên trang bảo trì 5 lần để nhập mã.
                            </div>
@@ -499,93 +586,227 @@ export default function SettingsAdminPage() {
               </div>
             )}
 
-            {/* TAB: TELEGRAM */}
-            {activeTab === 'telegram' && (
-              <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+            {/* TAB: ALERTS (Unified) */}
+            {activeTab === 'alerts' && (
+              <div className="space-y-12 animate-in fade-in slide-in-from-right-4 duration-500 pb-10">
                 <div>
-                   <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
-                     <Send className="text-sky-500" /> Cấu hình Thông báo Hệ thống (Telegram)
-                   </h2>
-                   <p className="text-sm text-slate-500 italic">Nhận tin nhắn Telegram ngay khi có người đăng ký hoặc bình luận mới.</p>
+                  <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2 tracking-tight flex items-center gap-3">
+                    <div className="p-2 bg-primary/10 rounded-xl">
+                      <Send className="text-primary" size={24} />
+                    </div>
+                    Cấu hình Cảnh báo Quản trị
+                  </h2>
+                  <p className="text-sm text-slate-500">Tùy chọn nhận thông báo tức thời qua các kênh khác nhau khi hệ thống có sự kiện mới.</p>
                 </div>
 
-                <div className="grid grid-cols-1 gap-8">
-                   {/* Toggle Enable */}
-                   <div className={cn(
-                     "p-6 rounded-[2rem] border transition-all duration-300",
-                     telegramForm.telegram_enabled === 'true' 
-                        ? "bg-sky-50 dark:bg-sky-500/10 border-sky-200 dark:border-sky-500/30" 
-                        : "bg-slate-50 dark:bg-slate-950/50 border-slate-100 dark:border-slate-800"
-                   )}>
-                      <div className="flex items-center justify-between">
-                         <div className="flex items-center gap-4">
-                            <div className={cn("p-3 rounded-2xl", telegramForm.telegram_enabled === 'true' ? "bg-sky-500 text-white" : "bg-slate-200 dark:bg-slate-800 text-slate-500")}>
-                               <ShieldAlert size={24} />
-                            </div>
-                            <div>
-                               <h3 className="font-bold text-slate-900 dark:text-white">Kích hoạt thông báo Telegram</h3>
-                               <p className="text-xs text-slate-500">Gửi các sự kiện hệ thống quan trọng tới Bot.</p>
-                            </div>
-                         </div>
-                         <label className="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" className="sr-only peer" checked={telegramForm.telegram_enabled === 'true'} onChange={e => setTelegramForm({...telegramForm, telegram_enabled: e.target.checked ? 'true' : 'false'})} />
-                            <div className="w-14 h-7 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-sky-500"></div>
-                         </label>
+                <div className="grid grid-cols-1 gap-10">
+                  {/* CHANNEL: TELEGRAM */}
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "p-2 rounded-xl transition-colors",
+                          alertsForm.telegram_enabled === 'true' ? "bg-sky-500 text-white" : "bg-slate-200 dark:bg-slate-800 text-slate-500"
+                        )}>
+                          <Send size={20} />
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">Telegram Channel</h3>
                       </div>
-                   </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="sr-only peer" 
+                          checked={alertsForm.telegram_enabled === 'true'} 
+                          onChange={e => setAlertsForm({...alertsForm, telegram_enabled: e.target.checked ? 'true' : 'false'})} 
+                        />
+                        <div className="w-12 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-sky-500"></div>
+                      </label>
+                    </div>
 
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Telegram Bot Token</label>
-                         <input 
-                            type="password" 
-                            autoComplete="off"
-                            value={telegramForm.telegram_bot_token || ''} 
-                            onChange={e => setTelegramForm({...telegramForm, telegram_bot_token: e.target.value})} 
-                            placeholder="123456789:ABCDEF..."
-                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all font-mono" 
-                         />
-                         <p className="text-[10px] text-slate-400">Lấy từ <a href="https://t.me/BotFather" target="_blank" rel="noreferrer" className="text-primary hover:underline">@BotFather</a></p>
+                    <div className={cn(
+                      "grid grid-cols-1 md:grid-cols-2 gap-5 transition-opacity duration-300",
+                      alertsForm.telegram_enabled === 'false' && "opacity-50 pointer-events-none"
+                    )}>
+                      <div className="space-y-2 relative">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Bot Token</label>
+                        <div className="relative">
+                          <input 
+                            type={showSecrets['telegram_bot_token'] ? 'text' : 'password'} 
+                            value={alertsForm.telegram_bot_token || ''} 
+                            onChange={e => setAlertsForm({...alertsForm, telegram_bot_token: e.target.value})} 
+                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all font-mono pr-12" 
+                          />
+                          <button 
+                            type="button"
+                            onClick={() => toggleSecret('telegram_bot_token')}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                          >
+                            {showSecrets['telegram_bot_token'] ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
                       </div>
                       <div className="space-y-2">
-                         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Admin Chat ID</label>
-                         <input 
-                            type="text" 
-                            value={telegramForm.telegram_chat_id || ''} 
-                            onChange={e => setTelegramForm({...telegramForm, telegram_chat_id: e.target.value})} 
-                            placeholder="987654321"
-                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all font-mono" 
-                         />
-                         <p className="text-[10px] text-slate-400">ID cá nhân hoặc Group Admin (Lấy qua @userinfobot)</p>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Admin Chat ID</label>
+                        <input 
+                          type="text" 
+                          value={alertsForm.telegram_chat_id || ''} 
+                          onChange={e => setAlertsForm({...alertsForm, telegram_chat_id: e.target.value})} 
+                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all font-mono" 
+                        />
                       </div>
-                   </div>
+                      <div className="col-span-1 md:col-span-2 flex justify-start">
+                        <Button variant="ghost" size="sm" onClick={handleTestTelegram} isLoading={testing} className="text-sky-600 hover:bg-sky-50">
+                          <Send size={14} className="mr-2" /> Gửi tin thử tới Telegram
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
 
-                   {/* Instruction / Help */}
-                   <div className="p-6 bg-slate-50 dark:bg-slate-950/50 rounded-[2rem] border border-slate-100 dark:border-slate-800">
-                      <h4 className="text-xs font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                        <AlertCircle size={14} className="text-primary" /> Hướng dẫn nhanh:
-                      </h4>
-                      <ol className="text-[11px] text-slate-500 space-y-2 list-decimal list-inside">
-                        <li>Tạo Bot mới trên Telegram qua <b>@BotFather</b> và lấy API Token.</li>
-                        <li>Gửi tin nhắn bất kỳ cho Bot vừa tạo.</li>
-                        <li>Sử dụng <b>@userinfobot</b> để lấy Chat ID của bạn (hoặc lấy ID của Group nếu mời Bot vào Group).</li>
-                        <li>Lưu cấu hình và nhấn <b>Lưu cấu hình</b> để bắt đầu nhận thông báo.</li>
-                      </ol>
-                   </div>
+                  <hr className="border-slate-100 dark:border-slate-800" />
+
+                  {/* CHANNEL: MS TEAMS */}
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "p-2 rounded-xl transition-colors",
+                          alertsForm.teams_enabled === 'true' ? "bg-indigo-500 text-white" : "bg-slate-200 dark:bg-slate-800 text-slate-500"
+                        )}>
+                          <LinkIcon size={20} />
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">Microsoft Teams</h3>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="sr-only peer" 
+                          checked={alertsForm.teams_enabled === 'true'} 
+                          onChange={e => setAlertsForm({...alertsForm, teams_enabled: e.target.checked ? 'true' : 'false'})} 
+                        />
+                        <div className="w-12 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-500"></div>
+                      </label>
+                    </div>
+
+                    <div className={cn(
+                      "space-y-4 transition-opacity duration-300",
+                      alertsForm.teams_enabled === 'false' && "opacity-50 pointer-events-none"
+                    )}>
+                      <div className="space-y-2 relative">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Incoming Webhook URL</label>
+                        <div className="relative">
+                          <input 
+                            type={showSecrets['teams_webhook_url'] ? 'text' : 'password'} 
+                            value={alertsForm.teams_webhook_url || ''} 
+                            onChange={e => setAlertsForm({...alertsForm, teams_webhook_url: e.target.value})} 
+                            placeholder="https://outlook.office.com/webhook/..."
+                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all font-mono pr-12" 
+                          />
+                          <button 
+                            type="button"
+                            onClick={() => toggleSecret('teams_webhook_url')}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                          >
+                            {showSecrets['teams_webhook_url'] ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="sm" onClick={handleTestTeams} isLoading={testing} className="text-indigo-600 hover:bg-indigo-50">
+                        <LinkIcon size={14} className="mr-2" /> Gửi tin thử tới MS Teams
+                      </Button>
+                    </div>
+                  </div>
+
+                  <hr className="border-slate-100 dark:border-slate-800" />
+
+                  {/* CHANNEL: EMAIL */}
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "p-2 rounded-xl transition-colors",
+                          alertsForm.mail_enabled === 'true' ? "bg-emerald-500 text-white" : "bg-slate-200 dark:bg-slate-800 text-slate-500"
+                        )}>
+                          <Globe size={20} />
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">Email Notifications</h3>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input 
+                          type="checkbox" 
+                          className="sr-only peer" 
+                          checked={alertsForm.mail_enabled === 'true'} 
+                          onChange={e => setAlertsForm({...alertsForm, mail_enabled: e.target.checked ? 'true' : 'false'})} 
+                        />
+                        <div className="w-12 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-500"></div>
+                      </label>
+                    </div>
+
+                    <div className={cn(
+                      "grid grid-cols-1 md:grid-cols-2 gap-5 transition-opacity duration-300",
+                      alertsForm.mail_enabled === 'false' && "opacity-50 pointer-events-none"
+                    )}>
+                      <div className="space-y-4 md:col-span-2">
+                        <div className="p-4 bg-emerald-50 dark:bg-emerald-500/5 rounded-2xl border border-emerald-100 dark:border-emerald-500/10 text-xs text-emerald-700">
+                          Sử dụng thư viện <b>Nodemailer</b> phía Backend để kết nối với máy chủ SMTP của bạn.
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">SMTP Host</label>
+                        <input type="text" value={alertsForm.mail_host || ''} onChange={e => setAlertsForm({...alertsForm, mail_host: e.target.value})} placeholder="smtp.gmail.com"
+                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary" />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">SMTP Port</label>
+                        <input type="text" value={alertsForm.mail_port || ''} onChange={e => setAlertsForm({...alertsForm, mail_port: e.target.value})} placeholder="587 hoặc 465"
+                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary" />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">SMTP User</label>
+                        <input type="text" value={alertsForm.mail_user || ''} onChange={e => setAlertsForm({...alertsForm, mail_user: e.target.value})} placeholder="your-email@gmail.com"
+                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary" />
+                      </div>
+
+                      <div className="space-y-2 relative">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">SMTP Password</label>
+                        <div className="relative">
+                          <input 
+                            type={showSecrets['mail_pass'] ? 'text' : 'password'} 
+                            value={alertsForm.mail_pass || ''} 
+                            onChange={e => setAlertsForm({...alertsForm, mail_pass: e.target.value})} 
+                            placeholder="App Password"
+                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary pr-12" 
+                          />
+                          <button 
+                            type="button"
+                            onClick={() => toggleSecret('mail_pass')}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                          >
+                            {showSecrets['mail_pass'] ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2 md:col-span-2">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Email Nhận Cảnh Báo (Admin Recipient)</label>
+                        <input type="email" value={alertsForm.mail_admin_recipient || ''} onChange={e => setAlertsForm({...alertsForm, mail_admin_recipient: e.target.value})} placeholder="admin@domain.com"
+                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-emerald-200 dark:border-emerald-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary font-bold" />
+                      </div>
+
+                      <div className="md:col-span-2 flex justify-start">
+                        <Button variant="ghost" size="sm" onClick={handleTestEmail} isLoading={testing} className="text-emerald-600 hover:bg-emerald-50">
+                          <Globe size={14} className="mr-2" /> Gửi mail thử nghiệm
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-800">
-                   <Button 
-                      variant="outline" 
-                      onClick={handleTestTelegram} 
-                      isLoading={testing} 
-                      disabled={saving}
-                      className="rounded-2xl px-8 border-sky-200 text-sky-600 hover:bg-sky-50"
-                   >
-                     <Send size={16} className="mr-2" /> Gửi tin nhắn thử
-                   </Button>
-                   <Button onClick={() => handleSaveGroup('telegram')} isLoading={saving} disabled={testing} size="lg" className="rounded-2xl px-12 order-first sm:order-last">
-                     <Save size={18} className="mr-2" /> Lưu cấu hình Telegram
+                <div className="pt-10 flex justify-end">
+                   <Button onClick={() => handleSaveGroup('alerts')} isLoading={saving} disabled={testing} size="lg" className="rounded-2xl px-16 h-14 text-base shadow-xl shadow-primary/20">
+                     <Save size={20} className="mr-2" /> Lưu toàn bộ cấu hình Cảnh báo
                    </Button>
                 </div>
               </div>

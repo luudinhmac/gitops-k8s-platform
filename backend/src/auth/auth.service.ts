@@ -8,6 +8,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcryptjs';
 import { User, UserRole } from '../users/interfaces/user.interface';
 import { RegisterDto } from './dto/auth.dto';
+import { MonitoringService } from '../admin-alert/monitoring.service';
 
 interface PrismaError {
   code: string;
@@ -18,6 +19,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private monitoringService: MonitoringService,
   ) {}
 
   private loginAttempts = new Map<
@@ -31,6 +33,7 @@ export class AuthService {
     username: string,
     pass: string,
   ): Promise<Partial<User> | null> {
+    this.monitoringService.trackLoginAttempt();
     const attempt = this.loginAttempts.get(username);
     const now = Date.now();
 
