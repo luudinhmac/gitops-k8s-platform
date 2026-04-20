@@ -35,6 +35,7 @@ export interface Post {
   likes: number;
   readTime?: number;
   created_at: string;
+  updated_at?: string;
   is_published: boolean;
   is_blocked?: boolean;
   excerpt?: string;

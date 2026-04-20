@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+    output: 'standalone',
     images: {
         unoptimized: true, // Allow local images from localhost/private IPs
         remotePatterns: [
