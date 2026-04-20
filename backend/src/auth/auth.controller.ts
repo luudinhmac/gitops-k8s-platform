@@ -1,11 +1,6 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Body,
-  UseGuards,
   Req,
   Res,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
@@ -33,7 +28,7 @@ export class AuthController {
     )) as User | null;
 
     if (!validatedUser) {
-      return { success: false, message: 'Sai tên đăng nhập hoặc mật khẩu' };
+      throw new UnauthorizedException('Sai tên đăng nhập hoặc mật khẩu');
     }
     const result = await this.authService.login(validatedUser);
 
