@@ -1,0 +1,18 @@
+---
+- name: Create SSL directory
+  file:
+    path: "{{ app_root }}/nginx/ssl"
+    state: directory
+
+- name: Check if SSL certificate exists
+  stat:
+    path: "{{ app_root }}/nginx/ssl/server.crt"
+  register: ssl_cert
+
+- name: Generate self-signed SSL certificate
+  command: >
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048
+    -keyout {{ app_root }}/nginx/ssl/server.key
+    -out {{ app_root }}/nginx/ssl/server.crt
+    -subj "/C=US/ST=State/L=City/O=Organization/OU=Unit/CN=staging.local"
+  when: not ssl_cert.stat.exists

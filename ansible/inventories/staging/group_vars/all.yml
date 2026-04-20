@@ -1,8 +1,0 @@
-# Staging specific variables
-env_path: "{{ base_path }}/staging"
-env_name: "staging"
-db_name: "portfolio_staging"
-nginx_port: 8080
-nginx_ssl_port: 9443
-frontend_port: 3000
-backend_port: 3001
