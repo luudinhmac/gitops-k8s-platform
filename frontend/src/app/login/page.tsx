@@ -39,6 +39,10 @@ function LoginContent() {
     try {
       const data = await authService.login(formData);
 
+      if (data.success === false) {
+        throw new Error(data.message || 'Sai tên đăng nhập hoặc mật khẩu');
+      }
+
       // Update AuthContext and redirect
       login(data.user);
       router.push(redirectPath);
