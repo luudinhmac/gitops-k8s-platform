@@ -1,11 +1,14 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { SettingsService } from '../settings/settings.service';
 
 @Injectable()
 export class TelegramService {
   private readonly logger = new Logger(TelegramService.name);
 
-  constructor(private settingsService: SettingsService) {}
+  constructor(
+    @Inject(forwardRef(() => SettingsService))
+    private settingsService: SettingsService
+  ) {}
 
   async sendSystemNotification(message: string) {
     try {
@@ -27,24 +30,45 @@ export class TelegramService {
   }
 
   async sendToTelegram(token: string, chatId: string, text: string) {
-    const url = `https://api.telegram.org/bot${token}/sendMessage`;
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: chatId,
-        text: text,
-        parse_mode: 'HTML',
-        disable_web_page_preview: false,
-      }),
-    });
+    try {
+      // 1. Aggressive Sanitization: Only keep [0-9], [a-z], [A-Z], "-", "_", and ":"
+      let cleanToken = (token || '').trim();
+      
+      // Remove double 'bot' prefix if exists
+      if (cleanToken.toLowerCase().startsWith('bot')) {
+        cleanToken = cleanToken.substring(3).trim();
+      }
+      
+      // Keep only valid characters for a Telegram token
+      cleanToken = cleanToken.replace(/[^0-9a-zA-Z:\-_]/g, '');
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      this.logger.error(`Telegram API error: ${JSON.stringify(errorData)}`);
-      return { success: false, error: errorData };
+      const url = `https://api.telegram.org/bot${cleanToken}/sendMessage`;
+      
+      // Log masked URL for diagnostics
+      const maskedToken = cleanToken.length > 10 ? `${cleanToken.substring(0, 4)}...${cleanToken.substring(cleanToken.length - 4)}` : '***';
+      this.logger.debug(`Calling Telegram: https://api.telegram.org/bot${maskedToken}/sendMessage`);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId?.trim().replace(/[^0-9\-]/g, ''), // Chat IDs are numeric or negative numeric
+          text: text,
+          parse_mode: 'HTML',
+          disable_web_page_preview: false,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        this.logger.error(`Telegram API error (Status ${response.status}): ${JSON.stringify(errorData)}`);
+        return { success: false, error: errorData.description || `Status ${response.status}` };
+      }
+
+      return { success: true };
+    } catch (error: any) {
+      this.logger.error(`Telegram connection error: ${error.message}`);
+      return { success: false, error: error.message };
     }
-
-    return { success: true };
   }
 }
