@@ -19,6 +19,7 @@ import Button from '@/components/ui/Button';
 import IconBadge from '@/components/ui/IconBadge';
 import AnimateList from '@/components/ui/AnimateList';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
+import PromptDialog from '@/components/ui/PromptDialog';
 
 // Modular Services
 import { userService } from '@/services/userService';
@@ -44,6 +45,14 @@ export default function UsersPage() {
   const [showNewPass, setShowNewPass] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  
+  const [promptData, setPromptData] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    userId: number | null;
+    fields: any;
+  }>({ isOpen: false, title: '', message: '', userId: null, fields: null });
 
   const [createForm, setCreateForm] = useState({
     username: '', fullname: '', email: '', password: '', role: 'user', profession: ''
@@ -87,21 +96,24 @@ export default function UsersPage() {
     }
   };
 
-  const handleUpdatePermissions = async (userId: number, fields: { role?: string; is_active?: boolean; can_comment?: boolean; can_post?: boolean }) => {
+  const handleUpdatePermissions = async (userId: number, fields: { role?: string; is_active?: boolean; can_comment?: boolean; can_post?: boolean }, reason?: string) => {
     try {
       if (fields.is_active === false && userId === currentUser?.id) {
         setStatusMsg({ type: 'error', text: 'Bạn không thể tự khóa tài khoản của mình!' });
         return;
       }
 
-      // Check if we are restricting permissions (blocking)
+      // If we need a reason and it's not provided yet, open prompt
       const isRestricting = fields.is_active === false || fields.can_comment === false || fields.can_post === false;
-      let reason: string | undefined = undefined;
-      
-      if (isRestricting) {
-        const input = window.prompt('Nhập lý do thực hiện hành động này (tùy chọn):');
-        if (input === null) return; // User cancelled
-        reason = input;
+      if (isRestricting && reason === undefined) {
+        setPromptData({
+          isOpen: true,
+          title: 'Lý do thực hiện',
+          message: 'Vui lòng nhập lý do thực hiện hành động này (ví dụ: Vi phạm quy định cộng đồng):',
+          userId,
+          fields
+        });
+        return;
       }
 
       const updateData = { ...fields, reason };
@@ -109,6 +121,7 @@ export default function UsersPage() {
       
       setUsers(users.map(u => u.id === userId ? { ...u, ...fields } as AdminUser : u));
       setStatusMsg({ type: 'success', text: 'Đã cập nhật quyền hạn thành công' });
+      setPromptData({ ...promptData, isOpen: false });
     } catch (err: any) { 
       setStatusMsg({ type: 'error', text: err.response?.data?.message || 'Không thể cập nhật quyền hạn' });
     }
@@ -499,6 +512,18 @@ export default function UsersPage() {
         message={`Bạn có chắc chắn muốn xóa vĩnh viễn người dùng ${userToDelete?.fullname || userToDelete?.username}? Hành động này không thể hoàn tác.`}
         confirmLabel="Xác nhận xóa"
         isLoading={isDeleting}
+      />
+      <PromptDialog
+        isOpen={promptData.isOpen}
+        onClose={() => setPromptData({ ...promptData, isOpen: false })}
+        onConfirm={(reason) => {
+          if (promptData.userId && promptData.fields) {
+            handleUpdatePermissions(promptData.userId, promptData.fields, reason);
+          }
+        }}
+        title={promptData.title}
+        message={promptData.message}
+        placeholder="Ví dụ: Tài khoản spam, nội dung không phù hợp..."
       />
     </>
   );

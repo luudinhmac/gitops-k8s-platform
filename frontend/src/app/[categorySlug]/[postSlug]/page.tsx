@@ -22,6 +22,7 @@ import FormattedDate from '@/components/common/FormattedDate';
 import Button from '@/components/ui/Button';
 import IconBadge from '@/components/ui/IconBadge';
 import AnimateList from '@/components/ui/AnimateList';
+import MessageDialog from '@/components/ui/MessageDialog';
 
 // Modular Services
 import { postService } from '@/services/postService';
@@ -79,6 +80,9 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
   const [commentError, setCommentError] = useState<string | null>(null);
   const [activeHash, setActiveHash] = useState<string>('');
   const [isMaintenanceComments, setIsMaintenanceComments] = useState(false);
+  const [msgData, setMsgData] = useState<{ isOpen: boolean; title: string; message: string; variant: 'info' | 'success' | 'warning' | 'error' }>({ 
+    isOpen: false, title: '', message: '', variant: 'info' 
+  });
   const router = useRouter();
 
   useEffect(() => {
@@ -175,7 +179,7 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
 
   const handleLike = async () => {
     if (!isAuthenticated) {
-      alert('Vui lòng đăng nhập để thích bài viết.');
+      setMsgData({ isOpen: true, title: 'Yêu cầu đăng nhập', message: 'Vui lòng đăng nhập để có thể tương tác và thích bài viết này nhé!', variant: 'warning' });
       return;
     }
     if (!post) return;
@@ -360,7 +364,7 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
                          <Linkedin size={14} className="mr-3 text-blue-700" /> LinkedIn
                        </button>
                        <div className="h-px bg-slate-100 dark:bg-slate-700 my-1 mx-2" />
-                       <button onClick={() => { navigator.clipboard.writeText(typeof window !== 'undefined' ? window.location.href : ''); alert('Đã copy link!'); setShowShareMenu(false); }} className="w-full flex items-center px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                       <button onClick={() => { navigator.clipboard.writeText(typeof window !== 'undefined' ? window.location.href : ''); setMsgData({ isOpen: true, title: 'Thành công', message: 'Liên kết bài viết đã được chép vào bộ nhớ đệm!', variant: 'success' }); setShowShareMenu(false); }} className="w-full flex items-center px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50">
                          <Link2 size={14} className="mr-3 text-slate-500" /> Copy Link
                        </button>
                     </div>
@@ -697,6 +701,14 @@ export default function PostSlugDetailPage({ params }: { params: Promise<{ categ
       </aside>
     </div>
   </div>
+
+  <MessageDialog 
+    isOpen={msgData.isOpen}
+    onClose={() => setMsgData({ ...msgData, isOpen: false })}
+    title={msgData.title}
+    message={msgData.message}
+    variant={msgData.variant}
+  />
 </div>
 
   );

@@ -9,11 +9,14 @@ import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import UserAvatar from '@/components/common/UserAvatar';
 import Button from '@/components/ui/Button';
+import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
+  const [isDeleteAllOpen, setIsDeleteAllOpen] = useState(false);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
   const router = useRouter();
 
   const fetchNotifications = async () => {
@@ -51,12 +54,15 @@ export default function NotificationsPage() {
   };
 
   const handleDeleteAll = async () => {
-    if (!window.confirm('Bạn có chắc chắn muốn xóa tất cả thông báo?')) return;
+    setIsDeletingAll(true);
     try {
       await notificationService.deleteAll();
       setNotifications([]);
+      setIsDeleteAllOpen(false);
     } catch (err) {
       console.error('Error deleting all notifications:', err);
+    } finally {
+      setIsDeletingAll(false);
     }
   };
 
@@ -127,7 +133,7 @@ export default function NotificationsPage() {
                 <Button 
                   variant="danger" 
                   size="sm" 
-                  onClick={handleDeleteAll}
+                  onClick={() => setIsDeleteAllOpen(true)}
                   className="text-xs font-bold uppercase tracking-wider"
                 >
                   Xóa hết
@@ -246,6 +252,16 @@ export default function NotificationsPage() {
           )}
         </div>
       </div>
+
+      <ConfirmationDialog 
+        isOpen={isDeleteAllOpen}
+        onClose={() => setIsDeleteAllOpen(false)}
+        onConfirm={handleDeleteAll}
+        isLoading={isDeletingAll}
+        title="Xóa tất cả thông báo"
+        message="Bạn có chắc chắn muốn xóa vĩnh viễn tất cả các thông báo hiện có? Hành động này không thể hoàn tác."
+        confirmLabel="Xác nhận xóa hết"
+      />
     </div>
   );
 }

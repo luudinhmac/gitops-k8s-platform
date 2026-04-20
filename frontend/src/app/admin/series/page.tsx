@@ -11,6 +11,7 @@ import Button from '@/components/ui/Button';
 import IconBadge from '@/components/ui/IconBadge';
 import AnimateList from '@/components/ui/AnimateList';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
+import MessageDialog from '@/components/ui/MessageDialog';
 
 // Modular Services
 import { seriesService } from '@/services/seriesService';
@@ -35,6 +36,9 @@ export default function SeriesAdminPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [msgData, setMsgData] = useState<{ isOpen: boolean; title: string; message: string; variant: 'info' | 'success' | 'warning' | 'error' }>({ 
+    isOpen: false, title: '', message: '', variant: 'error' 
+  });
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -72,7 +76,7 @@ export default function SeriesAdminPage() {
       setNewSeries({ name: '', description: '' });
       fetchData();
     } catch {
-      alert('Lỗi khi tạo series');
+      setMsgData({ isOpen: true, title: 'Lỗi tạo Series', message: 'Không thể tạo series vào lúc này. Vui lòng thử lại sau.', variant: 'error' });
     } finally {
       setSubmitting(false);
     }
@@ -85,7 +89,7 @@ export default function SeriesAdminPage() {
       setEditingId(null);
       fetchData();
     } catch {
-      alert('Có lỗi xảy ra khi cập nhật series');
+      setMsgData({ isOpen: true, title: 'Cập nhật thất bại', message: 'Có lỗi xảy ra khi cập nhật thông tin series.', variant: 'error' });
     }
   };
 
@@ -98,7 +102,7 @@ export default function SeriesAdminPage() {
       setDeleteId(null);
       fetchData();
     } catch {
-      alert('Có lỗi xảy ra khi xóa series');
+      setMsgData({ isOpen: true, title: 'Lỗi khi xóa', message: 'Có lỗi xảy ra khi tiến hành xóa series này.', variant: 'error' });
     } finally {
       setIsDeleting(false);
     }
@@ -223,6 +227,14 @@ export default function SeriesAdminPage() {
         isLoading={isDeleting}
         title="Xóa Series"
         message="Bạn có chắc chắn muốn xóa series này? Các bài viết trong series sẽ không bị xóa nhưng sẽ không còn thuộc series này nữa."
+      />
+
+      <MessageDialog 
+        isOpen={msgData.isOpen}
+        onClose={() => setMsgData({ ...msgData, isOpen: false })}
+        title={msgData.title}
+        message={msgData.message}
+        variant={msgData.variant}
       />
     </>
   );

@@ -11,6 +11,7 @@ import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminCard from '@/components/admin/AdminCard';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/common/Badge';
+import MessageDialog from '@/components/ui/MessageDialog';
 
 // Modular Services
 import { postService } from '@/services/postService';
@@ -43,6 +44,9 @@ export default function PostEditor({ postId }: PostEditorProps) {
   const [error, setError] = useState<string | null>(null);
   const [permissionError, setPermissionError] = useState<string | null>(null);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [msgData, setMsgData] = useState<{ isOpen: boolean; title: string; message: string; variant: 'info' | 'success' | 'warning' | 'error' }>({ 
+    isOpen: false, title: '', message: '', variant: 'error' 
+  });
   
   const [formData, setFormData] = useState({
     title: '',
@@ -188,7 +192,12 @@ export default function PostEditor({ postId }: PostEditorProps) {
       const data = await uploadService.uploadImage(file, 'post');
       setFormData({ ...formData, cover_image: data.url });
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Không thể tải ảnh lên!');
+      setMsgData({ 
+        isOpen: true, 
+        title: 'Lỗi tải ảnh', 
+        message: err.response?.data?.message || 'Không thể tải ảnh lên vào lúc này. Vui lòng kiểm tra lại định dạng hoặc kích thước ảnh.', 
+        variant: 'error' 
+      });
     }
   };
 
@@ -371,6 +380,14 @@ export default function PostEditor({ postId }: PostEditorProps) {
           </div>
         </div>
       </div>
+
+      <MessageDialog 
+        isOpen={msgData.isOpen}
+        onClose={() => setMsgData({ ...msgData, isOpen: false })}
+        title={msgData.title}
+        message={msgData.message}
+        variant={msgData.variant}
+      />
     </div>
   );
 }

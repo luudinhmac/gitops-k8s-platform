@@ -19,6 +19,8 @@ import Button from '@/components/ui/Button';
 import IconBadge from '@/components/ui/IconBadge';
 import AnimateList from '@/components/ui/AnimateList';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
+import MessageDialog from '@/components/ui/MessageDialog';
+import PromptDialog from '@/components/ui/PromptDialog';
 import { Post as AdminPost } from '@/types/post';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -33,6 +35,11 @@ export default function AdminDashboardPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [sortBy, setSortBy] = useState<'date' | 'views' | 'interaction'>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  
+  const [msgData, setMsgData] = useState<{ isOpen: boolean; title: string; message: string; variant: 'info' | 'success' | 'warning' | 'error' }>({ 
+    isOpen: false, title: '', message: '', variant: 'info' 
+  });
+  const [promptData, setPromptData] = useState<{ isOpen: boolean; postId: number | null }>({ isOpen: false, postId: null });
 
   const fetchData = useCallback(async () => {
     if (!isAuthenticated) return;
@@ -63,21 +70,20 @@ export default function AdminDashboardPage() {
   // Modular Logic
   const { deletePost, togglePublish, isActionLoading } = usePostActions(() => fetchData());
 
-  const handleTogglePublish = async (id: number) => {
+  const handleTogglePublish = async (id: number, reason?: string) => {
     try {
       const post = posts.find(p => p.id === id);
       const isBlocking = user?.role === 'admin' && post?.author_id !== user?.id && !post?.is_blocked;
       
-      let reason: string | undefined = undefined;
-      if (isBlocking) {
-        const input = window.prompt('Nhập lý do chặn bài viết này (tùy chọn):');
-        if (input === null) return; // Cancelled
-        reason = input;
+      if (isBlocking && reason === undefined) {
+        setPromptData({ isOpen: true, postId: id });
+        return;
       }
 
       await togglePublish(id, reason);
+      setPromptData({ isOpen: false, postId: null });
     } catch (err: any) {
-      alert(err.message || 'Lỗi khi thay đổi trạng thái bài viết');
+      setMsgData({ isOpen: true, title: 'Lỗi thực thi', message: err.message || 'Không thể thay đổi trạng thái bài viết vào lúc này.', variant: 'error' });
     }
   };
 
@@ -291,6 +297,25 @@ export default function AdminDashboardPage() {
         isLoading={isActionLoading}
         title="Xóa bài viết"
         message="Bạn có chắc chắn muốn xóa bài viết này? Hành động này không thể hoàn tác và sẽ gỡ bỏ bài viết vĩnh viễn khỏi hệ thống."
+      />
+
+      <PromptDialog
+        isOpen={promptData.isOpen}
+        onClose={() => setPromptData({ isOpen: false, postId: null })}
+        onConfirm={(reason) => {
+          if (promptData.postId) handleTogglePublish(promptData.postId, reason);
+        }}
+        title="Lý do chặn bài viết"
+        message="Vui lòng nhập lý do (vi phạm quy định, spam...) để tác giả được biết."
+        placeholder="Ví dụ: Nội dung vi phạm quy tắc cộng đồng..."
+      />
+
+      <MessageDialog 
+        isOpen={msgData.isOpen}
+        onClose={() => setMsgData({ ...msgData, isOpen: false })}
+        title={msgData.title}
+        message={msgData.message}
+        variant={msgData.variant}
       />
     </>
   );
