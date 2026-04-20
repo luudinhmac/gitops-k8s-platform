@@ -1,35 +1,24 @@
 ---
-- name: Install Nginx
-  apt:
-    name: nginx
-    state: present
-    update_cache: yes
+- name: Create nginx directory
+  file:
+    path: "{{ app_root }}/nginx"
+    state: directory
 
-- name: Include ACME SSL tasks if enabled
-  include_tasks: acme.yml
-  when: enable_ssl | bool
-
-- name: Ensure Nginx is started and enabled
-  service:
-    name: nginx
-    state: started
-    enabled: yes
-
-- name: Create Nginx configuration from template
+- name: Generate Nginx configuration
   template:
-    src: vhost.conf.j2
-    dest: "/etc/nginx/sites-available/{{ project_name }}_{{ env_name }}.conf"
-  notify: reload nginx
+    src: nginx.conf.j2
+    dest: "{{ app_root }}/nginx/nginx.conf"
 
-- name: Enable Nginx configuration
-  file:
-    src: "/etc/nginx/sites-available/{{ project_name }}_{{ env_name }}.conf"
-    dest: "/etc/nginx/sites-enabled/{{ project_name }}_{{ env_name }}.conf"
-    state: link
-  notify: reload nginx
+- name: Generate Docker Compose file
+  template:
+    src: docker-compose.staging.yml.j2
+    dest: "{{ app_root }}/docker-compose.yml"
 
-- name: Remove default nginx configuration
-  file:
-    path: /etc/nginx/sites-enabled/default
-    state: absent
-  notify: reload nginx
+- name: Run Docker Compose
+  become: yes
+  command: docker compose -f {{ app_root }}/docker-compose.yml up -d --build
+  register: docker_compose_output
+
+- name: Display Docker Compose output
+  debug:
+    var: docker_compose_output.stdout_lines

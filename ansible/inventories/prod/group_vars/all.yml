@@ -1,8 +1,0 @@
-# Production specific variables
-env_path: "{{ base_path }}/prod"
-env_name: "production"
-db_name: "portfolio_prod"
-nginx_port: 80
-nginx_ssl_port: 443
-frontend_port: 3000
-backend_port: 3001
