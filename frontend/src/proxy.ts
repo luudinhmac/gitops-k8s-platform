@@ -19,37 +19,39 @@ export async function proxy(request: NextRequest) {
   // 2. Check for Bypass Cookie
   const bypassCookie = request.cookies.get('MAINTENANCE_BYPASS');
   
-  // 3. Fetch Maintenance Status
-  try {
-    const apiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3001/api';
-    const fetchUrl = `${apiUrl.replace(/\/$/, '')}/settings/public`;
-    
-    console.log(`[Middleware] Checking maintenance at: ${fetchUrl}`);
+    // 3. Fetch Maintenance Status
+    try {
+      const rawApiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3001/api';
+      // Force 127.0.0.1 for local dev to avoid IPv6/IPv4 mismatch (ECONNREFUSED)
+      const apiUrl = rawApiUrl.replace('localhost', '127.0.0.1');
+      const fetchUrl = `${apiUrl.replace(/\/$/, '')}/settings/public`;
+      
+      console.log(`[Proxy] Checking maintenance at: ${fetchUrl}`);
 
-    const response = await fetch(fetchUrl, { 
-      cache: 'no-store',
-      signal: AbortSignal.timeout(3000) 
-    });
-    
-    if (response.ok) {
-      const settings = await response.json();
-      console.log(`[Middleware] Status:`, settings.maintenance_global);
+      const response = await fetch(fetchUrl, { 
+        cache: 'no-store',
+        signal: AbortSignal.timeout(3000) 
+      });
       
-      const isGlobalMaintenance = settings.maintenance_global === 'true' || settings.maintenance_global === true;
-      
-      if (isGlobalMaintenance && !bypassCookie) {
-        console.log(`[Middleware] REDIRECTING to /maintenance from ${pathname}`);
-        const url = new URL('/maintenance', request.url);
-        url.searchParams.set('from', pathname);
-        return NextResponse.redirect(url);
+      if (response.ok) {
+        const settings = await response.json();
+        console.log(`[Proxy] Status:`, settings.maintenance_global);
+        
+        const isGlobalMaintenance = settings.maintenance_global === 'true' || settings.maintenance_global === true;
+        
+        if (isGlobalMaintenance && !bypassCookie) {
+          console.log(`[Proxy] REDIRECTING to /maintenance from ${pathname}`);
+          const url = new URL('/maintenance', request.url);
+          url.searchParams.set('from', pathname);
+          return NextResponse.redirect(url);
+        }
+      } else {
+        console.error(`[Proxy] API error: ${response.status}`);
       }
-    } else {
-      console.error(`[Middleware] API error: ${response.status}`);
+    } catch (error: any) {
+      console.error(`[Proxy] Fetch failed: ${error.message}`);
+      return NextResponse.next();
     }
-  } catch (error: any) {
-    console.error(`[Middleware] Fetch failed: ${error.message}`);
-    return NextResponse.next();
-  }
 
   return NextResponse.next();
 }
