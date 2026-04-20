@@ -12,6 +12,7 @@ import { CommentsModule } from './comments/comments.module';
 import { UploadModule } from './upload/upload.module';
 import { SeriesModule } from './series/series.module';
 import { SettingsModule } from './settings/settings.module';
+import { TelegramModule } from './telegram/telegram.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { SettingsModule } from './settings/settings.module';
     UploadModule,
     SeriesModule,
     SettingsModule,
+    TelegramModule,
   ],
   controllers: [],
   providers: [],
