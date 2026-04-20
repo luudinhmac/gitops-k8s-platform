@@ -95,6 +95,8 @@ export class UsersService {
       });
       // Return without password
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { password: _, ...result } = user;
+
       // Notify admin via Telegram
       this.telegramService.sendSystemNotification(
         `🆕 <b>Người dùng mới đăng ký</b>\n\n` +

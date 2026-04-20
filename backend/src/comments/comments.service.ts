@@ -90,7 +90,7 @@ export class CommentsService {
         `💬 <b>Bình luận mới</b>\n\n` +
         `• <b>Người gửi:</b> ${commenterName}\n` +
         `• <b>Bài viết:</b> ${post.title}\n` +
-        `• <b>Nội dung:</b> ${comment.content.substring(0, 100)}${comment.content.length > 100 ? '...' : ''}\n` +
+        `• <b>Nội dung:</b> ${(comment.content || '').substring(0, 100)}${(comment.content || '').length > 100 ? '...' : ''}\n` +
         `• <b>Link:</b> <a href="${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}/posts/${post.slug}#comment-${comment.id}">Xem bài viết</a>`
       );
     } catch (err) {
