@@ -39,7 +39,7 @@ export default function UsersPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [resetModal, setResetModal] = useState<{ open: boolean; userId: number | null; username: string }>({ open: false, userId: null, username: '' });
-  const [settingsMenuId, setSettingsMenuId] = useState<number | null>(null);
+  const [settingsUser, setSettingsUser] = useState<AdminUser | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [showNewPass, setShowNewPass] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
@@ -269,57 +269,12 @@ export default function UsersPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className={cn("h-8 w-8 transition-all", settingsMenuId === u.id && "bg-slate-100 dark:bg-slate-800")}
-                          onClick={() => setSettingsMenuId(settingsMenuId === u.id ? null : u.id)}
+                          className={cn("h-8 w-8 transition-all", settingsUser?.id === u.id && "bg-slate-100 dark:bg-slate-800")}
+                          onClick={() => setSettingsUser(u)}
                           disabled={u.id === currentUser?.id}
                         >
                           <Settings size={14} className="text-slate-400" />
                         </Button>
-
-                        {settingsMenuId === u.id && (
-                          <div className="absolute right-10 top-2 mt-0 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 py-1.5 z-50 text-left animate-in fade-in zoom-in-95 overflow-hidden origin-top-right">
-                            <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-700 mb-1 flex items-center justify-between">
-                              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Box Cài Đặt</span>
-                              <button onClick={() => setSettingsMenuId(null)} className="text-slate-400 hover:text-red-500"><X size={12}/></button>
-                            </div>
-
-                            <button className="w-full flex items-center px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors" onClick={() => { setResetModal({ open: true, userId: u.id, username: u.username }); setSettingsMenuId(null); }}>
-                              <Lock size={12} className="mr-2 text-slate-400" /> Đổi mật khẩu
-                            </button>
-
-                            <div className="mx-2 my-1 h-px bg-slate-100 dark:bg-slate-700" />
-
-                            <button className="w-full justify-between flex items-center px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors" onClick={() => handleUpdatePermissions(u.id, { role: u.role === 'admin' ? 'user' : 'admin' })}>
-                              <div className="flex items-center"><Shield size={12} className="mr-2 text-blue-500" /> Quyền Admin</div>
-                              <div className={cn("w-6 h-3 rounded-full transition-colors relative", u.role === 'admin' ? "bg-primary" : "bg-slate-200 dark:bg-slate-600")}>
-                                <div className={cn("absolute top-0.5 w-2 h-2 rounded-full bg-white transition-all", u.role === 'admin' ? "right-0.5" : "left-0.5")} />
-                              </div>
-                            </button>
-
-                            <div className="mx-2 my-1 h-px bg-slate-100 dark:bg-slate-700" />
-
-                            <button className="w-full justify-between flex items-center px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors" onClick={() => handleUpdatePermissions(u.id, { is_active: !u.is_active })}>
-                              <div className="flex items-center"><ShieldAlert size={12} className="mr-2 text-red-500" /> Khóa Đăng nhập</div>
-                              <div className={cn("w-6 h-3 rounded-full transition-colors relative", !u.is_active ? "bg-red-500" : "bg-slate-200 dark:bg-slate-600")}>
-                                <div className={cn("absolute top-0.5 w-2 h-2 rounded-full bg-white transition-all", !u.is_active ? "right-0.5" : "left-0.5")} />
-                              </div>
-                            </button>
-
-                            <button className="w-full justify-between flex items-center px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors" onClick={() => handleUpdatePermissions(u.id, { can_comment: !u.can_comment })}>
-                              <div className="flex items-center"><MessageSquareOff size={12} className="mr-2 text-orange-500" /> Cấm Bình luận</div>
-                              <div className={cn("w-6 h-3 rounded-full transition-colors relative", !u.can_comment ? "bg-orange-500" : "bg-slate-200 dark:bg-slate-600")}>
-                                <div className={cn("absolute top-0.5 w-2 h-2 rounded-full bg-white transition-all", !u.can_comment ? "right-0.5" : "left-0.5")} />
-                              </div>
-                            </button>
-                            
-                            <button className="w-full justify-between flex items-center px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors" onClick={() => handleUpdatePermissions(u.id, { can_post: !u.can_post })}>
-                              <div className="flex items-center"><Edit3 size={12} className="mr-2 text-orange-500" /> Cấm Đăng bài</div>
-                              <div className={cn("w-6 h-3 rounded-full transition-colors relative", !u.can_post ? "bg-orange-500" : "bg-slate-200 dark:bg-slate-600")}>
-                                <div className={cn("absolute top-0.5 w-2 h-2 rounded-full bg-white transition-all", !u.can_post ? "right-0.5" : "left-0.5")} />
-                              </div>
-                            </button>
-                          </div>
-                        )}
                         <Button
                           variant="ghost"
                           size="icon"
@@ -453,6 +408,89 @@ export default function UsersPage() {
           </div>
         </div>
       )}
+      {/* ── User Settings Modal (Portal) ── */}
+      {settingsUser && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setSettingsUser(null)} />
+          <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-200 dark:border-slate-800 p-8 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="px-1 py-1 border-b border-slate-100 dark:border-slate-800 mb-6 flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                 <IconBadge icon={Settings} size="sm" variant="primary" /> Box Cài Đặt
+              </span>
+              <button onClick={() => setSettingsUser(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-400 hover:text-red-500 transition-all">
+                <X size={18}/>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3 mb-8 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
+               <UserAvatar user={settingsUser} size="md" />
+               <div className="min-w-0">
+                  <p className="font-bold text-slate-900 dark:text-white truncate">{settingsUser.fullname || settingsUser.username}</p>
+                  <p className="text-[10px] text-slate-400 font-bold tracking-widest uppercase">@{settingsUser.username}</p>
+               </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <button 
+                className="w-full flex items-center justify-between px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all group" 
+                onClick={() => { setResetModal({ open: true, userId: settingsUser.id, username: settingsUser.username }); setSettingsUser(null); }}
+              >
+                <div className="flex items-center"><Lock size={16} className="mr-3 text-slate-400 group-hover:text-primary transition-colors" /> Đổi mật khẩu</div>
+                <div className="text-[9px] uppercase tracking-tighter text-slate-400 group-hover:text-primary">Update</div>
+              </button>
+
+              <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2 my-2" />
+
+              {[
+                { 
+                   label: 'Quyền Admin', 
+                   icon: Shield, 
+                   color: 'text-blue-500', 
+                   active: settingsUser.role === 'admin',
+                   onClick: () => handleUpdatePermissions(settingsUser.id, { role: settingsUser.role === 'admin' ? 'user' : 'admin' })
+                },
+                { 
+                   label: 'Khóa Đăng nhập', 
+                   icon: ShieldAlert, 
+                   color: 'text-red-500', 
+                   active: !settingsUser.is_active,
+                   onClick: () => handleUpdatePermissions(settingsUser.id, { is_active: !settingsUser.is_active })
+                },
+                { 
+                   label: 'Cấm Bình luận', 
+                   icon: MessageSquareOff, 
+                   color: 'text-orange-500', 
+                   active: !settingsUser.can_comment,
+                   onClick: () => handleUpdatePermissions(settingsUser.id, { can_comment: !settingsUser.can_comment })
+                },
+                { 
+                   label: 'Cấm Đăng bài', 
+                   icon: Edit3, 
+                   color: 'text-orange-500', 
+                   active: !settingsUser.can_post,
+                   onClick: () => handleUpdatePermissions(settingsUser.id, { can_post: !settingsUser.can_post })
+                }
+              ].map((item, idx) => (
+                <button 
+                  key={idx}
+                  className="w-full justify-between flex items-center px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all" 
+                  onClick={item.onClick}
+                >
+                  <div className="flex items-center"><item.icon size={16} className={cn("mr-3", item.color)} /> {item.label}</div>
+                  <div className={cn("w-8 h-4 rounded-full transition-all relative p-0.5", item.active ? "bg-primary shadow-inner shadow-primary/20" : "bg-slate-200 dark:bg-slate-700")}>
+                    <div className={cn("absolute top-1 w-2 h-2 rounded-full bg-white transition-all shadow-sm", item.active ? "right-1" : "left-1")} />
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
+               <Button variant="outline" className="w-full rounded-2xl py-2" onClick={() => setSettingsUser(null)}>Đóng</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ConfirmationDialog
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
