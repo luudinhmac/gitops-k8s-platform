@@ -18,6 +18,7 @@ interface PrismaError {
 }
 
 import { NotificationsService } from '../notifications/notifications.service';
+import { TelegramService } from '../telegram/telegram.service';
 
 @Injectable()
 export class UsersService {
@@ -25,6 +26,7 @@ export class UsersService {
     private prisma: PrismaService,
     private fileService: FileService,
     private notificationsService: NotificationsService,
+    private telegramService: TelegramService,
   ) {}
 
   private validatePassword(password: string): boolean {
@@ -93,7 +95,15 @@ export class UsersService {
       });
       // Return without password
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const { password: _, ...result } = user;
+      // Notify admin via Telegram
+      this.telegramService.sendSystemNotification(
+        `🆕 <b>Người dùng mới đăng ký</b>\n\n` +
+        `• <b>Username:</b> ${user.username}\n` +
+        `• <b>Họ tên:</b> ${user.fullname}\n` +
+        `• <b>Email:</b> ${user.email || 'N/A'}\n` +
+        `• <b>Ngày tham gia:</b> ${new Date().toLocaleString('vi-VN')}`
+      );
+
       return result;
     } catch (e) {
       const err = e as PrismaError;

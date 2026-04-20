@@ -38,8 +38,10 @@ export class SettingsController {
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
-  @Post('admin/flush-cache')
-  async flushCache() {
-    return this.settingsService.flushCache();
+  @Post('admin/test-telegram')
+  async testTelegram(@Body() data: { token: string; chatId: string }) {
+    return this.settingsService.testTelegram(data.token, data.chatId);
   }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
 }

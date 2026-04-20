@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { 
   Settings, Globe, Server, Shield, TrendingUp, Save, Loader2, Image as ImageIcon, 
-  Trash2, AlertCircle, Check, Link as LinkIcon, Database, HardDrive, ShieldCheck, Lock, ShieldAlert, Key
+  Trash2, AlertCircle, Check, Link as LinkIcon, Database, HardDrive, ShieldCheck, Lock, ShieldAlert, Key, Send
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import AdminPageHeader from '@/components/admin/AdminPageHeader';
@@ -12,9 +12,10 @@ import { settingService, SettingsConfig } from '@/services/settingService';
 import Link from 'next/link';
 
 export default function SettingsAdminPage() {
-  const [activeTab, setActiveTab] = useState<'general' | 'system' | 'security' | 'marketing' | 'maintenance'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'system' | 'security' | 'marketing' | 'maintenance' | 'telegram'>('general');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [testing, setTesting] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Settings State mapped from API
@@ -45,6 +46,12 @@ export default function SettingsAdminPage() {
     maintenance_comments: 'false',
     maintenance_passcode: '123456',
   });
+  
+  const [telegramForm, setTelegramForm] = useState<Record<string, string>>({
+    telegram_enabled: 'false',
+    telegram_bot_token: '',
+    telegram_chat_id: '',
+  });
 
   useEffect(() => {
     fetchSettings();
@@ -65,6 +72,9 @@ export default function SettingsAdminPage() {
       if (data.dbConfig?.maintenance) {
         setMaintenanceForm(prev => ({ ...prev, ...data.dbConfig.maintenance }));
       }
+      if (data.dbConfig?.telegram) {
+        setTelegramForm(prev => ({ ...prev, ...data.dbConfig.telegram }));
+      }
     } catch (error) {
       console.error('Failed to parse settings', error);
     } finally {
@@ -79,6 +89,7 @@ export default function SettingsAdminPage() {
       let targetForm;
       if (group === 'general') targetForm = generalForm;
       else if (group === 'marketing') targetForm = marketingForm;
+      else if (group === 'telegram') targetForm = telegramForm;
       else targetForm = maintenanceForm;
       const items = Object.entries(targetForm).map(([key, value]) => ({
         key,
@@ -107,12 +118,34 @@ export default function SettingsAdminPage() {
     }
   };
 
+  const handleTestTelegram = async () => {
+    if (!telegramForm.telegram_bot_token || !telegramForm.telegram_chat_id) {
+       setStatusMsg({ type: 'error', text: 'Vui lòng nhập Token và Chat ID trước khi test.' });
+       return;
+    }
+    setTesting(true);
+    setStatusMsg(null);
+    try {
+       const result = await settingService.testTelegram(telegramForm.telegram_bot_token, telegramForm.telegram_chat_id);
+       if (result.success) {
+         setStatusMsg({ type: 'success', text: 'Đã gửi tin nhắn test thành công! Hãy kiểm tra Telegram của bạn.' });
+       } else {
+         setStatusMsg({ type: 'error', text: `Lỗi API: ${result.error?.description || 'Không thể gửi tin nhắn'}` });
+       }
+    } catch (error) {
+       setStatusMsg({ type: 'error', text: 'Lỗi khi kết nối tới Telegram API.' });
+    } finally {
+       setTesting(false);
+    }
+  };
+
   const tabs = [
     { id: 'general', label: 'Cấu hình Website', icon: Globe },
     { id: 'maintenance', label: 'Bảo trì hệ thống', icon: ShieldAlert },
     { id: 'system', label: 'Hệ thống (System)', icon: Server },
     { id: 'security', label: 'Bảo mật & Users', icon: Shield },
     { id: 'marketing', label: 'Marketing & SEO', icon: TrendingUp },
+    { id: 'telegram', label: 'Thông báo Telegram', icon: Send },
   ];
 
   if (loading) {
@@ -462,6 +495,98 @@ export default function SettingsAdminPage() {
                   <Button onClick={() => handleSaveGroup('maintenance')} isLoading={saving} size="lg" className="rounded-2xl px-12">
                     <Save size={18} className="mr-2" /> Lưu cấu hình bảo trì
                   </Button>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: TELEGRAM */}
+            {activeTab === 'telegram' && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                <div>
+                   <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
+                     <Send className="text-sky-500" /> Cấu hình Thông báo Hệ thống (Telegram)
+                   </h2>
+                   <p className="text-sm text-slate-500 italic">Nhận tin nhắn Telegram ngay khi có người đăng ký hoặc bình luận mới.</p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-8">
+                   {/* Toggle Enable */}
+                   <div className={cn(
+                     "p-6 rounded-[2rem] border transition-all duration-300",
+                     telegramForm.telegram_enabled === 'true' 
+                        ? "bg-sky-50 dark:bg-sky-500/10 border-sky-200 dark:border-sky-500/30" 
+                        : "bg-slate-50 dark:bg-slate-950/50 border-slate-100 dark:border-slate-800"
+                   )}>
+                      <div className="flex items-center justify-between">
+                         <div className="flex items-center gap-4">
+                            <div className={cn("p-3 rounded-2xl", telegramForm.telegram_enabled === 'true' ? "bg-sky-500 text-white" : "bg-slate-200 dark:bg-slate-800 text-slate-500")}>
+                               <ShieldAlert size={24} />
+                            </div>
+                            <div>
+                               <h3 className="font-bold text-slate-900 dark:text-white">Kích hoạt thông báo Telegram</h3>
+                               <p className="text-xs text-slate-500">Gửi các sự kiện hệ thống quan trọng tới Bot.</p>
+                            </div>
+                         </div>
+                         <label className="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" className="sr-only peer" checked={telegramForm.telegram_enabled === 'true'} onChange={e => setTelegramForm({...telegramForm, telegram_enabled: e.target.checked ? 'true' : 'false'})} />
+                            <div className="w-14 h-7 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-sky-500"></div>
+                         </label>
+                      </div>
+                   </div>
+
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Telegram Bot Token</label>
+                         <input 
+                            type="password" 
+                            autoComplete="off"
+                            value={telegramForm.telegram_bot_token || ''} 
+                            onChange={e => setTelegramForm({...telegramForm, telegram_bot_token: e.target.value})} 
+                            placeholder="123456789:ABCDEF..."
+                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all font-mono" 
+                         />
+                         <p className="text-[10px] text-slate-400">Lấy từ <a href="https://t.me/BotFather" target="_blank" rel="noreferrer" className="text-primary hover:underline">@BotFather</a></p>
+                      </div>
+                      <div className="space-y-2">
+                         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Admin Chat ID</label>
+                         <input 
+                            type="text" 
+                            value={telegramForm.telegram_chat_id || ''} 
+                            onChange={e => setTelegramForm({...telegramForm, telegram_chat_id: e.target.value})} 
+                            placeholder="987654321"
+                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all font-mono" 
+                         />
+                         <p className="text-[10px] text-slate-400">ID cá nhân hoặc Group Admin (Lấy qua @userinfobot)</p>
+                      </div>
+                   </div>
+
+                   {/* Instruction / Help */}
+                   <div className="p-6 bg-slate-50 dark:bg-slate-950/50 rounded-[2rem] border border-slate-100 dark:border-slate-800">
+                      <h4 className="text-xs font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                        <AlertCircle size={14} className="text-primary" /> Hướng dẫn nhanh:
+                      </h4>
+                      <ol className="text-[11px] text-slate-500 space-y-2 list-decimal list-inside">
+                        <li>Tạo Bot mới trên Telegram qua <b>@BotFather</b> và lấy API Token.</li>
+                        <li>Gửi tin nhắn bất kỳ cho Bot vừa tạo.</li>
+                        <li>Sử dụng <b>@userinfobot</b> để lấy Chat ID của bạn (hoặc lấy ID của Group nếu mời Bot vào Group).</li>
+                        <li>Lưu cấu hình và nhấn <b>Lưu cấu hình</b> để bắt đầu nhận thông báo.</li>
+                      </ol>
+                   </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+                   <Button 
+                      variant="outline" 
+                      onClick={handleTestTelegram} 
+                      isLoading={testing} 
+                      disabled={saving}
+                      className="rounded-2xl px-8 border-sky-200 text-sky-600 hover:bg-sky-50"
+                   >
+                     <Send size={16} className="mr-2" /> Gửi tin nhắn thử
+                   </Button>
+                   <Button onClick={() => handleSaveGroup('telegram')} isLoading={saving} disabled={testing} size="lg" className="rounded-2xl px-12 order-first sm:order-last">
+                     <Save size={18} className="mr-2" /> Lưu cấu hình Telegram
+                   </Button>
                 </div>
               </div>
             )}

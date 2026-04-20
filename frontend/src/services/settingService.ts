@@ -57,5 +57,16 @@ export const settingService = {
       console.error('Error flushing cache:', error);
       throw error;
     }
+  },
+
+  // Test Telegram connection
+  testTelegram: async (token: string, chatId: string) => {
+    try {
+      const response = await api.post('/settings/admin/test-telegram', { token, chatId });
+      return response.data;
+    } catch (error) {
+      console.error('Error testing telegram connection:', error);
+      throw error;
+    }
   }
 };

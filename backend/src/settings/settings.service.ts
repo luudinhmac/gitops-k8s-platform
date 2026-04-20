@@ -1,10 +1,14 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { TelegramService } from '../telegram/telegram.service';
 import * as os from 'os';
 
 @Injectable()
 export class SettingsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private telegramService: TelegramService,
+  ) {}
 
   async getPublicSettings() {
     const settings = await this.prisma.setting.findMany({
@@ -95,5 +99,10 @@ export class SettingsService {
   async flushCache() {
     // Implement cache flushing logic if needed later
     return { message: 'Cache flushed successfully' };
+  }
+
+  async testTelegram(token: string, chatId: string) {
+    const message = `🔔 <b>Test Thông báo Hệ thống</b>\n\nNội dung này xác nhận rằng Bot Telegram của bạn đã được cấu hình thành công trên Website.\n\n📅 <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}`;
+    return this.telegramService.sendToTelegram(token, chatId, message);
   }
 }
