@@ -69,6 +69,3 @@ Báo cáo này tổng hợp các sự cố phát sinh và phương án xử lý 
 2. **SSL thật**: Hiện tại Staging dùng SSL tự cấp (Self-signed), khi lên Production cần dùng Let's Encrypt (Certbot) để trình duyệt không cảnh báo bảo mật.
 3. **Health Checks**: Cần thêm các câu lệnh kiểm tra sức khỏe (health checks) của container để tự động phục hồi khi có lỗi.
 
----
-**Người lập báo cáo**: Antigravity AI Assistant
-**Ngày**: 20/04/2026
