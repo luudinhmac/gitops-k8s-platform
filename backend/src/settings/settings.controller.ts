@@ -44,4 +44,9 @@ export class SettingsController {
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles('admin')
+  @Post('admin/flush-cache')
+  async flushCache() {
+    return this.settingsService.flushCache();
+  }
 }
