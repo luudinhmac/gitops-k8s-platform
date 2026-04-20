@@ -428,7 +428,7 @@ export default function UsersPage() {
           <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-200 dark:border-slate-800 p-8 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="px-1 py-1 border-b border-slate-100 dark:border-slate-800 mb-6 flex items-center justify-between">
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                 <IconBadge icon={Settings} size="sm" variant="primary" /> Box Cài Đặt
+                 <IconBadge icon={Settings} size="sm" color="blue" /> Box Cài Đặt
               </span>
               <button onClick={() => setSettingsUser(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-400 hover:text-red-500 transition-all">
                 <X size={18}/>
