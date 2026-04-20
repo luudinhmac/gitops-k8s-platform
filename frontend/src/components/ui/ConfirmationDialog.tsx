@@ -3,7 +3,8 @@
 import { motion, AnimatePresence } from "framer-motion";
 import Button from "./Button";
 import { AlertCircle, X } from "lucide-react";
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface ConfirmationDialogProps {
   isOpen: boolean;
@@ -28,17 +29,33 @@ export default function ConfirmationDialog({
   variant = "danger",
   isLoading = false,
 }: ConfirmationDialogProps) {
-  return (
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
+  if (!mounted) return null;
+
+  const content = (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 min-h-screen">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-slate-950/60 backdrop-blur-md"
           />
 
           {/* Modal content */}
@@ -46,7 +63,7 @@ export default function ConfirmationDialog({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl shadow-2xl border border-slate-200 dark:border-slate-800 p-8 overflow-hidden"
+            className="relative w-full max-w-[400px] bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-200 dark:border-slate-800 p-6 md:p-10 overflow-hidden mx-auto"
           >
             <button
               onClick={onClose}
@@ -55,27 +72,27 @@ export default function ConfirmationDialog({
               <X size={20} />
             </button>
 
-            <div className="flex flex-col items-center text-center space-y-4">
+            <div className="flex flex-col items-center text-center space-y-5">
               <div className={cn(
-                "p-4 rounded-2xl",
+                "p-5 rounded-3xl",
                 variant === 'danger' ? 'bg-red-50 dark:bg-red-500/10 text-red-500' : 
                 variant === 'warning' ? 'bg-amber-50 dark:bg-amber-500/10 text-amber-500' :
                 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500'
               )}>
-                <AlertCircle size={32} />
+                <AlertCircle size={40} />
               </div>
               
-              <div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{title}</h3>
-                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">{message}</p>
+              <div className="space-y-2">
+                <h3 className="text-2xl font-display font-bold text-slate-900 dark:text-white">{title}</h3>
+                <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed px-2">{message}</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3 mt-8">
-              <Button variant="ghost" onClick={onClose} disabled={isLoading} className="w-full">
+            <div className="flex flex-col sm:grid sm:grid-cols-2 gap-3 mt-10">
+              <Button variant="ghost" onClick={onClose} disabled={isLoading} className="w-full py-3 order-2 sm:order-1">
                 {cancelLabel}
               </Button>
-              <Button variant={variant} onClick={onConfirm} isLoading={isLoading} className="w-full">
+              <Button variant={variant} onClick={onConfirm} isLoading={isLoading} className="w-full py-3 order-1 sm:order-2 shadow-lg shadow-red-500/20">
                 {confirmLabel}
               </Button>
             </div>
@@ -84,9 +101,10 @@ export default function ConfirmationDialog({
       )}
     </AnimatePresence>
   );
+
+  return createPortal(content, document.body);
 }
 
-// Global utility because cn is imported from @/lib/utils but I don't want to break the flow
 function cn(...classes: any[]) {
   return classes.filter(Boolean).join(' ');
 }
