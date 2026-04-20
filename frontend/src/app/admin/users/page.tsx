@@ -23,7 +23,7 @@ import PromptDialog from '@/components/ui/PromptDialog';
 
 // Modular Services
 import { userService } from '@/services/userService';
-import { User as AdminUser } from '@/types/user';
+import { User as AdminUser, UserRole } from '@/types/user';
 
 export default function UsersPage() {
   const { user: currentUser, isAuthenticated, loading: authLoading } = useAuth();
@@ -96,7 +96,7 @@ export default function UsersPage() {
     }
   };
 
-  const handleUpdatePermissions = async (userId: number, fields: { role?: string; is_active?: boolean; can_comment?: boolean; can_post?: boolean }, reason?: string) => {
+  const handleUpdatePermissions = async (userId: number, fields: { role?: UserRole; is_active?: boolean; can_comment?: boolean; can_post?: boolean }, reason?: string) => {
     try {
       if (fields.is_active === false && userId === currentUser?.id) {
         setStatusMsg({ type: 'error', text: 'Bạn không thể tự khóa tài khoản của mình!' });
