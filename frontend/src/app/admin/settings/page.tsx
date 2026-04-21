@@ -660,15 +660,24 @@ export default function SettingsAdminPage() {
                           </button>
                         </div>
                       </div>
-                      <div className="space-y-2">
+                      <div className="space-y-2 relative">
                         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Admin Chat ID</label>
-                        <input 
-                          type="text" 
-                          value={alertsForm.telegram_chat_id || ''} 
-                          disabled={!isSuperAdmin}
-                          onChange={e => setAlertsForm({...alertsForm, telegram_chat_id: e.target.value})} 
-                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all font-mono disabled:opacity-70 disabled:cursor-not-allowed" 
-                        />
+                        <div className="relative">
+                          <input 
+                            type={showSecrets['telegram_chat_id'] ? 'text' : 'password'} 
+                            value={alertsForm.telegram_chat_id || ''} 
+                            disabled={!isSuperAdmin}
+                            onChange={e => setAlertsForm({...alertsForm, telegram_chat_id: e.target.value})} 
+                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all font-mono pr-12 disabled:opacity-70 disabled:cursor-not-allowed" 
+                          />
+                          <button 
+                            type="button"
+                            onClick={() => toggleSecret('telegram_chat_id')}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                          >
+                            {showSecrets['telegram_chat_id'] ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
                       </div>
                       <div className="col-span-1 md:col-span-2 flex justify-start">
                         <Button variant="ghost" size="sm" onClick={handleTestTelegram} isLoading={testing} disabled={!isSuperAdmin} className="text-sky-600 hover:bg-sky-50">
@@ -782,10 +791,25 @@ export default function SettingsAdminPage() {
                           className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary disabled:opacity-70 disabled:cursor-not-allowed" />
                       </div>
 
-                      <div className="space-y-2">
+                      <div className="space-y-2 relative">
                         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">SMTP User</label>
-                        <input type="text" value={alertsForm.mail_user || ''} disabled={!isSuperAdmin} onChange={e => setAlertsForm({...alertsForm, mail_user: e.target.value})} placeholder="your-email@gmail.com"
-                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary disabled:opacity-70 disabled:cursor-not-allowed" />
+                        <div className="relative">
+                          <input 
+                            type={showSecrets['mail_user'] ? 'text' : 'password'} 
+                            value={alertsForm.mail_user || ''} 
+                            disabled={!isSuperAdmin}
+                            onChange={e => setAlertsForm({...alertsForm, mail_user: e.target.value})} 
+                            placeholder="your-email@gmail.com"
+                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary pr-12 disabled:opacity-70 disabled:cursor-not-allowed" 
+                          />
+                          <button 
+                            type="button"
+                            onClick={() => toggleSecret('mail_user')}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                          >
+                            {showSecrets['mail_user'] ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
                       </div>
 
                       <div className="space-y-2 relative">

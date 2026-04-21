@@ -9,10 +9,14 @@ import * as os from 'os';
 
 const SENSITIVE_KEYS = [
   'telegram_bot_token',
+  'telegram_chat_id',
   'teams_webhook_url',
+  'mail_user',
   'mail_pass',
   'maintenance_passcode'
 ];
+
+const MASK_VALUE = '********';
 
 @Injectable()
 export class SettingsService {
@@ -69,7 +73,7 @@ export class SettingsService {
 
       let value = current.value;
       if (SENSITIVE_KEYS.includes(current.key)) {
-        value = EncryptionUtil.decrypt(value);
+        value = MASK_VALUE;
       }
 
       acc[current.group][current.key] = value;
@@ -112,7 +116,7 @@ export class SettingsService {
     }
 
     try {
-      const queries = items.map((item) => {
+      const queries = items.filter(item => item.value !== MASK_VALUE).map((item) => {
         let finalValue = item.value;
 
         // Encrypt if sensitive and NOT already encrypted
@@ -185,6 +189,18 @@ export class SettingsService {
 
   async testTelegram(token: string, chatId: string) {
     try {
+      // Use stored values if mask or empty provided
+      if (token === MASK_VALUE || !token) {
+        token = await this.getSettingByKey('telegram_bot_token');
+      }
+      if (chatId === MASK_VALUE || !chatId) {
+        chatId = await this.getSettingByKey('telegram_chat_id');
+      }
+
+      if (!token || !chatId) {
+        return { success: false, error: 'Thiếu cấu hình Telegram (Token hoặc Chat ID).' };
+      }
+
       const message = `🔔 <b>Test Thông báo Hệ thống</b>\n\nNội dung này xác nhận rằng Bot Telegram của bạn đã được cấu hình thành công trên Website.\n\n📅 <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}`;
       return await this.telegramService.sendToTelegram(token, chatId, message);
     } catch (error: any) {
@@ -194,6 +210,15 @@ export class SettingsService {
 
   async testTeams(webhookUrl: string) {
     try {
+      // Use stored value if mask or empty provided
+      if (webhookUrl === MASK_VALUE || !webhookUrl) {
+        webhookUrl = await this.getSettingByKey('teams_webhook_url');
+      }
+
+      if (!webhookUrl) {
+        return { success: false, error: 'Thiếu cấu hình Webhook URL của MS Teams.' };
+      }
+
       const msg = `🔔 <b>Thông báo thử nghiệm MS Teams</b>\n\nCấu hình kết nối Webhook thành công! Đã có thể nhận cảnh báo từ ứng dụng.\n\n📅 <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}`;
       return await this.teamsService.sendMessage(msg, webhookUrl);
     } catch (error: any) {
@@ -205,6 +230,18 @@ export class SettingsService {
     const subject = '🔔 Thông báo thử nghiệm Email';
     const text = 'Hệ thống đã kết nối thành công với máy chủ Email của bạn.';
     const html = `<h3>Thành công!</h3><p>${text}</p><p>📅 <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}</p>`;
+
+    // Use stored values if masks provided
+    if (config.user === MASK_VALUE || !config.user) {
+      config.user = await this.getSettingByKey('mail_user');
+    }
+    if (config.pass === MASK_VALUE || !config.pass) {
+      config.pass = await this.getSettingByKey('mail_pass');
+    }
+
+    if (!config.user || !config.pass) {
+      return { success: false, error: 'Thiếu cấu hình tài khoản Email (User hoặc Pass).' };
+    }
 
     // We use nodemailer directly for testing to avoid forcing a save first
     const nodemailer = require('nodemailer');
