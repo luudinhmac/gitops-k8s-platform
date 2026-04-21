@@ -85,15 +85,7 @@ export class CommentsService {
         }
       }
 
-      // Notify admin via multi-channel alerts
-      this.adminAlertService.sendAlert({
-        subject: `💬 Bình luận mới từ ${commenterName} trên bài "${post.title}"`,
-        text: `💬 <b>Bình luận mới</b>\n\n` +
-              `• <b>Người gửi:</b> ${commenterName}\n` +
-              `• <b>Bài viết:</b> ${post.title}\n` +
-              `• <b>Nội dung:</b> ${(comment.content || '').substring(0, 100)}${(comment.content || '').length > 100 ? '...' : ''}\n` +
-              `• <b>Link:</b> <a href="${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/posts/${post.slug}#comment-${comment.id}">Xem bài viết</a>`,
-      });
+
     } catch (err) {
       console.error('Failed to trigger notification:', err);
       // Don't fail the comment creation if notification fails
