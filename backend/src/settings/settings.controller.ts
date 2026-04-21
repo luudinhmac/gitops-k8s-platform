@@ -19,6 +19,11 @@ export class SettingsController {
     return { success: isValid };
   }
 
+  @Post('request-maintenance-code')
+  async requestMaintenanceCode(@Req() req: any) {
+    return this.settingsService.requestMaintenanceCode(req.ip);
+  }
+
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin', 'editor')
   @Get('admin')
