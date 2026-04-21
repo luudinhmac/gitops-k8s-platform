@@ -6,6 +6,9 @@ export class PrismaService
   extends PrismaClient
   implements OnModuleInit, OnModuleDestroy
 {
+  // Explicitly declare models that might have typing delays in the IDE
+  maintenanceCode: any; 
+
   async onModuleInit() {
     await this.$connect();
     const dbUrl = process.env.DATABASE_URL;

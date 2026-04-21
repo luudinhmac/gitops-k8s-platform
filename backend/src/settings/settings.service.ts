@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Inject, forwardRef, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { TelegramService } from '../telegram/telegram.service';
 import { TeamsService } from '../teams/teams.service';
@@ -20,6 +20,8 @@ const MASK_VALUE = '********';
 
 @Injectable()
 export class SettingsService {
+  private readonly logger = new Logger(SettingsService.name);
+
   constructor(
     private prisma: PrismaService,
     @Inject(forwardRef(() => TelegramService))
