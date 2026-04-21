@@ -20,5 +20,8 @@
     - name: Sync database schema (db push)
       command: docker exec portfolio-backend npx prisma db push --accept-data-loss
 
+    - name: Generate Prisma Client (ensure schema is up-to-date for seed)
+      command: docker exec portfolio-backend npx prisma generate
+
     - name: Seed database with default settings and admin user
       command: docker exec portfolio-backend npx prisma db seed
