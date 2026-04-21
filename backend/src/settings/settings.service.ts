@@ -73,15 +73,16 @@ export class SettingsService {
 
     // 3. Save to database
     try {
+      const prisma = this.prisma as any;
       // Optional: Cleanup old expired codes to keep DB clean
-      await this.prisma.maintenanceCode.deleteMany({
+      await prisma.maintenanceCode.deleteMany({
         where: { OR: [
           { expires_at: { lt: new Date() } },
           { is_used: true }
         ]}
       });
 
-      await this.prisma.maintenanceCode.create({
+      await prisma.maintenanceCode.create({
         data: {
           code,
           expires_at: expiry,
@@ -108,8 +109,9 @@ export class SettingsService {
   }
 
   async verifyMaintenancePasscode(passcode: string) {
+    const prisma = this.prisma as any;
     // 1. Try verify as dynamic maintenance code first
-    const record = await this.prisma.maintenanceCode.findFirst({
+    const record = await prisma.maintenanceCode.findFirst({
       where: {
         code: passcode,
         is_used: false,
@@ -120,7 +122,7 @@ export class SettingsService {
 
     if (record) {
       // Mark as used immediately
-      await this.prisma.maintenanceCode.update({
+      await prisma.maintenanceCode.update({
         where: { id: record.id },
         data: { is_used: true }
       });
