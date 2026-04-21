@@ -11,6 +11,7 @@ import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import AdminCard from '@/components/admin/AdminCard';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/common/Badge';
+import MessageDialog from '@/components/ui/MessageDialog';
 
 // Modular Services
 import { postService } from '@/services/postService';
@@ -43,6 +44,9 @@ export default function PostEditor({ postId }: PostEditorProps) {
   const [error, setError] = useState<string | null>(null);
   const [permissionError, setPermissionError] = useState<string | null>(null);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [msgData, setMsgData] = useState<{ isOpen: boolean; title: string; message: string; variant: 'info' | 'success' | 'warning' | 'error' }>({ 
+    isOpen: false, title: '', message: '', variant: 'error' 
+  });
   
   const [formData, setFormData] = useState({
     title: '',
@@ -68,7 +72,7 @@ export default function PostEditor({ postId }: PostEditorProps) {
         }
 
         // 2. Check Maintenance Mode (Only for non-admins)
-        if (user.role !== 'admin') {
+        if (!['admin', 'superadmin'].includes(user.role)) {
           try {
             const { settingsService } = await import('@/services/settingsService');
             const settings = await settingsService.getPublicSettings();
@@ -104,7 +108,7 @@ export default function PostEditor({ postId }: PostEditorProps) {
         const post = await postService.getById(postId);
         
         // Ownership check: only author or admin can edit
-        if (post.author_id !== user.id && user.role !== 'admin') {
+        if (post.author_id !== user.id && !['admin', 'superadmin'].includes(user.role)) {
            setPermissionError('Bạn không có quyền chỉnh sửa bài viết của người khác.');
            return;
         }
@@ -188,7 +192,12 @@ export default function PostEditor({ postId }: PostEditorProps) {
       const data = await uploadService.uploadImage(file, 'post');
       setFormData({ ...formData, cover_image: data.url });
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Không thể tải ảnh lên!');
+      setMsgData({ 
+        isOpen: true, 
+        title: 'Lỗi tải ảnh', 
+        message: err.response?.data?.message || 'Không thể tải ảnh lên vào lúc này. Vui lòng kiểm tra lại định dạng hoặc kích thước ảnh.', 
+        variant: 'error' 
+      });
     }
   };
 
@@ -332,7 +341,7 @@ export default function PostEditor({ postId }: PostEditorProps) {
                           className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm" />
                      </div>
                    )}
-                   {user?.role === 'admin' && (
+                   {['admin', 'superadmin'].includes(user?.role || '') && (
                      <div className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
                         <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tight">Ghim bài viết</span>
                         <input type="checkbox" className="w-4 h-4 accent-primary cursor-pointer" checked={formData.is_pinned} onChange={(e) => setFormData({ ...formData, is_pinned: e.target.checked })} />
@@ -371,6 +380,14 @@ export default function PostEditor({ postId }: PostEditorProps) {
           </div>
         </div>
       </div>
+
+      <MessageDialog 
+        isOpen={msgData.isOpen}
+        onClose={() => setMsgData({ ...msgData, isOpen: false })}
+        title={msgData.title}
+        message={msgData.message}
+        variant={msgData.variant}
+      />
     </div>
   );
 }

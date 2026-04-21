@@ -6,7 +6,7 @@ type BadgeType = 'role' | 'category' | 'tag';
 interface BadgeProps {
   children: React.ReactNode;
   type?: BadgeType;
-  variant?: 'admin' | 'editor' | 'user' | 'warning' | 'success' | 'info' | 'default';
+  variant?: 'superadmin' | 'admin' | 'editor' | 'user' | 'warning' | 'success' | 'info' | 'default';
   className?: string;
   size?: 'xs' | 'sm' | 'md';
 }
@@ -28,6 +28,7 @@ const Badge: React.FC<BadgeProps> = ({
 
   const typeStyles = {
     role: {
+      superadmin: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-500 border border-red-200/50 dark:border-red-800/50",
       admin: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-500",
       editor: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-500",
       user: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",

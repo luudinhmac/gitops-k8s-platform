@@ -33,6 +33,11 @@ export class RolesGuard implements CanActivate {
       );
     }
 
+    // Superadmin has access to everything
+    if (user.role === 'superadmin') {
+      return true;
+    }
+
     const hasRole = requiredRoles.includes(user.role);
     if (!hasRole) {
       throw new ForbiddenException(

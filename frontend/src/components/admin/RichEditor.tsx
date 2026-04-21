@@ -4,6 +4,7 @@ import { useState, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import 'react-quill-new/dist/quill.snow.css';
 import { FileUp, Loader2 } from 'lucide-react';
+import MessageDialog from '../ui/MessageDialog';
 import * as mammoth from 'mammoth';
 
 
@@ -35,6 +36,9 @@ interface RichEditorProps {
 export default function RichEditor({ value, onChange, placeholder }: RichEditorProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [importing, setImporting] = useState(false);
+    const [msgData, setMsgData] = useState<{ isOpen: boolean; title: string; message: string; variant: 'info' | 'success' | 'warning' | 'error' }>({ 
+        isOpen: false, title: '', message: '', variant: 'error' 
+    });
 
     const modules = useMemo(() => ({
         toolbar: {
@@ -81,7 +85,7 @@ export default function RichEditor({ value, onChange, placeholder }: RichEditorP
                             }
                         } catch (error) {
                             console.error('Lỗi khi upload ảnh:', error);
-                            alert('Không thể upload ảnh vào bài viết');
+                            setMsgData({ isOpen: true, title: 'Lỗi upload', message: 'Không thể tải ảnh vào bài viết vào lúc này.', variant: 'error' });
                         }
                     };
                 }
@@ -113,7 +117,7 @@ export default function RichEditor({ value, onChange, placeholder }: RichEditorP
                     const result = await mammoth.convertToHtml({ arrayBuffer });
                     onChange(result.value);
                 } catch {
-                    alert('Không thể chuyển đổi file Word!');
+                    setMsgData({ isOpen: true, title: 'Lỗi chuyển đổi', message: 'Đã có lỗi xảy ra khi đọc file Word (.docx).', variant: 'error' });
                 } finally {
                     setImporting(false);
                 }
@@ -304,6 +308,14 @@ export default function RichEditor({ value, onChange, placeholder }: RichEditorP
                     border-radius: 4px;
                 }
             `}</style>
+
+            <MessageDialog 
+                isOpen={msgData.isOpen}
+                onClose={() => setMsgData({ ...msgData, isOpen: false })}
+                title={msgData.title}
+                message={msgData.message}
+                variant={msgData.variant}
+            />
         </div>
     );
 }

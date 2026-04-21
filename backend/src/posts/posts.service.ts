@@ -12,6 +12,7 @@ import { CreatePostDto, UpdatePostDto } from './dto/create-post.dto';
 import { Prisma } from '@prisma/client';
 import { FileService } from '../upload/file.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { AdminAlertService } from '../admin-alert/admin-alert.service';
 
 @Injectable()
 export class PostsService {
@@ -19,6 +20,7 @@ export class PostsService {
     private prisma: PrismaService,
     private fileService: FileService,
     private notificationsService: NotificationsService,
+    private adminAlertService: AdminAlertService,
   ) {}
 
   private sanitizeOptions = {
@@ -82,7 +84,10 @@ export class PostsService {
       where.is_published = true;
       where.is_blocked = false;
     } else if (user) {
-      if (user.role === (UserRole.ADMIN as string)) {
+      if (
+        user.role === (UserRole.ADMIN as string) ||
+        user.role === (UserRole.SUPERADMIN as string)
+      ) {
         where.OR = [
           { author_id: user.id }, // Own drafts
           { is_published: true }, // Published posts of others (including blocked ones)
@@ -223,10 +228,19 @@ export class PostsService {
       },
     };
 
-    const post = await (this.prisma.post as any).findUnique({
+    let post = await (this.prisma.post as any).findUnique({
       where,
       select,
     });
+
+    // If numeric slug and not found by ID, try searching by slug
+    if (!post && isId) {
+      post = await (this.prisma.post as any).findUnique({
+        where: { slug: String(idOrSlug) },
+        select,
+      });
+    }
+
     if (!post) throw new NotFoundException('Post not found');
 
     // Fetch next/prev posts if in a series
@@ -319,7 +333,11 @@ export class PostsService {
       content: cleanContent,
       cover_image: cover_image || null,
       is_pinned:
-        user.role === (UserRole.ADMIN as string) && is_pinned ? true : false,
+        (user.role === (UserRole.ADMIN as string) ||
+          user.role === (UserRole.SUPERADMIN as string)) &&
+        is_pinned
+          ? true
+          : false,
       is_published: is_published !== undefined ? is_published : true,
       User: { connect: { id: user.id } },
       Series: series_id ? { connect: { id: Number(series_id) } } : undefined,
@@ -402,7 +420,8 @@ export class PostsService {
       slug: finalSlug,
       content: cleanContent,
       is_pinned:
-        user.role === (UserRole.ADMIN as string)
+        user.role === (UserRole.ADMIN as string) ||
+        user.role === (UserRole.SUPERADMIN as string)
           ? data.is_pinned
           : post.is_pinned,
       Series:
@@ -450,7 +469,7 @@ export class PostsService {
     return updatedPost as unknown as PostInterface;
   }
 
-  async remove(id: number, user: User) {
+  async remove(id: number, user: User, ip?: string) {
     const post = await this.prisma.post.findUnique({
       where: { id },
       select: { id: true, author_id: true, cover_image: true },
@@ -458,6 +477,7 @@ export class PostsService {
     if (!post) throw new NotFoundException('Post not found');
     if (
       user.role !== (UserRole.ADMIN as string) &&
+      user.role !== (UserRole.SUPERADMIN as string) &&
       post.author_id !== user.id
     ) {
       throw new ForbiddenException('Bạn không có quyền xóa bài viết này.');
@@ -467,28 +487,60 @@ export class PostsService {
       await this.fileService.deleteFile(post.cover_image);
     }
 
-    return this.prisma.post.delete({ where: { id } });
+    await this.prisma.post.delete({ where: { id } });
+
+    // --- AUDIT ALERT ---
+    const username = user.username || 'Hệ thống';
+    const userIp = ip || 'unknown';
+
+    this.adminAlertService.sendAlert({
+      subject: `🗑️ Bài viết bị xóa: ${post.id}`,
+      text: `🗑️ <b>BÀI VIẾT BỊ XÓA</b>\n\n` +
+            `• <b>Hành động:</b> Đã xóa bài viết ID #${post.id}\n` +
+            `• <b>IP:</b> ${userIp}\n` +
+            `• <b>User:</b> ${username}\n` +
+            `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
+    });
+
+    return { success: true };
   }
 
-  async togglePin(id: number, user: User) {
+  async togglePin(id: number, user: User, ip?: string) {
     const post = await this.prisma.post.findUnique({
       where: { id },
-      select: { id: true, author_id: true, is_pinned: true },
+      select: { id: true, title: true, author_id: true, is_pinned: true },
     });
     if (!post) throw new NotFoundException('Post not found');
 
     if (
       user.role !== (UserRole.ADMIN as string) &&
+      user.role !== (UserRole.SUPERADMIN as string) &&
       post.author_id !== user.id
     ) {
       throw new ForbiddenException('Bạn không có quyền ghim bài viết này.');
     }
 
-    return this.prisma.post.update({
+    const updated = await this.prisma.post.update({
       where: { id },
       data: { is_pinned: !post.is_pinned },
-      select: { id: true, is_pinned: true },
+      select: { id: true, title: true, is_pinned: true },
     });
+
+    // --- AUDIT ALERT ---
+    const username = user.username || 'Hệ thống';
+    const userIp = ip || 'unknown';
+    const action = updated.is_pinned ? 'Ghim bài viết' : 'Bỏ ghim bài viết';
+
+    this.adminAlertService.sendAlert({
+      subject: `📌 ${action}: ${updated.title}`,
+      text: `📌 <b>THAY ĐỔI GHIM BÀI VIẾT</b>\n\n` +
+            `• <b>Hành động:</b> ${action} "${updated.title}"\n` +
+            `• <b>IP:</b> ${userIp}\n` +
+            `• <b>User:</b> ${username}\n` +
+            `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
+    });
+
+    return updated;
   }
 
   async toggleLike(id: number, userId: number) {
@@ -528,7 +580,7 @@ export class PostsService {
     return { liked: !!existingLike };
   }
 
-  async togglePublish(id: number, user: User, reason?: string) {
+  async togglePublish(id: number, user: User, ip?: string, reason?: string) {
     const post = await (this.prisma.post as any).findUnique({
       where: { id },
       select: { id: true, title: true, author_id: true, is_published: true, is_blocked: true },
@@ -537,6 +589,7 @@ export class PostsService {
 
     if (
       user.role !== (UserRole.ADMIN as string) &&
+      user.role !== (UserRole.SUPERADMIN as string) &&
       post.author_id !== user.id
     ) {
       throw new ForbiddenException(
@@ -547,7 +600,11 @@ export class PostsService {
     // Logic: If Admin is hiding another user's post -> Block it
     // If Admin/User is hiding their own post -> Unpublish (Draft)
     const updates: any = {};
-    if (user.role === (UserRole.ADMIN as string) && user.id !== post.author_id) {
+    if (
+      (user.role === (UserRole.ADMIN as string) ||
+        user.role === (UserRole.SUPERADMIN as string)) &&
+      user.id !== post.author_id
+    ) {
       updates.is_blocked = !post.is_blocked;
     } else {
       updates.is_published = !post.is_published;
@@ -559,7 +616,26 @@ export class PostsService {
       select: { id: true, title: true, slug: true, is_published: true, is_blocked: true, author_id: true },
     });
 
-    // --- TRIGGER NOTIFICATIONS ---
+    // --- AUDIT ALERT ---
+    const username = user.username || 'Hệ thống';
+    const userIp = ip || 'unknown';
+    let action = '';
+    if (updates.is_blocked !== undefined) {
+      action = updates.is_blocked ? 'Khóa bài viết' : 'Mở khóa bài viết';
+    } else {
+      action = updates.is_published ? 'Công khai bài viết' : 'Gỡ bài viết (Lưu nháp)';
+    }
+
+    this.adminAlertService.sendAlert({
+      subject: `📝 ${action}: ${updatedPost.title}`,
+      text: `📝 <b>THAY ĐỔI TRẠNG THÁI BÀI VIẾT</b>\n\n` +
+            `• <b>Hành động:</b> ${action} "${updatedPost.title}"\n` +
+            `• <b>IP:</b> ${userIp}\n` +
+            `• <b>User:</b> ${username}\n` +
+            `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
+    });
+
+    // --- TRIGGER NOTIFICATIONS (Legacy) ---
     try {
       if (updates.is_blocked !== undefined && user.id !== post.author_id) {
         const reasonText = reason ? ` Lý do: ${reason}` : '';

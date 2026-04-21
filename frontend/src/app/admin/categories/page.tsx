@@ -11,6 +11,7 @@ import Button from '@/components/ui/Button';
 import IconBadge from '@/components/ui/IconBadge';
 import AnimateList from '@/components/ui/AnimateList';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
+import MessageDialog from '@/components/ui/MessageDialog';
 
 // Modular Services
 import { categoryService } from '@/services/categoryService';
@@ -33,6 +34,9 @@ export default function CategoriesPage() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [msgData, setMsgData] = useState<{ isOpen: boolean; title: string; message: string; variant: 'info' | 'success' | 'warning' | 'error' }>({ 
+    isOpen: false, title: '', message: '', variant: 'error' 
+  });
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -63,7 +67,7 @@ export default function CategoriesPage() {
       setNewCategory('');
       fetchData();
     } catch {
-      alert('Lỗi: Danh mục có thể đã tồn tại');
+      setMsgData({ isOpen: true, title: 'Lỗi hệ thống', message: 'Danh mục này có thể đã tồn tại. Vui lòng thử tên khác.', variant: 'error' });
     } finally {
       setSubmitting(false);
     }
@@ -76,7 +80,7 @@ export default function CategoriesPage() {
       setEditingId(null);
       fetchData();
     } catch {
-      alert('Có lỗi xảy ra khi cập nhật danh mục');
+      setMsgData({ isOpen: true, title: 'Cập nhật thất bại', message: 'Có lỗi xảy ra khi cập nhật danh mục. Vui lòng thử lại.', variant: 'error' });
     }
   };
 
@@ -89,7 +93,7 @@ export default function CategoriesPage() {
       setDeleteId(null);
       fetchData();
     } catch {
-      alert('Có lỗi xảy ra khi xóa danh mục');
+      setMsgData({ isOpen: true, title: 'Lỗi khi xóa', message: 'Có lỗi xảy ra khi xóa danh mục này.', variant: 'error' });
     } finally {
       setIsDeleting(false);
     }
@@ -212,6 +216,14 @@ export default function CategoriesPage() {
         isLoading={isDeleting}
         title="Xóa danh mục"
         message="Bạn có chắc chắn muốn xóa danh mục này? Tất cả bài viết thuộc danh mục này sẽ được chuyển về trạng thái 'Chưa phân loại'."
+      />
+      
+      <MessageDialog 
+        isOpen={msgData.isOpen}
+        onClose={() => setMsgData({ ...msgData, isOpen: false })}
+        title={msgData.title}
+        message={msgData.message}
+        variant={msgData.variant}
       />
     </>
   );

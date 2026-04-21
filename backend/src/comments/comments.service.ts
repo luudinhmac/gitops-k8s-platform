@@ -6,6 +6,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCommentDto } from './dto/comment.dto';
 import { NotificationsService } from '../notifications/notifications.service';
+import { AdminAlertService } from '../admin-alert/admin-alert.service';
 import { User } from '@prisma/client';
 
 @Injectable()
@@ -13,6 +14,7 @@ export class CommentsService {
   constructor(
     private prisma: PrismaService,
     private notificationsService: NotificationsService,
+    private adminAlertService: AdminAlertService,
   ) {}
 
   async create(data: CreateCommentDto) {
@@ -82,6 +84,8 @@ export class CommentsService {
           });
         }
       }
+
+
     } catch (err) {
       console.error('Failed to trigger notification:', err);
       // Don't fail the comment creation if notification fails

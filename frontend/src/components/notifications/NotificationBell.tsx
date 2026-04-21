@@ -8,12 +8,15 @@ import { Notification } from '@/types/notification';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import UserAvatar from '../common/UserAvatar';
+import ConfirmationDialog from '../ui/ConfirmationDialog';
 
 const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -62,6 +65,20 @@ const NotificationBell = () => {
       setUnreadCount(0);
     } catch (err) {
       console.error('Error marking all as read:', err);
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    setIsDeletingAll(true);
+    try {
+      await notificationService.deleteAll();
+      setNotifications([]);
+      setUnreadCount(0);
+      setShowConfirmDelete(false);
+    } catch (err) {
+      console.error('Error deleting all notifications:', err);
+    } finally {
+      setIsDeletingAll(false);
     }
   };
 
@@ -116,14 +133,7 @@ const NotificationBell = () => {
               </h3>
               <div className="flex items-center gap-2">
                 <button 
-                  onClick={() => {
-                    if (window.confirm('Xóa tất cả thông báo?')) {
-                      notificationService.deleteAll().then(() => {
-                        setNotifications([]);
-                        setUnreadCount(0);
-                      });
-                    }
-                  }}
+                  onClick={() => setShowConfirmDelete(true)}
                   className="p-1.5 hover:bg-white dark:hover:bg-slate-700 rounded-lg text-slate-400 hover:text-red-500 transition-all"
                   title="Xóa tất cả"
                 >
@@ -243,6 +253,19 @@ const NotificationBell = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Custom Confirmation Modal */}
+      <ConfirmationDialog
+        isOpen={showConfirmDelete}
+        onClose={() => setShowConfirmDelete(false)}
+        onConfirm={handleDeleteAll}
+        title="Xóa tất cả thông báo"
+        message="Bạn có chắc chắn muốn xóa toàn bộ thông báo không? Hành động này không thể hoàn tác."
+        confirmLabel="Xác nhận xóa"
+        cancelLabel="Hủy bỏ"
+        variant="danger"
+        isLoading={isDeletingAll}
+      />
     </div>
   );
 };

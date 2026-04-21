@@ -17,6 +17,7 @@ const outfit = Outfit({
 });
 
 export async function generateMetadata(): Promise<Metadata> {
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://luudinhmac.com';
   let siteTitle = 'LƯU ĐÌNH MÁC | System Engineer';
   let siteDesc = 'Portfolio giới thiệu các dự án và kỹ năng chuyên môn về System Engineering và Web Development.';
   
@@ -33,9 +34,50 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 
   return {
-    title: siteTitle,
+    metadataBase: new URL(baseUrl),
+    title: {
+      default: siteTitle,
+      template: `%s | ${siteTitle.split('|')[0].trim()}`,
+    },
     description: siteDesc,
-    keywords: ['Portfolio', 'System Engineer', 'Web Developer', 'Next.js', 'NestJS'],
+    keywords: ['Portfolio', 'System Engineer', 'Web Developer', 'Next.js', 'NestJS', 'DevOps', 'Cloud Computing', 'Automation'],
+    authors: [{ name: 'Lưu Đình Mác' }],
+    creator: 'Lưu Đình Mác',
+    publisher: 'Lưu Đình Mác',
+    formatDetection: {
+      email: false,
+      address: false,
+      telephone: false,
+    },
+    icons: {
+      icon: '/favicon.ico',
+      shortcut: '/favicon.ico',
+      apple: '/favicon.ico', // Placeholder, usually these are different
+    },
+    openGraph: {
+      title: siteTitle,
+      description: siteDesc,
+      url: baseUrl,
+      siteName: siteTitle,
+      locale: 'vi_VN',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: siteTitle,
+      description: siteDesc,
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-video-preview': -1,
+        'max-image-preview': 'large',
+        'max-snippet': -1,
+      },
+    },
   };
 }
 

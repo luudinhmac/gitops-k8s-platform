@@ -19,10 +19,17 @@ import Button from '@/components/ui/Button';
 import IconBadge from '@/components/ui/IconBadge';
 import AnimateList from '@/components/ui/AnimateList';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
+import PromptDialog from '@/components/ui/PromptDialog';
 
-// Modular Services
 import { userService } from '@/services/userService';
-import { User as AdminUser } from '@/types/user';
+import { User as AdminUser, UserRole } from '@/types/user';
+
+const ROLE_HIERARCHY: Record<string, number> = {
+  'superadmin': 100,
+  'admin': 50,
+  'editor': 20,
+  'user': 10
+};
 
 export default function UsersPage() {
   const { user: currentUser, isAuthenticated, loading: authLoading } = useAuth();
@@ -39,11 +46,19 @@ export default function UsersPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const [resetModal, setResetModal] = useState<{ open: boolean; userId: number | null; username: string }>({ open: false, userId: null, username: '' });
-  const [settingsMenuId, setSettingsMenuId] = useState<number | null>(null);
+  const [settingsUser, setSettingsUser] = useState<AdminUser | null>(null);
   const [newPassword, setNewPassword] = useState('');
   const [showNewPass, setShowNewPass] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  
+  const [promptData, setPromptData] = useState<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    userId: number | null;
+    fields: any;
+  }>({ isOpen: false, title: '', message: '', userId: null, fields: null });
 
   const [createForm, setCreateForm] = useState({
     username: '', fullname: '', email: '', password: '', role: 'user', profession: ''
@@ -64,7 +79,7 @@ export default function UsersPage() {
   }, []);
 
   useEffect(() => {
-    if (!authLoading && (!isAuthenticated || currentUser?.role !== 'admin')) {
+    if (!authLoading && (!isAuthenticated || !['admin', 'superadmin'].includes(currentUser?.role || ''))) {
       router.push('/admin');
     }
   }, [authLoading, isAuthenticated, currentUser, router]);
@@ -87,28 +102,35 @@ export default function UsersPage() {
     }
   };
 
-  const handleUpdatePermissions = async (userId: number, fields: { role?: string; is_active?: boolean; can_comment?: boolean; can_post?: boolean }) => {
+  const handleUpdatePermissions = async (userId: number, fields: { role?: UserRole; is_active?: boolean; can_comment?: boolean; can_post?: boolean }, reason?: string) => {
     try {
       if (fields.is_active === false && userId === currentUser?.id) {
         setStatusMsg({ type: 'error', text: 'Bạn không thể tự khóa tài khoản của mình!' });
         return;
       }
 
-      // Check if we are restricting permissions (blocking)
+      // If we need a reason and it's not provided yet, open prompt
       const isRestricting = fields.is_active === false || fields.can_comment === false || fields.can_post === false;
-      let reason: string | undefined = undefined;
-      
-      if (isRestricting) {
-        const input = window.prompt('Nhập lý do thực hiện hành động này (tùy chọn):');
-        if (input === null) return; // User cancelled
-        reason = input;
+      if (isRestricting && reason === undefined) {
+        setPromptData({
+          isOpen: true,
+          title: 'Lý do thực hiện',
+          message: 'Vui lòng nhập lý do thực hiện hành động này (ví dụ: Vi phạm quy định cộng đồng):',
+          userId,
+          fields
+        });
+        return;
       }
 
       const updateData = { ...fields, reason };
       await userService.updatePermissions(userId, updateData);
       
       setUsers(users.map(u => u.id === userId ? { ...u, ...fields } as AdminUser : u));
+      if (settingsUser?.id === userId) {
+        setSettingsUser(prev => prev ? { ...prev, ...fields } : null);
+      }
       setStatusMsg({ type: 'success', text: 'Đã cập nhật quyền hạn thành công' });
+      setPromptData({ ...promptData, isOpen: false });
     } catch (err: any) { 
       setStatusMsg({ type: 'error', text: err.response?.data?.message || 'Không thể cập nhật quyền hạn' });
     }
@@ -166,7 +188,11 @@ export default function UsersPage() {
     if (user.id === currentUser?.id) return;
     try {
       await userService.toggleStatus(user.id, user.is_active || false);
-      setUsers(users.map(u => u.id === user.id ? { ...u, is_active: !u.is_active } : u));
+      const updatedUser = { ...user, is_active: !user.is_active };
+      setUsers(users.map(u => u.id === user.id ? updatedUser : u));
+      if (settingsUser?.id === user.id) {
+        setSettingsUser(updatedUser);
+      }
     } catch (err) { console.error(err); }
   };
 
@@ -183,6 +209,22 @@ export default function UsersPage() {
       </div>
     );
   }
+
+  const canModifyUser = (targetUser: AdminUser) => {
+    if (!currentUser) return false;
+    if (currentUser.role === 'superadmin') return true;
+    if (targetUser.id === currentUser.id) return false; // Usually handle self via profile, but here we block self-mod in table actions
+    
+    const currentLevel = ROLE_HIERARCHY[currentUser.role] || 0;
+    const targetLevel = ROLE_HIERARCHY[targetUser.role] || 0;
+    
+    return currentLevel > targetLevel;
+  };
+
+  const getRoleDisplayName = (role: string) => {
+    if (role === 'superadmin') return 'SUPER ADMIN';
+    return role.toUpperCase();
+  };
 
   return (
     <>
@@ -249,7 +291,7 @@ export default function UsersPage() {
                       </p>
                     </td>
                     <td className="px-6 py-4">
-                      <Badge type="role" variant={u.role as any}>{u.role}</Badge>
+                      <Badge type="role" variant={u.role as any}>{getRoleDisplayName(u.role)}</Badge>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-1 items-center">
@@ -269,64 +311,20 @@ export default function UsersPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className={cn("h-8 w-8 transition-all", settingsMenuId === u.id && "bg-slate-100 dark:bg-slate-800")}
-                          onClick={() => setSettingsMenuId(settingsMenuId === u.id ? null : u.id)}
-                          disabled={u.id === currentUser?.id}
+                          className={cn("h-8 w-8 transition-all", settingsUser?.id === u.id && "bg-slate-100 dark:bg-slate-800")}
+                          onClick={() => setSettingsUser(u)}
+                          disabled={!canModifyUser(u)}
                         >
-                          <Settings size={14} className="text-slate-400" />
+                          <Settings size={14} className={cn("text-slate-400", !canModifyUser(u) && "opacity-20")} />
                         </Button>
-
-                        {settingsMenuId === u.id && (
-                          <div className="absolute right-10 top-2 mt-0 w-52 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-100 dark:border-slate-700 py-1.5 z-50 text-left animate-in fade-in zoom-in-95 overflow-hidden origin-top-right">
-                            <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-700 mb-1 flex items-center justify-between">
-                              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Box Cài Đặt</span>
-                              <button onClick={() => setSettingsMenuId(null)} className="text-slate-400 hover:text-red-500"><X size={12}/></button>
-                            </div>
-
-                            <button className="w-full flex items-center px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors" onClick={() => { setResetModal({ open: true, userId: u.id, username: u.username }); setSettingsMenuId(null); }}>
-                              <Lock size={12} className="mr-2 text-slate-400" /> Đổi mật khẩu
-                            </button>
-
-                            <div className="mx-2 my-1 h-px bg-slate-100 dark:bg-slate-700" />
-
-                            <button className="w-full justify-between flex items-center px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors" onClick={() => handleUpdatePermissions(u.id, { role: u.role === 'admin' ? 'user' : 'admin' })}>
-                              <div className="flex items-center"><Shield size={12} className="mr-2 text-blue-500" /> Quyền Admin</div>
-                              <div className={cn("w-6 h-3 rounded-full transition-colors relative", u.role === 'admin' ? "bg-primary" : "bg-slate-200 dark:bg-slate-600")}>
-                                <div className={cn("absolute top-0.5 w-2 h-2 rounded-full bg-white transition-all", u.role === 'admin' ? "right-0.5" : "left-0.5")} />
-                              </div>
-                            </button>
-
-                            <div className="mx-2 my-1 h-px bg-slate-100 dark:bg-slate-700" />
-
-                            <button className="w-full justify-between flex items-center px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors" onClick={() => handleUpdatePermissions(u.id, { is_active: !u.is_active })}>
-                              <div className="flex items-center"><ShieldAlert size={12} className="mr-2 text-red-500" /> Khóa Đăng nhập</div>
-                              <div className={cn("w-6 h-3 rounded-full transition-colors relative", !u.is_active ? "bg-red-500" : "bg-slate-200 dark:bg-slate-600")}>
-                                <div className={cn("absolute top-0.5 w-2 h-2 rounded-full bg-white transition-all", !u.is_active ? "right-0.5" : "left-0.5")} />
-                              </div>
-                            </button>
-
-                            <button className="w-full justify-between flex items-center px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors" onClick={() => handleUpdatePermissions(u.id, { can_comment: !u.can_comment })}>
-                              <div className="flex items-center"><MessageSquareOff size={12} className="mr-2 text-orange-500" /> Cấm Bình luận</div>
-                              <div className={cn("w-6 h-3 rounded-full transition-colors relative", !u.can_comment ? "bg-orange-500" : "bg-slate-200 dark:bg-slate-600")}>
-                                <div className={cn("absolute top-0.5 w-2 h-2 rounded-full bg-white transition-all", !u.can_comment ? "right-0.5" : "left-0.5")} />
-                              </div>
-                            </button>
-                            
-                            <button className="w-full justify-between flex items-center px-4 py-2 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors" onClick={() => handleUpdatePermissions(u.id, { can_post: !u.can_post })}>
-                              <div className="flex items-center"><Edit3 size={12} className="mr-2 text-orange-500" /> Cấm Đăng bài</div>
-                              <div className={cn("w-6 h-3 rounded-full transition-colors relative", !u.can_post ? "bg-orange-500" : "bg-slate-200 dark:bg-slate-600")}>
-                                <div className={cn("absolute top-0.5 w-2 h-2 rounded-full bg-white transition-all", !u.can_post ? "right-0.5" : "left-0.5")} />
-                              </div>
-                            </button>
-                          </div>
-                        )}
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 hover:text-red-600 hover:bg-red-50"
                           onClick={() => openDeleteModal(u)}
+                          disabled={!canModifyUser(u)}
                         >
-                          <Trash2 size={14} className="text-slate-400" />
+                          <Trash2 size={14} className={cn("text-slate-400", !canModifyUser(u) && "opacity-20")} />
                         </Button>
                       </div>
                     </td>
@@ -453,6 +451,103 @@ export default function UsersPage() {
           </div>
         </div>
       )}
+      {/* ── User Settings Modal (Portal) ── */}
+      {settingsUser && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={() => setSettingsUser(null)} />
+          <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-200 dark:border-slate-800 p-8 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+            <div className="px-1 py-1 border-b border-slate-100 dark:border-slate-800 mb-6 flex items-center justify-between">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                 <IconBadge icon={Settings} size="sm" color="blue" /> Box Cài Đặt
+              </span>
+              <button onClick={() => setSettingsUser(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-400 hover:text-red-500 transition-all">
+                <X size={18}/>
+              </button>
+            </div>
+
+            <div className="flex items-center gap-3 mb-8 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
+               <UserAvatar user={settingsUser} size="md" />
+               <div className="min-w-0">
+                  <p className="font-bold text-slate-900 dark:text-white truncate">{settingsUser.fullname || settingsUser.username}</p>
+                  <p className="text-[10px] text-slate-400 font-bold tracking-widest uppercase">@{settingsUser.username}</p>
+               </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <button 
+                className="w-full flex items-center justify-between px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all group" 
+                onClick={() => { setResetModal({ open: true, userId: settingsUser.id, username: settingsUser.username }); setSettingsUser(null); }}
+              >
+                <div className="flex items-center"><Lock size={16} className="mr-3 text-slate-400 group-hover:text-primary transition-colors" /> Đổi mật khẩu</div>
+                <div className="text-[9px] uppercase tracking-tighter text-slate-400 group-hover:text-primary">Update</div>
+              </button>
+
+              <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2 my-2" />
+
+              {[
+                { 
+                   label: settingsUser.role === 'superadmin' ? 'Quyền Master (Tối cao)' : 'Quyền Admin', 
+                   icon: settingsUser.role === 'superadmin' ? ShieldAlert : Shield, 
+                   color: settingsUser.role === 'superadmin' ? 'text-primary' : 'text-blue-500', 
+                   active: settingsUser.role === 'superadmin' || settingsUser.role === 'admin',
+                   disabled: settingsUser.role === 'superadmin',
+                   onClick: () => {
+                     if (settingsUser.role === 'superadmin') return;
+                     handleUpdatePermissions(settingsUser.id, { role: settingsUser.role === 'admin' ? 'user' : 'admin' });
+                   }
+                },
+                { 
+                   label: 'Khóa Đăng nhập', 
+                   icon: ShieldAlert, 
+                   color: 'text-red-500', 
+                   active: !settingsUser.is_active,
+                   onClick: () => handleUpdatePermissions(settingsUser.id, { is_active: !settingsUser.is_active })
+                },
+                { 
+                   label: 'Cấm Bình luận', 
+                   icon: MessageSquareOff, 
+                   color: 'text-orange-500', 
+                   active: !settingsUser.can_comment,
+                   onClick: () => handleUpdatePermissions(settingsUser.id, { can_comment: !settingsUser.can_comment })
+                },
+                { 
+                   label: 'Cấm Đăng bài', 
+                   icon: Edit3, 
+                   color: 'text-orange-500', 
+                   active: !settingsUser.can_post,
+                   onClick: () => handleUpdatePermissions(settingsUser.id, { can_post: !settingsUser.can_post })
+                }
+              ].map((item, idx) => (
+                <button 
+                  key={idx}
+                  className={cn(
+                    "w-full justify-between flex items-center px-4 py-3 text-xs font-bold transition-all rounded-2xl",
+                    item.disabled 
+                      ? "opacity-50 cursor-not-allowed bg-slate-50/50 dark:bg-slate-800/20 text-slate-400" 
+                      : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  )}
+                  onClick={item.onClick}
+                  disabled={item.disabled}
+                >
+                  <div className="flex items-center"><item.icon size={16} className={cn("mr-3", item.color)} /> {item.label}</div>
+                  <div className={cn(
+                    "w-8 h-4 rounded-full transition-all relative p-0.5", 
+                    item.active ? "bg-primary shadow-inner shadow-primary/20" : "bg-slate-200 dark:bg-slate-700",
+                    item.disabled && "grayscale"
+                  )}>
+                    <div className={cn("absolute top-1 w-2 h-2 rounded-full bg-white transition-all shadow-sm", item.active ? "right-1" : "left-1")} />
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
+               <Button variant="outline" className="w-full rounded-2xl py-2" onClick={() => setSettingsUser(null)}>Đóng</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <ConfirmationDialog
         isOpen={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
@@ -461,6 +556,18 @@ export default function UsersPage() {
         message={`Bạn có chắc chắn muốn xóa vĩnh viễn người dùng ${userToDelete?.fullname || userToDelete?.username}? Hành động này không thể hoàn tác.`}
         confirmLabel="Xác nhận xóa"
         isLoading={isDeleting}
+      />
+      <PromptDialog
+        isOpen={promptData.isOpen}
+        onClose={() => setPromptData({ ...promptData, isOpen: false })}
+        onConfirm={(reason) => {
+          if (promptData.userId && promptData.fields) {
+            handleUpdatePermissions(promptData.userId, promptData.fields, reason);
+          }
+        }}
+        title={promptData.title}
+        message={promptData.message}
+        placeholder="Ví dụ: Tài khoản spam, nội dung không phù hợp..."
       />
     </>
   );

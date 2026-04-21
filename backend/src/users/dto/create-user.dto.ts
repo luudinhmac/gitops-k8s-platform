@@ -8,4 +8,6 @@ export class CreateUserDto {
   role?: UserRole | string;
   profession?: string;
   avatar?: string;
+  can_comment?: boolean;
+  can_post?: boolean;
 }

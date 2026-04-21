@@ -4,8 +4,8 @@ import { AuthController } from './auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-
 import { JwtStrategy } from './jwt.strategy';
+import { AdminAlertModule } from '../admin-alert/admin-alert.module';
 
 @Module({
   imports: [
@@ -21,6 +21,7 @@ import { JwtStrategy } from './jwt.strategy';
         signOptions: { expiresIn: '7d' },
       }),
     }),
+    AdminAlertModule,
   ],
   providers: [AuthService, JwtStrategy],
   controllers: [AuthController],

@@ -23,6 +23,7 @@ import Button from '@/components/ui/Button';
 import IconBadge from '@/components/ui/IconBadge';
 import AnimateList from '@/components/ui/AnimateList';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
+import MessageDialog from '@/components/ui/MessageDialog';
 import { Post, SortOption } from '@/types/post';
 import { User as UserType } from '@/types/user';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -51,6 +52,9 @@ function ProfilePageContent() {
   const [showPass, setShowPass] = useState({ old: false, new: false, confirm: false });
   const [passLoading, setPassLoading] = useState(false);
   const [passMsg, setPassMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [msgData, setMsgData] = useState<{ isOpen: boolean; title: string; message: string; variant: 'info' | 'success' | 'warning' | 'error' }>({ 
+    isOpen: false, title: '', message: '', variant: 'error' 
+  });
 
   // Modular Logic
   const { deletePost, isActionLoading, togglePublish } = usePostActions(() => fetchMyPosts());
@@ -140,7 +144,7 @@ function ProfilePageContent() {
       await userService.updateProfile(user.id, { avatar: avatarUrl });
       await checkAuth();
     } catch (err: any) {
-      alert(err.response?.data?.message || 'Upload thất bại');
+      setMsgData({ isOpen: true, title: 'Upload thất bại', message: err.response?.data?.message || 'Không thể cập nhật ảnh đại diện của bạn. Vui lòng kiểm tra lại kích thước ảnh.', variant: 'error' });
     } finally {
       setAvatarLoading(false);
       if (e.target) e.target.value = '';
@@ -549,6 +553,14 @@ function ProfilePageContent() {
         isLoading={isActionLoading}
         title="Xóa bài viết"
         message="Bạn có chắc chắn muốn xóa bài viết này? Hành động này không thể hoàn tác và bài viết sẽ bị gỡ bỏ vĩnh viễn."
+      />
+
+      <MessageDialog 
+        isOpen={msgData.isOpen}
+        onClose={() => setMsgData({ ...msgData, isOpen: false })}
+        title={msgData.title}
+        message={msgData.message}
+        variant={msgData.variant}
       />
     </div>
   );

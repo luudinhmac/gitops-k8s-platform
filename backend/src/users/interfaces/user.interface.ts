@@ -1,6 +1,7 @@
 import { Request } from 'express';
 
 export enum UserRole {
+  SUPERADMIN = 'superadmin',
   ADMIN = 'admin',
   EDITOR = 'editor',
   USER = 'user',

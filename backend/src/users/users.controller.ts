@@ -71,6 +71,7 @@ export class UsersController {
     @Req() req: AuthenticatedRequest,
     @Body() body: { is_active: boolean },
   ) {
+    return this.usersService.updateStatus(+id, req.user, body.is_active, req.ip);
   }
 
   @Patch(':id/permissions')
@@ -80,7 +81,7 @@ export class UsersController {
     @Req() req: AuthenticatedRequest,
     @Body() body: { role?: string; is_active?: boolean; can_comment?: boolean; can_post?: boolean },
   ) {
-    return this.usersService.updatePermissions(+id, req.user, body);
+    return this.usersService.updatePermissions(+id, req.user, body, req.ip);
   }
 
   @Patch(':id/reset-password')
@@ -90,7 +91,7 @@ export class UsersController {
     @Req() req: AuthenticatedRequest,
     @Body() body: { newPassword: string },
   ) {
-    return this.usersService.resetPassword(+id, body.newPassword, req.user);
+    return this.usersService.resetPassword(+id, body.newPassword, req.user, req.ip);
   }
 
   @Patch(':id/change-password')
@@ -105,12 +106,13 @@ export class UsersController {
       body.oldPassword,
       body.newPassword,
       req.user,
+      req.ip
     );
   }
 
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'))
   remove(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
-    return this.usersService.remove(+id, req.user);
+    return this.usersService.remove(+id, req.user, req.ip);
   }
 }

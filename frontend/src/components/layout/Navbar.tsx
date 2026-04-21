@@ -141,7 +141,7 @@ export default function Navbar() {
                         <PenSquare size={16} className="mr-2.5" /> Viết bài mới
                       </Link>
 
-                      {user.role === 'admin' && (
+                      {['admin', 'superadmin'].includes(user.role) && (
                         <Link href="/admin" onClick={() => setDropdownOpen(false)}
                           className="flex items-center px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary hover:bg-primary/5 rounded-xl transition-all">
                           <LayoutDashboard size={16} className="mr-2.5" /> Trang quản trị

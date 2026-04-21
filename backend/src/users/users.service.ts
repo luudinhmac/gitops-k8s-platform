@@ -18,6 +18,7 @@ interface PrismaError {
 }
 
 import { NotificationsService } from '../notifications/notifications.service';
+import { AdminAlertService } from '../admin-alert/admin-alert.service';
 
 @Injectable()
 export class UsersService {
@@ -25,11 +26,30 @@ export class UsersService {
     private prisma: PrismaService,
     private fileService: FileService,
     private notificationsService: NotificationsService,
+    private adminAlertService: AdminAlertService,
   ) {}
 
   private validatePassword(password: string): boolean {
     const regex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d\S]{8,}$/;
     return regex.test(password);
+  }
+
+  private readonly roleHierarchy: Record<string, number> = {
+    [UserRole.SUPERADMIN]: 100,
+    [UserRole.ADMIN]: 50,
+    [UserRole.EDITOR]: 20,
+    [UserRole.USER]: 10,
+  };
+
+  private canModify(currentUser: User, targetUser: { role?: string | null }): boolean {
+    const currentLevel = this.roleHierarchy[currentUser.role] || 0;
+    const targetLevel = this.roleHierarchy[targetUser.role || 'user'] || 0;
+
+    // Superadmin can always modify others (except potentially self-deletion handled elsewhere)
+    if (currentUser.role === UserRole.SUPERADMIN) return true;
+
+    // Others can only modify users at a STRICTLY LOWER hierarchy level
+    return currentLevel > targetLevel;
   }
 
   private readonly publicSelect = {
@@ -67,8 +87,17 @@ export class UsersService {
   }
 
   async create(data: CreateUserDto, currentUser?: User) {
-    if (currentUser && currentUser.role !== (UserRole.ADMIN as string)) {
-      throw new ForbiddenException('Chỉ Admin mới có thể tạo tài khoản mới.');
+    if (currentUser && !this.roleHierarchy[currentUser.role]) {
+       throw new ForbiddenException('Bạn không có quyền tạo tài khoản.');
+    }
+    
+    // Check if current user is attempting to create a user with equal or higher role
+    if (currentUser && currentUser.role !== UserRole.SUPERADMIN) {
+       const targetLevel = this.roleHierarchy[data.role || 'user'] || 0;
+       const currentLevel = this.roleHierarchy[currentUser.role] || 0;
+       if (targetLevel >= currentLevel) {
+          throw new ForbiddenException('Bạn không thể tạo tài khoản có quyền cao hơn hoặc bằng chính mình.');
+       }
     }
     if (data.password && !this.validatePassword(data.password)) {
       throw new BadRequestException(
@@ -94,6 +123,17 @@ export class UsersService {
       // Return without password
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password: _, ...result } = user;
+
+      // Notify admin via multi-channel alerts
+      this.adminAlertService.sendAlert({
+        subject: `🆕 Người dùng mới đăng ký: ${user.username}`,
+        text: `🆕 <b>Người dùng mới đăng ký</b>\n\n` +
+              `• <b>Username:</b> ${user.username}\n` +
+              `• <b>Họ tên:</b> ${user.fullname}\n` +
+              `• <b>Email:</b> ${user.email || 'N/A'}\n` +
+              `• <b>Ngày tham gia:</b> ${new Date().toLocaleString('vi-VN')}`,
+      });
+
       return result;
     } catch (e) {
       const err = e as PrismaError;
@@ -105,20 +145,27 @@ export class UsersService {
   }
 
   async update(id: number, currentUser: User, data: UpdateUserDto) {
-    if (
-      currentUser.role !== (UserRole.ADMIN as string) &&
-      currentUser.id !== id
-    ) {
-      throw new ForbiddenException('Bạn không có quyền sửa thông tin này.');
+    const targetUser = await this.prisma.user.findUnique({ where: { id } });
+    if (!targetUser) throw new NotFoundException('Người dùng không tồn tại');
+
+    if (!this.canModify(currentUser, targetUser) && currentUser.id !== id) {
+      throw new ForbiddenException('Bạn không có quyền sửa thông tin của người dùng này vì cấp bậc của họ cao hơn hoặc bằng bạn.');
     }
 
     if (
-      (data.role || data.is_active !== undefined) &&
-      currentUser.role !== (UserRole.ADMIN as string)
+      (data.role || data.is_active !== undefined || data.can_comment !== undefined || data.can_post !== undefined) &&
+      currentUser.id === id && currentUser.role !== UserRole.SUPERADMIN
     ) {
-      throw new ForbiddenException(
-        'Bạn không có quyền thay đổi vai trò hoặc trạng thái người dùng.',
-      );
+       // Regular users (including admins) shouldn't be able to elevate their own secondary permissions via general update if restricted elsewhere
+       // But usually we allow updating profile. 
+    }
+
+    if (data.role) {
+       const newRoleLevel = this.roleHierarchy[data.role] || 0;
+       const currentLevel = this.roleHierarchy[currentUser.role] || 0;
+       if (newRoleLevel >= currentLevel && currentUser.role !== UserRole.SUPERADMIN) {
+          throw new ForbiddenException('Bạn không thể gán vai trò cao hơn hoặc bằng vai trò hiện tại của mình.');
+       }
     }
 
     // Create a copy to remove unwanted fields
@@ -150,9 +197,20 @@ export class UsersService {
   }
 
   async updateRole(id: number, currentUser: User, role: string) {
-    if (currentUser.role !== (UserRole.ADMIN as string)) {
+    if (
+      currentUser.role !== (UserRole.ADMIN as string) &&
+      currentUser.role !== (UserRole.SUPERADMIN as string)
+    ) {
       throw new ForbiddenException('Chỉ Admin mới có thể thay đổi vai trò.');
     }
+
+    const targetUser = await this.prisma.user.findUnique({ where: { id } });
+    if (!targetUser) throw new NotFoundException('Người dùng không tồn tại');
+
+    if (targetUser.role === UserRole.SUPERADMIN) {
+      throw new ForbiddenException('Không thể thay đổi vai trò của tài khoản Superadmin tối cao.');
+    }
+
     if (!Object.values(UserRole).includes(role as UserRole)) {
       throw new BadRequestException(
         'Vai trò không hợp lệ. Chỉ chấp nhận: admin, editor, user.',
@@ -165,22 +223,43 @@ export class UsersService {
     });
   }
 
-  async updateStatus(id: number, currentUser: User, isActive: boolean) {
-    if (currentUser.role !== (UserRole.ADMIN as string)) {
-      throw new ForbiddenException('Chỉ Admin mới có thể thay đổi trạng thái.');
+  async updateStatus(id: number, currentUser: User, isActive: boolean, ip?: string) {
+    const targetUser = await this.prisma.user.findUnique({ where: { id } });
+    if (!targetUser) throw new NotFoundException('Người dùng không tồn tại');
+
+    if (!this.canModify(currentUser, targetUser)) {
+      throw new ForbiddenException('Bạn không có quyền thay đổi trạng thái của người dùng có cấp bậc cao hơn hoặc bằng mình.');
     }
+
     if (currentUser.id === id) {
       throw new BadRequestException(
         'Bạn không thể tự vô hiệu hóa tài khoản của chính mình.',
       );
     }
-    return this.prisma.user.update({
+
+    const updatedUser = await this.prisma.user.update({
       where: { id },
       data: {
         is_active: isActive,
       },
       select: this.publicSelect,
     });
+
+    // Notify info
+    const statusText = isActive ? 'KÍCH HOẠT' : 'VÔ HIỆU HÓA';
+    const username = currentUser.username || 'Hệ thống';
+    const userIp = ip || 'unknown';
+
+    this.adminAlertService.sendAlert({
+      subject: `🛡️ Trạng thái người dùng đã đổi: ${targetUser.username}`,
+      text: `🛡️ <b>TRẠNG THÁI NGƯỜI DÙNG THAY ĐỔI</b>\n\n` +
+            `• <b>Hành động:</b> ${statusText} người dùng ${targetUser.username}\n` +
+            `• <b>IP:</b> ${userIp}\n` +
+            `• <b>User:</b> ${username}\n` +
+            `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}`,
+    });
+
+    return updatedUser;
   }
 
   async updatePermissions(
@@ -193,8 +272,12 @@ export class UsersService {
       can_post?: boolean;
       reason?: string; 
     },
+    ip?: string,
   ) {
-    if (currentUser.role !== (UserRole.ADMIN as string)) {
+    if (
+      currentUser.role !== (UserRole.ADMIN as string) &&
+      currentUser.role !== (UserRole.SUPERADMIN as string)
+    ) {
       throw new ForbiddenException('Chỉ Admin mới có thể thay đổi quyền hạn.');
     }
     
@@ -204,6 +287,25 @@ export class UsersService {
 
     if (data.role && !Object.values(UserRole).includes(data.role as UserRole)) {
       throw new BadRequestException('Vai trò không hợp lệ.');
+    }
+
+    const targetUser = await this.prisma.user.findUnique({ where: { id } });
+    if (!targetUser) throw new NotFoundException('Người dùng không tồn tại');
+
+    if (targetUser.role === UserRole.SUPERADMIN && data.role && data.role !== UserRole.SUPERADMIN) {
+      throw new ForbiddenException('Không thể hạ cấp vai trò của tài khoản Superadmin tối cao.');
+    }
+
+    if (!this.canModify(currentUser, targetUser)) {
+      throw new ForbiddenException('Bạn không có quyền thay đổi quyền hạn của người dùng có cấp bậc cao hơn hoặc bằng mình.');
+    }
+
+    if (data.role) {
+       const newRoleLevel = this.roleHierarchy[data.role] || 0;
+       const currentLevel = this.roleHierarchy[currentUser.role] || 0;
+       if (newRoleLevel >= currentLevel && currentUser.role !== UserRole.SUPERADMIN) {
+          throw new ForbiddenException('Bạn không thể gán vai trò cao hơn hoặc bằng vai trò hiện tại của mình.');
+       }
     }
 
     const { reason, ...dbData } = data;
@@ -218,6 +320,21 @@ export class UsersService {
       },
       select: this.publicSelect,
     });
+
+    // --- AUDIT ALERTS ---
+    if (data.role && data.role !== targetUser.role) {
+      const username = currentUser.username || 'Hệ thống';
+      const userIp = ip || 'unknown';
+      
+      this.adminAlertService.sendAlert({
+        subject: `🛡️ Thay đổi vai trò: ${targetUser.username}`,
+        text: `🛡️ <b>THAY ĐỔI VAI TRÒ NGƯỜI DÙNG</b>\n\n` +
+              `• <b>Hành động:</b> Đổi vai trò ${targetUser.username} (${targetUser.role} → ${data.role})\n` +
+              `• <b>IP:</b> ${userIp}\n` +
+              `• <b>User:</b> ${username}\n` +
+              `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
+      });
+    }
 
     // --- TRIGGER NOTIFICATIONS ---
     try {
@@ -283,17 +400,36 @@ export class UsersService {
     return updatedUser;
   }
 
-  async resetPassword(id: number, newPassword: string, currentUser: User) {
-    if (currentUser.role !== (UserRole.ADMIN as string)) {
-      throw new ForbiddenException('Chỉ Admin mới có thể reset mật khẩu.');
+  async resetPassword(id: number, newPassword: string, currentUser: User, ip?: string) {
+    const targetUser = await this.prisma.user.findUnique({ where: { id } });
+    if (!targetUser) throw new NotFoundException('Người dùng không tồn tại');
+
+    if (!this.canModify(currentUser, targetUser) && currentUser.id !== id) {
+       throw new ForbiddenException('Bạn không có quyền đặt lại mật khẩu cho người dùng có cấp bậc cao hơn hoặc bằng mình.');
     }
+
     if (!this.validatePassword(newPassword)) {
       throw new BadRequestException(
         'Mật khẩu mới phải tối thiểu 8 ký tự, bao gồm cả chữ và số.',
       );
     }
+    
     const hash = await bcrypt.hash(newPassword, 10);
     await this.prisma.user.update({ where: { id }, data: { password: hash } });
+
+    // Notify info
+    const username = currentUser.username || 'Hệ thống';
+    const userIp = ip || 'unknown';
+    
+    this.adminAlertService.sendAlert({
+      subject: `🔐 Reset mật khẩu: ${targetUser.username}`,
+      text: `🔐 <b>RESET MẬT KHẨU NGƯỜI DÙNG</b>\n\n` +
+            `• <b>Hành động:</b> Đặt lại mật khẩu cho ${targetUser.username}\n` +
+            `• <b>IP:</b> ${userIp}\n` +
+            `• <b>User:</b> ${username}\n` +
+            `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}`,
+    });
+
     return { success: true, message: 'Đã đặt lại mật khẩu thành công.' };
   }
 
@@ -302,6 +438,7 @@ export class UsersService {
     oldPassword: string,
     newPassword: string,
     currentUser: User,
+    ip?: string,
   ) {
     if (currentUser.id !== id) {
       throw new ForbiddenException(
@@ -322,11 +459,33 @@ export class UsersService {
 
     const hash = await bcrypt.hash(newPassword, 10);
     await this.prisma.user.update({ where: { id }, data: { password: hash } });
+
+    // Notify if Admin/Superadmin changed password
+    if (
+      user.role === (UserRole.ADMIN as string) ||
+      user.role === (UserRole.SUPERADMIN as string)
+    ) {
+      const username = currentUser.username || 'Hệ thống';
+      const userIp = ip || 'unknown';
+      
+      this.adminAlertService.sendAlert({
+        subject: `🔐 CẢNH BÁO: Admin đổi mật khẩu`,
+        text: `🔐 <b>MẬT KHẨU QUẢN TRỊ VIÊN ĐÃ THAY ĐỔI</b>\n\n` +
+              `• <b>Hành động:</b> Tự đổi mật khẩu định kỳ/khẩn cấp\n` +
+              `• <b>IP:</b> ${userIp}\n` +
+              `• <b>User:</b> ${username}\n` +
+              `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}`,
+      });
+    }
+
     return { success: true, message: 'Đã đổi mật khẩu thành công.' };
   }
 
-  async remove(id: number, currentUser: User) {
-    if (currentUser.role !== (UserRole.ADMIN as string)) {
+  async remove(id: number, currentUser: User, ip?: string) {
+    if (
+      currentUser.role !== (UserRole.ADMIN as string) &&
+      currentUser.role !== (UserRole.SUPERADMIN as string)
+    ) {
       throw new ForbiddenException('Chỉ Admin mới có thể xóa tài khoản.');
     }
     if (currentUser.id === id) {
@@ -338,6 +497,11 @@ export class UsersService {
     const targetUser = await this.prisma.user.findUnique({ where: { id } });
 
     if (!targetUser) throw new NotFoundException('Người dùng không tồn tại');
+    
+    if (!this.canModify(currentUser, targetUser)) {
+      throw new ForbiddenException('Bạn không có quyền xóa người dùng có cấp bậc cao hơn hoặc bằng mình.');
+    }
+
     if (
       (targetUser.role as string) === (UserRole.ADMIN as string) &&
       adminCount <= 1
@@ -347,11 +511,33 @@ export class UsersService {
       );
     }
 
+    // Superadmin protection (additional safety)
+    if (targetUser.role === UserRole.SUPERADMIN) {
+      throw new ForbiddenException(
+        'Tài khoản Superadmin tối cao được hệ thống bảo vệ. Không bao giờ có thể bị xóa.',
+      );
+    }
+
     // Deleted user avatar if exists
     if (targetUser.avatar) {
       await this.fileService.deleteFile(targetUser.avatar);
     }
 
-    return this.prisma.user.delete({ where: { id } });
+    await this.prisma.user.delete({ where: { id } });
+
+    // Notify 
+    const username = currentUser.username || 'Hệ thống';
+    const userIp = ip || 'unknown';
+
+    this.adminAlertService.sendAlert({
+      subject: `🗑️ Người dùng bị xóa: ${targetUser.username}`,
+      text: `🗑️ <b>NGƯỜI DÙNG BỊ XÓA</b>\n\n` +
+            `• <b>Hành động:</b> Xóa vĩnh viễn tài khoản ${targetUser.username}\n` +
+            `• <b>IP:</b> ${userIp}\n` +
+            `• <b>User:</b> ${username}\n` +
+            `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}`,
+    });
+
+    return { success: true };
   }
 }

@@ -68,7 +68,7 @@ export class PostsController {
     @Param('id', ParseIntPipe) id: number,
     @Req() req: AuthenticatedRequest,
   ) {
-    return this.postsService.remove(id, req.user);
+    return this.postsService.remove(id, req.user, req.ip);
   }
 
   @Post(':id/pin')
@@ -77,7 +77,7 @@ export class PostsController {
     @Param('id', ParseIntPipe) id: number,
     @Req() req: AuthenticatedRequest,
   ) {
-    return this.postsService.togglePin(id, req.user);
+    return this.postsService.togglePin(id, req.user, req.ip);
   }
 
   @Post(':id/publish')
@@ -87,7 +87,7 @@ export class PostsController {
     @Req() req: AuthenticatedRequest,
     @Body('reason') reason?: string,
   ) {
-    return this.postsService.togglePublish(id, req.user, reason);
+    return this.postsService.togglePublish(id, req.user, req.ip, reason);
   }
 
   @Post(':id/like')

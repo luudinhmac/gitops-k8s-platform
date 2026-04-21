@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import AdminSidebar from '@/components/admin/AdminSidebar';
@@ -13,23 +13,25 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const { sidebarOpen, setSidebarOpen, isCollapsed } = useSidebar();
   const pathname = usePathname();
+  const [isForbidden, setIsForbidden] = useState(false);
 
   useEffect(() => {
     if (!loading) {
       if (!isAuthenticated) {
         router.push(`/login?redirect=${pathname}`);
-      } else if (user && user.role !== 'admin') {
-        // Silent Redirect for non-admins to keep admin area hidden
-        router.push('/');
+      } else if (user && !['admin', 'superadmin'].includes(user.role)) {
+        setIsForbidden(true);
+      } else {
+        setIsForbidden(false);
       }
     }
-  }, [isAuthenticated, loading, router, user, pathname]);
+  }, [user, loading, router, isAuthenticated, pathname]);
 
   useEffect(() => {
     setSidebarOpen(false);
   }, [pathname, setSidebarOpen]);
 
-  const isForbiddenForUser = user && user.role !== 'admin';
+  const isForbiddenForUser = user && !['admin', 'superadmin'].includes(user.role);
 
   if (loading || !isAuthenticated || isForbiddenForUser) {
     return (
