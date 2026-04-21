@@ -35,11 +35,11 @@ import Badge from '@/components/common/Badge';
 const NavContent = ({ mobile = false, setSidebarOpen, pathname, user, logout, isCollapsed = false, setIsCollapsed }: NavContentProps) => {
   const menuItems = [
     { id: 'posts', label: 'Bài viết', icon: FileText, href: '/admin' },
-    ...(user?.role === 'admin' || user?.role === 'editor' ? [
+    ...( ['admin', 'superadmin', 'editor'].includes(user?.role || '') ? [
       { id: 'categories', label: 'Danh mục', icon: Layout, href: '/admin/categories' },
       { id: 'series', label: 'Series', icon: Layers, href: '/admin/series' }
     ] : []),
-    ...(user?.role === 'admin' ? [{ id: 'users', label: 'Người dùng', icon: Users, href: '/admin/users' }] : []),
+    ...( ['admin', 'superadmin'].includes(user?.role || '') ? [{ id: 'users', label: 'Người dùng', icon: Users, href: '/admin/users' }] : []),
   ];
 
   const isActive = (href: string) => {
@@ -85,7 +85,7 @@ const NavContent = ({ mobile = false, setSidebarOpen, pathname, user, logout, is
         ))}
       </nav>
       <div className={cn("p-3 border-t border-slate-200 dark:border-slate-800 space-y-1", mobile && "bg-slate-50 dark:bg-slate-900/50", isCollapsed && "px-2")}>
-        {user?.role === 'admin' && (
+        {['admin', 'superadmin'].includes(user?.role || '') && (
           <Link
             href="/admin/settings"
             title={isCollapsed ? "Cài đặt" : undefined}

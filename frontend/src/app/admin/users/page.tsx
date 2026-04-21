@@ -21,9 +21,15 @@ import AnimateList from '@/components/ui/AnimateList';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 import PromptDialog from '@/components/ui/PromptDialog';
 
-// Modular Services
 import { userService } from '@/services/userService';
 import { User as AdminUser, UserRole } from '@/types/user';
+
+const ROLE_HIERARCHY: Record<string, number> = {
+  'superadmin': 100,
+  'admin': 50,
+  'editor': 20,
+  'user': 10
+};
 
 export default function UsersPage() {
   const { user: currentUser, isAuthenticated, loading: authLoading } = useAuth();
@@ -73,7 +79,7 @@ export default function UsersPage() {
   }, []);
 
   useEffect(() => {
-    if (!authLoading && (!isAuthenticated || currentUser?.role !== 'admin')) {
+    if (!authLoading && (!isAuthenticated || !['admin', 'superadmin'].includes(currentUser?.role || ''))) {
       router.push('/admin');
     }
   }, [authLoading, isAuthenticated, currentUser, router]);
@@ -204,6 +210,22 @@ export default function UsersPage() {
     );
   }
 
+  const canModifyUser = (targetUser: AdminUser) => {
+    if (!currentUser) return false;
+    if (currentUser.role === 'superadmin') return true;
+    if (targetUser.id === currentUser.id) return false; // Usually handle self via profile, but here we block self-mod in table actions
+    
+    const currentLevel = ROLE_HIERARCHY[currentUser.role] || 0;
+    const targetLevel = ROLE_HIERARCHY[targetUser.role] || 0;
+    
+    return currentLevel > targetLevel;
+  };
+
+  const getRoleDisplayName = (role: string) => {
+    if (role === 'superadmin') return 'SUPER ADMIN';
+    return role.toUpperCase();
+  };
+
   return (
     <>
       <AdminPageHeader
@@ -269,7 +291,7 @@ export default function UsersPage() {
                       </p>
                     </td>
                     <td className="px-6 py-4">
-                      <Badge type="role" variant={u.role as any}>{u.role}</Badge>
+                      <Badge type="role" variant={u.role as any}>{getRoleDisplayName(u.role)}</Badge>
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex flex-col gap-1 items-center">
@@ -291,17 +313,18 @@ export default function UsersPage() {
                           size="icon"
                           className={cn("h-8 w-8 transition-all", settingsUser?.id === u.id && "bg-slate-100 dark:bg-slate-800")}
                           onClick={() => setSettingsUser(u)}
-                          disabled={u.id === currentUser?.id}
+                          disabled={!canModifyUser(u)}
                         >
-                          <Settings size={14} className="text-slate-400" />
+                          <Settings size={14} className={cn("text-slate-400", !canModifyUser(u) && "opacity-20")} />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8 hover:text-red-600 hover:bg-red-50"
                           onClick={() => openDeleteModal(u)}
+                          disabled={!canModifyUser(u)}
                         >
-                          <Trash2 size={14} className="text-slate-400" />
+                          <Trash2 size={14} className={cn("text-slate-400", !canModifyUser(u) && "opacity-20")} />
                         </Button>
                       </div>
                     </td>

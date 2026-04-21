@@ -196,8 +196,10 @@ export class UsersService {
     });
   }
 
-  async updateRole(id: number, currentUser: User, role: string) {
-    if (currentUser.role !== (UserRole.ADMIN as string)) {
+    if (
+      currentUser.role !== (UserRole.ADMIN as string) &&
+      currentUser.role !== (UserRole.SUPERADMIN as string)
+    ) {
       throw new ForbiddenException('Chỉ Admin mới có thể thay đổi vai trò.');
     }
     if (!Object.values(UserRole).includes(role as UserRole)) {
@@ -263,7 +265,10 @@ export class UsersService {
     },
     ip?: string,
   ) {
-    if (currentUser.role !== (UserRole.ADMIN as string)) {
+    if (
+      currentUser.role !== (UserRole.ADMIN as string) &&
+      currentUser.role !== (UserRole.SUPERADMIN as string)
+    ) {
       throw new ForbiddenException('Chỉ Admin mới có thể thay đổi quyền hạn.');
     }
     
@@ -442,8 +447,11 @@ export class UsersService {
     const hash = await bcrypt.hash(newPassword, 10);
     await this.prisma.user.update({ where: { id }, data: { password: hash } });
 
-    // Notify if Admin changed password
-    if (user.role === (UserRole.ADMIN as string)) {
+    // Notify if Admin/Superadmin changed password
+    if (
+      user.role === (UserRole.ADMIN as string) ||
+      user.role === (UserRole.SUPERADMIN as string)
+    ) {
       const username = currentUser.username || 'Hệ thống';
       const userIp = ip || 'unknown';
       
@@ -460,8 +468,10 @@ export class UsersService {
     return { success: true, message: 'Đã đổi mật khẩu thành công.' };
   }
 
-  async remove(id: number, currentUser: User, ip?: string) {
-    if (currentUser.role !== (UserRole.ADMIN as string)) {
+    if (
+      currentUser.role !== (UserRole.ADMIN as string) &&
+      currentUser.role !== (UserRole.SUPERADMIN as string)
+    ) {
       throw new ForbiddenException('Chỉ Admin mới có thể xóa tài khoản.');
     }
     if (currentUser.id === id) {

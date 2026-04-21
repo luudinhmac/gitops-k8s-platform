@@ -88,7 +88,7 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
       try {
         const { settingsService } = await import('@/services/settingsService');
         const settings = await settingsService.getPublicSettings();
-        if (settings.maintenance_comments === 'true' && user?.role !== 'admin') {
+        if (settings.maintenance_comments === 'true' && !['admin', 'superadmin'].includes(user?.role || '')) {
           setIsMaintenanceComments(true);
         }
       } catch (err) {
@@ -539,7 +539,7 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
                                    <button onClick={() => { setReplyingTo(replyingTo === comment.id ? null : comment.id); setCommentText(''); }} className="text-[11px] font-bold text-slate-500 hover:text-primary transition-colors">
                                      Phản hồi
                                    </button>
-                                   {isAuthenticated && (user?.id === comment.user_id || user?.role === 'admin') && (
+                                   {isAuthenticated && (user?.id === comment.user_id || ['admin', 'superadmin'].includes(user?.role || '')) && (
                                       <>
                                         {user?.id === comment.user_id && <button onClick={() => { setEditingCommentId(comment.id); setEditingText(comment.content); }} className="text-[11px] font-bold text-slate-500 hover:text-primary transition-colors">Sửa</button>}
                                         {deleteConfirmId === comment.id ? (

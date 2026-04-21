@@ -51,7 +51,7 @@ export default function AdminDashboardPage() {
       ]);
 
       let filtered: AdminPost[] = Array.isArray(postsData) ? postsData : [];
-      if (user?.role !== 'admin') {
+      if (!['admin', 'superadmin'].includes(user?.role || '')) {
         filtered = filtered.filter(p => p.author_id === user?.id);
       }
       setPosts(filtered);
@@ -73,7 +73,7 @@ export default function AdminDashboardPage() {
   const handleTogglePublish = async (id: number, reason?: string) => {
     try {
       const post = posts.find(p => p.id === id);
-      const isBlocking = user?.role === 'admin' && post?.author_id !== user?.id && !post?.is_blocked;
+      const isBlocking = ['admin', 'superadmin'].includes(user?.role || '') && post?.author_id !== user?.id && !post?.is_blocked;
       
       if (isBlocking && reason === undefined) {
         setPromptData({ isOpen: true, postId: id });

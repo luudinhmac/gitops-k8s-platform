@@ -84,7 +84,10 @@ export class PostsService {
       where.is_published = true;
       where.is_blocked = false;
     } else if (user) {
-      if (user.role === (UserRole.ADMIN as string)) {
+      if (
+        user.role === (UserRole.ADMIN as string) ||
+        user.role === (UserRole.SUPERADMIN as string)
+      ) {
         where.OR = [
           { author_id: user.id }, // Own drafts
           { is_published: true }, // Published posts of others (including blocked ones)
@@ -330,7 +333,11 @@ export class PostsService {
       content: cleanContent,
       cover_image: cover_image || null,
       is_pinned:
-        user.role === (UserRole.ADMIN as string) && is_pinned ? true : false,
+        (user.role === (UserRole.ADMIN as string) ||
+          user.role === (UserRole.SUPERADMIN as string)) &&
+        is_pinned
+          ? true
+          : false,
       is_published: is_published !== undefined ? is_published : true,
       User: { connect: { id: user.id } },
       Series: series_id ? { connect: { id: Number(series_id) } } : undefined,
@@ -413,7 +420,8 @@ export class PostsService {
       slug: finalSlug,
       content: cleanContent,
       is_pinned:
-        user.role === (UserRole.ADMIN as string)
+        user.role === (UserRole.ADMIN as string) ||
+        user.role === (UserRole.SUPERADMIN as string)
           ? data.is_pinned
           : post.is_pinned,
       Series:
@@ -469,6 +477,7 @@ export class PostsService {
     if (!post) throw new NotFoundException('Post not found');
     if (
       user.role !== (UserRole.ADMIN as string) &&
+      user.role !== (UserRole.SUPERADMIN as string) &&
       post.author_id !== user.id
     ) {
       throw new ForbiddenException('Bạn không có quyền xóa bài viết này.');
@@ -505,6 +514,7 @@ export class PostsService {
 
     if (
       user.role !== (UserRole.ADMIN as string) &&
+      user.role !== (UserRole.SUPERADMIN as string) &&
       post.author_id !== user.id
     ) {
       throw new ForbiddenException('Bạn không có quyền ghim bài viết này.');
@@ -579,6 +589,7 @@ export class PostsService {
 
     if (
       user.role !== (UserRole.ADMIN as string) &&
+      user.role !== (UserRole.SUPERADMIN as string) &&
       post.author_id !== user.id
     ) {
       throw new ForbiddenException(
@@ -589,7 +600,11 @@ export class PostsService {
     // Logic: If Admin is hiding another user's post -> Block it
     // If Admin/User is hiding their own post -> Unpublish (Draft)
     const updates: any = {};
-    if (user.role === (UserRole.ADMIN as string) && user.id !== post.author_id) {
+    if (
+      (user.role === (UserRole.ADMIN as string) ||
+        user.role === (UserRole.SUPERADMIN as string)) &&
+      user.id !== post.author_id
+    ) {
       updates.is_blocked = !post.is_blocked;
     } else {
       updates.is_published = !post.is_published;
