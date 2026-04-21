@@ -19,52 +19,52 @@ model Series {
   id          Int      @id @default(autoincrement())
   name        String   @unique
   slug        String   @unique
-  description String?  @db.Text
+  description String?
   created_at  DateTime @default(now())
   Post        Post[]
 }
 
 model Comment {
-  id           Int      @id @default(autoincrement())
+  id           Int       @id @default(autoincrement())
   post_id      Int?
+  author_name  String?
+  author_email String?
+  content      String?
+  created_at   DateTime  @default(now())
   user_id      Int?
   parent_id    Int?
-  author_name  String?  @db.Text
-  author_email String?  @db.Text
-  content      String?  @db.Text
-  created_at   DateTime @default(now())
-  Post         Post?    @relation(fields: [post_id], references: [id], onDelete: Cascade)
-  User         User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
-  Parent       Comment? @relation("CommentToComment", fields: [parent_id], references: [id], onDelete: Cascade)
+  Parent       Comment?  @relation("CommentToComment", fields: [parent_id], references: [id], onDelete: Cascade)
   Replies      Comment[] @relation("CommentToComment")
+  Post         Post?     @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  User         User?     @relation(fields: [user_id], references: [id])
 
   @@index([post_id])
   @@index([user_id])
 }
 
 model Post {
-  id          Int        @id @default(autoincrement())
-  title       String     @db.Text
-  slug        String     @unique @default("")
-  content     String?    @db.Text
-  series_id   Int?
-  series_order Int?      @default(0)
-  cover_image String?    @db.VarChar(500)
-  is_pinned   Boolean    @default(false)
-  is_published Boolean   @default(true)
-  views       Int        @default(0)
-  likes       Int        @default(0)
-  created_at  DateTime   @default(now())
-  updated_at  DateTime   @default(now())
-  is_blocked  Boolean    @default(false)
-  category_id Int?
-  author_id   Int?
-  Comment     Comment[]
-  User        User?      @relation(fields: [author_id], references: [id])
-  Category    Category?  @relation(fields: [category_id], references: [id])
-  Series      Series?    @relation(fields: [series_id], references: [id])
-  PostLike    PostLike[]
-  Tag         Tag[]      @relation("PostTags")
+  id           Int        @id @default(autoincrement())
+  title        String
+  slug         String     @unique @default("")
+  content      String?
+  series_id    Int?
+  series_order Int?       @default(0)
+  cover_image  String?    @db.VarChar(500)
+  is_pinned    Boolean    @default(false)
+  is_published Boolean    @default(true)
+  views        Int        @default(0)
+  likes        Int        @default(0)
+  created_at   DateTime   @default(now())
+  updated_at   DateTime   @default(now())
+  category_id  Int?
+  author_id    Int?
+  is_blocked   Boolean    @default(false)
+  Comment      Comment[]
+  User         User?      @relation(fields: [author_id], references: [id])
+  Category     Category?  @relation(fields: [category_id], references: [id])
+  Series       Series?    @relation(fields: [series_id], references: [id])
+  PostLike     PostLike[]
+  Tag          Tag[]      @relation("PostTags")
 
   @@index([author_id])
   @@index([category_id])
@@ -92,57 +92,56 @@ model Tag {
 }
 
 model User {
-  id                 Int        @id @default(autoincrement())
-  username           String     @unique
+  id                 Int            @id @default(autoincrement())
+  username           String         @unique
   email              String?
   fullname           String?
-  avatar             String?    @db.VarChar(500)
-  profession         String?    @default("Người dùng mới")
+  avatar             String?        @db.VarChar(500)
+  profession         String?        @default("Người dùng mới")
   password           String
-  role               String?    @default("editor")
-  phone              String?    @db.VarChar(20)
-  birthday           String?    @db.VarChar(50)
-  address            String?    @db.Text
-  google_id          String?    @unique
-  facebook_id        String?    @unique
-  apple_id           String?    @unique
+  role               String?        @default("editor")
+  phone              String?        @db.VarChar(20)
+  birthday           String?        @db.VarChar(50)
+  address            String?
+  google_id          String?        @unique
+  facebook_id        String?        @unique
+  apple_id           String?        @unique
   reset_token        String?
   reset_token_expiry DateTime?
-  is_active          Boolean    @default(true)
-  can_comment        Boolean    @default(true)
-  can_post           Boolean    @default(true)
-  created_at         DateTime   @default(now())
-  Post               Post[]
-  PostLike           PostLike[]
+  is_active          Boolean        @default(true)
+  created_at         DateTime       @default(now())
+  can_comment        Boolean        @default(true)
+  can_post           Boolean        @default(true)
   Comment            Comment[]
   Notification       Notification[] @relation("Recipient")
   SentNotification   Notification[] @relation("Sender")
+  Post               Post[]
+  PostLike           PostLike[]
 }
 
 model Notification {
   id           Int      @id @default(autoincrement())
   recipient_id Int
   sender_id    Int?
-  type         String   // COMMENT_ON_POST, REPLY_TO_COMMENT, USER_STATUS_CHANGE, USER_PERMISSION_CHANGE, POST_BLOCKED
+  type         String
   title        String
-  content      String   @db.Text
+  content      String
   link         String?
   is_read      Boolean  @default(false)
   created_at   DateTime @default(now())
-
   Recipient    User     @relation("Recipient", fields: [recipient_id], references: [id], onDelete: Cascade)
-  Sender       User?    @relation("Sender", fields: [sender_id], references: [id], onDelete: SetNull)
+  Sender       User?    @relation("Sender", fields: [sender_id], references: [id])
 
   @@index([recipient_id])
   @@index([is_read])
 }
 
 model Setting {
-  key         String   @id        
-  value       String?  @db.Text   
-  group       String   @default("general") 
-  is_public   Boolean  @default(true)      
-  updated_at  DateTime @default(now()) @updatedAt
+  key        String   @id
+  value      String?
+  group      String   @default("general")
+  is_public  Boolean  @default(true)
+  updated_at DateTime @default(now()) @updatedAt
 }
 
 model MaintenanceCode {
