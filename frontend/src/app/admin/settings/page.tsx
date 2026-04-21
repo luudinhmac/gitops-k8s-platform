@@ -11,6 +11,7 @@ import AdminPageHeader from '@/components/admin/AdminPageHeader';
 import Button from '@/components/ui/Button';
 import { settingService, SettingsConfig } from '@/services/settingService';
 import Link from 'next/link';
+import { useAuth } from '@/context/AuthContext';
 
 export default function SettingsAdminPage() {
   const [activeTab, setActiveTab] = useState<'general' | 'system' | 'security' | 'marketing' | 'maintenance' | 'alerts'>('general');
@@ -19,6 +20,8 @@ export default function SettingsAdminPage() {
   const [testing, setTesting] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
+  const { user } = useAuth();
+  const isSuperAdmin = user?.role === 'superadmin';
 
   const toggleSecret = (key: string) => {
     setShowSecrets(prev => ({ ...prev, [key]: !prev[key] }));
@@ -599,6 +602,16 @@ export default function SettingsAdminPage() {
                   <p className="text-sm text-slate-500">Tùy chọn nhận thông báo tức thời qua các kênh khác nhau khi hệ thống có sự kiện mới.</p>
                 </div>
 
+                {!isSuperAdmin && (
+                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-4 rounded-2xl flex items-start gap-4 text-amber-700 dark:text-amber-400">
+                    <ShieldAlert className="shrink-0 mt-0.5" size={20} />
+                    <div className="text-sm">
+                      <p className="font-bold mb-1">Quyền hạn hạn chế</p>
+                      <p>Chỉ <b>Superadmin (Master)</b> mới có quyền thay đổi các cấu hình cảnh báo, Webhook và máy chủ Email để đảm bảo an ninh hệ thống.</p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 gap-10">
                   {/* CHANNEL: TELEGRAM */}
                   <div className="space-y-6">
@@ -617,6 +630,7 @@ export default function SettingsAdminPage() {
                           type="checkbox" 
                           className="sr-only peer" 
                           checked={alertsForm.telegram_enabled === 'true'} 
+                          disabled={!isSuperAdmin}
                           onChange={e => setAlertsForm({...alertsForm, telegram_enabled: e.target.checked ? 'true' : 'false'})} 
                         />
                         <div className="w-12 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-sky-500"></div>
@@ -633,8 +647,9 @@ export default function SettingsAdminPage() {
                           <input 
                             type={showSecrets['telegram_bot_token'] ? 'text' : 'password'} 
                             value={alertsForm.telegram_bot_token || ''} 
+                            disabled={!isSuperAdmin}
                             onChange={e => setAlertsForm({...alertsForm, telegram_bot_token: e.target.value})} 
-                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all font-mono pr-12" 
+                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all font-mono pr-12 disabled:opacity-70 disabled:cursor-not-allowed" 
                           />
                           <button 
                             type="button"
@@ -650,12 +665,13 @@ export default function SettingsAdminPage() {
                         <input 
                           type="text" 
                           value={alertsForm.telegram_chat_id || ''} 
+                          disabled={!isSuperAdmin}
                           onChange={e => setAlertsForm({...alertsForm, telegram_chat_id: e.target.value})} 
-                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all font-mono" 
+                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all font-mono disabled:opacity-70 disabled:cursor-not-allowed" 
                         />
                       </div>
                       <div className="col-span-1 md:col-span-2 flex justify-start">
-                        <Button variant="ghost" size="sm" onClick={handleTestTelegram} isLoading={testing} className="text-sky-600 hover:bg-sky-50">
+                        <Button variant="ghost" size="sm" onClick={handleTestTelegram} isLoading={testing} disabled={!isSuperAdmin} className="text-sky-600 hover:bg-sky-50">
                           <Send size={14} className="mr-2" /> Gửi tin thử tới Telegram
                         </Button>
                       </div>
@@ -681,6 +697,7 @@ export default function SettingsAdminPage() {
                           type="checkbox" 
                           className="sr-only peer" 
                           checked={alertsForm.teams_enabled === 'true'} 
+                          disabled={!isSuperAdmin}
                           onChange={e => setAlertsForm({...alertsForm, teams_enabled: e.target.checked ? 'true' : 'false'})} 
                         />
                         <div className="w-12 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-indigo-500"></div>
@@ -697,9 +714,10 @@ export default function SettingsAdminPage() {
                           <input 
                             type={showSecrets['teams_webhook_url'] ? 'text' : 'password'} 
                             value={alertsForm.teams_webhook_url || ''} 
+                            disabled={!isSuperAdmin}
                             onChange={e => setAlertsForm({...alertsForm, teams_webhook_url: e.target.value})} 
                             placeholder="https://outlook.office.com/webhook/..."
-                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all font-mono pr-12" 
+                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all font-mono pr-12 disabled:opacity-70 disabled:cursor-not-allowed" 
                           />
                           <button 
                             type="button"
@@ -710,7 +728,7 @@ export default function SettingsAdminPage() {
                           </button>
                         </div>
                       </div>
-                      <Button variant="ghost" size="sm" onClick={handleTestTeams} isLoading={testing} className="text-indigo-600 hover:bg-indigo-50">
+                      <Button variant="ghost" size="sm" onClick={handleTestTeams} isLoading={testing} disabled={!isSuperAdmin} className="text-indigo-600 hover:bg-indigo-50">
                         <LinkIcon size={14} className="mr-2" /> Gửi tin thử tới MS Teams
                       </Button>
                     </div>
@@ -735,6 +753,7 @@ export default function SettingsAdminPage() {
                           type="checkbox" 
                           className="sr-only peer" 
                           checked={alertsForm.mail_enabled === 'true'} 
+                          disabled={!isSuperAdmin}
                           onChange={e => setAlertsForm({...alertsForm, mail_enabled: e.target.checked ? 'true' : 'false'})} 
                         />
                         <div className="w-12 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-emerald-500"></div>
@@ -753,20 +772,20 @@ export default function SettingsAdminPage() {
                       
                       <div className="space-y-2">
                         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">SMTP Host</label>
-                        <input type="text" value={alertsForm.mail_host || ''} onChange={e => setAlertsForm({...alertsForm, mail_host: e.target.value})} placeholder="smtp.gmail.com"
-                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary" />
+                        <input type="text" value={alertsForm.mail_host || ''} disabled={!isSuperAdmin} onChange={e => setAlertsForm({...alertsForm, mail_host: e.target.value})} placeholder="smtp.gmail.com"
+                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary disabled:opacity-70 disabled:cursor-not-allowed" />
                       </div>
                       
                       <div className="space-y-2">
                         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">SMTP Port</label>
-                        <input type="text" value={alertsForm.mail_port || ''} onChange={e => setAlertsForm({...alertsForm, mail_port: e.target.value})} placeholder="587 hoặc 465"
-                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary" />
+                        <input type="text" value={alertsForm.mail_port || ''} disabled={!isSuperAdmin} onChange={e => setAlertsForm({...alertsForm, mail_port: e.target.value})} placeholder="587 hoặc 465"
+                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary disabled:opacity-70 disabled:cursor-not-allowed" />
                       </div>
 
                       <div className="space-y-2">
                         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">SMTP User</label>
-                        <input type="text" value={alertsForm.mail_user || ''} onChange={e => setAlertsForm({...alertsForm, mail_user: e.target.value})} placeholder="your-email@gmail.com"
-                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary" />
+                        <input type="text" value={alertsForm.mail_user || ''} disabled={!isSuperAdmin} onChange={e => setAlertsForm({...alertsForm, mail_user: e.target.value})} placeholder="your-email@gmail.com"
+                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary disabled:opacity-70 disabled:cursor-not-allowed" />
                       </div>
 
                       <div className="space-y-2 relative">
@@ -775,9 +794,10 @@ export default function SettingsAdminPage() {
                           <input 
                             type={showSecrets['mail_pass'] ? 'text' : 'password'} 
                             value={alertsForm.mail_pass || ''} 
+                            disabled={!isSuperAdmin}
                             onChange={e => setAlertsForm({...alertsForm, mail_pass: e.target.value})} 
                             placeholder="App Password"
-                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary pr-12" 
+                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary pr-12 disabled:opacity-70 disabled:cursor-not-allowed" 
                           />
                           <button 
                             type="button"
@@ -791,12 +811,12 @@ export default function SettingsAdminPage() {
 
                       <div className="space-y-2 md:col-span-2">
                         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Email Nhận Cảnh Báo (Admin Recipient)</label>
-                        <input type="email" value={alertsForm.mail_admin_recipient || ''} onChange={e => setAlertsForm({...alertsForm, mail_admin_recipient: e.target.value})} placeholder="admin@domain.com"
-                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-emerald-200 dark:border-emerald-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary font-bold" />
+                        <input type="email" value={alertsForm.mail_admin_recipient || ''} disabled={!isSuperAdmin} onChange={e => setAlertsForm({...alertsForm, mail_admin_recipient: e.target.value})} placeholder="admin@domain.com"
+                          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-emerald-200 dark:border-emerald-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary font-bold disabled:opacity-70 disabled:cursor-not-allowed" />
                       </div>
 
                       <div className="md:col-span-2 flex justify-start">
-                        <Button variant="ghost" size="sm" onClick={handleTestEmail} isLoading={testing} className="text-emerald-600 hover:bg-emerald-50">
+                        <Button variant="ghost" size="sm" onClick={handleTestEmail} isLoading={testing} disabled={!isSuperAdmin} className="text-emerald-600 hover:bg-emerald-50">
                           <Globe size={14} className="mr-2" /> Gửi mail thử nghiệm
                         </Button>
                       </div>
@@ -805,8 +825,8 @@ export default function SettingsAdminPage() {
                 </div>
 
                 <div className="pt-10 flex justify-end">
-                   <Button onClick={() => handleSaveGroup('alerts')} isLoading={saving} disabled={testing} size="lg" className="rounded-2xl px-16 h-14 text-base shadow-xl shadow-primary/20">
-                     <Save size={20} className="mr-2" /> Lưu toàn bộ cấu hình Cảnh báo
+                   <Button onClick={() => handleSaveGroup('alerts')} isLoading={saving} disabled={testing || !isSuperAdmin} size="lg" className="rounded-2xl px-16 h-14 text-base shadow-xl shadow-primary/20">
+                     <Save size={20} className="mr-2" /> {isSuperAdmin ? 'Lưu toàn bộ cấu hình Cảnh báo' : 'Vui lòng sử dụng quyền Superadmin'}
                    </Button>
                 </div>
               </div>

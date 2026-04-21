@@ -102,6 +102,15 @@ export class SettingsService {
   }
 
   async updateSettings(items: { key: string; value: string; group?: string; is_public?: boolean }[], user?: any, ip?: string) {
+    // Check if any sensitive group is being updated
+    const sensitiveGroups = ['telegram', 'teams', 'mail'];
+    const isUpdatingSensitive = items.some(item => item.group && sensitiveGroups.includes(item.group));
+    
+    if (isUpdatingSensitive && user?.role !== 'superadmin') {
+      const { ForbiddenException } = require('@nestjs/common');
+      throw new ForbiddenException('Chỉ Superadmin mới có quyền thay đổi cấu hình Cảnh báo Quản trị.');
+    }
+
     try {
       const queries = items.map((item) => {
         let finalValue = item.value;

@@ -40,21 +40,21 @@ export class SettingsController {
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('admin')
+  @Roles('superadmin')
   @Post('admin/test-telegram')
   async testTelegram(@Body() data: { token: string; chatId: string }) {
     return this.settingsService.testTelegram(data.token, data.chatId);
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('admin')
+  @Roles('superadmin')
   @Post('admin/test-teams')
   async testTeams(@Body() data: { webhookUrl: string }) {
     return this.settingsService.testTeams(data.webhookUrl);
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('admin')
+  @Roles('superadmin')
   @Post('admin/test-email')
   async testEmail(@Body() data: { host: string; port: string; user: string; pass: string; to: string }) {
     return this.settingsService.testEmail(data);
