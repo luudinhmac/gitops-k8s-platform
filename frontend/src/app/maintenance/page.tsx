@@ -6,6 +6,7 @@ import { ShieldAlert, Rocket, Github, Twitter, Mail, Lock, CheckCircle2, AlertCi
 import Button from '@/components/ui/Button';
 import axios from 'axios';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { cn } from '@/lib/utils';
 
 function MaintenanceContent() {
   const [clickCount, setClickCount] = useState(0);
@@ -50,6 +51,24 @@ function MaintenanceContent() {
     checkMaintenanceStatus();
   }, [from, router]);
 
+  const handleRequestCode = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3001/api';
+      const response = await axios.post(`${apiUrl}/settings/request-maintenance-code`);
+      if (response.data.success) {
+        setError('Mã đã được gửi! Vui lòng kiểm tra Telegram/Email/Teams.');
+      } else {
+        setError(response.data.error || 'Không thể yêu cầu mã. Vui lòng thử lại.');
+      }
+    } catch (err) {
+      setError('Đã xảy ra lỗi khi yêu cầu mã. Vui lòng thử lại sau.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -59,13 +78,14 @@ function MaintenanceContent() {
       const response = await axios.post(`${apiUrl}/settings/verify-maintenance-passcode`, { passcode });
       if (response.data.success) {
         setSuccess(true);
-        // Set bypass cookie for 24 hours
-        document.cookie = `MAINTENANCE_BYPASS=${passcode}; path=/; max-age=86400; samesite=lax`;
+        // Set bypass cookie for session (closes when browser closes) or short time
+        // User requested: "sau khi admin logout ra thì phải quay về web bảo trì"
+        document.cookie = `MAINTENANCE_BYPASS=${passcode}; path=/; samesite=lax`;
         setTimeout(() => {
           router.push('/admin');
         }, 1500);
       } else {
-        setError('Mã xác thực không đúng. Vui lòng thử lại.');
+        setError('Mã xác thực không đúng hoặc đã hết hạn.');
       }
     } catch (err) {
       setError('Đã xảy ra lỗi khi xác thực. Vui lòng thử lại sau.');
@@ -177,19 +197,35 @@ function MaintenanceContent() {
                 </div>
 
                 {error && (
-                  <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-red-500 text-xs font-bold animate-in fade-in slide-in-from-top-2">
+                  <div className={cn(
+                    "p-3 border rounded-xl flex items-center gap-3 text-xs font-bold animate-in fade-in slide-in-from-top-2",
+                    error.includes('Mã đã được gửi') 
+                      ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" 
+                      : "bg-red-500/10 border-red-500/20 text-red-500"
+                  )}>
                     <AlertCircle size={14} />
                     {error}
                   </div>
                 )}
 
+                <div className="grid grid-cols-2 gap-4">
+                  <Button 
+                    type="button"
+                    variant="outline"
+                  onClick={handleRequestCode}
+                  className="py-6 rounded-2xl font-black uppercase tracking-widest text-[10px]"
+                  isLoading={loading}
+                >
+                  Yêu cầu mã
+                </Button>
                 <Button 
                    type="submit" 
-                   className="w-full py-6 rounded-2xl font-black uppercase tracking-widest text-xs"
+                   className="py-6 rounded-2xl font-black uppercase tracking-widest text-[10px]"
                    isLoading={loading}
                 >
-                  Gửi mã xác nhận
+                  Xác nhận
                 </Button>
+                </div>
               </form>
 
               <p className="mt-8 text-center text-[10px] text-slate-600 font-bold uppercase tracking-wider">

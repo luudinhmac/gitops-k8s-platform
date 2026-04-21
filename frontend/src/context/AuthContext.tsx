@@ -76,7 +76,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         credentials: 'include',
       });
       setUser(null);
-      router.push('/login');
+      
+      // Clear maintenance bypass cookie
+      document.cookie = 'MAINTENANCE_BYPASS=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=lax';
+      
+      // Check if global maintenance is ON to decide where to redirect
+      try {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3001/api';
+        const maintenanceRes = await fetch(`${apiUrl}/settings/public`);
+        const settings = await maintenanceRes.json();
+        if (settings.maintenance_global === 'true' || settings.maintenance_global === true) {
+          router.push('/maintenance');
+        } else {
+          router.push('/login');
+        }
+      } catch (e) {
+        router.push('/login');
+      }
     } catch (error) {
       console.error('Logout error:', error);
     }

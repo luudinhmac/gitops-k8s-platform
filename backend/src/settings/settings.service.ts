@@ -57,9 +57,76 @@ export class SettingsService {
     return setting.value;
   }
 
+  async requestMaintenanceCode(ip: string = 'unknown') {
+    // 1. Verify maintenance mode is actually ON
+    const isMaintenance = await this.getSettingByKey('maintenance_global');
+    if (isMaintenance !== 'true') {
+      return { success: false, error: 'Chế độ bảo trì hiện đang TẮT. Không cần mã truy cập.' };
+    }
+
+    // 2. Generate 6-digit random code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiry = new Date();
+    expiry.setMinutes(expiry.getMinutes() + 10); // 10 minutes valid
+
+    // 3. Save to database
+    try {
+      // Optional: Cleanup old expired codes to keep DB clean
+      await this.prisma.maintenanceCode.deleteMany({
+        where: { OR: [
+          { expires_at: { lt: new Date() } },
+          { is_used: true }
+        ]}
+      });
+
+      await this.prisma.maintenanceCode.create({
+        data: {
+          code,
+          expires_at: expiry,
+          is_used: false
+        }
+      });
+
+      // 4. Send Notification
+      this.adminAlertService.sendAlert({
+        subject: `🔐 MÃ TRUY CẬP BẢO TRÌ (Maintenance Code)`,
+        text: `🔐 <b>YÊU CẦU TRUY CẬP HỆ THỐNG</b>\n\n` +
+              `Hệ thống đang trong trạng thái bảo trì. Một yêu cầu truy cập đã được thực hiện:\n\n` +
+              `• <b>Mã xác thực:</b> <code>${code}</code>\n` +
+              `• <b>Hiệu lực:</b> 10 phút (đến ${expiry.toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })})\n` +
+              `• <b>Địa chỉ IP:</b> ${ip}\n\n` +
+              `<i>Vui lòng không chia sẻ mã này với bất kỳ ai.</i>`,
+      });
+
+      return { success: true, message: 'Mã truy cập đã được gửi qua các hệ thống thông báo.' };
+    } catch (error) {
+      this.logger.error('Failed to generate maintenance code', error);
+      return { success: false, error: 'Không thể tạo mã xác thực vào lúc này.' };
+    }
+  }
+
   async verifyMaintenancePasscode(passcode: string) {
+    // 1. Try verify as dynamic maintenance code first
+    const record = await this.prisma.maintenanceCode.findFirst({
+      where: {
+        code: passcode,
+        is_used: false,
+        expires_at: { gt: new Date() }
+      },
+      orderBy: { created_at: 'desc' }
+    });
+
+    if (record) {
+      // Mark as used immediately
+      await this.prisma.maintenanceCode.update({
+        where: { id: record.id },
+        data: { is_used: true }
+      });
+      return true;
+    }
+
+    // 2. Fallback to static passcode (for emergency or as requested)
     const savedPasscode = await this.getSettingByKey('maintenance_passcode');
-    // For now, simplicity is key, but we ensure it fails if not set
     if (!savedPasscode) return false;
     return savedPasscode === passcode;
   }
