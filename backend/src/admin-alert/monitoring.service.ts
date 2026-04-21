@@ -12,6 +12,10 @@ export class MonitoringService {
   private requestCounts = new Map<string, number>(); // ip -> count in last minute
   private loginAttempts = 0; // count in last minute
   
+  // State for resource dampening
+  private resourceBreachStartTime: number | null = null;
+  private resourceAlertSent = false;
+  
   // Thresholds
   private readonly CPU_THRESHOLD = 90;
   private readonly RAM_THRESHOLD = 90;
@@ -104,21 +108,60 @@ export class MonitoringService {
 
     // --- ALERTS ---
     
-    // Resource Alerts
-    if (cpuUsagePercent > this.CPU_THRESHOLD || ramUsagePercent > this.RAM_THRESHOLD || (diskInfo && diskInfo.usage > this.DISK_THRESHOLD)) {
-      const diskText = diskInfo 
-        ? `• <b>Disk:</b> ${diskInfo.usage.toFixed(1)}% (${diskInfo.freeGB}GB trống / ${diskInfo.totalGB}GB)\n`
-        : '';
+    // Check if any resource is currently breached
+    const isCpuBreached = cpuUsagePercent > this.CPU_THRESHOLD;
+    const isRamBreached = ramUsagePercent > this.RAM_THRESHOLD;
+    const isDiskBreached = !!(diskInfo && diskInfo.usage > this.DISK_THRESHOLD);
+    const isResourceBreached = isCpuBreached || isRamBreached || isDiskBreached;
 
-      this.adminAlertService.sendAlert({
-        subject: `⚠️ CẢNH BÁO: Tài nguyên Server vượt ngưỡng`,
-        text: `⚠️ <b>CẢNH BÁO TÀI NGUYÊN</b>\n\n` +
-              `• <b>CPU:</b> ${cpuUsagePercent.toFixed(1)}%\n` +
-              `• <b>RAM:</b> ${ramUsagePercent.toFixed(1)}%\n` +
-              `${diskText}` +
-              `• <b>Trạng thái:</b> VƯỢT NGƯỠNG AN TOÀN (>90%)\n` +
-              `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
-      });
+    if (isResourceBreached) {
+      // Start tracking if this is a new breach
+      if (!this.resourceBreachStartTime) {
+        this.resourceBreachStartTime = Date.now();
+        this.logger.warn('System resource breach detected. Starting 5-minute dampening period...');
+      }
+
+      // Check if the breach has been sustained for 5 minutes
+      const elapsedMinutes = (Date.now() - this.resourceBreachStartTime) / (60 * 1000);
+      
+      if (elapsedMinutes >= 5 && !this.resourceAlertSent) {
+        const diskText = diskInfo 
+          ? `• <b>Disk:</b> ${diskInfo.usage.toFixed(1)}% (${diskInfo.freeGB}GB trống / ${diskInfo.totalGB}GB)\n`
+          : '';
+
+        this.adminAlertService.sendAlert({
+          subject: `⚠️ CẢNH BÁO: Tài nguyên Server vượt ngưỡng (Duy trì >5 phút)`,
+          text: `⚠️ <b>CẢNH BÁO TÀI NGUYÊN</b>\n\n` +
+                `Hệ thống đã duy trì mức tải cao trong hơn 5 phút:\n\n` +
+                `• <b>CPU:</b> ${cpuUsagePercent.toFixed(1)}% ${isCpuBreached ? '🚨' : '✅'}\n` +
+                `• <b>RAM:</b> ${ramUsagePercent.toFixed(1)}% ${isRamBreached ? '🚨' : '✅'}\n` +
+                `${diskText}${isDiskBreached ? '🚨' : ''}` +
+                `• <b>Trạng thái:</b> VƯỢT NGƯỠNG (>90%)\n` +
+                `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
+        });
+        this.resourceAlertSent = true;
+      }
+    } else {
+      // System is healthy - Check if we need to send a recovery notification
+      if (this.resourceAlertSent) {
+        const diskText = diskInfo 
+          ? `• <b>Disk:</b> ${diskInfo.usage.toFixed(1)}% (${diskInfo.freeGB}GB trống)\n`
+          : '';
+
+        this.adminAlertService.sendAlert({
+          subject: `✅ PHỤC HỒI: Tài nguyên Server đã ổn định`,
+          text: `✅ <b>THÔNG BÁO PHỤC HỒI</b>\n\n` +
+                `Các chỉ số tài nguyên hệ thống đã trở lại mức an toàn:\n\n` +
+                `• <b>CPU:</b> ${cpuUsagePercent.toFixed(1)}% ✅\n` +
+                `• <b>RAM:</b> ${ramUsagePercent.toFixed(1)}% ✅\n` +
+                `${diskText}` +
+                `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
+        });
+      }
+      
+      // Reset state
+      this.resourceBreachStartTime = null;
+      this.resourceAlertSent = false;
     }
 
     // DOS Detection
