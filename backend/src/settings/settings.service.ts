@@ -191,10 +191,10 @@ export class SettingsService {
     try {
       // Use stored values if mask or empty provided
       if (token === MASK_VALUE || !token) {
-        token = await this.getSettingByKey('telegram_bot_token');
+        token = (await this.getSettingByKey('telegram_bot_token')) || '';
       }
       if (chatId === MASK_VALUE || !chatId) {
-        chatId = await this.getSettingByKey('telegram_chat_id');
+        chatId = (await this.getSettingByKey('telegram_chat_id')) || '';
       }
 
       if (!token || !chatId) {
@@ -212,7 +212,7 @@ export class SettingsService {
     try {
       // Use stored value if mask or empty provided
       if (webhookUrl === MASK_VALUE || !webhookUrl) {
-        webhookUrl = await this.getSettingByKey('teams_webhook_url');
+        webhookUrl = (await this.getSettingByKey('teams_webhook_url')) || '';
       }
 
       if (!webhookUrl) {
@@ -233,10 +233,10 @@ export class SettingsService {
 
     // Use stored values if masks provided
     if (config.user === MASK_VALUE || !config.user) {
-      config.user = await this.getSettingByKey('mail_user');
+      config.user = (await this.getSettingByKey('mail_user')) || '';
     }
     if (config.pass === MASK_VALUE || !config.pass) {
-      config.pass = await this.getSettingByKey('mail_pass');
+      config.pass = (await this.getSettingByKey('mail_pass')) || '';
     }
 
     if (!config.user || !config.pass) {
