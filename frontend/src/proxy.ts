@@ -21,15 +21,27 @@ export async function proxy(request: NextRequest) {
   
     // 3. Fetch Maintenance Status
     try {
-      // Always call backend directly on port 3001 from the server-side proxy
-      // to avoid infinite loops if NEXT_PUBLIC_API_URL points to the frontend itself.
-      const fetchUrl = 'http://127.0.0.1:3001/api/settings/public';
+      console.log(`[Proxy] NODE_ENV: ${process.env.NODE_ENV}`);
+      
+      // Use INTERNAL_API_URL if defined, then Docker service name, then localhost
+      let fetchUrl = process.env.INTERNAL_API_URL;
+      
+      if (!fetchUrl) {
+        const backendHost = process.env.NODE_ENV === 'production' ? 'portfolio-backend' : '127.0.0.1';
+        fetchUrl = `http://${backendHost}:3001/api/settings/public`;
+      } else {
+        // Ensure settings endpoint is appended if only base URL is provided
+        if (!fetchUrl.endsWith('/settings/public')) {
+          fetchUrl = fetchUrl.replace(/\/api\/?$/, '/api/settings/public');
+        }
+      }
       
       console.log(`[Proxy] Checking maintenance at: ${fetchUrl}`);
 
       const response = await fetch(fetchUrl, { 
         cache: 'no-store',
-        signal: AbortSignal.timeout(3000) 
+        next: { revalidate: 0 },
+        signal: AbortSignal.timeout(4000) 
       });
       
       if (response.ok) {
