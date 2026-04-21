@@ -117,6 +117,7 @@ export default function RegisterPage() {
                   <input
                     type="text"
                     required
+                    autoFocus
                     className="w-full pl-11 pr-4 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none text-sm"
                     placeholder="Tên đăng nhập"
                     value={formData.username}
@@ -275,13 +276,15 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <Button
-              type="submit"
-              isLoading={loading}
-              className="w-full py-2 text-base rounded-2xl shadow-xl shadow-primary/20"
-            >
-              Đăng ký
-            </Button>
+            <div className="flex justify-center">
+              <Button
+                type="submit"
+                isLoading={loading}
+                className="px-16 py-3.5 text-base rounded-2xl shadow-xl shadow-primary/20"
+              >
+                Đăng ký
+              </Button>
+            </div>
           </form>
 
           <div className="mt-10 pt-8 border-t border-slate-50 dark:border-slate-800 text-center">

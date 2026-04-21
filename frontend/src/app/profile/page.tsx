@@ -355,10 +355,12 @@ function ProfilePageContent() {
                         </div>
                       ))}
                     </div>
-                    <Button type="submit" isLoading={saveLoading} size="lg" className="shadow-primary/30">
-                      <Save size={18} className="mr-2" />
-                      Cập nhật thông tin
-                    </Button>
+                    <div className="flex justify-center pt-2">
+                      <Button type="submit" isLoading={saveLoading} size="lg" className="px-12 shadow-primary/30">
+                        <Save size={18} className="mr-2" />
+                        Cập nhật thông tin
+                      </Button>
+                    </div>
                   </form>
                 </div>
               )}
@@ -519,6 +521,7 @@ function ProfilePageContent() {
                     <div className="relative">
                       <input
                         required
+                        autoFocus={field.key === 'oldPassword'}
                         type={field.show ? 'text' : 'password'}
                         placeholder="••••••••"
                         value={(passForm as Record<string, string>)[field.key]}
@@ -532,10 +535,12 @@ function ProfilePageContent() {
                     </div>
                   </div>
                 ))}
-                <Button type="submit" isLoading={passLoading} className="w-full py-6 mt-4 shadow-primary/30">
-                  <Lock size={14} className="mr-2" />
-                  Đổi mật khẩu
-                </Button>
+                <div className="flex justify-center pt-4">
+                  <Button type="submit" isLoading={passLoading} className="px-16 py-3.5 text-sm rounded-xl shadow-xl shadow-primary/20">
+                    <Lock size={14} className="mr-2" />
+                    Đổi mật khẩu
+                  </Button>
+                </div>
               </form>
             </div>
           )}
