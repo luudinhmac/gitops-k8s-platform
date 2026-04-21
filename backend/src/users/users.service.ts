@@ -203,6 +203,14 @@ export class UsersService {
     ) {
       throw new ForbiddenException('Chỉ Admin mới có thể thay đổi vai trò.');
     }
+
+    const targetUser = await this.prisma.user.findUnique({ where: { id } });
+    if (!targetUser) throw new NotFoundException('Người dùng không tồn tại');
+
+    if (targetUser.role === UserRole.SUPERADMIN) {
+      throw new ForbiddenException('Không thể thay đổi vai trò của tài khoản Superadmin tối cao.');
+    }
+
     if (!Object.values(UserRole).includes(role as UserRole)) {
       throw new BadRequestException(
         'Vai trò không hợp lệ. Chỉ chấp nhận: admin, editor, user.',
@@ -282,7 +290,11 @@ export class UsersService {
     }
 
     const targetUser = await this.prisma.user.findUnique({ where: { id } });
-    if (!targetUser) throw new NotFoundException('Người dùng không tồn đã tồn tại');
+    if (!targetUser) throw new NotFoundException('Người dùng không tồn tại');
+
+    if (targetUser.role === UserRole.SUPERADMIN && data.role && data.role !== UserRole.SUPERADMIN) {
+      throw new ForbiddenException('Không thể hạ cấp vai trò của tài khoản Superadmin tối cao.');
+    }
 
     if (!this.canModify(currentUser, targetUser)) {
       throw new ForbiddenException('Bạn không có quyền thay đổi quyền hạn của người dùng có cấp bậc cao hơn hoặc bằng mình.');

@@ -486,11 +486,15 @@ export default function UsersPage() {
 
               {[
                 { 
-                   label: 'Quyền Admin', 
-                   icon: Shield, 
-                   color: 'text-blue-500', 
-                   active: settingsUser.role === 'admin',
-                   onClick: () => handleUpdatePermissions(settingsUser.id, { role: settingsUser.role === 'admin' ? 'user' : 'admin' })
+                   label: settingsUser.role === 'superadmin' ? 'Quyền Master (Tối cao)' : 'Quyền Admin', 
+                   icon: settingsUser.role === 'superadmin' ? ShieldAlert : Shield, 
+                   color: settingsUser.role === 'superadmin' ? 'text-primary' : 'text-blue-500', 
+                   active: settingsUser.role === 'superadmin' || settingsUser.role === 'admin',
+                   disabled: settingsUser.role === 'superadmin',
+                   onClick: () => {
+                     if (settingsUser.role === 'superadmin') return;
+                     handleUpdatePermissions(settingsUser.id, { role: settingsUser.role === 'admin' ? 'user' : 'admin' });
+                   }
                 },
                 { 
                    label: 'Khóa Đăng nhập', 
@@ -516,11 +520,21 @@ export default function UsersPage() {
               ].map((item, idx) => (
                 <button 
                   key={idx}
-                  className="w-full justify-between flex items-center px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all" 
+                  className={cn(
+                    "w-full justify-between flex items-center px-4 py-3 text-xs font-bold transition-all rounded-2xl",
+                    item.disabled 
+                      ? "opacity-50 cursor-not-allowed bg-slate-50/50 dark:bg-slate-800/20 text-slate-400" 
+                      : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
+                  )}
                   onClick={item.onClick}
+                  disabled={item.disabled}
                 >
                   <div className="flex items-center"><item.icon size={16} className={cn("mr-3", item.color)} /> {item.label}</div>
-                  <div className={cn("w-8 h-4 rounded-full transition-all relative p-0.5", item.active ? "bg-primary shadow-inner shadow-primary/20" : "bg-slate-200 dark:bg-slate-700")}>
+                  <div className={cn(
+                    "w-8 h-4 rounded-full transition-all relative p-0.5", 
+                    item.active ? "bg-primary shadow-inner shadow-primary/20" : "bg-slate-200 dark:bg-slate-700",
+                    item.disabled && "grayscale"
+                  )}>
                     <div className={cn("absolute top-1 w-2 h-2 rounded-full bg-white transition-all shadow-sm", item.active ? "right-1" : "left-1")} />
                   </div>
                 </button>
