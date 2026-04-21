@@ -10,4 +10,6 @@ export class UpdateUserDto {
   address?: string;
   role?: string;
   is_active?: boolean;
+  can_comment?: boolean;
+  can_post?: boolean;
 }
