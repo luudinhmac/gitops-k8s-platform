@@ -26,22 +26,7 @@ async function main() {
   const adminPassword = process.env.ADMIN_PASSWORD || 'macld@2026';
   const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
-  // 1. Seed 'admin' user
-  const adminUser = await prisma.user.upsert({
-    where: { username: 'admin' },
-    update: {},
-    create: {
-      username: 'admin',
-      email: 'admin@mac.com',
-      password: hashedPassword,
-      role: 'admin',
-      fullname: 'Administrator',
-      is_active: true,
-    },
-  });
-  console.log(`- Upserted admin user: ${adminUser.username}`);
-
-  // 2. Seed 'macld' superuser
+  // 1. Seed 'macld' superuser
   const macldUser = await prisma.user.upsert({
     where: { username: 'macld' },
     update: {
