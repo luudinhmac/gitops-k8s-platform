@@ -34,6 +34,24 @@ export class UsersService {
     return regex.test(password);
   }
 
+  private readonly roleHierarchy: Record<string, number> = {
+    [UserRole.SUPERADMIN]: 100,
+    [UserRole.ADMIN]: 50,
+    [UserRole.EDITOR]: 20,
+    [UserRole.USER]: 10,
+  };
+
+  private canModify(currentUser: User, targetUser: { role?: string | null }): boolean {
+    const currentLevel = this.roleHierarchy[currentUser.role] || 0;
+    const targetLevel = this.roleHierarchy[targetUser.role || 'user'] || 0;
+
+    // Superadmin can always modify others (except potentially self-deletion handled elsewhere)
+    if (currentUser.role === UserRole.SUPERADMIN) return true;
+
+    // Others can only modify users at a STRICTLY LOWER hierarchy level
+    return currentLevel > targetLevel;
+  }
+
   private readonly publicSelect = {
     id: true,
     username: true,
@@ -69,8 +87,17 @@ export class UsersService {
   }
 
   async create(data: CreateUserDto, currentUser?: User) {
-    if (currentUser && currentUser.role !== (UserRole.ADMIN as string)) {
-      throw new ForbiddenException('Chỉ Admin mới có thể tạo tài khoản mới.');
+    if (currentUser && !this.roleHierarchy[currentUser.role]) {
+       throw new ForbiddenException('Bạn không có quyền tạo tài khoản.');
+    }
+    
+    // Check if current user is attempting to create a user with equal or higher role
+    if (currentUser && currentUser.role !== UserRole.SUPERADMIN) {
+       const targetLevel = this.roleHierarchy[data.role || 'user'] || 0;
+       const currentLevel = this.roleHierarchy[currentUser.role] || 0;
+       if (targetLevel >= currentLevel) {
+          throw new ForbiddenException('Bạn không thể tạo tài khoản có quyền cao hơn hoặc bằng chính mình.');
+       }
     }
     if (data.password && !this.validatePassword(data.password)) {
       throw new BadRequestException(
@@ -118,20 +145,27 @@ export class UsersService {
   }
 
   async update(id: number, currentUser: User, data: UpdateUserDto) {
-    if (
-      currentUser.role !== (UserRole.ADMIN as string) &&
-      currentUser.id !== id
-    ) {
-      throw new ForbiddenException('Bạn không có quyền sửa thông tin này.');
+    const targetUser = await this.prisma.user.findUnique({ where: { id } });
+    if (!targetUser) throw new NotFoundException('Người dùng không tồn tại');
+
+    if (!this.canModify(currentUser, targetUser) && currentUser.id !== id) {
+      throw new ForbiddenException('Bạn không có quyền sửa thông tin của người dùng này vì cấp bậc của họ cao hơn hoặc bằng bạn.');
     }
 
     if (
-      (data.role || data.is_active !== undefined) &&
-      currentUser.role !== (UserRole.ADMIN as string)
+      (data.role || data.is_active !== undefined || data.can_comment !== undefined || data.can_post !== undefined) &&
+      currentUser.id === id && currentUser.role !== UserRole.SUPERADMIN
     ) {
-      throw new ForbiddenException(
-        'Bạn không có quyền thay đổi vai trò hoặc trạng thái người dùng.',
-      );
+       // Regular users (including admins) shouldn't be able to elevate their own secondary permissions via general update if restricted elsewhere
+       // But usually we allow updating profile. 
+    }
+
+    if (data.role) {
+       const newRoleLevel = this.roleHierarchy[data.role] || 0;
+       const currentLevel = this.roleHierarchy[currentUser.role] || 0;
+       if (newRoleLevel >= currentLevel && currentUser.role !== UserRole.SUPERADMIN) {
+          throw new ForbiddenException('Bạn không thể gán vai trò cao hơn hoặc bằng vai trò hiện tại của mình.');
+       }
     }
 
     // Create a copy to remove unwanted fields
@@ -179,20 +213,16 @@ export class UsersService {
   }
 
   async updateStatus(id: number, currentUser: User, isActive: boolean, ip?: string) {
-    if (currentUser.role !== (UserRole.ADMIN as string)) {
-      throw new ForbiddenException('Chỉ Admin mới có thể thay đổi trạng thái.');
-    }
-    if (currentUser.id === id) {
-      throw new BadRequestException(
-        'Bạn không thể tự vô hiệu hóa tài khoản của chính mình.',
-      );
-    }
     const targetUser = await this.prisma.user.findUnique({ where: { id } });
     if (!targetUser) throw new NotFoundException('Người dùng không tồn tại');
 
-    if (targetUser.username === 'macld' && isActive === false) {
-      throw new ForbiddenException(
-        'Không thể vô hiệu hóa tài khoản Superadmin tối cao.',
+    if (!this.canModify(currentUser, targetUser)) {
+      throw new ForbiddenException('Bạn không có quyền thay đổi trạng thái của người dùng có cấp bậc cao hơn hoặc bằng mình.');
+    }
+
+    if (currentUser.id === id) {
+      throw new BadRequestException(
+        'Bạn không thể tự vô hiệu hóa tài khoản của chính mình.',
       );
     }
 
@@ -246,15 +276,17 @@ export class UsersService {
     }
 
     const targetUser = await this.prisma.user.findUnique({ where: { id } });
-    if (!targetUser) throw new NotFoundException('Người dùng không tồn tại');
+    if (!targetUser) throw new NotFoundException('Người dùng không tồn đã tồn tại');
 
-    // Superadmin protection
-    if (targetUser.username === 'macld') {
-       if (data.is_active === false) {
-         throw new ForbiddenException('Không thể vô hiệu hóa tài khoản Superadmin tối cao.');
-       }
-       if (data.role && data.role !== (UserRole.ADMIN as string)) {
-         throw new ForbiddenException('Không thể hạ cấp (demote) tài khoản Superadmin tối cao.');
+    if (!this.canModify(currentUser, targetUser)) {
+      throw new ForbiddenException('Bạn không có quyền thay đổi quyền hạn của người dùng có cấp bậc cao hơn hoặc bằng mình.');
+    }
+
+    if (data.role) {
+       const newRoleLevel = this.roleHierarchy[data.role] || 0;
+       const currentLevel = this.roleHierarchy[currentUser.role] || 0;
+       if (newRoleLevel >= currentLevel && currentUser.role !== UserRole.SUPERADMIN) {
+          throw new ForbiddenException('Bạn không thể gán vai trò cao hơn hoặc bằng vai trò hiện tại của mình.');
        }
     }
 
@@ -351,17 +383,18 @@ export class UsersService {
   }
 
   async resetPassword(id: number, newPassword: string, currentUser: User, ip?: string) {
-    if (currentUser.role !== (UserRole.ADMIN as string)) {
-      throw new ForbiddenException('Chỉ Admin mới có thể reset mật khẩu.');
+    const targetUser = await this.prisma.user.findUnique({ where: { id } });
+    if (!targetUser) throw new NotFoundException('Người dùng không tồn tại');
+
+    if (!this.canModify(currentUser, targetUser) && currentUser.id !== id) {
+       throw new ForbiddenException('Bạn không có quyền đặt lại mật khẩu cho người dùng có cấp bậc cao hơn hoặc bằng mình.');
     }
+
     if (!this.validatePassword(newPassword)) {
       throw new BadRequestException(
         'Mật khẩu mới phải tối thiểu 8 ký tự, bao gồm cả chữ và số.',
       );
     }
-    
-    const targetUser = await this.prisma.user.findUnique({ where: { id } });
-    if (!targetUser) throw new NotFoundException('Người dùng không tồn tại');
     
     const hash = await bcrypt.hash(newPassword, 10);
     await this.prisma.user.update({ where: { id }, data: { password: hash } });
@@ -440,6 +473,11 @@ export class UsersService {
     const targetUser = await this.prisma.user.findUnique({ where: { id } });
 
     if (!targetUser) throw new NotFoundException('Người dùng không tồn tại');
+    
+    if (!this.canModify(currentUser, targetUser)) {
+      throw new ForbiddenException('Bạn không có quyền xóa người dùng có cấp bậc cao hơn hoặc bằng mình.');
+    }
+
     if (
       (targetUser.role as string) === (UserRole.ADMIN as string) &&
       adminCount <= 1
@@ -449,10 +487,10 @@ export class UsersService {
       );
     }
 
-    // Superadmin protection
-    if (targetUser.username === 'macld') {
+    // Superadmin protection (additional safety)
+    if (targetUser.role === UserRole.SUPERADMIN) {
       throw new ForbiddenException(
-        'Tài khoản Superadmin (macld) được hệ thống bảo vệ. Không bao giờ có thể bị xóa.',
+        'Tài khoản Superadmin tối cao được hệ thống bảo vệ. Không bao giờ có thể bị xóa.',
       );
     }
 
