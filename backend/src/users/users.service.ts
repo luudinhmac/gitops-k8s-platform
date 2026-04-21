@@ -196,6 +196,7 @@ export class UsersService {
     });
   }
 
+  async updateRole(id: number, currentUser: User, role: string) {
     if (
       currentUser.role !== (UserRole.ADMIN as string) &&
       currentUser.role !== (UserRole.SUPERADMIN as string)
@@ -468,6 +469,7 @@ export class UsersService {
     return { success: true, message: 'Đã đổi mật khẩu thành công.' };
   }
 
+  async remove(id: number, currentUser: User, ip?: string) {
     if (
       currentUser.role !== (UserRole.ADMIN as string) &&
       currentUser.role !== (UserRole.SUPERADMIN as string)
