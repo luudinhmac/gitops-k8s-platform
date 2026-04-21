@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 1. Define excluded paths (always accessible)
@@ -22,7 +22,7 @@ export async function middleware(request: NextRequest) {
   // 3. Fetch Maintenance Status
   try {
     const nodeEnv = process.env.NODE_ENV || 'development';
-    console.log(`[Middleware] NODE_ENV: ${nodeEnv}`);
+    console.log(`[Proxy] NODE_ENV: ${nodeEnv}`);
     
     // Use INTERNAL_API_URL if defined, then Docker service name, then localhost
     let fetchUrl = process.env.INTERNAL_API_URL;
@@ -37,7 +37,7 @@ export async function middleware(request: NextRequest) {
       }
     }
     
-    console.log(`[Middleware] Checking maintenance at: ${fetchUrl}`);
+    console.log(`[Proxy] Checking maintenance at: ${fetchUrl}`);
 
     const response = await fetch(fetchUrl, { 
       cache: 'no-store',
@@ -49,19 +49,19 @@ export async function middleware(request: NextRequest) {
       const settings = await response.json();
       const isGlobalMaintenance = settings.maintenance_global === 'true' || settings.maintenance_global === true;
       
-      console.log(`[Middleware] Maintenance status: ${isGlobalMaintenance}`);
+      console.log(`[Proxy] Maintenance status: ${isGlobalMaintenance}`);
       
       if (isGlobalMaintenance && !bypassCookie) {
-        console.log(`[Middleware] REDIRECTING to /maintenance from ${pathname}`);
+        console.log(`[Proxy] REDIRECTING to /maintenance from ${pathname}`);
         const url = new URL('/maintenance', request.url);
         url.searchParams.set('from', pathname);
         return NextResponse.redirect(url);
       }
     } else {
-      console.error(`[Middleware] API error: ${response.status}`);
+      console.error(`[Proxy] API error: ${response.status}`);
     }
   } catch (error: any) {
-    console.error(`[Middleware] Fetch failed: ${error.message}`);
+    console.error(`[Proxy] Fetch failed: ${error.message}`);
     // If we can't reach the backend, we default to allowing access (to prevent total outage)
     // In a production environment, you might want to redirect to a generic error page
     return NextResponse.next();
@@ -83,3 +83,5 @@ export const config = {
     '/((?!api|_next/static|_next/image|favicon.ico).*)',
   ],
 };
+
+export default proxy;

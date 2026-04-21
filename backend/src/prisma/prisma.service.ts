@@ -7,7 +7,7 @@ export class PrismaService
   implements OnModuleInit, OnModuleDestroy
 {
   // Explicitly declare models that might have typing delays in the IDE
-  maintenanceCode: any; 
+  // Note: maintenanceCode is handled by PrismaClient accessor
 
   async onModuleInit() {
     await this.$connect();
