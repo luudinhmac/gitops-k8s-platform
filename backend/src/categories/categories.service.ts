@@ -53,7 +53,7 @@ export class CategoriesService {
       text: `📂 <b>Danh mục mới đã được tạo</b>\n\n` +
             `• <b>Tên:</b> ${category.name}\n` +
             `• <b>Slug:</b> ${category.slug}\n` +
-            `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}`,
+            `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
     });
 
     return category;

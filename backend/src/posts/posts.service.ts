@@ -499,7 +499,7 @@ export class PostsService {
             `• <b>Hành động:</b> Đã xóa bài viết ID #${post.id}\n` +
             `• <b>IP:</b> ${userIp}\n` +
             `• <b>User:</b> ${username}\n` +
-            `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}`,
+            `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
     });
 
     return { success: true };
@@ -537,7 +537,7 @@ export class PostsService {
             `• <b>Hành động:</b> ${action} "${updated.title}"\n` +
             `• <b>IP:</b> ${userIp}\n` +
             `• <b>User:</b> ${username}\n` +
-            `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}`,
+            `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
     });
 
     return updated;
@@ -632,7 +632,7 @@ export class PostsService {
             `• <b>Hành động:</b> ${action} "${updatedPost.title}"\n` +
             `• <b>IP:</b> ${userIp}\n` +
             `• <b>User:</b> ${username}\n` +
-            `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}`,
+            `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
     });
 
     // --- TRIGGER NOTIFICATIONS (Legacy) ---

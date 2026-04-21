@@ -30,6 +30,8 @@ FROM node:22-alpine AS runner
 
 WORKDIR /app
 
+RUN apk add --no-cache tzdata
+ENV TZ=Asia/Ho_Chi_Minh
 ENV NODE_ENV=production
 
 # Install pnpm for pruning if needed, but we'll copy only what's necessary

@@ -117,7 +117,7 @@ export class MonitoringService {
               `• <b>RAM:</b> ${ramUsagePercent.toFixed(1)}%\n` +
               `${diskText}` +
               `• <b>Trạng thái:</b> VƯỢT NGƯỠNG AN TOÀN (>90%)\n` +
-              `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}`,
+              `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
       });
     }
 
@@ -131,7 +131,7 @@ export class MonitoringService {
                 `• <b>Số lượng request:</b> ${count}/phút\n` +
                 `• <b>Ngưỡng:</b> ${this.DOS_THRESHOLD}\n` +
                 `• <b>Hành động:</b> Đang giám sát IP này\n` +
-                `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}`,
+                `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
         });
       }
     }
@@ -144,7 +144,7 @@ export class MonitoringService {
               `• <b>Lượng đăng nhập:</b> ${this.loginAttempts}/phút\n` +
               `• <b>Ngưỡng:</b> ${this.LOGIN_SPIKE_THRESHOLD}\n` +
               `• <b>Tình trạng:</b> Nghi ngờ tấn công Brute-force hoặc lưu lượng tăng đột biến\n` +
-              `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}`,
+              `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
       });
     }
 

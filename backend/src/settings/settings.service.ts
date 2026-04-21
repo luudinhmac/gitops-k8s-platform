@@ -173,7 +173,7 @@ export class SettingsService {
               `• <b>Hành động:</b> ${actions}\n` +
               `• <b>IP:</b> ${userIp}\n` +
               `• <b>User:</b> ${username}\n` +
-              `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}`,
+              `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
       });
 
       return { message: 'Settings updated successfully' };
@@ -201,7 +201,7 @@ export class SettingsService {
         return { success: false, error: 'Thiếu cấu hình Telegram (Token hoặc Chat ID).' };
       }
 
-      const message = `🔔 <b>Test Thông báo Hệ thống</b>\n\nNội dung này xác nhận rằng Bot Telegram của bạn đã được cấu hình thành công trên Website.\n\n📅 <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}`;
+      const message = `🔔 <b>Test Thông báo Hệ thống</b>\n\nNội dung này xác nhận rằng Bot Telegram của bạn đã được cấu hình thành công trên Website.\n\n📅 <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`;
       return await this.telegramService.sendToTelegram(token, chatId, message);
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -219,7 +219,7 @@ export class SettingsService {
         return { success: false, error: 'Thiếu cấu hình Webhook URL của MS Teams.' };
       }
 
-      const msg = `🔔 <b>Thông báo thử nghiệm MS Teams</b>\n\nCấu hình kết nối Webhook thành công! Đã có thể nhận cảnh báo từ ứng dụng.\n\n📅 <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}`;
+      const msg = `🔔 <b>Thông báo thử nghiệm MS Teams</b>\n\nCấu hình kết nối Webhook thành công! Đã có thể nhận cảnh báo từ ứng dụng.\n\n📅 <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`;
       return await this.teamsService.sendMessage(msg, webhookUrl);
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -229,7 +229,7 @@ export class SettingsService {
   async testEmail(config: { host: string; port: string; user: string; pass: string; to: string }) {
     const subject = '🔔 Thông báo thử nghiệm Email';
     const text = 'Hệ thống đã kết nối thành công với máy chủ Email của bạn.';
-    const html = `<h3>Thành công!</h3><p>${text}</p><p>📅 <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}</p>`;
+    const html = `<h3>Thành công!</h3><p>${text}</p><p>📅 <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</p>`;
 
     // Use stored values if masks provided
     if (config.user === MASK_VALUE || !config.user) {

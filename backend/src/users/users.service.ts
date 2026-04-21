@@ -332,7 +332,7 @@ export class UsersService {
               `• <b>Hành động:</b> Đổi vai trò ${targetUser.username} (${targetUser.role} → ${data.role})\n` +
               `• <b>IP:</b> ${userIp}\n` +
               `• <b>User:</b> ${username}\n` +
-              `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}`,
+              `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
       });
     }
 
