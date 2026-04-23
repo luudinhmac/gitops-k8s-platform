@@ -58,12 +58,11 @@ export async function proxy(request: NextRequest) {
         return NextResponse.redirect(url);
       }
     } else {
-      console.error(`[Proxy] API error: ${response.status}`);
+      console.error(`[Proxy] API error: ${response.status} at ${fetchUrl}`);
     }
   } catch (error: any) {
-    console.error(`[Proxy] Fetch failed: ${error.message}`);
-    // If we can't reach the backend, we default to allowing access (to prevent total outage)
-    // In a production environment, you might want to redirect to a generic error page
+    console.error(`[Proxy] Backend unreachable: ${error.message}`);
+    // If we can't reach the backend, we default to allowing access (frontend will handle offline state)
     return NextResponse.next();
   }
 

@@ -13,6 +13,8 @@ import { cn } from '@/lib/utils';
 import { postService } from '@/services/postService';
 import { categoryService as catApi } from '@/services/categoryService';
 import { seriesService } from '@/services/seriesService';
+import { useAuth } from '@/context/AuthContext';
+import OfflineMessage from '@/components/common/OfflineMessage';
 
 interface Post {
   id: number;
@@ -57,10 +59,12 @@ interface Series {
 }
 
 export default function BlogContent() {
+  const { isBackendOffline } = useAuth();
   const [posts, setPosts] = useState<Post[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [recentSeries, setRecentSeries] = useState<Series[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
   const q = searchParams.get('q') || '';
@@ -71,7 +75,13 @@ export default function BlogContent() {
   }, [q]);
 
   const fetchData = useCallback(async () => {
+    if (isBackendOffline) {
+      setLoading(false);
+      return;
+    }
+    
     setLoading(true);
+    setHasError(false);
     try {
       const [postsData, catsData, seriesData] = await Promise.all([
         postService.getAll({ q, limit: 12 }),
@@ -82,12 +92,16 @@ export default function BlogContent() {
       setPosts(Array.isArray(postsData) ? (postsData as any) : []);
       setCategories(catsData);
       setRecentSeries(Array.isArray(seriesData) ? seriesData.slice(0, 5) : []);
-    } catch (error) {
+      setHasError(false);
+    } catch (error: any) {
       console.error('Error fetching data:', error);
+      if (error.isOffline || error.response?.status === 500) {
+        setHasError(true);
+      }
     } finally {
       setLoading(false);
     }
-  }, [q]);
+  }, [q, isBackendOffline]);
 
   useEffect(() => {
     fetchData();
@@ -132,7 +146,9 @@ export default function BlogContent() {
         <div className="flex flex-col lg:flex-row gap-1">
           {/* Main Content (Posts) */}
           <div className="flex-grow lg:w-3/4">
-            {loading ? (
+            {(isBackendOffline || hasError) ? (
+               <OfflineMessage onRetry={fetchData} />
+            ) : loading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1">
                 {[1, 2, 3, 4, 5, 6].map(i => (
                   <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl h-[400px] animate-pulse border border-slate-100 dark:border-slate-800 shadow-sm" />
