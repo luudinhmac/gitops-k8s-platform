@@ -32,7 +32,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - NEXT_PUBLIC_API_URL=https://staging.local/api
+        - NEXT_PUBLIC_API_URL=https://{{ domain_name }}/api
     container_name: portfolio-frontend
     restart: always
     env_file:
@@ -51,7 +51,11 @@ services:
       - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      {% if ssl_method == 'letsencrypt' %}
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      {% else %}
       - ./nginx/ssl:/etc/nginx/ssl:ro
+      {% endif %}
     depends_on:
       - frontend
       - backend
