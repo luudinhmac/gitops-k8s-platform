@@ -1,6 +1,6 @@
 server {
     listen 80;
-    server_name staging.local;
+    server_name {{ domain_name }};
 
     # Redirect all HTTP traffic to HTTPS
     location / {
@@ -10,10 +10,15 @@ server {
 
 server {
     listen 443 ssl;
-    server_name staging.local;
+    server_name {{ domain_name }};
 
+    {% if ssl_method == 'letsencrypt' %}
+    ssl_certificate /etc/letsencrypt/live/{{ domain_name }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/{{ domain_name }}/privkey.pem;
+    {% else %}
     ssl_certificate /etc/nginx/ssl/server.crt;
     ssl_certificate_key /etc/nginx/ssl/server.key;
+    {% endif %}
 
     # Routing / to frontend
     location / {

@@ -1,0 +1,39 @@
+---
+# Playbook to deploy the application to the Production environment (Public VPS)
+- name: Deploy Fullstack Application to Production
+  hosts: production_server
+  become: yes
+  vars:
+    # Deployment directory on the VPS
+    app_root: "/data/portfolio-prod"
+    
+    # Database configuration - ALWAYS use environment variables for Production
+    db_user: "{{ lookup('env', 'PROD_DB_USER') | default('prod_user', true) }}"
+    db_password: "{{ lookup('env', 'PROD_DB_PASSWORD') }}"
+    db_name: "{{ lookup('env', 'PROD_DB_NAME') | default('portfolio_prod', true) }}"
+    
+    # Domain and SSL configuration
+    domain_name: "{{ lookup('env', 'PROD_DOMAIN') }}"
+    ssl_method: "letsencrypt"
+    cert_email: "{{ lookup('env', 'CERT_EMAIL') | default('admin@' + domain_name, true) }}"
+  
+  roles:
+    - common       # Basic system setup (Security, Updates, etc.)
+    - docker       # Install Docker & Docker Compose
+    - app/backend  # Deploy Backend & generate .env
+    - app/frontend # Deploy Frontend & generate .env
+    - ssl          # Request Let's Encrypt certificates
+    - nginx        # Configure Nginx & Start Docker containers
+
+  post_tasks:
+    # Sync database schema (Safe push for production)
+    - name: Sync database schema (db push)
+      command: docker exec portfolio-backend npx prisma db push
+
+    # Ensure Prisma client is ready
+    - name: Generate Prisma Client
+      command: docker exec portfolio-backend npx prisma generate
+
+    # Seed the database if necessary
+    - name: Seed database
+      command: docker exec portfolio-backend npx prisma db seed

@@ -1,27 +1,40 @@
 ---
+# Playbook to deploy the application to the Staging environment (internal VM)
 - name: Deploy Fullstack Application to Staging
   hosts: staging_server
   become: yes
   vars:
-    app_root: "/opt/portfolio"
-    db_user: "macld"
-    db_password: "macld@2026"
-    db_name: "portfolio_db"
+    # Basic application directory on the remote server
+    app_root: "/opt/portfolio-staging"
+    
+    # Database configuration - retrieved from environment variables for security
+    db_user: "{{ lookup('env', 'STAGING_DB_USER') | default('staging_user', true) }}"
+    db_password: "{{ lookup('env', 'STAGING_DB_PASSWORD') }}"
+    db_name: "{{ lookup('env', 'STAGING_DB_NAME') | default('portfolio_staging', true) }}"
+    
+    # Domain configuration
+    domain_name: "{{ lookup('env', 'STAGING_DOMAIN') | default('staging.local', true) }}"
+    
+    # SSL method: self-signed is used for internal staging environment
+    ssl_method: "self-signed"
   
   roles:
-    - common
-    - docker
-    - app/backend
-    - app/frontend
-    - ssl
-    - nginx
+    - common       # Basic system setup
+    - docker       # Install Docker & Docker Compose
+    - app/backend  # Prepare backend files & .env
+    - app/frontend # Prepare frontend files & .env
+    - ssl          # Generate SSL certificates
+    - nginx        # Configure Nginx & Start services via Docker Compose
 
   post_tasks:
+    # Apply database migrations to the running container
     - name: Sync database schema (db push)
       command: docker exec portfolio-backend npx prisma db push --accept-data-loss
 
-    - name: Generate Prisma Client (ensure schema is up-to-date for seed)
+    # Ensure Prisma Client is generated for the seeding step
+    - name: Generate Prisma Client
       command: docker exec portfolio-backend npx prisma generate
 
-    - name: Seed database with default settings and admin user
+    # Seed the database with initial data (Admin user, settings, etc.)
+    - name: Seed database with default settings
       command: docker exec portfolio-backend npx prisma db seed
