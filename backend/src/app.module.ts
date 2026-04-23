@@ -20,6 +20,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { StatsModule } from './stats/stats.module';
 import { StatsMiddleware } from './stats/stats.middleware';
 import { MiddlewareConsumer, RequestMethod } from '@nestjs/common';
+import { HealthController } from './health.controller';
 
 @Module({
   imports: [
@@ -47,7 +48,7 @@ import { MiddlewareConsumer, RequestMethod } from '@nestjs/common';
     ScheduleModule.forRoot(),
     StatsModule,
   ],
-  controllers: [],
+  controllers: [HealthController],
   providers: [],
 })
 export class AppModule {
