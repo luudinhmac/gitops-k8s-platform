@@ -4,8 +4,8 @@ const isServer = typeof window === 'undefined';
 
 const api = axios.create({
   baseURL: isServer 
-    ? (process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api')
-    : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'),
+    ? (process.env.INTERNAL_API_URL || (process.env.NODE_ENV === 'production' ? 'http://backend:3001/api' : 'http://localhost:3001/api'))
+    : '/api',
   withCredentials: true,
   timeout: 5000, // 5 seconds timeout
   headers: {

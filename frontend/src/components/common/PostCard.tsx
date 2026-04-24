@@ -55,7 +55,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, className, priority = false }
       <div className="relative h-56 overflow-hidden rounded-[2rem] bg-slate-100 dark:bg-slate-800 shadow-sm group-hover:shadow-2xl group-hover:shadow-primary/20 transition-all duration-500">
         {post.cover_image ? (
           <Image
-            src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${post.cover_image}`}
+            src={`${post.cover_image}`}
             alt={post.title}
             fill
             priority={priority}

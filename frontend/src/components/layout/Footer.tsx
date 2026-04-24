@@ -16,7 +16,7 @@ export default function Footer() {
 
     const fetchStats = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/stats/counters`);
+        const res = await fetch(`/api/stats/counters`);
         if (res.ok) {
           const data = await res.json();
           setStats(data);

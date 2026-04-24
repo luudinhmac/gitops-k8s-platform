@@ -8,9 +8,9 @@ Dự án Portfolio + Blog chuyên nghiệp dành cho Kỹ sư Hệ thống (Syst
 - **Backend:** NestJS
 - **Database:** PostgreSQL (Dockerized)
 - **DevOps:**
-  - Docker & Docker Compose (Containerization)
-  - Ansible (Automated Deployment)
-  - Nginx (Security & Reverse Proxy)
+  - Docker & Docker Compose (Containerization: Apps, DB, Nginx)
+  - Ansible (Automated Roles-based Deployment)
+  - Nginx (Unified Reverse Proxy & SSL)
 
 ## Features
 - **Blog-First Architecture:** Hệ thống được cấu trúc với Blog là trang chủ (`/`) để tối ưu việc chia sẻ kiến thức, trong khi các phần Portfolio, Giới thiệu, Dự án được quy hoạch gọn gàng trong mục `/about`.
@@ -22,13 +22,14 @@ Dự án Portfolio + Blog chuyên nghiệp dành cho Kỹ sư Hệ thống (Syst
 - **Advanced User Management:** Quản trị viên (Admin & Superadmin) có thể kiểm soát chi tiết quyền hạn của từng người dùng thông qua Settings Box: cấm đăng nhập (Khóa tài khoản), cấm bình luận, cấm đăng bài, và thay đổi vai trò trực quan. Tài khoản **Superadmin** có quyền hạn tối cao, quản lý được cả các tài khoản Admin khác.
 - **Maintenance Mode:** Hệ thống bảo trì phân mảnh (Global, Posts, Comments) cho phép khóa toàn bộ website hoặc từng chức năng cụ thể. Tích hợp "Cửa bí mật" (Hidden Door) với Passcode xác thực dành riêng cho Quản trị viên để truy cập quản trị trong lúc bảo trì.
 - **Notification System:** Hệ thống thông báo thời hạn thực với huy hiệu (badges) thông minh trên Navbar. Thông báo cho người dùng về các tương tác (bình luận, trả lời) và các sự kiện hệ thống quan trọng.
+- **Security-First API:** Tài liệu Swagger được bảo vệ theo môi trường và giới hạn IP. Các thông tin nhạy cảm (pass hash) được lọc bỏ hoàn toàn khỏi các phản hồi API.
 
 ## Project Structure
 ```text
-frontend/      # Next.js Application
-backend/       # NestJS API (Prisma + PostgreSQL)
-ansible/       # Ansible Playbooks & Inventory
-docs/          # Technical Documentation & Debug Logs
+frontend/      # Next.js Application (Build Once, Run Anywhere)
+backend/       # NestJS API (Stateless, DB Retry Logic)
+ansible/       # Ansible Roles & Automation
+docs/          # Technical Documentation & Deployment Reports
 ```
 
 ## Local Development
@@ -50,84 +51,64 @@ docs/          # Technical Documentation & Debug Logs
 3. **Truy cập:**
    - Frontend: http://localhost:3000
    - Backend: http://localhost:3001
+   - Swagger Docs: http://localhost:3001/api/docs (Local only)
 
 ## Environment Variables
 Sử dụng các tệp `.env.example` được cung cấp trong từng thư mục làm mẫu.
 
 **Backend:**
 - `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DATABASE_URL`
-- `JWT_SECRET`
+- `JWT_SECRET`, `ENABLE_SWAGGER`
 - `ALLOWED_ORIGINS`
 
 **Frontend:**
-- `NEXT_PUBLIC_API_URL`
+- (Không còn yêu cầu biến môi trường lúc build nhờ kiến trúc Proxy tập trung)
 
 ## Git Workflow
 Hệ thống tuân thủ quy trình làm việc chuyên nghiệp:
 - `feature/*` → `development`: Phát triển tính năng mới.
-- `dev` → `staging`: Kiểm thừ trên VM (Cổng 8000).
-- `main` → `production`: Vận hành chính thức (Cổng 80/443).
+- `dev` → `staging`: Kiểm thử trên VM Staging.
+- `main` → `production`: Vận hành chính thức.
 
 ## Deployment
 
-Dự án sử dụng hệ thống tự động hóa **Ansible Roles** để quản lý hạ tầng và triển khai đa môi trường một cách chuyên nghiệp.
+Dự án sử dụng hệ thống tự động hóa **Ansible Roles** để quản lý hạ tầng và triển khai đa môi trường.
 
 ### 1. Hạ tầng (Infrastructure)
-Hệ thống tự động thiết lập các thành phần sau trên VM Linux:
-- **Docker & Docker Compose**: Nền tảng vận hành container chính.
-- **PostgreSQL (Dockerized)**: Cơ sở dữ liệu chạy trong container để đảm bảo tính đóng gói.
-- **Nginx (Local Native)**: Cài đặt trực tiếp trên OS để điều phối traffic và quản lý SSL tập trung.
+Hệ thống được đóng gói hoàn toàn trong Docker Compose bao gồm:
+- **Frontend** (Next.js Standalone)
+- **Backend** (NestJS)
+- **PostgreSQL 16** (Database)
+- **Nginx (Containerized)**: Đóng vai trò Reverse Proxy duy nhất, quản lý SSL và Routing.
 
-### 2. Môi trường triển khai (Environments)
-Mã nguồn và dữ liệu được lưu trữ tập trung tại phân vùng **/data**:
-- **Production**: Triển khai tại `/data/prod` (Nginx Cổng 80).
-- **Development**: Triển khai tại `/data/dev` (Nginx Cổng 8000).
+### 2. Cách vận hành Ansible
+Cấu hình IP máy chủ tại `ansible/inventory.ini`, sau đó chạy:
 
-### 3. Cách vận hành Ansible
-Cấu hình IP máy chủ tại `ansible/inventory.ini`, sau đó chạy các lệnh sau:
-
-**Triển khai Staging (Tự động hóa hoàn toàn):**
+**Triển khai Staging:**
 ```bash
 cd ansible
+export STAGING_DB_PASSWORD=your_password
 ansible-playbook -i inventory.ini playbooks/staging.yml
 ```
 
 Quy trình tự động bao gồm:
-1. Sync mã nguồn mới nhất lên Server.
-2. Build Docker images cho Frontend & Backend.
-3. Cấu hình môi trường (.env) từ templates.
-4. Cấu hình Nginx & SSL.
+1. Đồng bộ mã nguồn lên Server.
+2. Build Docker images (Frontend & Backend).
+3. Cấu hình Nginx & SSL (Self-signed cho Staging, Certbot cho Prod).
+4. Khởi chạy toàn bộ Services qua Docker Compose.
 5. Tự động `prisma db push` và `prisma db seed`.
-
-### 4. Cấu hình SSL (HTTPS)
-Dự án tích hợp sẵn **Certbot** để cấp phát chứng chỉ Let's Encrypt tự động.
-
-**Các bước kích hoạt:**
-1. Trỏ Domain của bạn về IP của máy chủ VM.
-2. Cập nhật các biến trong `ansible/group_vars/all.yml`:
-   ```yaml
-   enable_ssl: true
-   domain_name: "yourdomain.com"
-   cert_email: "luumac2801@gmail.com"
-   ```
-3. Chạy Playbook cấu hình Nginx:
-   ```bash
-   ansible-playbook -i ansible/hosts ansible/site.yml --tags nginx
-   ```
-
-Hệ thống sẽ tự động yêu cầu chứng chỉ, cấu hình cổng 443 và thiết lập Redirect từ HTTP sang HTTPS.
 
 ---
 
 ## DevOps Architecture
-**Quy trình:** Laptop → GitHub → Ansible Controller → VM (Native DB & Docker Apps)
+**Quy trình:** Laptop → GitHub → Ansible Controller → VM (All Docker Containers)
 
-Thiết kế này tối ưu hóa hiệu năng bằng cách chạy Database Native trực tiếp trên OS và đóng gói ứng dụng trong Docker để dễ dàng quản lý phiên bản và môi trường.
+Kiến trúc này đảm bảo tính đóng gói tuyệt đối, cho phép di chuyển ứng dụng giữa các Server một cách dễ dàng (Portability).
 
 ## Security Notes
-- Luôn sử dụng biến môi trường cho các thông tin nhạy cảm.
-- Cookie định danh được cấu hình `httpOnly` và `SameSite: Lax`.
-- Chỉ cho phép các domain được định nghĩa trong `ALLOWED_ORIGINS` truy cập API.
+- **API Protection:** Swagger chỉ hiển thị ở môi trường nội bộ/staging và bị chặn ở Production bởi Nginx.
+- **Data Privacy:** Các trường nhạy cảm trong Cấu hình (Settings) được che giấu tự động trước khi gửi về Client.
+- **Network Security:** Backend và DB không mở cổng ra internet, chỉ cho phép truy cập thông qua Nginx Proxy.
 
 
 

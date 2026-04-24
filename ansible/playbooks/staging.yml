@@ -17,6 +17,12 @@
     
     # SSL method: self-signed is used for internal staging environment
     ssl_method: "self-signed"
+
+    # JWT Secret
+    jwt_secret: "{{ lookup('env', 'JWT_SECRET') | default('p0rtf0l1o_m1gration_secret_key_123456', true) }}"
+
+    # Swagger Documentation
+    enable_swagger: "true"
   
   roles:
     - common       # Basic system setup
@@ -27,7 +33,7 @@
     - nginx        # Configure Nginx & Start services via Docker Compose
 
   post_tasks:
-    # Apply database migrations to the running container
+    # Apply database schema to the database (using db push as there are no migrations yet)
     - name: Sync database schema (db push)
       command: docker exec portfolio-backend npx prisma db push --accept-data-loss
 

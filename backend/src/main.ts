@@ -6,6 +6,9 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Enable Graceful Shutdown
+  app.enableShutdownHooks();
+
   // Set Global Prefix
   app.setGlobalPrefix('api');
 
@@ -26,15 +29,20 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
   });
 
-  // Swagger Documentation
-  const config = new DocumentBuilder()
-    .setTitle('Portfolio API')
-    .setDescription('The Portfolio project API documentation')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  // Swagger Documentation - Only enabled in non-production or when explicitly enabled
+  const isProduction = process.env.NODE_ENV === 'production';
+  const isSwaggerEnabled = process.env.ENABLE_SWAGGER === 'true';
+
+  if (!isProduction || isSwaggerEnabled) {
+    const config = new DocumentBuilder()
+      .setTitle('Portfolio API')
+      .setDescription('The Portfolio project API documentation')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document);
+  }
 
   const port = process.env.PORT || 3001;
   await app.listen(port);

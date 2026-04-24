@@ -47,7 +47,7 @@ export default function AdminDashboardPage() {
     try {
       const [postsData, catsData] = await Promise.all([
         postService.getAdminPosts(),
-        fetch(`${process.env.NEXT_PUBLIC_API_URL}/categories`, { credentials: 'include' }).then(res => res.json())
+        fetch(`/api/categories`, { credentials: 'include' }).then(res => res.json())
       ]);
 
       let filtered: AdminPost[] = Array.isArray(postsData) ? postsData : [];
