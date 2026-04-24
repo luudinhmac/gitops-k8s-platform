@@ -1,0 +1,54 @@
+1. 📂 Quản lý Triển khai (Ansible - Chạy từ máy Controller .50)
+Triển khai môi trường Staging (Docker Compose):
+bash
+ansible-playbook -i inventory.ini playbooks/staging.yml
+Thiết lập cụm Kubernetes (Cài đặt kubeadm, docker, dashboard...):
+bash
+ansible-playbook -i inventory.ini playbooks/k8s_setup.yml
+Triển khai Ứng dụng lên Kubernetes (Build image, Sync manifests, DB Init):
+bash
+ansible-playbook -i inventory.ini playbooks/k8s_app_deploy.yml
+2. ☸️ Quản lý Kubernetes (Chạy trên máy K8s Node .110)
+Kiểm tra trạng thái hệ thống:
+bash
+kubectl get all -n portfolio         # Xem tất cả pod, svc, deployment
+kubectl get pods -n portfolio        # Chỉ xem danh sách Pods
+kubectl describe pod <tên-pod> -n portfolio  # Xem chi tiết lỗi của Pod
+Xem logs để debug:
+bash
+kubectl logs -n portfolio deployment/backend
+kubectl logs -n portfolio deployment/nginx
+Quản lý Dashboard:
+bash
+# Tạo Token đăng nhập
+kubectl -n kubernetes-dashboard create token admin-user
+# Kiểm tra cổng NodePort của Dashboard
+kubectl get svc -n kubernetes-dashboard
+3. 🐳 Quản lý Docker & Containerd (Cầu nối Image)
+Kiểm tra Image trong Docker (Moby):
+bash
+docker images
+docker build -t portfolio-frontend:latest ./frontend
+Chuyển Image sang K8s (Containerd k8s.io namespace):
+bash
+# Đây là lệnh then chốt để K8s thấy được image build local
+docker save portfolio-frontend:latest | sudo ctr -n k8s.io images import -
+Kiểm tra Image trong K8s runtime:
+bash
+sudo ctr -n k8s.io images list
+💾 4. Quản lý Database & Prisma (Chạy từ bên trong Pod)
+Đồng bộ Schema (DB Push):
+bash
+kubectl exec -n portfolio deployment/backend -- npx prisma db push --accept-data-loss
+Khởi tạo dữ liệu mẫu (DB Seed):
+bash
+kubectl exec -n portfolio deployment/backend -- npx prisma db seed
+🛠️ 5. Lệnh kiểm tra hệ thống (Hữu ích khi gặp lỗi)
+Kiểm tra cổng đang lắng nghe:
+bash
+# Kiểm tra bên trong Pod Nginx
+kubectl exec -n portfolio deployment/nginx -- netstat -tuln
+Kiểm tra dịch vụ hệ thống:
+bash
+sudo systemctl status docker
+sudo systemctl status kubelet
