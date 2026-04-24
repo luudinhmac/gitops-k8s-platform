@@ -70,7 +70,7 @@ export default function RichEditor({ value, onChange, placeholder }: RichEditorP
                         formData.append('file', file);
 
                         try {
-                            const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/upload?type=content`, {
+                            const res = await fetch(`/api/upload?type=content`, {
                                 method: 'POST',
                                 body: formData,
                                 credentials: 'include'

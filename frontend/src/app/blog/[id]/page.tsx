@@ -10,7 +10,7 @@ export default function OldPostDetailPage({ params }: { params: Promise<{ id: st
   useEffect(() => {
     const fetchAndRedirect = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/posts/${id}`);
+        const response = await fetch(`/api/posts/${id}`);
         if (response.ok) {
           const post = await response.json();
           const categorySlug = post.Category?.slug || 'uncategorized';

@@ -374,7 +374,7 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
                 <div className="w-full aspect-[21/9] border-b border-slate-100/50 dark:border-slate-800/50 relative overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none z-10" />
                   <img
-                    src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${post.cover_image}`}
+                    src={`${post.cover_image}`}
                     alt={post.title}
                     className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700 relative z-0"
                   />

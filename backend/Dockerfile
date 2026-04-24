@@ -23,7 +23,7 @@ RUN npx prisma generate
 RUN pnpm run build
 
 # Compile seed files to JavaScript
-RUN npx tsc prisma/seed.ts seed_admin.ts --outDir dist --esModuleInterop --module CommonJS --target ES2021
+RUN npx tsc prisma/seed.ts --outDir dist --esModuleInterop --module CommonJS --target ES2021
 
 # Stage 2: Run
 FROM node:22-alpine AS runner

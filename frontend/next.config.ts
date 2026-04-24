@@ -17,10 +17,18 @@ const nextConfig: NextConfig = {
         root: '..',
     },
     async rewrites() {
+        const internalApiUrl = process.env.INTERNAL_API_URL || 'http://localhost:3001/api';
+        // Remove trailing slash and /api suffix to use as base destination
+        const destinationBase = internalApiUrl.replace(/\/api\/?$/, '');
+        
         return [
             {
                 source: '/api/:path*',
-                destination: 'http://localhost:3001/api/:path*',
+                destination: `${destinationBase}/api/:path*`,
+            },
+            {
+                source: '/uploads/:path*',
+                destination: `${destinationBase}/uploads/:path*`,
             },
         ];
     },

@@ -24,16 +24,17 @@ export async function proxy(request: NextRequest) {
     const nodeEnv = process.env.NODE_ENV || 'development';
     console.log(`[Proxy] NODE_ENV: ${nodeEnv}`);
     
-    // Use INTERNAL_API_URL if defined, then Docker service name, then localhost
+    // Standardized fetching: Priority to INTERNAL_API_URL, then env-based host, then fallback
     let fetchUrl = process.env.INTERNAL_API_URL;
     
     if (!fetchUrl) {
-      const backendHost = nodeEnv === 'production' ? 'portfolio-backend' : '127.0.0.1';
+      // Use generic 'backend' as default for Compose/K8s, fallback to 127.0.0.1 for local
+      const backendHost = nodeEnv === 'production' ? 'backend' : '127.0.0.1';
       fetchUrl = `http://${backendHost}:3001/api/settings/public`;
     } else {
-      // Ensure settings endpoint is appended if only base URL is provided
-      if (!fetchUrl.endsWith('/settings/public')) {
-        fetchUrl = fetchUrl.replace(/\/api\/?$/, '/api/settings/public');
+      // Ensure settings endpoint is appended correctly
+      if (!fetchUrl.includes('/settings/public')) {
+        fetchUrl = fetchUrl.replace(/\/api\/?$/, '') + '/api/settings/public';
       }
     }
     

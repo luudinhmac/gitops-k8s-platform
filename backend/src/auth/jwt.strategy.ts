@@ -56,7 +56,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     if (!user.is_active) {
       throw new UnauthorizedException('Tài khoản đã bị vô hiệu hóa');
     }
-
-    return user as unknown as User;
+    
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...result } = user;
+    return result as unknown as User;
   }
 }
