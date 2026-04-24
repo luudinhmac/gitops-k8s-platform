@@ -1,0 +1,97 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: portfolio
+data:
+  nginx.conf: |
+    server {
+        # Redirect standard HTTP (80) to HTTPS (443)
+        listen 80;
+        server_name _;
+        return 301 https://$host$request_uri;
+    }
+
+    server {
+        # Secure server listening on 443 with SSL enabled
+        listen 443 ssl;
+        ssl_certificate /etc/nginx/ssl/tls.crt;
+        ssl_certificate_key /etc/nginx/ssl/tls.key;
+
+        # Standard HTTPS redirect for 497 error
+        error_page 497 https://$host$request_uri;
+
+        location / {
+            proxy_pass http://frontend:3000;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+        location /api/ {
+            location /api/docs {
+                deny all;
+            }
+            proxy_pass http://backend:3001;
+            proxy_set_header Host $host;
+        }
+        location /uploads/ {
+            proxy_pass http://backend:3001/uploads/;
+            proxy_set_header Host $host;
+        }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: portfolio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      # Use hostNetwork to bind directly to VPS ports 80/443
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      containers:
+      - name: nginx
+        image: nginx:alpine
+        ports:
+        - containerPort: 80
+        - containerPort: 443
+        volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: nginx.conf
+        - name: ssl-certs
+          mountPath: /etc/nginx/ssl
+          readOnly: true
+      volumes:
+      - name: nginx-config
+        configMap:
+          name: nginx-config
+      - name: ssl-certs
+        secret:
+          secretName: portfolio-ssl
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  namespace: portfolio
+spec:
+  # ClusterIP is sufficient as hostNetwork already exposes the ports
+  type: ClusterIP
+  selector:
+    app: nginx
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+  - name: https
+    port: 443
+    targetPort: 443

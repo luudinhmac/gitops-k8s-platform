@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: portfolio
+data:
+  NODE_ENV: "production"
+  PORT: "3001"
+  INTERNAL_API_URL: "http://backend:3001/api"
+  NEXT_PUBLIC_API_URL: "https://192.168.157.110/api"

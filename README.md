@@ -9,8 +9,9 @@ Dự án Portfolio + Blog chuyên nghiệp dành cho Kỹ sư Hệ thống (Syst
 - **Database:** PostgreSQL (Dockerized)
 - **DevOps:**
   - Docker & Docker Compose (Containerization: Apps, DB, Nginx)
-  - Ansible (Automated Roles-based Deployment)
-  - Nginx (Unified Reverse Proxy & SSL)
+  - Kubernetes (Production Orchestration: Single-node kubeadm)
+  - Ansible (Automated Roles-based Infrastructure & App Deployment)
+  - Nginx (Unified Reverse Proxy & SSL Gateway)
 
 ## Features
 - **Blog-First Architecture:** Hệ thống được cấu trúc với Blog là trang chủ (`/`) để tối ưu việc chia sẻ kiến thức, trong khi các phần Portfolio, Giới thiệu, Dự án được quy hoạch gọn gàng trong mục `/about`.
@@ -72,31 +73,31 @@ Hệ thống tuân thủ quy trình làm việc chuyên nghiệp:
 
 ## Deployment
 
-Dự án sử dụng hệ thống tự động hóa **Ansible Roles** để quản lý hạ tầng và triển khai đa môi trường.
+Dự án hỗ trợ hai phương thức triển khai tự động hóa qua **Ansible Roles**:
 
-### 1. Hạ tầng (Infrastructure)
-Hệ thống được đóng gói hoàn toàn trong Docker Compose bao gồm:
-- **Frontend** (Next.js Standalone)
-- **Backend** (NestJS)
-- **PostgreSQL 16** (Database)
-- **Nginx (Containerized)**: Đóng vai trò Reverse Proxy duy nhất, quản lý SSL và Routing.
-
-### 2. Cách vận hành Ansible
-Cấu hình IP máy chủ tại `ansible/inventory.ini`, sau đó chạy:
-
-**Triển khai Staging:**
+### 1. Môi trường Staging (Docker Compose)
+Dành cho kiểm thử nhanh trên VM đơn lẻ.
 ```bash
 cd ansible
-export STAGING_DB_PASSWORD=your_password
+# Triển khai qua Docker Compose
 ansible-playbook -i inventory.ini playbooks/staging.yml
 ```
 
-Quy trình tự động bao gồm:
-1. Đồng bộ mã nguồn lên Server.
-2. Build Docker images (Frontend & Backend).
-3. Cấu hình Nginx & SSL (Self-signed cho Staging, Certbot cho Prod).
-4. Khởi chạy toàn bộ Services qua Docker Compose.
-5. Tự động `prisma db push` và `prisma db seed`.
+### 2. Môi trường Production (Kubernetes)
+Kiến trúc Production-Grade trên cụm Single-node K8s.
+*   **Hạ tầng:** Kubeadm, Flannel CNI, Dashboard.
+*   **Networking:** HostNetwork Nginx (Cổng 80/443 chuẩn), tương thích Cloudflare.
+*   **Security:** Quản lý tập trung qua K8s Secrets & ConfigMaps.
+
+**Triển khai:**
+```bash
+# 1. Setup Cluster (Cài đặt môi trường K8s)
+ansible-playbook -i inventory.ini playbooks/k8s_setup.yml
+
+# 2. Deploy App (Build, Sync & Run)
+ansible-playbook -i inventory.ini playbooks/k8s_app_deploy.yml
+```
+Quy trình K8s tự động bao gồm bridge Image từ Docker sang Containerd, cấp phát SSL, và khởi tạo Secrets động (bao gồm auto-gen JWT).
 
 ---
 
