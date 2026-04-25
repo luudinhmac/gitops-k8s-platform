@@ -1,3 +1,4 @@
+import { IsString, IsOptional, IsNumber, IsBoolean, IsNotEmpty } from 'class-validator';
 import { User } from './users';
 
 export interface Post {
@@ -34,30 +35,94 @@ export interface Post {
 }
 
 export class CreatePostDto {
+  @IsString()
+  @IsNotEmpty()
   title: string;
+
+  @IsString()
+  @IsOptional()
   slug?: string;
+
+  @IsString()
+  @IsOptional()
   content?: string;
+
+  @IsNumber()
+  @IsOptional()
   category_id?: number | null;
+
+  @IsNumber()
+  @IsOptional()
   series_id?: number | null;
+
+  @IsNumber()
+  @IsOptional()
   series_order?: number | null;
+
+  @IsString()
+  @IsOptional()
   cover_image?: string | null;
+
+  @IsBoolean()
+  @IsOptional()
   is_pinned?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
   is_published?: boolean;
+
+  @IsString()
+  @IsOptional()
   tags?: string;
+
+  @IsString()
+  @IsOptional()
   series_name?: string;
 }
 
 export class UpdatePostDto {
+  @IsString()
+  @IsOptional()
   title?: string;
+
+  @IsString()
+  @IsOptional()
   slug?: string;
+
+  @IsString()
+  @IsOptional()
   content?: string;
+
+  @IsNumber()
+  @IsOptional()
   category_id?: number | null;
+
+  @IsNumber()
+  @IsOptional()
   series_id?: number | null;
+
+  @IsNumber()
+  @IsOptional()
   series_order?: number | null;
+
+  @IsString()
+  @IsOptional()
   cover_image?: string | null;
+
+  @IsBoolean()
+  @IsOptional()
   is_pinned?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
   is_published?: boolean;
+
+  @IsString()
+  @IsOptional()
   tags?: string;
+
+  @IsString()
+  @IsOptional()
   series_name?: string;
 }
 

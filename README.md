@@ -24,6 +24,7 @@ Dự án Portfolio + Blog chuyên nghiệp dành cho Kỹ sư Hệ thống (Syst
 - **Advanced User Management:** Quản trị viên (Admin & Superadmin) có thể kiểm soát chi tiết quyền hạn của từng người dùng thông qua Settings Box: cấm đăng nhập (Khóa tài khoản), cấm bình luận, cấm đăng bài, và thay đổi vai trò trực quan. Tài khoản **Superadmin** có quyền hạn tối cao, quản lý được cả các tài khoản Admin khác.
 - **Maintenance Mode:** Hệ thống bảo trì phân mảnh (Global, Posts, Comments) cho phép khóa toàn bộ website hoặc từng chức năng cụ thể. Tích hợp "Cửa bí mật" (Hidden Door) với Passcode xác thực dành riêng cho Quản trị viên để truy cập quản trị trong lúc bảo trì.
 - **Notification System:** Hệ thống thông báo thời hạn thực với huy hiệu (badges) thông minh trên Navbar. Thông báo cho người dùng về các tương tác (bình luận, trả lời) và các sự kiện hệ thống quan trọng.
+- **Series Navigation:** Tự động hiển thị bài viết trước và bài viết sau trong cùng một series, hỗ trợ điều hướng thông minh theo thứ tự (series_order) ngay trong trang chi tiết bài viết.
 - **Security-First API:** Tài liệu Swagger được bảo vệ theo môi trường và giới hạn IP. Các thông tin nhạy cảm (pass hash) được lọc bỏ hoàn toàn khỏi các phản hồi API.
 
 ## Project Structure

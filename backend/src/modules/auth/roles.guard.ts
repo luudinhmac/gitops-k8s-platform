@@ -6,7 +6,6 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from './roles.decorator';
-import { AuthenticatedRequest } from '../users/interfaces/user.interface';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -18,22 +17,19 @@ export class RolesGuard implements CanActivate {
       [context.getHandler(), context.getClass()],
     );
 
-    // If no roles are required, allow access
     if (!requiredRoles) {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
+    const request = context.switchToHttp().getRequest<any>();
     const user = request.user;
 
-    // If user is not present or doesn't have a role, deny access
     if (!user || !user.role) {
       throw new ForbiddenException(
         'Bạn không có quyền thực hiện hành động này.',
       );
     }
 
-    // Superadmin has access to everything
     if (user.role === 'superadmin') {
       return true;
     }

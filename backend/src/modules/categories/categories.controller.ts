@@ -13,7 +13,7 @@ import { CategoriesService } from './categories.service';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
-import { CreateCategoryDto, UpdateCategoryDto } from './dto/category.dto';
+import { CreateCategoryDto, UpdateCategoryDto } from '@portfolio/contracts';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
 @ApiTags('Categories')

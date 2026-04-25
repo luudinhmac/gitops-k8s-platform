@@ -55,7 +55,7 @@ export default function AdminDashboardPage() {
         categoryService.getAll()
       ]);
 
-      setPosts(postsData?.data || []);
+      setPosts(postsData?.items || []);
       setCategories(Array.isArray(catsData) ? catsData : []);
     } catch (error) {
       console.error('Error fetching admin data:', error);

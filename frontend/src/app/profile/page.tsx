@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
   User as UserIcon, FileText, Lock, Save, Loader2,
   ArrowLeft, Eye, EyeOff, AlertCircle, Check,
-  Calendar, Phone, MapPin, Briefcase, Mail, Trash2, Edit, MessageSquare, Heart, SortAsc
+  Calendar, Phone, MapPin, Briefcase, Mail, Trash2, Edit, MessageSquare, Heart, SortAsc, Layers
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import UserAvatar from '@/features/users/components/UserAvatar';
@@ -19,6 +19,7 @@ import FormattedDate from '@/shared/components/common/FormattedDate';
 import { postService } from '@/features/posts/services/postService';
 import { userService } from '@/features/users/services/userService';
 import { usePostActions } from '@/hooks/post/usePostActions';
+import { seriesService } from '@/features/series/services/seriesService';
 import Button from '@/shared/components/ui/Button';
 import IconBadge from '@/shared/components/ui/IconBadge';
 import AnimateList from '@/shared/components/ui/AnimateList';
@@ -34,7 +35,7 @@ function ProfilePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState<'info' | 'posts' | 'password'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'posts' | 'series' | 'password'>('info');
   const [profileForm, setProfileForm] = useState({
     fullname: '', email: '', phone: '', address: '', profession: '', birthday: ''
   });
@@ -47,6 +48,9 @@ function ProfilePageContent() {
   const [postsLoading, setPostsLoading] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('latest');
   const [postFilter, setPostFilter] = useState<'all' | 'published' | 'draft' | 'blocked'>('all');
+  
+  const [mySeries, setMySeries] = useState<any[]>([]);
+  const [seriesLoading, setSeriesLoading] = useState(false);
 
   const [passForm, setPassForm] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
   const [showPass, setShowPass] = useState({ old: false, new: false, confirm: false });
@@ -68,7 +72,7 @@ function ProfilePageContent() {
     
     // Check for tab parameter
     const tab = searchParams.get('tab');
-    if (tab === 'posts' || tab === 'info' || tab === 'password') {
+    if (tab === 'posts' || tab === 'info' || tab === 'series' || tab === 'password') {
       setActiveTab(tab as any);
     }
   }, [authLoading, isAuthenticated, router, searchParams]);
@@ -94,16 +98,29 @@ function ProfilePageContent() {
         status: postFilter,
         sort: sortBy
       });
-      setMyPosts(data?.data || []);
+      setMyPosts(data?.items || []);
     } catch (err) { console.error('Failed to fetch posts:', err); }
     finally { setPostsLoading(false); }
   }, [user?.id, postFilter, sortBy]);
+
+  const fetchMySeries = useCallback(async () => {
+    if (!user?.id) return;
+    setSeriesLoading(true);
+    try {
+      const data = await seriesService.getMySeries();
+      setMySeries(data || []);
+    } catch (err) { console.error('Failed to fetch series:', err); }
+    finally { setSeriesLoading(false); }
+  }, [user?.id]);
 
   useEffect(() => {
     if (activeTab === 'posts' && user) {
       fetchMyPosts();
     }
-  }, [activeTab, user, fetchMyPosts, sortBy, postFilter]);
+    if (activeTab === 'series' && user) {
+        fetchMySeries();
+    }
+  }, [activeTab, user, fetchMyPosts, fetchMySeries, sortBy, postFilter]);
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -199,6 +216,7 @@ function ProfilePageContent() {
   const tabs = [
     { id: 'info', label: 'Thông tin cá nhân', icon: UserIcon },
     { id: 'posts', label: 'Bài viết của tôi', icon: FileText },
+    { id: 'series', label: 'Series của tôi', icon: Layers },
     { id: 'password', label: 'Đổi mật khẩu', icon: Lock },
   ];
 
@@ -475,6 +493,51 @@ function ProfilePageContent() {
                   ))}
                 </AnimateList>
               )}
+            </div>
+          )}
+
+          {activeTab === 'series' && (
+            <div>
+               <div className="flex items-center justify-between mb-1">
+                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">Series của tôi ({mySeries.length})</h2>
+                 <Link href="/admin/series" className="text-xs font-bold text-primary hover:underline flex items-center">
+                   <Edit size={12} className="mr-1" /> Quản lý tất cả series
+                 </Link>
+               </div>
+
+               {seriesLoading ? (
+                 <div className="flex justify-center py-12"><Loader2 className="animate-spin text-primary" size={32} /></div>
+               ) : mySeries.length === 0 ? (
+                 <div className="text-center py-16 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-xl">
+                   <Layers size={40} className="mx-auto text-slate-200 dark:text-slate-800 mb-4" />
+                   <p className="text-slate-500">Bạn chưa có series bài viết nào.</p>
+                   <p className="text-[10px] text-slate-400 mt-1">Khi viết bài, bạn có thể nhập tên series để tự động tạo và nhóm các bài viết lại.</p>
+                 </div>
+               ) : (
+                 <AnimateList className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {mySeries.map(series => (
+                      <div key={series.id} className="flex items-center justify-between py-1 group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 px-2 -mx-2 rounded-xl transition-all">
+                        <div className="flex items-center space-x-4 flex-1 min-w-0">
+                           <IconBadge icon={Layers} color="blue" size="md" />
+                           <div className="flex-1 min-w-0">
+                              <Link href={`/?q=${encodeURIComponent(series.name)}`}>
+                                <h3 className="font-bold text-slate-900 dark:text-white text-sm truncate group-hover:text-primary transition-colors cursor-pointer">{series.name}</h3>
+                              </Link>
+                              <div className="flex items-center text-[10px] text-slate-400 mt-0.5 uppercase tracking-tight font-bold">
+                                 <FileText size={10} className="mr-1" />
+                                 {series._count?.Post || 0} bài viết đã viết
+                              </div>
+                           </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                           <Link href={`/?q=${encodeURIComponent(series.name)}`}>
+                              <Button variant="outline" size="sm" className="text-[10px] h-8">Xem tất cả</Button>
+                           </Link>
+                        </div>
+                      </div>
+                    ))}
+                 </AnimateList>
+               )}
             </div>
           )}
 

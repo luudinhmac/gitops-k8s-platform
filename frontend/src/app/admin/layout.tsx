@@ -17,23 +17,18 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!loading) {
-      if (!isAuthenticated) {
-        router.push(`/login?redirect=${pathname}`);
-      } else if (user && !['admin', 'superadmin'].includes(user.role)) {
-        setIsForbidden(true);
-      } else {
-        setIsForbidden(false);
+      if (!isAuthenticated || (user && !['admin', 'superadmin'].includes(user.role))) {
+        // Stealth redirect: If not admin, go back to home instead of revealing login
+        router.replace('/');
       }
     }
-  }, [user, loading, router, isAuthenticated, pathname]);
+  }, [user, loading, router, isAuthenticated]);
 
   useEffect(() => {
     setSidebarOpen(false);
   }, [pathname, setSidebarOpen]);
 
-  const isForbiddenForUser = user && !['admin', 'superadmin'].includes(user.role);
-
-  if (loading || !isAuthenticated || isForbiddenForUser) {
+  if (loading || !isAuthenticated || (user && !['admin', 'superadmin'].includes(user.role))) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
         <Loader2 className="w-10 h-10 text-primary animate-spin" />

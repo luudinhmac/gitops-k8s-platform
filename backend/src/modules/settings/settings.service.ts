@@ -1,9 +1,9 @@
 import { Injectable, InternalServerErrorException, Inject, forwardRef, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-import { TelegramService } from '../../telegram/telegram.service';
-import { TeamsService } from '../../teams/teams.service';
-import { MailService } from '../../mail/mail.service';
-import { AdminAlertService } from '../../admin-alert/admin-alert.service';
+import { TelegramService } from '../telegram/telegram.service';
+import { TeamsService } from '../teams/teams.service';
+import { MailService } from '../mail/mail.service';
+import { AdminAlertService } from '../admin-alert/admin-alert.service';
 import { EncryptionUtil } from '../../utils/encryption.util';
 import * as os from 'os';
 
@@ -51,7 +51,6 @@ export class SettingsService {
     });
     if (!setting) return null;
 
-    // Decrypt if it's a sensitive key and is encrypted
     if (SENSITIVE_KEYS.includes(key)) {
       return EncryptionUtil.decrypt(setting.value);
     }
@@ -60,21 +59,17 @@ export class SettingsService {
   }
 
   async requestMaintenanceCode(ip: string = 'unknown') {
-    // 1. Verify maintenance mode is actually ON
     const isMaintenance = await this.getSettingByKey('maintenance_global');
     if (isMaintenance !== 'true') {
       return { success: false, error: 'Chế độ bảo trì hiện đang TẮT. Không cần mã truy cập.' };
     }
 
-    // 2. Generate 6-digit random code
     const code = Math.floor(100000 + Math.random() * 900000).toString();
     const expiry = new Date();
-    expiry.setMinutes(expiry.getMinutes() + 10); // 10 minutes valid
+    expiry.setMinutes(expiry.getMinutes() + 10);
 
-    // 3. Save to database
     try {
       const prisma = this.prisma as any;
-      // Optional: Cleanup old expired codes to keep DB clean
       await prisma.maintenanceCode.deleteMany({
         where: { OR: [
           { expires_at: { lt: new Date() } },
@@ -90,7 +85,6 @@ export class SettingsService {
         }
       });
 
-      // 4. Send Notification
       this.adminAlertService.sendAlert({
         subject: `🔐 MÃ TRUY CẬP BẢO TRÌ (Maintenance Code)`,
         text: `🔐 <b>YÊU CẦU TRUY CẬP HỆ THỐNG</b>\n\n` +
@@ -110,7 +104,6 @@ export class SettingsService {
 
   async verifyMaintenancePasscode(passcode: string) {
     const prisma = this.prisma as any;
-    // 1. Try verify as dynamic maintenance code first
     const record = await prisma.maintenanceCode.findFirst({
       where: {
         code: passcode,
@@ -121,7 +114,6 @@ export class SettingsService {
     });
 
     if (record) {
-      // Mark as used immediately
       await prisma.maintenanceCode.update({
         where: { id: record.id },
         data: { is_used: true }
@@ -129,7 +121,6 @@ export class SettingsService {
       return true;
     }
 
-    // 2. Fallback to static passcode (for emergency or as requested)
     const savedPasscode = await this.getSettingByKey('maintenance_passcode');
     if (!savedPasscode) return false;
     return savedPasscode === passcode;
@@ -138,20 +129,16 @@ export class SettingsService {
   async getAllSettings() {
     const settings = await this.prisma.setting.findMany();
 
-    // Group DB Settings
     const dbSettings = settings.reduce((acc, current) => {
       if (!acc[current.group]) acc[current.group] = {};
-
       let value = current.value;
       if (SENSITIVE_KEYS.includes(current.key)) {
         value = MASK_VALUE;
       }
-
       acc[current.group][current.key] = value;
       return acc;
     }, {} as Record<string, any>);
 
-    // Get ENV settings (Redacted for security)
     const envSettings = {
       NODE_ENV: process.env.NODE_ENV || 'development',
       DATABASE_URL: process.env.DATABASE_URL ? '********' : 'Not setup',
@@ -177,7 +164,6 @@ export class SettingsService {
   }
 
   async updateSettings(items: { key: string; value: string; group?: string; is_public?: boolean }[], user?: any, ip?: string) {
-    // Check if any sensitive group is being updated
     const sensitiveGroups = ['telegram', 'teams', 'mail'];
     const isUpdatingSensitive = items.some(item => item.group && sensitiveGroups.includes(item.group));
     
@@ -189,11 +175,8 @@ export class SettingsService {
     try {
       const queries = items.filter(item => item.value !== MASK_VALUE).map((item) => {
         let finalValue = item.value;
-
-        // Encrypt if sensitive and NOT already encrypted
         if (SENSITIVE_KEYS.includes(item.key) && item.value && !EncryptionUtil.isEncrypted(item.value)) {
           let cleanValue = item.value.trim();
-          
           if (item.key === 'telegram_bot_token') {
             if (cleanValue.toLowerCase().startsWith('bot')) {
               cleanValue = cleanValue.substring(3).trim();
@@ -202,11 +185,9 @@ export class SettingsService {
           } else if (item.key === 'teams_webhook_url') {
             cleanValue = cleanValue.trim();
           }
-          
           finalValue = EncryptionUtil.encrypt(cleanValue);
         }
 
-        // Auto-assign group if not provided or for alerts
         let effectiveGroup = item.group || 'general';
         if (item.key.startsWith('telegram_')) effectiveGroup = 'telegram';
         else if (item.key.startsWith('teams_')) effectiveGroup = 'teams';
@@ -234,12 +215,10 @@ export class SettingsService {
 
       await this.prisma.$transaction(queries);
 
-      // --- DETAILED AUDIT NOTIFICATION ---
       const changedKeys = items.map(i => i.key);
       const username = user?.username || 'Hệ thống';
       const userIp = ip || 'unknown';
 
-      // Describe actions based on keys
       const actions = changedKeys.map(key => {
         if (key === 'maintenance_global') return 'Thay đổi trạng thái Bảo trì toàn cầu';
         if (key === 'maintenance_posts') return 'Thay đổi trạng thái Bảo trì bài viết';
@@ -264,13 +243,11 @@ export class SettingsService {
   }
 
   async flushCache() {
-    // Implement cache flushing logic if needed later
     return { message: 'Cache flushed successfully' };
   }
 
   async testTelegram(token: string, chatId: string) {
     try {
-      // Use stored values if mask or empty provided
       if (token === MASK_VALUE || !token) {
         token = (await this.getSettingByKey('telegram_bot_token')) || '';
       }
@@ -291,7 +268,6 @@ export class SettingsService {
 
   async testTeams(webhookUrl: string) {
     try {
-      // Use stored value if mask or empty provided
       if (webhookUrl === MASK_VALUE || !webhookUrl) {
         webhookUrl = (await this.getSettingByKey('teams_webhook_url')) || '';
       }
@@ -312,7 +288,6 @@ export class SettingsService {
     const text = 'Hệ thống đã kết nối thành công với máy chủ Email của bạn.';
     const html = `<h3>Thành công!</h3><p>${text}</p><p>📅 <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</p>`;
 
-    // Use stored values if masks provided
     if (config.user === MASK_VALUE || !config.user) {
       config.user = (await this.getSettingByKey('mail_user')) || '';
     }
@@ -324,7 +299,6 @@ export class SettingsService {
       return { success: false, error: 'Thiếu cấu hình tài khoản Email (User hoặc Pass).' };
     }
 
-    // We use nodemailer directly for testing to avoid forcing a save first
     const nodemailer = require('nodemailer');
     try {
       const transporter = nodemailer.createTransport({

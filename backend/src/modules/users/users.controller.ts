@@ -10,12 +10,9 @@ import {
   Req,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserDto, UpdateUserDto, User } from '@portfolio/contracts';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { AuthenticatedRequest } from './interfaces/user.interface';
-import { Request } from 'express';
 
 @ApiTags('Users')
 @Controller('users')
@@ -38,7 +35,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Create new user' })
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  create(@Body() createUserDto: CreateUserDto, @Req() req: AuthenticatedRequest) {
+  create(@Body() createUserDto: CreateUserDto, @Req() req: any) {
     return this.usersService.create(createUserDto, req.user);
   }
 
@@ -48,7 +45,7 @@ export class UsersController {
   @ApiBearerAuth()
   update(
     @Param('id') id: string,
-    @Req() req: AuthenticatedRequest,
+    @Req() req: any,
     @Body() updateUserDto: UpdateUserDto,
   ) {
     return this.usersService.update(+id, req.user, updateUserDto);
@@ -60,7 +57,7 @@ export class UsersController {
   @ApiBearerAuth()
   updateRole(
     @Param('id') id: string,
-    @Req() req: AuthenticatedRequest,
+    @Req() req: any,
     @Body('role') role: string,
   ) {
     return this.usersService.updateRole(+id, req.user, role);
@@ -72,7 +69,7 @@ export class UsersController {
   @ApiBearerAuth()
   updateStatus(
     @Param('id') id: string,
-    @Req() req: AuthenticatedRequest,
+    @Req() req: any,
     @Body('is_active') isActive: boolean,
   ) {
     const ip = req.ip || req.headers['x-forwarded-for'] || (req.socket.remoteAddress as string);
@@ -85,7 +82,7 @@ export class UsersController {
   @ApiBearerAuth()
   updatePermissions(
     @Param('id') id: string,
-    @Req() req: AuthenticatedRequest,
+    @Req() req: any,
     @Body() data: { 
       role?: string; 
       is_active?: boolean; 
@@ -104,7 +101,7 @@ export class UsersController {
   @ApiBearerAuth()
   resetPassword(
     @Param('id') id: string,
-    @Req() req: AuthenticatedRequest,
+    @Req() req: any,
     @Body('password') password: string,
   ) {
     const ip = req.ip || req.headers['x-forwarded-for'] || (req.socket.remoteAddress as string);
@@ -117,7 +114,7 @@ export class UsersController {
   @ApiBearerAuth()
   changePassword(
     @Param('id') id: string,
-    @Req() req: AuthenticatedRequest,
+    @Req() req: any,
     @Body() data: any,
   ) {
     const ip = req.ip || req.headers['x-forwarded-for'] || (req.socket.remoteAddress as string);
@@ -134,7 +131,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Delete user' })
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  remove(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+  remove(@Param('id') id: string, @Req() req: any) {
     const ip = req.ip || req.headers['x-forwarded-for'] || (req.socket.remoteAddress as string);
     return this.usersService.remove(+id, req.user, Array.isArray(ip) ? ip[0] : ip);
   }

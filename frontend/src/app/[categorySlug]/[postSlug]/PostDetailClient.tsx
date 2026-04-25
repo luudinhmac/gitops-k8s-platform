@@ -129,7 +129,7 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
         postService.getAll({ limit: 5 })
       ]);
       setCategories(Array.isArray(cats) ? cats : []);
-      setRelatedPosts(Array.isArray(related) ? related : []);
+      setRelatedPosts(Array.isArray(related?.items) ? related.items : []);
     } catch (err) {
       console.error('Sidebar error:', err);
     }
@@ -176,16 +176,22 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
         parent_id: replyingTo,
       });
 
-      // Update local state by adding the new comment to the tree
+      // Update local state by adding the new comment to the tree recursively
       if (replyingTo) {
-        setPost({
-          ...post,
-          Comment: (post.Comment || []).map(c => {
+        const updateComments = (comments: CommentType[]): CommentType[] => {
+          return comments.map(c => {
             if (c.id === replyingTo) {
               return { ...c, Replies: [formattedComment, ...(c.Replies || [])] };
             }
+            if (c.Replies && c.Replies.length > 0) {
+              return { ...c, Replies: updateComments(c.Replies) };
+            }
             return c;
-          })
+          });
+        };
+        setPost({
+          ...post,
+          Comment: updateComments(post.Comment || [])
         });
       } else {
         setPost({ ...post, Comment: [formattedComment, ...(post.Comment || [])] });

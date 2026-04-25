@@ -11,10 +11,9 @@ import {
   Req,
 } from '@nestjs/common';
 import { CommentsService } from './comments.service';
-import { CreateCommentDto } from './dto/comment.dto';
+import { CreateCommentDto, User } from '@portfolio/contracts';
 import { AuthGuard } from '@nestjs/passport';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
-import { User } from '@prisma/client';
 
 interface AuthenticatedRequest extends Request {
   user: User;

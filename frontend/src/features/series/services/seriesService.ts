@@ -5,6 +5,16 @@ export const seriesService = {
     const response = await api.get('/series');
     return response.data;
   },
+  
+  getMySeries: async () => {
+    const response = await api.get('/series/mine');
+    return response.data;
+  },
+
+  getByAuthor: async (authorId: number) => {
+    const response = await api.get(`/series/author/${authorId}`);
+    return response.data;
+  },
 
   getById: async (id: number) => {
     const response = await api.get(`/series/${id}`);

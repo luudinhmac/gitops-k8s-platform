@@ -4,8 +4,9 @@ import { UsersController } from './users.controller';
 import { PrismaModule } from '../../prisma/prisma.module';
 import { UploadModule } from '../upload/upload.module';
 import { NotificationsModule } from '../notifications/notifications.module';
-import { AdminAlertModule } from '../../admin-alert/admin-alert.module';
-import { UsersRepository } from './users.repository';
+import { AdminAlertModule } from '../admin-alert/admin-alert.module';
+import { UsersRepository } from './repositories/user.repository';
+import { I_USERS_REPOSITORY } from './repositories/user.repository.interface';
 
 @Module({
   imports: [
@@ -15,7 +16,13 @@ import { UsersRepository } from './users.repository';
     AdminAlertModule,
   ],
   controllers: [UsersController],
-  providers: [UsersService, UsersRepository],
-  exports: [UsersService, UsersRepository],
+  providers: [
+    UsersService,
+    {
+      provide: I_USERS_REPOSITORY,
+      useClass: UsersRepository,
+    },
+  ],
+  exports: [UsersService, I_USERS_REPOSITORY],
 })
 export class UsersModule {}

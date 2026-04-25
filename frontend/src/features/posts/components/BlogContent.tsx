@@ -67,8 +67,12 @@ export default function BlogContent() {
         seriesService.getAll()
       ]);
 
-      setPosts(postsData?.data || []);
-      setMeta(postsData?.meta || { total: 0, limit: 12, page: 1 });
+      setPosts(postsData?.items || []);
+      setMeta({
+        total: postsData?.total || 0,
+        limit: postsData?.limit || 12,
+        page: postsData?.page || 1
+      });
       setCategories(catsData);
       setRecentSeries(Array.isArray(seriesData) ? seriesData.slice(0, 5) : []);
       setHasError(false);
@@ -80,7 +84,7 @@ export default function BlogContent() {
     } finally {
       setLoading(false);
     }
-  }, [q, isBackendOffline]);
+  }, [q, page, isBackendOffline]);
 
   useEffect(() => {
     fetchData();
