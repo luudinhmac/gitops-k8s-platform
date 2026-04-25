@@ -3,9 +3,9 @@
 import { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShieldAlert, Rocket, Github, Twitter, Mail, Lock, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
-import Button from '@/components/ui/Button';
-import axios from 'axios';
+import Button from '@/shared/components/ui/Button';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { settingService } from '@/features/settings/services/settingService';
 import { cn } from '@/lib/utils';
 
 function MaintenanceContent() {
@@ -31,9 +31,8 @@ function MaintenanceContent() {
 
   const checkMaintenanceStatus = async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3001/api';
-      const response = await axios.get(`${apiUrl}/settings/public?t=${Date.now()}`);
-      const isGlobalMaintenance = response.data.maintenance_global === 'true' || response.data.maintenance_global === true;
+      const data = await settingService.getPublicSettings();
+      const isGlobalMaintenance = data.maintenance_global === 'true' || data.maintenance_global === true;
       
       // If maintenance mode is OFF, redirect back to home or the previous page
       if (!isGlobalMaintenance) {
@@ -55,12 +54,11 @@ function MaintenanceContent() {
     setLoading(true);
     setError(null);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3001/api';
-      const response = await axios.post(`${apiUrl}/settings/request-maintenance-code`);
-      if (response.data.success) {
+      const data = await settingService.requestMaintenanceCode();
+      if (data.success) {
         setError('Mã đã được gửi! Vui lòng kiểm tra Telegram/Email/Teams.');
       } else {
-        setError(response.data.error || 'Không thể yêu cầu mã. Vui lòng thử lại.');
+        setError(data.error || 'Không thể yêu cầu mã. Vui lòng thử lại.');
       }
     } catch (err) {
       setError('Đã xảy ra lỗi khi yêu cầu mã. Vui lòng thử lại sau.');
@@ -74,9 +72,8 @@ function MaintenanceContent() {
     setLoading(true);
     setError(null);
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3001/api';
-      const response = await axios.post(`${apiUrl}/settings/verify-maintenance-passcode`, { passcode });
-      if (response.data.success) {
+      const data = await settingService.verifyMaintenancePasscode(passcode);
+      if (data.success) {
         setSuccess(true);
         // Set bypass cookie for session (closes when browser closes) or short time
         // User requested: "sau khi admin logout ra thì phải quay về web bảo trì"
@@ -251,3 +248,4 @@ export default function MaintenancePage() {
     </Suspense>
   );
 }
+

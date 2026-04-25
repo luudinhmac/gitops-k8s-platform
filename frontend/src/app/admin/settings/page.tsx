@@ -2,14 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { 
-  Settings, Globe, Server, Shield, TrendingUp, Save, Loader2, Image as ImageIcon, 
+  Settings, Globe, Server, Shield, TrendingUp, Save, Image as ImageIcon, 
   Trash2, AlertCircle, Check, Link as LinkIcon, Database, HardDrive, ShieldCheck, Lock, ShieldAlert, Key, Send,
   Eye, EyeOff
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import AdminPageHeader from '@/components/admin/AdminPageHeader';
-import Button from '@/components/ui/Button';
-import { settingService, SettingsConfig } from '@/services/settingService';
+import AdminPageHeader from '@/features/admin/components/AdminPageHeader';
+import Button from '@/shared/components/ui/Button';
+import Skeleton from '@/shared/components/ui/Skeleton';
+import { settingService, SettingsConfig } from '@/features/settings/services/settingService';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 
@@ -115,21 +116,10 @@ export default function SettingsAdminPage() {
       else if (group === 'alerts') targetForm = alertsForm;
       else targetForm = maintenanceForm;
       
-      const items = Object.entries(targetForm).map(([key, value]) => {
-        // Decide group based on prefix
-        let effectiveGroup: string = group;
-        if (group === 'alerts') {
-          if (key.startsWith('telegram_')) effectiveGroup = 'telegram';
-          else if (key.startsWith('teams_')) effectiveGroup = 'teams';
-          else if (key.startsWith('mail_')) effectiveGroup = 'mail';
-        }
-        
-        return {
-          key,
-          value: String(value),
-          group: effectiveGroup,
-        };
-      });
+      const items = Object.entries(targetForm).map(([key, value]) => ({
+        key,
+        value: String(value)
+      }));
       
       await settingService.updateSettings(items);
       setStatusMsg({ type: 'success', text: 'Đã lưu cấu hình thành công!' });
@@ -233,8 +223,13 @@ export default function SettingsAdminPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      <div className="flex flex-col lg:flex-row gap-6 p-4 md:p-6 lg:p-0">
+        <div className="w-full lg:w-64 shrink-0">
+          <Skeleton className="h-[400px] w-full rounded-2xl" />
+        </div>
+        <div className="flex-grow">
+          <Skeleton className="h-[600px] w-full rounded-2xl" />
+        </div>
       </div>
     );
   }
@@ -861,3 +856,4 @@ export default function SettingsAdminPage() {
     </>
   );
 }
+

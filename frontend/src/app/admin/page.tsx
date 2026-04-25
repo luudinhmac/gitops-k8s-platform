@@ -5,23 +5,25 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import {
   FileText, Plus, Edit, Trash2, Eye,
-  Loader2, Tag as TagIcon, MessageSquare, Heart,
+  Tag as TagIcon, MessageSquare, Heart,
   ChevronUp, ChevronDown, Layout, Calendar
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import AdminPageHeader from '@/components/admin/AdminPageHeader';
-import AdminCard from '@/components/admin/AdminCard';
+import AdminPageHeader from '@/features/admin/components/AdminPageHeader';
+import AdminCard from '@/features/admin/components/AdminCard';
 
 // Professional Modules
-import { postService } from '@/services/postService';
+import { postService } from '@/features/posts/services/postService';
+import { categoryService } from '@/features/categories/services/categoryService';
 import { usePostActions } from '@/hooks/post/usePostActions';
-import Button from '@/components/ui/Button';
-import IconBadge from '@/components/ui/IconBadge';
-import AnimateList from '@/components/ui/AnimateList';
-import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
-import MessageDialog from '@/components/ui/MessageDialog';
-import PromptDialog from '@/components/ui/PromptDialog';
-import { Post as AdminPost } from '@/types/post';
+import Button from '@/shared/components/ui/Button';
+import IconBadge from '@/shared/components/ui/IconBadge';
+import AnimateList from '@/shared/components/ui/AnimateList';
+import ConfirmationDialog from '@/shared/components/ui/ConfirmationDialog';
+import MessageDialog from '@/shared/components/ui/MessageDialog';
+import PromptDialog from '@/shared/components/ui/PromptDialog';
+import Skeleton from '@/shared/components/ui/Skeleton';
+import { Post as AdminPost } from '@portfolio/contracts';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AdminDashboardPage() {
@@ -46,22 +48,21 @@ export default function AdminDashboardPage() {
     setLoading(true);
     try {
       const [postsData, catsData] = await Promise.all([
-        postService.getAdminPosts(),
-        fetch(`/api/categories`, { credentials: 'include' }).then(res => res.json())
+        postService.getAdminPosts({ 
+          q: searchQuery, 
+          sort: sortBy === 'date' ? 'latest' : sortBy 
+        }),
+        categoryService.getAll()
       ]);
 
-      let filtered: AdminPost[] = Array.isArray(postsData) ? postsData : [];
-      if (!['admin', 'superadmin'].includes(user?.role || '')) {
-        filtered = filtered.filter(p => p.author_id === user?.id);
-      }
-      setPosts(filtered);
+      setPosts(postsData?.data || []);
       setCategories(Array.isArray(catsData) ? catsData : []);
     } catch (error) {
       console.error('Error fetching admin data:', error);
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated, user?.id, user?.role]);
+  }, [isAuthenticated, searchQuery, sortBy]);
 
   useEffect(() => {
     fetchData();
@@ -87,34 +88,21 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const filteredPosts = posts.filter(p =>
-    p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.Category?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.User?.fullname?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const sortedPosts = [...filteredPosts].sort((a, b) => {
-    let valA: number = 0;
-    let valB: number = 0;
-
-    if (sortBy === 'date') {
-      valA = new Date(a.created_at).getTime();
-      valB = new Date(b.created_at).getTime();
-    } else if (sortBy === 'views') {
-      valA = a.views || 0;
-      valB = b.views || 0;
-    } else if (sortBy === 'interaction') {
-      valA = (a.views || 0) + (a._count?.Comment || 0) + (a.likes || 0);
-      valB = (b.views || 0) + (b._count?.Comment || 0) + (b.likes || 0);
-    }
-
-    return sortOrder === 'asc' ? valA - valB : valB - valA;
-  });
+  const sortedPosts = posts; // Now handled by backend
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 w-full" />)}
+        </div>
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 space-y-4">
+          {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-12 w-full" />)}
+        </div>
       </div>
     );
   }
@@ -320,3 +308,4 @@ export default function AdminDashboardPage() {
     </>
   );
 }
+

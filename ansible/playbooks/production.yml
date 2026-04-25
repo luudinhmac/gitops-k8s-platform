@@ -26,9 +26,9 @@
     - nginx        # Configure Nginx & Start Docker containers
 
   post_tasks:
-    # Sync database schema (Safe push for production)
-    - name: Sync database schema (db push)
-      command: docker exec portfolio-backend npx prisma db push
+    # Run database migrations (Safe deployment)
+    - name: Run database migrations (migrate deploy)
+      command: docker exec portfolio-backend npx prisma migrate deploy
 
     # Ensure Prisma client is ready
     - name: Generate Prisma Client

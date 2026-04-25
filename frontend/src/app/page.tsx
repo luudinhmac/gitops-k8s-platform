@@ -1,7 +1,7 @@
 import { Metadata } from 'next';
 import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
-import BlogContent from './BlogContent';
+import BlogContent from '@/features/posts/components/BlogContent';
 
 export const metadata: Metadata = {
   title: 'Blog chia sẻ Kiến thức | Lưu Đình Mác',
@@ -25,3 +25,4 @@ export default function BlogPage() {
     </Suspense>
   );
 }
+

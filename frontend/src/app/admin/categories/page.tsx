@@ -5,16 +5,16 @@ import {
   Plus, Trash2, Layout, Loader2, FileText, Settings, Search
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import AdminPageHeader from '@/components/admin/AdminPageHeader';
-import AdminCard from '@/components/admin/AdminCard';
-import Button from '@/components/ui/Button';
-import IconBadge from '@/components/ui/IconBadge';
-import AnimateList from '@/components/ui/AnimateList';
-import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
-import MessageDialog from '@/components/ui/MessageDialog';
+import AdminPageHeader from '@/features/admin/components/AdminPageHeader';
+import AdminCard from '@/features/admin/components/AdminCard';
+import Button from '@/shared/components/ui/Button';
+import IconBadge from '@/shared/components/ui/IconBadge';
+import AnimateList from '@/shared/components/ui/AnimateList';
+import ConfirmationDialog from '@/shared/components/ui/ConfirmationDialog';
+import MessageDialog from '@/shared/components/ui/MessageDialog';
 
 // Modular Services
-import { categoryService } from '@/services/categoryService';
+import { categoryService } from '@/features/categories/services/categoryService';
 
 interface Category {
   id: number;
@@ -228,4 +228,5 @@ export default function CategoriesPage() {
     </>
   );
 }
+
 

@@ -33,9 +33,9 @@
     - nginx        # Configure Nginx & Start services via Docker Compose
 
   post_tasks:
-    # Apply database schema to the database (using db push as there are no migrations yet)
-    - name: Sync database schema (db push)
-      command: docker exec portfolio-backend npx prisma db push --accept-data-loss
+    # Apply database schema to the database
+    - name: Run database migrations (migrate deploy)
+      command: docker exec portfolio-backend npx prisma migrate deploy
 
     # Ensure Prisma Client is generated for the seeding step
     - name: Generate Prisma Client

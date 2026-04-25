@@ -14,3 +14,4 @@ export interface Notification {
     avatar: string;
   };
 }
+
