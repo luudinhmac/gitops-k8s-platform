@@ -7,11 +7,11 @@ import { useTheme } from 'next-themes';
 import { Menu, X, ChevronRight, LayoutDashboard, User, LogOut, PenSquare, ChevronDown, Moon, Sun, Search, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
-import NotificationBell from '@/components/notifications/NotificationBell';
+import NotificationBell from '@/features/notifications/components/NotificationBell';
 
-import UserAvatar from '@/components/common/UserAvatar';
-import Badge from '@/components/common/Badge';
-import ErrorBoundary from '@/components/common/ErrorBoundary';
+import UserAvatar from '@/features/users/components/UserAvatar';
+import Badge from '@/shared/components/common/Badge';
+import ErrorBoundary from '@/shared/components/common/ErrorBoundary';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -246,3 +246,4 @@ export default function Navbar() {
     </nav>
   );
 }
+

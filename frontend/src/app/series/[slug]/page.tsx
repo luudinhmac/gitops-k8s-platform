@@ -3,14 +3,14 @@
 import { useState, useEffect, use, useCallback } from 'react';
 import Link from 'next/link';
 import { Layers, Calendar, Eye, ChevronRight, ArrowLeft, Loader2, Sparkles, BookOpen, Clock } from 'lucide-react';
-import AnimateList from '@/components/ui/AnimateList';
-import Button from '@/components/ui/Button';
-import IconBadge from '@/components/ui/IconBadge';
-import Badge from '@/components/common/Badge';
-import FormattedDate from '@/components/common/FormattedDate';
+import AnimateList from '@/shared/components/ui/AnimateList';
+import Button from '@/shared/components/ui/Button';
+import IconBadge from '@/shared/components/ui/IconBadge';
+import Badge from '@/shared/components/common/Badge';
+import FormattedDate from '@/shared/components/common/FormattedDate';
 
 // Modular Services
-import { seriesService } from '@/services/seriesService';
+import { seriesService } from '@/features/series/services/seriesService';
 
 interface Post {
   id: number;

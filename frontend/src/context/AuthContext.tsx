@@ -3,22 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-export interface User {
-  id: number;
-  username: string;
-  fullname: string;
-  avatar?: string | null;
-  role: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  profession?: string;
-  birthday?: string;
-  is_active?: boolean;
-  can_comment?: boolean;
-  can_post?: boolean;
-  created_at?: string;
-}
+import { User } from '@portfolio/contracts';
 
 interface AuthContextType {
   user: User | null;
@@ -135,3 +120,4 @@ export const useAuth = () => {
   }
   return context;
 };
+

@@ -24,3 +24,6 @@ export function slugify(text: string) {
     .replace(/-+/g, '-'); // Loại bỏ nhiều dấu gạch ngang liên tiếp
 }
 
+
+
+

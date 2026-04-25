@@ -2,40 +2,18 @@
 
 import { useState, useEffect, use, useCallback } from 'react';
 import Link from 'next/link';
-import { Calendar, User as UserIcon, Mail, Eye, ArrowLeft, Loader2, Sparkles, MapPin, Briefcase, Heart, MessageSquare } from 'lucide-react';
-import AnimateList from '@/components/ui/AnimateList';
-import Button from '@/components/ui/Button';
-import FormattedDate from '@/components/common/FormattedDate';
-import Badge from '@/components/common/Badge';
+import { Calendar, User as UserIcon, Mail, Eye, ArrowLeft, Sparkles, MapPin, Briefcase, Heart, MessageSquare } from 'lucide-react';
+import AnimateList from '@/shared/components/ui/AnimateList';
+import Button from '@/shared/components/ui/Button';
+import Skeleton from '@/shared/components/ui/Skeleton';
+import FormattedDate from '@/shared/components/common/FormattedDate';
+import Badge from '@/shared/components/common/Badge';
 
 // Modular Services
-import { userService } from '@/services/userService';
-import { postService } from '@/services/postService';
+import { userService } from '@/features/users/services/userService';
+import { postService } from '@/features/posts/services/postService';
 
-interface Post {
-  id: number;
-  title: string;
-  slug: string;
-  cover_image: string | null;
-  created_at: string;
-  is_pinned?: boolean;
-  author_id: number;
-  views: number;
-  Category?: { name: string; slug: string } | null;
-  Tag?: { name: string }[];
-  likes?: number;
-  _count?: { Comment: number; PostLike: number };
-}
-
-interface Author {
-  id: number;
-  fullname: string; 
-  username: string; 
-  email?: string; 
-  profession?: string; 
-  avatar?: string;
-  created_at: string;
-}
+import { Post, User as Author } from '@portfolio/contracts';
 
 export default function AuthorPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
@@ -45,19 +23,14 @@ export default function AuthorPage({ params }: { params: Promise<{ id: string }>
 
   const fetchData = useCallback(async () => {
     try {
+      const authorId = parseInt(id);
       const [userData, postsData] = await Promise.all([
         userService.getById(id),
-        postService.getAll({ limit: 100 }) // Assuming limit 100 for author posts
+        postService.getAll({ userId: authorId, limit: 100 })
       ]);
-      // Cast to any to handle flexible response formats quietly
-      const rawPostsData = postsData as any;
-      setAuthor(userData as unknown as Author);
       
-      // Filter posts by author_id
-      const authorId = parseInt(id);
-      const postsArray = Array.isArray(rawPostsData) ? rawPostsData : (rawPostsData?.posts || []);
-      const authorPosts = postsArray.filter((p: Post) => p.author_id === authorId);
-      setPosts(authorPosts);
+      setAuthor(userData as unknown as Author);
+      setPosts(postsData?.data || []);
     } catch (error: unknown) {
       console.error('Error fetching author data:', error);
     } finally {
@@ -72,9 +45,14 @@ export default function AuthorPage({ params }: { params: Promise<{ id: string }>
   if (loading) {
     return (
       <div className="pt-40 pb-12 px-4 min-h-screen text-center bg-slate-50/30 dark:bg-slate-950/30">
-        <Loader2 size={40} className="animate-spin text-primary mx-auto mb-6" />
-        <div className="w-24 h-24 bg-slate-200 dark:bg-slate-800 rounded-full animate-pulse mx-auto mb-6" />
-        <div className="h-8 w-48 bg-slate-200 dark:bg-slate-800 rounded mx-auto mb-4 animate-pulse" />
+        <Skeleton className="w-24 h-24 rounded-full mx-auto mb-6" />
+        <Skeleton className="h-8 w-48 mx-auto mb-4" />
+        <Skeleton className="h-4 w-64 mx-auto mb-8" />
+        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3].map(i => (
+            <Skeleton key={i} className="h-64 w-full rounded-2xl" />
+          ))}
+        </div>
       </div>
     );
   }

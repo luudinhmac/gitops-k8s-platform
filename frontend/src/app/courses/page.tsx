@@ -9,3 +9,4 @@ export default function CoursesPage() {
   }, [router]);
   return null;
 }
+

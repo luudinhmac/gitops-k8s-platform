@@ -3,13 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Check, Trash2, MessageCircle, Reply, ShieldAlert, UserCheck, ChevronLeft, Search, Filter } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { notificationService } from '@/services/notificationService';
-import { Notification } from '@/types/notification';
+import { notificationService } from '@/features/notifications/services/notificationService';
+import { Notification } from '@portfolio/contracts';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import UserAvatar from '@/components/common/UserAvatar';
-import Button from '@/components/ui/Button';
-import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
+import UserAvatar from '@/features/users/components/UserAvatar';
+import Button from '@/shared/components/ui/Button';
+import ConfirmationDialog from '@/shared/components/ui/ConfirmationDialog';
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -22,7 +22,7 @@ export default function NotificationsPage() {
   const fetchNotifications = async () => {
     setLoading(true);
     try {
-      const data = await notificationService.getAll();
+      const data = await notificationService.getAll(filter === 'unread');
       setNotifications(data);
     } catch (err) {
       console.error('Failed to fetch notifications:', err);
@@ -33,7 +33,7 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     fetchNotifications();
-  }, []);
+  }, [filter]);
 
   const handleMarkAsRead = async (id: number) => {
     try {
@@ -94,10 +94,6 @@ export default function NotificationsPage() {
       default: return <Bell size={18} className="text-slate-400" />;
     }
   };
-
-  const filteredNotifications = filter === 'all' 
-    ? notifications 
-    : notifications.filter(n => !n.is_read);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pt-24 pb-12 px-4">
@@ -174,7 +170,7 @@ export default function NotificationsPage() {
               <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mb-4" />
               <p className="text-slate-400 text-sm">Đang tải thông báo...</p>
             </div>
-          ) : filteredNotifications.length === 0 ? (
+          ) : notifications.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-24 text-slate-400">
               <div className="bg-slate-50 dark:bg-slate-800 p-6 rounded-full mb-6">
                 <Bell size={48} className="opacity-20" />
@@ -184,7 +180,7 @@ export default function NotificationsPage() {
             </div>
           ) : (
             <div className="divide-y divide-slate-100 dark:divide-slate-800">
-              {filteredNotifications.map((n) => (
+              {notifications.map((n) => (
                 <div
                   key={n.id}
                   onClick={() => handleNotificationClick(n)}
@@ -265,3 +261,4 @@ export default function NotificationsPage() {
     </div>
   );
 }
+

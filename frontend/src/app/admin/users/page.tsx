@@ -10,19 +10,19 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
-import AdminPageHeader from '@/components/admin/AdminPageHeader';
-import AdminCard from '@/components/admin/AdminCard';
-import UserAvatar from '@/components/common/UserAvatar';
-import Badge from '@/components/common/Badge';
-import FormattedDate from '@/components/common/FormattedDate';
-import Button from '@/components/ui/Button';
-import IconBadge from '@/components/ui/IconBadge';
-import AnimateList from '@/components/ui/AnimateList';
-import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
-import PromptDialog from '@/components/ui/PromptDialog';
+import AdminPageHeader from '@/features/admin/components/AdminPageHeader';
+import AdminCard from '@/features/admin/components/AdminCard';
+import UserAvatar from '@/features/users/components/UserAvatar';
+import Badge from '@/shared/components/common/Badge';
+import FormattedDate from '@/shared/components/common/FormattedDate';
+import Button from '@/shared/components/ui/Button';
+import IconBadge from '@/shared/components/ui/IconBadge';
+import AnimateList from '@/shared/components/ui/AnimateList';
+import ConfirmationDialog from '@/shared/components/ui/ConfirmationDialog';
+import PromptDialog from '@/shared/components/ui/PromptDialog';
 
-import { userService } from '@/services/userService';
-import { User as AdminUser, UserRole } from '@/types/user';
+import { userService } from '@/features/users/services/userService';
+import { User as AdminUser, UserRole } from '@portfolio/contracts';
 
 const ROLE_HIERARCHY: Record<string, number> = {
   'superadmin': 100,
@@ -102,7 +102,7 @@ export default function UsersPage() {
     }
   };
 
-  const handleUpdatePermissions = async (userId: number, fields: { role?: UserRole; is_active?: boolean; can_comment?: boolean; can_post?: boolean }, reason?: string) => {
+  const handleUpdatePermissions = async (userId: number, fields: { role?: UserRole | string; is_active?: boolean; can_comment?: boolean; can_post?: boolean }, reason?: string) => {
     try {
       if (fields.is_active === false && userId === currentUser?.id) {
         setStatusMsg({ type: 'error', text: 'Bạn không thể tự khóa tài khoản của mình!' });
@@ -572,3 +572,4 @@ export default function UsersPage() {
     </>
   );
 }
+

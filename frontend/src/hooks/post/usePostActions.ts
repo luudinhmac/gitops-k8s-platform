@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { postService } from '@/services/postService';
+import { postService } from '@/features/posts/services/postService';
 
 export const usePostActions = (onSuccess?: () => void) => {
   const [isActionLoading, setIsActionLoading] = useState(false);
@@ -61,3 +61,4 @@ export const usePostActions = (onSuccess?: () => void) => {
     setActionError
   };
 };
+

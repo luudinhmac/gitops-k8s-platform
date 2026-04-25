@@ -1,5 +1,5 @@
 import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
-import { SettingsService } from '../settings/settings.service';
+import { SettingsService } from '../modules/settings/settings.service';
 
 @Injectable()
 export class TeamsService {

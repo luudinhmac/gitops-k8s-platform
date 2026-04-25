@@ -4,10 +4,10 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Home, Search, ArrowRight, MessageSquare, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
-import Button from '@/components/ui/Button';
+import Button from '@/shared/components/ui/Button';
 import Navbar from '@/components/layout/Navbar';
-import { postService } from '@/services/postService';
-import { Post } from '@/types/post';
+import { postService } from '@/features/posts/services/postService';
+import { Post } from '@portfolio/contracts';
 
 export default function NotFound() {
   const [recentPosts, setRecentPosts] = useState<Post[]>([]);
@@ -151,3 +151,4 @@ export default function NotFound() {
     </main>
   );
 }
+

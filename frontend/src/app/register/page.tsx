@@ -4,10 +4,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Lock, Mail, User, Eye, EyeOff, Loader2, ArrowLeft, Phone, Calendar, Briefcase, UserPlus } from 'lucide-react';
-import Button from '@/components/ui/Button';
+import Button from '@/shared/components/ui/Button';
 
 // Modular Services
-import { authService } from '@/services/authService';
+import { authService } from '@/features/auth/services/authService';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -300,4 +300,5 @@ export default function RegisterPage() {
     </div>
   );
 }
+
 

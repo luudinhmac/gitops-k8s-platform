@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import AdminSidebar from '@/components/admin/AdminSidebar';
+import AdminSidebar from '@/features/admin/components/AdminSidebar';
 import { Loader2 } from 'lucide-react';
 import { SidebarProvider, useSidebar } from '@/context/SidebarContext';
 import { cn } from '@/lib/utils';
@@ -67,3 +67,4 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     </SidebarProvider>
   );
 }
+

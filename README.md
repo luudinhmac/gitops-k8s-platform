@@ -7,6 +7,7 @@ Dự án Portfolio + Blog chuyên nghiệp dành cho Kỹ sư Hệ thống (Syst
 - **Frontend:** Next.js (App Router)
 - **Backend:** NestJS
 - **Database:** PostgreSQL (Dockerized)
+- **Monorepo:** Organized with `pnpm` workspaces for shared code management
 - **DevOps:**
   - Docker & Docker Compose (Containerization: Apps, DB, Nginx)
   - Kubernetes (Production Orchestration: Single-node kubeadm)
@@ -27,8 +28,9 @@ Dự án Portfolio + Blog chuyên nghiệp dành cho Kỹ sư Hệ thống (Syst
 
 ## Project Structure
 ```text
-frontend/      # Next.js Application (Build Once, Run Anywhere)
-backend/       # NestJS API (Stateless, DB Retry Logic)
+frontend/      # Next.js Application (Feature-based structure)
+backend/       # NestJS API (Modular architecture)
+packages/      # Shared packages (e.g., @portfolio/contracts)
 ansible/       # Ansible Roles & Automation
 docs/          # Technical Documentation & Deployment Reports
 ```
@@ -39,15 +41,14 @@ docs/          # Technical Documentation & Deployment Reports
 
 1. **Cài đặt:**
    ```bash
-   cd frontend && npm install
-   cd ../backend && npm install
+   pnpm install
    ```
 2. **Khởi chạy:**
    ```bash
    # Terminal 1 (Frontend)
-   npm run dev
+   pnpm --prefix frontend dev
    # Terminal 2 (Backend)
-   npm run start:dev
+   pnpm --prefix backend start:dev
    ```
 3. **Truy cập:**
    - Frontend: http://localhost:3000

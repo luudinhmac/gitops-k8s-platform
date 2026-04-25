@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import PostDetailClient from './PostDetailClient';
-import { postService } from '@/services/postService';
+import { postService } from '@/features/posts/services/postService';
 
 interface Props {
   params: Promise<{ categorySlug: string; postSlug: string }>;
@@ -29,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         type: 'article',
         url: `${baseUrl}/${post.Category?.slug || 'uncategorized'}/${post.slug}`,
         images: [{ url: image }],
-        publishedTime: post.created_at,
+        publishedTime: post.created_at as string,
         authors: ['Lưu Đình Mác'],
         tags: post.Tag?.map(t => t.name) || [],
       },
@@ -59,7 +59,7 @@ export default async function Page({ params }: Props) {
     '@type': 'BlogPosting',
     headline: post.title,
     image: post.cover_image ? `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${post.cover_image}` : `${baseUrl}/favicon.ico`,
-    datePublished: post.created_at,
+    datePublished: post.created_at as string,
     author: {
       '@type': 'Person',
       name: 'Lưu Đình Mác',

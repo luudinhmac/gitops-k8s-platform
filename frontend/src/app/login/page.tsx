@@ -5,10 +5,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { Lock, Mail, Eye, EyeOff, Loader2, ArrowLeft, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import Button from '@/components/ui/Button';
+import Button from '@/shared/components/ui/Button';
 
 // Modular Services
-import { authService } from '@/services/authService';
+import { authService } from '@/features/auth/services/authService';
 
 function LoginContent() {
   const router = useRouter();
@@ -191,4 +191,5 @@ export default function LoginPage() {
     </Suspense>
   );
 }
+
 

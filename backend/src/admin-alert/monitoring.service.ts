@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { AdminAlertService } from './admin-alert.service';
 import * as os from 'os';
-import { execSync } from 'child_process';
 
 @Injectable()
 export class MonitoringService {
@@ -41,50 +40,25 @@ export class MonitoringService {
   }
 
   /**
-   * Helper to get disk usage on Windows
+   * Helper to get disk usage
    */
   private getDiskUsage(): { usage: number; freeGB: number; totalGB: number } | null {
-    try {
-      if (os.platform() !== 'win32') return null;
-      
-      const output = execSync('wmic logicaldisk where "DeviceID=\'C:\'" get FreeSpace,Size /format:list').toString();
-      const lines = output.split('\n').filter(l => l && l.trim());
-      
-      let free = 0;
-      let size = 0;
-      
-      lines.forEach(line => {
-        if (line.includes('FreeSpace=')) free = parseInt(line.split('=')[1].trim(), 10);
-        if (line.includes('Size=')) size = parseInt(line.split('=')[1].trim(), 10);
-      });
-
-      if (!size || isNaN(size)) return null;
-      
-      return {
-        usage: ((size - free) / size) * 100,
-        freeGB: Math.round(free / (1024 * 1024 * 1024)),
-        totalGB: Math.round(size / (1024 * 1024 * 1024))
-      };
-    } catch (error) {
-      this.logger.error('Failed to get disk usage', error);
-      return null;
-    }
+    // Disk usage monitoring via OS commands is unreliable in containers.
+    // Recommended to use external tools like Prometheus for infrastructure monitoring.
+    return null;
   }
 
   /**
-   * Helper to get CPU usage on Windows
+   * Helper to get CPU usage
    */
-  private getCpuUsage(): number {
+  private async getCpuUsage(): Promise<number> {
     try {
-      if (os.platform() !== 'win32') {
-        const cpus = os.cpus().length;
-        const loadAvg = os.loadavg()[0];
-        return (loadAvg / cpus) * 100;
-      }
-      
-      const output = execSync('wmic cpu get loadpercentage').toString();
-      const load = parseInt(output.split('\n')[1]?.trim(), 10);
-      return isNaN(load) ? 0 : load;
+      // Return 0 for development or Windows, otherwise use Linux loadavg
+      if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development' || os.platform() === 'win32') return 0; 
+
+      const cpus = os.cpus().length;
+      const loadAvg = os.loadavg()[0]; // 1 minute load average
+      return cpus > 0 ? (loadAvg / cpus) * 100 : 0;
     } catch (error) {
       return 0;
     }
@@ -95,8 +69,11 @@ export class MonitoringService {
    */
   @Cron(CronExpression.EVERY_MINUTE)
   async checkSystemHealth() {
+    // Skip heavy monitoring in development to save CPU
+    if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') return;
+
     // 1. Check CPU Usage
-    const cpuUsagePercent = this.getCpuUsage();
+    const cpuUsagePercent = await this.getCpuUsage();
     
     // 2. Check RAM Usage
     const totalMem = os.totalmem();
