@@ -14406,13 +14406,13 @@ export namespace Prisma {
   export type UserWhereUniqueInput = Prisma.AtLeast<{
     id?: number
     username?: string
+    email?: string
     google_id?: string
     facebook_id?: string
     apple_id?: string
     AND?: UserWhereInput | UserWhereInput[]
     OR?: UserWhereInput[]
     NOT?: UserWhereInput | UserWhereInput[]
-    email?: StringNullableFilter<"User"> | string | null
     fullname?: StringNullableFilter<"User"> | string | null
     avatar?: StringNullableFilter<"User"> | string | null
     profession?: StringNullableFilter<"User"> | string | null
@@ -14433,7 +14433,7 @@ export namespace Prisma {
     BlockedPosts?: PostListRelationFilter
     SentNotification?: NotificationListRelationFilter
     PostLike?: PostLikeListRelationFilter
-  }, "id" | "username" | "google_id" | "facebook_id" | "apple_id">
+  }, "id" | "username" | "email" | "google_id" | "facebook_id" | "apple_id">
 
   export type UserOrderByWithAggregationInput = {
     id?: SortOrder

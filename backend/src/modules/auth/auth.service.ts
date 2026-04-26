@@ -80,8 +80,25 @@ export class AuthService {
     }
     const hash = await bcrypt.hash(data.password, 10);
     try {
+      // Check if email already exists manually since DB permissions might prevent unique constraint
+      if (data.email) {
+        const existingEmail = await this.userRepository.findByEmail(data.email);
+        if (existingEmail) {
+          throw new BadRequestException('Email này đã được sử dụng bởi một tài khoản khác.');
+        }
+      }
+
+      // Check if username already exists
+      const existingUser = await this.userRepository.findByUsername(data.username);
+      if (existingUser) {
+        throw new BadRequestException('Tên đăng nhập đã tồn tại.');
+      }
+
+      // Destructure to remove confirmPassword and other possible DTO-only fields
+      const { confirmPassword, ...registerData } = data as any;
+      
       const user = await this.userRepository.create({
-        ...data,
+        ...registerData,
         fullname: data.fullname || data.username,
         password: hash,
         role: UserRole.USER,

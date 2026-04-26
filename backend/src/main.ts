@@ -14,6 +14,10 @@ async function bootstrap() {
   // Set Global Prefix
   app.setGlobalPrefix('api');
 
+  // Trust proxy for accurate IP capture
+  const expressApp = app.getHttpAdapter().getInstance();
+  expressApp.set('trust proxy', true);
+
   // Global Validation Pipe
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
