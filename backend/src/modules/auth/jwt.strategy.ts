@@ -3,10 +3,6 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
-<<<<<<< HEAD
-import { JwtPayload } from './interfaces/jwt-payload.interface';
-import { User } from '@portfolio/contracts';
-=======
 import { User } from '@portfolio/contracts';
 
 interface JwtPayload {
@@ -14,7 +10,6 @@ interface JwtPayload {
   username: string;
   role: string;
 }
->>>>>>> feature/arch-refactor
 
 interface RequestWithCookies {
   cookies?: {

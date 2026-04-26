@@ -2,11 +2,7 @@
 
 import { useState, useEffect, use, useCallback } from 'react';
 import Link from 'next/link';
-<<<<<<< HEAD
-import { Calendar, User as UserIcon, Mail, Eye, ArrowLeft, Sparkles, MapPin, Briefcase, Heart, MessageSquare } from 'lucide-react';
-=======
-import { Calendar, User as UserIcon, Mail, Eye, ArrowLeft, Sparkles, MapPin, Briefcase, Heart, MessageSquare, Layers } from 'lucide-react';
->>>>>>> feature/arch-refactor
+import { Calendar, User as UserIcon, Mail, Eye, ArrowLeft, Sparkles, Briefcase, Heart, MessageSquare, Layers } from 'lucide-react';
 import AnimateList from '@/shared/components/ui/AnimateList';
 import Button from '@/shared/components/ui/Button';
 import Skeleton from '@/shared/components/ui/Skeleton';
@@ -16,10 +12,7 @@ import Badge from '@/shared/components/common/Badge';
 // Modular Services
 import { userService } from '@/features/users/services/userService';
 import { postService } from '@/features/posts/services/postService';
-<<<<<<< HEAD
-=======
 import { seriesService } from '@/features/series/services/seriesService';
->>>>>>> feature/arch-refactor
 
 import { Post, User as Author } from '@portfolio/contracts';
 
@@ -33,15 +26,6 @@ export default function AuthorPage({ params }: { params: Promise<{ id: string }>
   const fetchData = useCallback(async () => {
     try {
       const authorId = parseInt(id);
-<<<<<<< HEAD
-      const [userData, postsData] = await Promise.all([
-        userService.getById(id),
-        postService.getAll({ userId: authorId, limit: 100 })
-      ]);
-      
-      setAuthor(userData as unknown as Author);
-      setPosts(postsData?.data || []);
-=======
       const [userData, postsData, seriesData] = await Promise.all([
         userService.getById(id),
         postService.getAll({ userId: authorId, limit: 100 }),
@@ -51,7 +35,6 @@ export default function AuthorPage({ params }: { params: Promise<{ id: string }>
       setAuthor(userData as unknown as Author);
       setPosts(postsData?.items || []);
       setSeries(seriesData || []);
->>>>>>> feature/arch-refactor
     } catch (error: unknown) {
       console.error('Error fetching author data:', error);
     } finally {

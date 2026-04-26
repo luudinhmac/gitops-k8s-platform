@@ -12,17 +12,10 @@ import { CommentsModule } from './modules/comments/comments.module';
 import { UploadModule } from './modules/upload/upload.module';
 import { SeriesModule } from './modules/series/series.module';
 import { SettingsModule } from './modules/settings/settings.module';
-<<<<<<< HEAD
-import { TelegramModule } from './telegram/telegram.module';
-import { MailModule } from './mail/mail.module';
-import { TeamsModule } from './teams/teams.module';
-import { AdminAlertModule } from './admin-alert/admin-alert.module';
-=======
 import { TelegramModule } from './modules/telegram/telegram.module';
 import { MailModule } from './modules/mail/mail.module';
 import { TeamsModule } from './modules/teams/teams.module';
 import { AdminAlertModule } from './modules/admin-alert/admin-alert.module';
->>>>>>> feature/arch-refactor
 import { ScheduleModule } from '@nestjs/schedule';
 import { StatsModule } from './modules/stats/stats.module';
 import { StatsMiddleware } from './modules/stats/stats.middleware';
