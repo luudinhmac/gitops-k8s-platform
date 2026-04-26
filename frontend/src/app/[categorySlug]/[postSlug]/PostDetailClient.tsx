@@ -13,50 +13,25 @@ import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import PageHeader from '@/components/layout/PageHeader';
 import { sanitizeHTML } from '@/lib/sanitizer';
-import UserAvatar from '@/components/common/UserAvatar';
+import UserAvatar from '@/features/users/components/UserAvatar';
 import Navbar from '@/components/layout/Navbar';
-import { usePathname, useSearchParams } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
-import Badge from '@/components/common/Badge';
-import FormattedDate from '@/components/common/FormattedDate';
-import Button from '@/components/ui/Button';
-import IconBadge from '@/components/ui/IconBadge';
-import AnimateList from '@/components/ui/AnimateList';
-import MessageDialog from '@/components/ui/MessageDialog';
+import Badge from '@/shared/components/common/Badge';
+import FormattedDate from '@/shared/components/common/FormattedDate';
+import Button from '@/shared/components/ui/Button';
+import Skeleton from '@/shared/components/ui/Skeleton';
+import IconBadge from '@/shared/components/ui/IconBadge';
+import AnimateList from '@/shared/components/ui/AnimateList';
+import MessageDialog from '@/shared/components/ui/MessageDialog';
 
 // Modular Services
-import { postService } from '@/services/postService';
-import { commentService } from '@/services/commentService';
-import { categoryService as catApi } from '@/services/categoryService';
-import { seriesService } from '@/services/seriesService';
+import { postService } from '@/features/posts/services/postService';
+import { commentService } from '@/features/comments/services/commentService';
+import { categoryService as catApi } from '@/features/categories/services/categoryService';
+import { seriesService } from '@/features/series/services/seriesService';
 
-import { Post, Comment as CommentType } from '@/types/post';
+import { Post, Comment as CommentType } from '@portfolio/contracts';
 
-const buildCommentTree = (comments: CommentType[]) => {
-  const map = new Map<number, CommentType>();
-  const roots: CommentType[] = [];
 
-  comments.forEach(c => {
-    map.set(c.id, { ...c, Replies: [] });
-  });
-
-  comments.forEach(c => {
-    const node = map.get(c.id);
-    if (!node) return;
-    if (c.parent_id) {
-      const parent = map.get(c.parent_id);
-      if (parent) {
-        parent.Replies!.push(node);
-      } else {
-        roots.push(node);
-      }
-    } else {
-      roots.push(node);
-    }
-  });
-
-  return roots;
-};
 
 export default function PostDetailClient({ params }: { params: { categorySlug: string, postSlug: string } }) {
   const { categorySlug, postSlug } = params;
@@ -86,8 +61,8 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
   useEffect(() => {
     const checkMaintenance = async () => {
       try {
-        const { settingsService } = await import('@/services/settingsService');
-        const settings = await settingsService.getPublicSettings();
+        const { settingService } = await import('@/features/settings/services/settingService');
+        const settings = await settingService.getPublicSettings();
         if (settings.maintenance_comments === 'true' && !['admin', 'superadmin'].includes(user?.role || '')) {
           setIsMaintenanceComments(true);
         }
@@ -154,7 +129,7 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
         postService.getAll({ limit: 5 })
       ]);
       setCategories(Array.isArray(cats) ? cats : []);
-      setRelatedPosts(Array.isArray(related) ? related : []);
+      setRelatedPosts(Array.isArray(related?.items) ? related.items : []);
     } catch (err) {
       console.error('Sidebar error:', err);
     }
@@ -195,27 +170,45 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
 
     setIsSubmitting(true);
     try {
-      const newCommentRaw = await commentService.create({
+      const formattedComment = await commentService.create({
         content: commentText,
         post_id: post.id,
         parent_id: replyingTo,
-        user_id: user?.id || null,
-        author_name: isAuthenticated ? (user?.fullname || user?.username || 'Thành viên') : 'Khách',
-        author_email: user?.email || null
       });
 
-      const formattedComment: CommentType = {
-        id: newCommentRaw.id,
-        content: newCommentRaw.content,
-        author_name: newCommentRaw.author_name,
-        author_email: newCommentRaw.author_email,
-        created_at: newCommentRaw.created_at,
-        user_id: newCommentRaw.user_id,
-        parent_id: newCommentRaw.parent_id,
-        User: user?.avatar ? { avatar: user.avatar } : null
-      };
-
-      setPost({ ...post, Comment: [formattedComment, ...(post.Comment || [])] });
+<<<<<<< HEAD
+      // Update local state by adding the new comment to the tree
+      if (replyingTo) {
+        setPost({
+          ...post,
+          Comment: (post.Comment || []).map(c => {
+            if (c.id === replyingTo) {
+              return { ...c, Replies: [formattedComment, ...(c.Replies || [])] };
+            }
+            return c;
+          })
+=======
+      // Update local state by adding the new comment to the tree recursively
+      if (replyingTo) {
+        const updateComments = (comments: CommentType[]): CommentType[] => {
+          return comments.map(c => {
+            if (c.id === replyingTo) {
+              return { ...c, Replies: [formattedComment, ...(c.Replies || [])] };
+            }
+            if (c.Replies && c.Replies.length > 0) {
+              return { ...c, Replies: updateComments(c.Replies) };
+            }
+            return c;
+          });
+        };
+        setPost({
+          ...post,
+          Comment: updateComments(post.Comment || [])
+>>>>>>> feature/arch-refactor
+        });
+      } else {
+        setPost({ ...post, Comment: [formattedComment, ...(post.Comment || [])] });
+      }
       setCommentText('');
       setReplyingTo(null);
       setCommentError(null);
@@ -260,11 +253,20 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
     return (
       <div className="pt-40 pb-12 px-4 min-h-screen">
         <div className="max-w-7xl mx-auto space-y-8">
-          <div className="h-10 w-48 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-lg" />
-          <div className="h-64 w-full bg-slate-200 dark:bg-slate-800 animate-pulse rounded-xl" />
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-96 w-full rounded-3xl" />
           <div className="space-y-4">
-            <div className="h-12 w-3/4 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-lg" />
-            <div className="h-6 w-1/2 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-lg" />
+            <Skeleton className="h-12 w-3/4" />
+            <Skeleton className="h-6 w-1/2" />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <div className="lg:col-span-3 space-y-6">
+              <Skeleton className="h-[600px] w-full rounded-3xl" />
+            </div>
+            <div className="space-y-6">
+              <Skeleton className="h-64 w-full rounded-3xl" />
+              <Skeleton className="h-96 w-full rounded-3xl" />
+            </div>
           </div>
         </div>
       </div>
@@ -301,9 +303,9 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
             {/* Horizontal Metabar Row */}
             <div className="flex flex-wrap items-center justify-between gap-1 mb-1 py-1 border-y border-slate-100 dark:border-slate-800/50">
               <div className="flex flex-wrap items-center gap-3">
-                <Link href={`/author/${post.User?.id || 1}`} className="flex items-center text-primary font-bold uppercase tracking-widest text-[9px] hover:text-primary/80 transition-all">
-                  <UserAvatar user={post.User} size="xs" className="mr-2" />
-                  {post.User?.fullname || post.User?.username || 'Ẩn danh'}
+                <Link href={`/author/${post.Author?.id || 1}`} className="flex items-center text-primary font-bold uppercase tracking-widest text-[9px] hover:text-primary/80 transition-all">
+                  <UserAvatar user={post.Author} size="xs" className="mr-2" />
+                  {post.Author?.fullname || post.Author?.username || 'Ẩn danh'}
                 </Link>
                 <div className="w-px h-3 bg-slate-200 dark:bg-slate-800" />
                 {post.Category && (
@@ -325,7 +327,7 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
                   <FormattedDate date={post.created_at} showIcon iconSize={10} />
                   <div className="flex items-center">
                     <Clock size={10} className="mr-1.5" />
-                    {post.readTime || 5} PHÚT ĐỌC
+                    {post.readTime || 1} PHÚT ĐỌC
                   </div>
                   <div className="flex items-center text-primary/70">
                     <Eye size={10} className="mr-1.5" />
@@ -487,7 +489,6 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
               <AnimateList className="space-y-1">
                 {post.Comment && post.Comment.length > 0 ? (
                   (() => {
-                    const tree = buildCommentTree(post.Comment);
                     const renderComments = (commentsList: CommentType[], isReply = false): React.ReactNode => {
                       return commentsList.map(comment => {
                         const isTarget = activeHash === `#comment-${comment.id}`;
@@ -541,7 +542,7 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
                                    </button>
                                    {isAuthenticated && (user?.id === comment.user_id || ['admin', 'superadmin'].includes(user?.role || '')) && (
                                       <>
-                                        {user?.id === comment.user_id && <button onClick={() => { setEditingCommentId(comment.id); setEditingText(comment.content); }} className="text-[11px] font-bold text-slate-500 hover:text-primary transition-colors">Sửa</button>}
+                                        {user?.id === comment.user_id && <button onClick={() => { setEditingCommentId(comment.id); setEditingText(comment.content || ''); }} className="text-[11px] font-bold text-slate-500 hover:text-primary transition-colors">Sửa</button>}
                                         {deleteConfirmId === comment.id ? (
                                           <div className="flex items-center space-x-2 text-[10px] bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded border border-red-100 dark:border-red-900/30">
                                             <span className="text-red-500 font-bold">Xóa?</span>
@@ -578,7 +579,7 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
                         );
                       });
                     };
-                    return <>{renderComments(tree)}</>;
+                    return <>{renderComments(post.Comment)}</>;
                   })()
                 ) : (
                   <div className="text-center py-16 bg-slate-50/50 dark:bg-slate-950/50 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-3xl">

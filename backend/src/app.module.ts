@@ -1,26 +1,33 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer, RequestMethod } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { PrismaModule } from './prisma/prisma.module';
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
-import { PostsModule } from './posts/posts.module';
-import { NotificationsModule } from './notifications/notifications.module';
-import { CategoriesModule } from './categories/categories.module';
-import { CommentsModule } from './comments/comments.module';
-import { UploadModule } from './upload/upload.module';
-import { SeriesModule } from './series/series.module';
-import { SettingsModule } from './settings/settings.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
+import { PostsModule } from './modules/posts/posts.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+import { CategoriesModule } from './modules/categories/categories.module';
+import { CommentsModule } from './modules/comments/comments.module';
+import { UploadModule } from './modules/upload/upload.module';
+import { SeriesModule } from './modules/series/series.module';
+import { SettingsModule } from './modules/settings/settings.module';
+<<<<<<< HEAD
 import { TelegramModule } from './telegram/telegram.module';
 import { MailModule } from './mail/mail.module';
 import { TeamsModule } from './teams/teams.module';
 import { AdminAlertModule } from './admin-alert/admin-alert.module';
+=======
+import { TelegramModule } from './modules/telegram/telegram.module';
+import { MailModule } from './modules/mail/mail.module';
+import { TeamsModule } from './modules/teams/teams.module';
+import { AdminAlertModule } from './modules/admin-alert/admin-alert.module';
+>>>>>>> feature/arch-refactor
 import { ScheduleModule } from '@nestjs/schedule';
-import { StatsModule } from './stats/stats.module';
-import { StatsMiddleware } from './stats/stats.middleware';
-import { MiddlewareConsumer, RequestMethod } from '@nestjs/common';
+import { StatsModule } from './modules/stats/stats.module';
+import { StatsMiddleware } from './modules/stats/stats.middleware';
 import { HealthController } from './health.controller';
+import { StorageModule } from './infrastructure/storage/storage.module';
 
 @Module({
   imports: [
@@ -32,6 +39,7 @@ import { HealthController } from './health.controller';
       serveRoot: '/uploads',
     }),
     PrismaModule,
+    StorageModule,
     AuthModule,
     UsersModule,
     PostsModule,

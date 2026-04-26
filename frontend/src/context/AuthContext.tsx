@@ -3,22 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-export interface User {
-  id: number;
-  username: string;
-  fullname: string;
-  avatar?: string | null;
-  role: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  profession?: string;
-  birthday?: string;
-  is_active?: boolean;
-  can_comment?: boolean;
-  can_post?: boolean;
-  created_at?: string;
-}
+import { User } from '@portfolio/contracts';
 
 interface AuthContextType {
   user: User | null;
@@ -77,11 +62,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    checkAuth();
+    // Only check auth if we have a hint that a session exists
+    // This avoids unnecessary 401 logs in the console for visitors
+    const hasTokenHint = document.cookie.includes('logged_in=true');
+    if (hasTokenHint) {
+      checkAuth();
+    } else {
+      setLoading(false);
+    }
   }, []);
 
   const login = (userData: User) => {
     setUser(userData);
+    setLoading(false);
   };
 
   const logout = async () => {
@@ -135,3 +128,4 @@ export const useAuth = () => {
   }
   return context;
 };
+

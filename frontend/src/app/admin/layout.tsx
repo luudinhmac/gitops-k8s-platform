@@ -1,9 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter, usePathname, notFound } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import AdminSidebar from '@/components/admin/AdminSidebar';
+import AdminSidebar from '@/features/admin/components/AdminSidebar';
 import { Loader2 } from 'lucide-react';
 import { SidebarProvider, useSidebar } from '@/context/SidebarContext';
 import { cn } from '@/lib/utils';
@@ -17,28 +17,28 @@ function AdminLayoutContent({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!loading) {
-      if (!isAuthenticated) {
-        router.push(`/login?redirect=${pathname}`);
-      } else if (user && !['admin', 'superadmin'].includes(user.role)) {
-        setIsForbidden(true);
-      } else {
-        setIsForbidden(false);
+      if (!isAuthenticated || (user && !['admin', 'superadmin'].includes(user.role))) {
+        // Stealth mode: Instead of redirect, we'll let the render check trigger notFound()
+        console.log('[Security] Unauthorized access to admin, hiding presence.');
       }
     }
-  }, [user, loading, router, isAuthenticated, pathname]);
+  }, [user, loading, isAuthenticated]);
 
   useEffect(() => {
     setSidebarOpen(false);
   }, [pathname, setSidebarOpen]);
 
-  const isForbiddenForUser = user && !['admin', 'superadmin'].includes(user.role);
-
-  if (loading || !isAuthenticated || isForbiddenForUser) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
         <Loader2 className="w-10 h-10 text-primary animate-spin" />
       </div>
     );
+  }
+
+  if (!isAuthenticated || (user && !['admin', 'superadmin'].includes(user.role))) {
+    notFound();
+    return null;
   }
 
   return (
@@ -67,3 +67,4 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     </SidebarProvider>
   );
 }
+

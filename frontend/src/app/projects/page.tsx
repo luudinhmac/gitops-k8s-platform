@@ -9,3 +9,4 @@ export default function ProjectsPage() {
   }, [router]);
   return null;
 }
+

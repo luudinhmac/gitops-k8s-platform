@@ -5,23 +5,25 @@ import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import {
   FileText, Plus, Edit, Trash2, Eye,
-  Loader2, Tag as TagIcon, MessageSquare, Heart,
+  Tag as TagIcon, MessageSquare, Heart,
   ChevronUp, ChevronDown, Layout, Calendar
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import AdminPageHeader from '@/components/admin/AdminPageHeader';
-import AdminCard from '@/components/admin/AdminCard';
+import AdminPageHeader from '@/features/admin/components/AdminPageHeader';
+import AdminCard from '@/features/admin/components/AdminCard';
 
 // Professional Modules
-import { postService } from '@/services/postService';
+import { postService } from '@/features/posts/services/postService';
+import { categoryService } from '@/features/categories/services/categoryService';
 import { usePostActions } from '@/hooks/post/usePostActions';
-import Button from '@/components/ui/Button';
-import IconBadge from '@/components/ui/IconBadge';
-import AnimateList from '@/components/ui/AnimateList';
-import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
-import MessageDialog from '@/components/ui/MessageDialog';
-import PromptDialog from '@/components/ui/PromptDialog';
-import { Post as AdminPost } from '@/types/post';
+import Button from '@/shared/components/ui/Button';
+import IconBadge from '@/shared/components/ui/IconBadge';
+import AnimateList from '@/shared/components/ui/AnimateList';
+import ConfirmationDialog from '@/shared/components/ui/ConfirmationDialog';
+import MessageDialog from '@/shared/components/ui/MessageDialog';
+import PromptDialog from '@/shared/components/ui/PromptDialog';
+import Skeleton from '@/shared/components/ui/Skeleton';
+import { Post as AdminPost } from '@portfolio/contracts';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AdminDashboardPage() {
@@ -46,22 +48,25 @@ export default function AdminDashboardPage() {
     setLoading(true);
     try {
       const [postsData, catsData] = await Promise.all([
-        postService.getAdminPosts(),
-        fetch(`/api/categories`, { credentials: 'include' }).then(res => res.json())
+        postService.getAdminPosts({ 
+          q: searchQuery, 
+          sort: sortBy === 'date' ? 'latest' : sortBy 
+        }),
+        categoryService.getAll()
       ]);
 
-      let filtered: AdminPost[] = Array.isArray(postsData) ? postsData : [];
-      if (!['admin', 'superadmin'].includes(user?.role || '')) {
-        filtered = filtered.filter(p => p.author_id === user?.id);
-      }
-      setPosts(filtered);
+<<<<<<< HEAD
+      setPosts(postsData?.data || []);
+=======
+      setPosts(postsData?.items || []);
+>>>>>>> feature/arch-refactor
       setCategories(Array.isArray(catsData) ? catsData : []);
     } catch (error) {
       console.error('Error fetching admin data:', error);
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated, user?.id, user?.role]);
+  }, [isAuthenticated, searchQuery, sortBy]);
 
   useEffect(() => {
     fetchData();
@@ -87,34 +92,21 @@ export default function AdminDashboardPage() {
     }
   };
 
-  const filteredPosts = posts.filter(p =>
-    p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.Category?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    p.User?.fullname?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const sortedPosts = [...filteredPosts].sort((a, b) => {
-    let valA: number = 0;
-    let valB: number = 0;
-
-    if (sortBy === 'date') {
-      valA = new Date(a.created_at).getTime();
-      valB = new Date(b.created_at).getTime();
-    } else if (sortBy === 'views') {
-      valA = a.views || 0;
-      valB = b.views || 0;
-    } else if (sortBy === 'interaction') {
-      valA = (a.views || 0) + (a._count?.Comment || 0) + (a.likes || 0);
-      valB = (b.views || 0) + (b._count?.Comment || 0) + (b.likes || 0);
-    }
-
-    return sortOrder === 'asc' ? valA - valB : valB - valA;
-  });
+  const sortedPosts = posts; // Now handled by backend
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 text-primary animate-spin" />
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-10 w-48" />
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 w-full" />)}
+        </div>
+        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 space-y-4">
+          {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-12 w-full" />)}
+        </div>
       </div>
     );
   }
@@ -199,7 +191,7 @@ export default function AdminDashboardPage() {
                           <p className="text-[11px] text-slate-500 flex items-center">
                             <span className="font-medium text-slate-400">{post.Category?.name || 'Chưa phân loại'}</span>
                             <span className="mx-2 opacity-50">•</span>
-                            <span>{post.User?.fullname || 'Ẩn danh'}</span>
+                            <span>{post.Author?.fullname || 'Ẩn danh'}</span>
                             <span className="mx-2 opacity-50">•</span>
                             <span>{new Date(post.created_at).toLocaleDateString('vi-VN')}</span>
                           </p>
@@ -246,28 +238,42 @@ export default function AdminDashboardPage() {
                           return (
                             <button onClick={() => handleTogglePublish(post.id)}
                               className={cn("px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all",
-                                isPub ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"
+                                isPub ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
                               )}>
                               {isPub ? 'Công khai' : 'Bản nháp'}
                             </button>
                           );
                         }
 
+                        // If not own but is published: Admin can click to hide
+                        if (isPub && (user?.role === 'admin' || user?.role === 'superadmin')) {
+                          return (
+                            <button onClick={() => handleTogglePublish(post.id)}
+                              className="px-3 py-1.5 rounded-lg text-[10px] font-bold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-all">
+                              Đang hiển thị
+                            </button>
+                          );
+                        }
+
                         return (
-                          <button onClick={() => handleTogglePublish(post.id)}
-                            className="px-3 py-1.5 rounded-lg text-[10px] font-bold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-all">
-                            Đang hiển thị
-                          </button>
+                          <div className={cn("px-3 py-1.5 rounded-lg text-[10px] font-bold inline-block cursor-default opacity-80",
+                            isBlk ? "bg-red-100 text-red-700" : 
+                            (isPub ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500")
+                          )}>
+                            {isBlk ? 'Bị chặn' : (isPub ? 'Đang hiển thị' : 'Bản nháp')}
+                          </div>
                         );
                       })()}
                     </td>
                     <td className="px-5 py-3 text-right">
                       <div className="flex items-center justify-end space-x-2">
-                        <Link href={`/posts/${post.id}/edit`}>
-                          <Button variant="outline" size="icon" className="h-8 w-8 hover:border-amber-200">
-                            <Edit size={14} className="text-amber-500" />
-                          </Button>
-                        </Link>
+                        {post.author_id === user?.id && (
+                          <Link href={`/posts/${post.id}/edit`}>
+                            <Button variant="outline" size="icon" className="h-8 w-8 hover:border-amber-200">
+                              <Edit size={14} className="text-amber-500" />
+                            </Button>
+                          </Link>
+                        )}
                         <Button
                           variant="outline"
                           size="icon"
@@ -320,3 +326,4 @@ export default function AdminDashboardPage() {
     </>
   );
 }
+

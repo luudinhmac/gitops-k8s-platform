@@ -7,25 +7,29 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import {
   User as UserIcon, FileText, Lock, Save, Loader2,
   ArrowLeft, Eye, EyeOff, AlertCircle, Check,
-  Calendar, Phone, MapPin, Briefcase, Mail, Trash2, Edit, MessageSquare, Heart, SortAsc
+  Calendar, Phone, MapPin, Briefcase, Mail, Trash2, Edit, MessageSquare, Heart, SortAsc, Layers
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import UserAvatar from '@/components/common/UserAvatar';
+import UserAvatar from '@/features/users/components/UserAvatar';
 import Navbar from '@/components/layout/Navbar';
-import Badge from '@/components/common/Badge';
-import FormattedDate from '@/components/common/FormattedDate';
+import Badge from '@/shared/components/common/Badge';
+import FormattedDate from '@/shared/components/common/FormattedDate';
 
 // Professional Modules
-import { postService } from '@/services/postService';
-import { userService } from '@/services/userService';
+import { postService } from '@/features/posts/services/postService';
+import { userService } from '@/features/users/services/userService';
 import { usePostActions } from '@/hooks/post/usePostActions';
-import Button from '@/components/ui/Button';
-import IconBadge from '@/components/ui/IconBadge';
-import AnimateList from '@/components/ui/AnimateList';
-import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
-import MessageDialog from '@/components/ui/MessageDialog';
-import { Post, SortOption } from '@/types/post';
-import { User as UserType } from '@/types/user';
+<<<<<<< HEAD
+=======
+import { seriesService } from '@/features/series/services/seriesService';
+>>>>>>> feature/arch-refactor
+import Button from '@/shared/components/ui/Button';
+import IconBadge from '@/shared/components/ui/IconBadge';
+import AnimateList from '@/shared/components/ui/AnimateList';
+import ConfirmationDialog from '@/shared/components/ui/ConfirmationDialog';
+import MessageDialog from '@/shared/components/ui/MessageDialog';
+import { Post, SortOption } from '@portfolio/contracts';
+import { User as UserType } from '@portfolio/contracts';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Suspense } from 'react';
 
@@ -34,7 +38,7 @@ function ProfilePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [activeTab, setActiveTab] = useState<'info' | 'posts' | 'password'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'posts' | 'series' | 'password'>('info');
   const [profileForm, setProfileForm] = useState({
     fullname: '', email: '', phone: '', address: '', profession: '', birthday: ''
   });
@@ -47,6 +51,9 @@ function ProfilePageContent() {
   const [postsLoading, setPostsLoading] = useState(false);
   const [sortBy, setSortBy] = useState<SortOption>('latest');
   const [postFilter, setPostFilter] = useState<'all' | 'published' | 'draft' | 'blocked'>('all');
+  
+  const [mySeries, setMySeries] = useState<any[]>([]);
+  const [seriesLoading, setSeriesLoading] = useState(false);
 
   const [passForm, setPassForm] = useState({ oldPassword: '', newPassword: '', confirmPassword: '' });
   const [showPass, setShowPass] = useState({ old: false, new: false, confirm: false });
@@ -68,7 +75,7 @@ function ProfilePageContent() {
     
     // Check for tab parameter
     const tab = searchParams.get('tab');
-    if (tab === 'posts' || tab === 'info' || tab === 'password') {
+    if (tab === 'posts' || tab === 'info' || tab === 'series' || tab === 'password') {
       setActiveTab(tab as any);
     }
   }, [authLoading, isAuthenticated, router, searchParams]);
@@ -90,26 +97,44 @@ function ProfilePageContent() {
     if (!user?.id) return;
     setPostsLoading(true);
     try {
-      const data = await postService.getAdminPosts();
-      const mine = Array.isArray(data)
-        ? data
-          .filter((p: Post) => p.author_id === user?.id)
-          .map((p: any) => ({
-            ...p,
-            likes: p.likes || 0,
-            comment_count: p._count?.Comment || 0
-          }))
-        : [];
-      setMyPosts(mine);
+      const data = await postService.getMyPosts({
+        status: postFilter,
+        sort: sortBy
+      });
+<<<<<<< HEAD
+      setMyPosts(data?.data || []);
     } catch (err) { console.error('Failed to fetch posts:', err); }
     finally { setPostsLoading(false); }
+  }, [user?.id, postFilter, sortBy]);
+=======
+      setMyPosts(data?.items || []);
+    } catch (err) { console.error('Failed to fetch posts:', err); }
+    finally { setPostsLoading(false); }
+  }, [user?.id, postFilter, sortBy]);
+
+  const fetchMySeries = useCallback(async () => {
+    if (!user?.id) return;
+    setSeriesLoading(true);
+    try {
+      const data = await seriesService.getMySeries();
+      setMySeries(data || []);
+    } catch (err) { console.error('Failed to fetch series:', err); }
+    finally { setSeriesLoading(false); }
   }, [user?.id]);
+>>>>>>> feature/arch-refactor
 
   useEffect(() => {
     if (activeTab === 'posts' && user) {
       fetchMyPosts();
     }
-  }, [activeTab, user, fetchMyPosts]);
+<<<<<<< HEAD
+  }, [activeTab, user, fetchMyPosts, sortBy, postFilter]);
+=======
+    if (activeTab === 'series' && user) {
+        fetchMySeries();
+    }
+  }, [activeTab, user, fetchMyPosts, fetchMySeries, sortBy, postFilter]);
+>>>>>>> feature/arch-refactor
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -202,26 +227,10 @@ function ProfilePageContent() {
     return <div className="min-h-screen flex items-center justify-center"><Loader2 size={40} className="animate-spin text-primary" /></div>;
   }
 
-  const filteredPosts = myPosts.filter(post => {
-    const isPub = post.is_published === true;
-    const isBlk = post.is_blocked === true;
-    
-    if (postFilter === 'published') return isPub && !isBlk;
-    if (postFilter === 'draft') return !isPub && !isBlk;
-    if (postFilter === 'blocked') return isBlk;
-    return true;
-  });
-
-  const sortedPosts = [...filteredPosts].sort((a, b) => {
-    if (sortBy === 'views') return (b.views || 0) - (a.views || 0);
-    if (sortBy === 'likes') return (b.likes || 0) - (a.likes || 0);
-    if (sortBy === 'comments') return (b.comment_count || 0) - (a.comment_count || 0);
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-  });
-
   const tabs = [
     { id: 'info', label: 'Thông tin cá nhân', icon: UserIcon },
     { id: 'posts', label: 'Bài viết của tôi', icon: FileText },
+    { id: 'series', label: 'Series của tôi', icon: Layers },
     { id: 'password', label: 'Đổi mật khẩu', icon: Lock },
   ];
 
@@ -421,7 +430,7 @@ function ProfilePageContent() {
               </div>
               {postsLoading ? (
                 <div className="flex justify-center py-12"><Loader2 className="animate-spin text-primary" size={32} /></div>
-              ) : filteredPosts.length === 0 ? (
+              ) : myPosts.length === 0 ? (
                 <div className="text-center py-16 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-xl">
                   <FileText size={40} className="mx-auto text-slate-200 dark:text-slate-800 mb-4" />
                   <p className="text-slate-500">
@@ -432,7 +441,7 @@ function ProfilePageContent() {
                 </div>
               ) : (
                 <AnimateList className="divide-y divide-slate-100 dark:divide-slate-800">
-                  {sortedPosts.map(post => (
+                  {myPosts.map(post => (
                     <div key={post.id} className="flex items-center justify-between py-1 group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 px-2 -mx-2 rounded-xl transition-all">
                       {(() => {
                         const isPub = !!post.is_published;
@@ -443,7 +452,9 @@ function ProfilePageContent() {
                               <div className="flex items-center space-x-2 mb-1.5">
                                 {isBlk && <span className="px-1.5 py-0.5 bg-red-100 text-red-700 text-[9px] font-bold rounded uppercase">Bị chặn</span>}
                                 {!isPub && !isBlk && <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[9px] font-bold rounded uppercase">Bản nháp</span>}
-                                <h3 className="font-bold text-slate-900 dark:text-white text-sm truncate group-hover:text-primary transition-colors cursor-pointer">{post.title}</h3>
+                                <Link href={`/${post.Category?.slug || 'uncategorized'}/${post.slug}`}>
+                                  <h3 className="font-bold text-slate-900 dark:text-white text-sm truncate group-hover:text-primary transition-colors cursor-pointer">{post.title}</h3>
+                                </Link>
                               </div>
                               {isPub && !isBlk ? (
                                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-500">
@@ -475,11 +486,13 @@ function ProfilePageContent() {
                         );
                       })()}
                       <div className="flex items-center space-x-2 shrink-0">
-                        <Link href={`/posts/${post.id}/edit`}>
-                          <Button variant="outline" size="icon" className="hover:border-amber-200">
-                            <Edit size={18} className="text-amber-500" />
-                          </Button>
-                        </Link>
+                        {post.author_id === user?.id && (
+                          <Link href={`/posts/${post.id}/edit`}>
+                            <Button variant="outline" size="icon" className="h-8 w-8 hover:border-amber-200">
+                              <Edit size={14} className="text-amber-500" />
+                            </Button>
+                          </Link>
+                        )}
                         <Button
                           variant="outline"
                           size="icon"
@@ -496,6 +509,51 @@ function ProfilePageContent() {
                   ))}
                 </AnimateList>
               )}
+            </div>
+          )}
+
+          {activeTab === 'series' && (
+            <div>
+               <div className="flex items-center justify-between mb-1">
+                 <h2 className="text-xl font-bold text-slate-900 dark:text-white">Series của tôi ({mySeries.length})</h2>
+                 <Link href="/admin/series" className="text-xs font-bold text-primary hover:underline flex items-center">
+                   <Edit size={12} className="mr-1" /> Quản lý tất cả series
+                 </Link>
+               </div>
+
+               {seriesLoading ? (
+                 <div className="flex justify-center py-12"><Loader2 className="animate-spin text-primary" size={32} /></div>
+               ) : mySeries.length === 0 ? (
+                 <div className="text-center py-16 border-2 border-dashed border-slate-100 dark:border-slate-800 rounded-xl">
+                   <Layers size={40} className="mx-auto text-slate-200 dark:text-slate-800 mb-4" />
+                   <p className="text-slate-500">Bạn chưa có series bài viết nào.</p>
+                   <p className="text-[10px] text-slate-400 mt-1">Khi viết bài, bạn có thể nhập tên series để tự động tạo và nhóm các bài viết lại.</p>
+                 </div>
+               ) : (
+                 <AnimateList className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {mySeries.map(series => (
+                      <div key={series.id} className="flex items-center justify-between py-1 group hover:bg-slate-50/50 dark:hover:bg-slate-800/20 px-2 -mx-2 rounded-xl transition-all">
+                        <div className="flex items-center space-x-4 flex-1 min-w-0">
+                           <IconBadge icon={Layers} color="blue" size="md" />
+                           <div className="flex-1 min-w-0">
+                              <Link href={`/?q=${encodeURIComponent(series.name)}`}>
+                                <h3 className="font-bold text-slate-900 dark:text-white text-sm truncate group-hover:text-primary transition-colors cursor-pointer">{series.name}</h3>
+                              </Link>
+                              <div className="flex items-center text-[10px] text-slate-400 mt-0.5 uppercase tracking-tight font-bold">
+                                 <FileText size={10} className="mr-1" />
+                                 {series._count?.Post || 0} bài viết đã viết
+                              </div>
+                           </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                           <Link href={`/?q=${encodeURIComponent(series.name)}`}>
+                              <Button variant="outline" size="sm" className="text-[10px] h-8">Xem tất cả</Button>
+                           </Link>
+                        </div>
+                      </div>
+                    ))}
+                 </AnimateList>
+               )}
             </div>
           )}
 
@@ -582,3 +640,4 @@ export default function ProfilePage() {
     </Suspense>
   );
 }
+

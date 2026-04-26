@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
-import { postService } from '@/services/postService';
-import { categoryService } from '@/services/categoryService';
+import { postService } from '@/features/posts/services/postService';
+import { categoryService } from '@/features/categories/services/categoryService';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://luudinhmac.com';
@@ -53,3 +53,4 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ];
   }
 }
+

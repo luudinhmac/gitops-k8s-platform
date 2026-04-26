@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique
+  slug       String   @unique @default("")
+  created_at DateTime @default(now())
+  Post       Post[]
+}
+
+model Series {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  slug        String   @unique
+  description String?
+  created_at  DateTime @default(now())
+  Post        Post[]
+}
+
+model Comment {
+  id           Int       @id @default(autoincrement())
+  post_id      Int?
+  author_name  String?
+  author_email String?
+  content      String?
+  created_at   DateTime  @default(now())
+  user_id      Int?
+  parent_id    Int?
+  Parent       Comment?  @relation("CommentToComment", fields: [parent_id], references: [id], onDelete: Cascade)
+  Replies      Comment[] @relation("CommentToComment")
+  Post         Post?     @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  User         User?     @relation(fields: [user_id], references: [id])
+
+  @@index([post_id])
+  @@index([user_id])
+}
+
+model Post {
+  id             Int        @id @default(autoincrement())
+  title          String
+  slug           String     @unique @default("")
+  content        String?
+  series_id      Int?
+  series_order   Int?       @default(0)
+  cover_image    String?    @db.VarChar(500)
+  is_pinned      Boolean    @default(false)
+  is_published   Boolean    @default(true)
+  views          Int        @default(0)
+  likes          Int        @default(0)
+  created_at     DateTime   @default(now())
+  updated_at     DateTime   @default(now())
+  category_id    Int?
+  author_id      Int?
+  is_blocked     Boolean    @default(false)
+  blocked_by_id  Int?
+  blocked_reason String?
+  Comment        Comment[]
+  Author         User?      @relation("PostAuthor", fields: [author_id], references: [id])
+  BlockedBy      User?      @relation("PostBlocker", fields: [blocked_by_id], references: [id])
+  Category       Category?  @relation(fields: [category_id], references: [id])
+  Series         Series?    @relation(fields: [series_id], references: [id])
+  PostLike       PostLike[]
+  Tag            Tag[]      @relation("PostTags")
+
+  @@index([author_id])
+  @@index([category_id])
+  @@index([series_id])
+  @@index([is_published, is_pinned, created_at])
+}
+
+model PostLike {
+  id         Int      @id @default(autoincrement())
+  post_id    Int
+  user_id    Int
+  created_at DateTime @default(now())
+  Post       Post     @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  User       User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([user_id, post_id])
+  @@index([post_id])
+}
+
+model Tag {
+  id         Int      @id @default(autoincrement())
+  name       String   @unique @db.VarChar(50)
+  created_at DateTime @default(now())
+  Post       Post[]   @relation("PostTags")
+}
+
+model User {
+  id                 Int            @id @default(autoincrement())
+  username           String         @unique
+  email              String?        @unique
+  fullname           String?
+  avatar             String?        @db.VarChar(500)
+  profession         String?        @default("Người dùng mới")
+  password           String
+  role               String?        @default("editor")
+  phone              String?        @db.VarChar(20)
+  birthday           String?        @db.VarChar(50)
+  address            String?
+  google_id          String?        @unique
+  facebook_id        String?        @unique
+  apple_id           String?        @unique
+  reset_token        String?
+  reset_token_expiry DateTime?
+  is_active          Boolean        @default(true)
+  created_at         DateTime       @default(now())
+  can_comment        Boolean        @default(true)
+  can_post           Boolean        @default(true)
+  Comment            Comment[]
+  Notification       Notification[] @relation("Recipient")
+  Posts              Post[]         @relation("PostAuthor")
+  BlockedPosts       Post[]         @relation("PostBlocker")
+  SentNotification   Notification[] @relation("Sender")
+  PostLike           PostLike[]
+}
+
+model Notification {
+  id           Int      @id @default(autoincrement())
+  recipient_id Int
+  sender_id    Int?
+  type         String
+  title        String
+  content      String
+  link         String?
+  is_read      Boolean  @default(false)
+  created_at   DateTime @default(now())
+  Recipient    User     @relation("Recipient", fields: [recipient_id], references: [id], onDelete: Cascade)
+  Sender       User?    @relation("Sender", fields: [sender_id], references: [id])
+
+  @@index([recipient_id])
+  @@index([is_read])
+}
+
+model Setting {
+  key        String   @id
+  value      String?
+  group      String   @default("general")
+  is_public  Boolean  @default(true)
+  updated_at DateTime @default(now()) @updatedAt
+}
+
+model MaintenanceCode {
+  id         Int      @id @default(autoincrement())
+  code       String
+  is_used    Boolean  @default(false)
+  expires_at DateTime
+  created_at DateTime @default(now())
+}

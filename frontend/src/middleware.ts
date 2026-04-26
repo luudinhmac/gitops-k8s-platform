@@ -19,52 +19,71 @@ export async function proxy(request: NextRequest) {
   // 2. Check for Bypass Cookie
   const bypassCookie = request.cookies.get('MAINTENANCE_BYPASS');
   
-  // 3. Fetch Maintenance Status
+  // 3. Fetch Maintenance Status (with simple in-memory cache)
   try {
     const nodeEnv = process.env.NODE_ENV || 'development';
-    console.log(`[Proxy] NODE_ENV: ${nodeEnv}`);
     
-    // Standardized fetching: Priority to INTERNAL_API_URL, then env-based host, then fallback
-    let fetchUrl = process.env.INTERNAL_API_URL;
+    // Simple global-like cache for Edge Runtime (persists as long as worker is alive)
+    const CACHE_KEY = 'MAINTENANCE_STATUS_CACHE';
+    const CACHE_TTL = 10000; // 10 seconds
     
-    if (!fetchUrl) {
-      // Use generic 'backend' as default for Compose/K8s, fallback to 127.0.0.1 for local
-      const backendHost = nodeEnv === 'production' ? 'backend' : '127.0.0.1';
-      fetchUrl = `http://${backendHost}:3001/api/settings/public`;
+    const now = Date.now();
+    const cached = (globalThis as any)[CACHE_KEY];
+    
+    let isGlobalMaintenance = false;
+    
+    if (cached && (now - cached.timestamp < CACHE_TTL)) {
+      isGlobalMaintenance = cached.status;
+      // console.debug(`[Proxy] Using cached maintenance status: ${isGlobalMaintenance}`);
     } else {
-      // Ensure settings endpoint is appended correctly
-      if (!fetchUrl.includes('/settings/public')) {
+      let fetchUrl = process.env.INTERNAL_API_URL;
+      
+      if (!fetchUrl) {
+        const backendHost = nodeEnv === 'production' ? 'backend' : '127.0.0.1';
+        fetchUrl = `http://${backendHost}:3001/api/settings/public`;
+      } else if (!fetchUrl.includes('/settings/public')) {
         fetchUrl = fetchUrl.replace(/\/api\/?$/, '') + '/api/settings/public';
       }
+      
+      const start = Date.now();
+      const response = await fetch(fetchUrl, { 
+        cache: 'no-store',
+        signal: AbortSignal.timeout(3000) 
+      });
+      
+      if (response.ok) {
+        const settings = await response.json();
+        isGlobalMaintenance = settings.maintenance_global === 'true' || settings.maintenance_global === true;
+        
+        // Update cache
+        (globalThis as any)[CACHE_KEY] = {
+          status: isGlobalMaintenance,
+          timestamp: now
+        };
+        
+        console.log(`[Proxy] Fetched maintenance status: ${isGlobalMaintenance} (${Date.now() - start}ms)`);
+      }
     }
     
-    console.log(`[Proxy] Checking maintenance at: ${fetchUrl}`);
-
-    const response = await fetch(fetchUrl, { 
-      cache: 'no-store',
-      next: { revalidate: 0 },
-      signal: AbortSignal.timeout(4000) 
-    });
-    
-    if (response.ok) {
-      const settings = await response.json();
-      const isGlobalMaintenance = settings.maintenance_global === 'true' || settings.maintenance_global === true;
-      
-      console.log(`[Proxy] Maintenance status: ${isGlobalMaintenance}`);
-      
-      if (isGlobalMaintenance && !bypassCookie) {
-        console.log(`[Proxy] REDIRECTING to /maintenance from ${pathname}`);
-        const url = new URL('/maintenance', request.url);
-        url.searchParams.set('from', pathname);
-        return NextResponse.redirect(url);
-      }
-    } else {
-      console.error(`[Proxy] API error: ${response.status} at ${fetchUrl}`);
+    if (isGlobalMaintenance && !bypassCookie) {
+      console.log(`[Proxy] REDIRECTING to /maintenance from ${pathname}`);
+      const url = new URL('/maintenance', request.url);
+      url.searchParams.set('from', pathname);
+      return NextResponse.redirect(url);
     }
   } catch (error: any) {
-    console.error(`[Proxy] Backend unreachable: ${error.message}`);
-    // If we can't reach the backend, we default to allowing access (frontend will handle offline state)
-    return NextResponse.next();
+    console.error(`[Proxy] Maintenance check failed: ${error.message}`);
+  }
+
+  // 4. Admin Stealth Protection
+  if (pathname.startsWith('/admin')) {
+    const token = request.cookies.get('token');
+    if (!token) {
+      console.log(`[Security] Unauthorized access to ${pathname}, performing stealth rewrite to 404.`);
+      // We rewrite to a non-existent path to trigger a real 404 response
+      // This ensures the HTTP status code is 404, not 200 or 302.
+      return NextResponse.rewrite(new URL('/not-found-stealth', request.url));
+    }
   }
 
   return NextResponse.next();
@@ -85,3 +104,4 @@ export const config = {
 };
 
 export default proxy;
+

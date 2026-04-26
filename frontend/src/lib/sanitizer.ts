@@ -24,3 +24,4 @@ export function sanitizeHTML(html: string): string {
 
   return sanitized;
 }
+

@@ -1,5 +1,5 @@
 import { use } from 'react';
-import PostEditor from '@/components/posts/PostEditor';
+import PostEditor from '@/features/posts/components/PostEditor';
 import Navbar from '@/components/layout/Navbar';
 import { SidebarProvider } from '@/context/SidebarContext';
 
