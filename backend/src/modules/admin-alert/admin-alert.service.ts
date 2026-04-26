@@ -2,7 +2,7 @@ import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
 import { TelegramService } from '../telegram/telegram.service';
 import { TeamsService } from '../teams/teams.service';
 import { MailService } from '../mail/mail.service';
-import { SettingsService } from '../modules/settings/settings.service';
+import { SettingsService } from '../settings/settings.service';
 
 @Injectable()
 export class AdminAlertService {

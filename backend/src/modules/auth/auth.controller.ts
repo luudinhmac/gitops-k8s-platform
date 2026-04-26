@@ -11,15 +11,8 @@ import {
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import type { Response } from 'express';
-<<<<<<< HEAD
-import { LoginDto, RegisterDto } from './dto/auth.dto';
-import { User } from '@portfolio/contracts';
-import { AuthenticatedRequest } from '../users/interfaces/user.interface';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
-=======
 import { LoginDto, RegisterDto, User } from '@portfolio/contracts';
 import { ApiTags } from '@nestjs/swagger';
->>>>>>> feature/arch-refactor
 
 @ApiTags('Auth')
 @Controller('auth')

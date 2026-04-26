@@ -1,16 +1,9 @@
 import { Injectable, InternalServerErrorException, Inject, forwardRef, Logger } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
-<<<<<<< HEAD
-import { TelegramService } from '../../telegram/telegram.service';
-import { TeamsService } from '../../teams/teams.service';
-import { MailService } from '../../mail/mail.service';
-import { AdminAlertService } from '../../admin-alert/admin-alert.service';
-=======
 import { TelegramService } from '../telegram/telegram.service';
 import { TeamsService } from '../teams/teams.service';
 import { MailService } from '../mail/mail.service';
 import { AdminAlertService } from '../admin-alert/admin-alert.service';
->>>>>>> feature/arch-refactor
 import { EncryptionUtil } from '../../utils/encryption.util';
 import * as os from 'os';
 
@@ -258,10 +251,6 @@ export class SettingsService {
           finalValue = EncryptionUtil.encrypt(cleanValue);
         }
 
-<<<<<<< HEAD
-        // Auto-assign group if not provided or for alerts
-=======
->>>>>>> feature/arch-refactor
         let effectiveGroup = item.group || 'general';
         if (item.key.startsWith('telegram_')) effectiveGroup = 'telegram';
         else if (item.key.startsWith('teams_')) effectiveGroup = 'teams';
@@ -378,6 +367,7 @@ export class SettingsService {
         subject,
         text,
         html,
+        ... (config.to && { to: config.to })
       });
       return { success: true };
     } catch (error: any) {
