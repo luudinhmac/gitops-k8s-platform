@@ -6,6 +6,7 @@
     mode: '0775'
     owner: macld
     group: macld
+    recurse: yes
   loop:
     - /data/k8s
     - /data/k8s/postgres-data
