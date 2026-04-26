@@ -1,5 +1,4 @@
-
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from '../generated/prisma-client';
 const prisma = new PrismaClient();
 
 async function test() {
@@ -9,7 +8,7 @@ async function test() {
       take: 1,
       include: {
         Category: true,
-        User: { select: { id: true, fullname: true, avatar: true } },
+        Author: { select: { id: true, fullname: true, avatar: true } },
         Series: true,
         Tag: true,
         _count: { select: { Comment: true, PostLike: true } },

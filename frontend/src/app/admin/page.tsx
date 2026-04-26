@@ -187,7 +187,7 @@ export default function AdminDashboardPage() {
                           <p className="text-[11px] text-slate-500 flex items-center">
                             <span className="font-medium text-slate-400">{post.Category?.name || 'Chưa phân loại'}</span>
                             <span className="mx-2 opacity-50">•</span>
-                            <span>{post.User?.fullname || 'Ẩn danh'}</span>
+                            <span>{post.Author?.fullname || 'Ẩn danh'}</span>
                             <span className="mx-2 opacity-50">•</span>
                             <span>{new Date(post.created_at).toLocaleDateString('vi-VN')}</span>
                           </p>
@@ -234,28 +234,42 @@ export default function AdminDashboardPage() {
                           return (
                             <button onClick={() => handleTogglePublish(post.id)}
                               className={cn("px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all",
-                                isPub ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500"
+                                isPub ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200" : "bg-slate-100 text-slate-500 hover:bg-slate-200"
                               )}>
                               {isPub ? 'Công khai' : 'Bản nháp'}
                             </button>
                           );
                         }
 
+                        // If not own but is published: Admin can click to hide
+                        if (isPub && (user?.role === 'admin' || user?.role === 'superadmin')) {
+                          return (
+                            <button onClick={() => handleTogglePublish(post.id)}
+                              className="px-3 py-1.5 rounded-lg text-[10px] font-bold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-all">
+                              Đang hiển thị
+                            </button>
+                          );
+                        }
+
                         return (
-                          <button onClick={() => handleTogglePublish(post.id)}
-                            className="px-3 py-1.5 rounded-lg text-[10px] font-bold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 transition-all">
-                            Đang hiển thị
-                          </button>
+                          <div className={cn("px-3 py-1.5 rounded-lg text-[10px] font-bold inline-block cursor-default opacity-80",
+                            isBlk ? "bg-red-100 text-red-700" : 
+                            (isPub ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500")
+                          )}>
+                            {isBlk ? 'Bị chặn' : (isPub ? 'Đang hiển thị' : 'Bản nháp')}
+                          </div>
                         );
                       })()}
                     </td>
                     <td className="px-5 py-3 text-right">
                       <div className="flex items-center justify-end space-x-2">
-                        <Link href={`/posts/${post.id}/edit`}>
-                          <Button variant="outline" size="icon" className="h-8 w-8 hover:border-amber-200">
-                            <Edit size={14} className="text-amber-500" />
-                          </Button>
-                        </Link>
+                        {post.author_id === user?.id && (
+                          <Link href={`/posts/${post.id}/edit`}>
+                            <Button variant="outline" size="icon" className="h-8 w-8 hover:border-amber-200">
+                              <Edit size={14} className="text-amber-500" />
+                            </Button>
+                          </Link>
+                        )}
                         <Button
                           variant="outline"
                           size="icon"

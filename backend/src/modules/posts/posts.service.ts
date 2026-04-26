@@ -68,13 +68,20 @@ export class PostsService {
     const filter: PostFilter = {
       search: query,
       is_published: status === 'published' ? true : (status === 'draft' ? false : undefined),
+      is_blocked: status === 'blocked' ? true : (isAdmin ? undefined : false),
       author_id: userId,
+      viewer_id: user?.id,
       sortBy: sort === 'views' ? 'views' : (sort === 'likes' ? 'likes' : 'created_at'),
       sortOrder: 'desc',
     };
 
-    if (isAdmin && user && user.role !== UserRole.ADMIN && user.role !== UserRole.SUPERADMIN) {
-      filter.author_id = user.id;
+    // If we are in admin view BUT no specific userId is requested, 
+    // we show everything (constrained by viewer_id logic in repo) 
+    // if the user is truly an admin.
+    if (isAdmin && user && !userId) {
+      if (user.role !== UserRole.ADMIN && user.role !== UserRole.SUPERADMIN) {
+        filter.author_id = user.id;
+      }
     }
 
     const pagination: PaginationParams = { page, limit };
@@ -151,8 +158,8 @@ export class PostsService {
     if (!post) throw new NotFoundException('Post not found');
 
     if (!(user as any).can_post) throw new ForbiddenException('Tài khoản bị cấm sửa bài.');
-    if (post.author_id !== user.id && user.role !== UserRole.ADMIN && user.role !== UserRole.SUPERADMIN) {
-      throw new ForbiddenException('Bạn không có quyền sửa bài viết này.');
+    if (post.author_id !== user.id) {
+      throw new ForbiddenException('Bạn chỉ có thể chỉnh sửa bài viết của chính mình.');
     }
 
     const cleanContent = data.content ? sanitizeHtml(data.content, this.sanitizeOptions) : post.content;
@@ -206,14 +213,51 @@ export class PostsService {
     if (user.role !== UserRole.ADMIN && user.role !== UserRole.SUPERADMIN) {
       throw new ForbiddenException('Chỉ Admin mới có thể ghim bài viết.');
     }
+    const post = await this.repository.findById(id);
+    if (!post) throw new NotFoundException('Post not found');
+    if (post.author_id !== user.id) {
+      throw new ForbiddenException('Bạn chỉ có thể ghim bài viết của chính mình.');
+    }
     return this.repository.togglePin(id);
   }
 
   async togglePublish(id: number, user: User, ip?: string, reason?: string) {
-    if (user.role !== UserRole.ADMIN && user.role !== UserRole.SUPERADMIN) {
-      throw new ForbiddenException('Chỉ Admin mới có thể thay đổi trạng thái bài viết.');
+    const post = await this.repository.findById(id);
+    if (!post) throw new NotFoundException('Post not found');
+    
+    const isAdmin = user.role === UserRole.ADMIN || user.role === UserRole.SUPERADMIN;
+    const isOwn = post.author_id === user.id;
+
+    // --- Admin Logic ---
+    if (isAdmin && !isOwn) {
+      // If currently blocked: Unblock it (becomes a draft for the author)
+      if (post.is_blocked) {
+        return this.repository.update(id, { is_blocked: false, blocked_by_id: null });
+      }
+
+      // If published: Block it (becomes a blocked draft)
+      if (post.is_published) {
+        return this.repository.update(id, { 
+          is_published: false, 
+          is_blocked: true, 
+          blocked_by_id: user.id 
+        });
+      }
+
+      // If it's just a draft: Admin can't do anything
+      throw new ForbiddenException('Admin không thể xuất bản bản nháp của người khác.');
     }
-    return this.repository.togglePublish(id, reason);
+
+    // --- Author Logic ---
+    if (isOwn) {
+      if (post.is_blocked) {
+        const adminName = post.BlockedBy?.fullname || 'Administrator';
+        throw new ForbiddenException(`Bài viết bị ẩn bởi ${adminName}. Vui lòng liên hệ để được mở khóa.`);
+      }
+      return this.repository.togglePublish(id, reason);
+    }
+
+    throw new ForbiddenException('Bạn không có quyền thực hiện thao tác này.');
   }
 
   async toggleLike(id: number, userId: number) {

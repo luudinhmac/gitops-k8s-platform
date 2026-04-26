@@ -16,8 +16,8 @@ export default function NotFound() {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const posts = await postService.getAll();
-        setRecentPosts(posts.slice(0, 3));
+        const data = await postService.getAll();
+        setRecentPosts(data?.items?.slice(0, 3) || []);
       } catch (err) {
         console.error('Failed to fetch posts for 404 page', err);
       } finally {
@@ -139,7 +139,7 @@ export default function NotFound() {
                     </p>
                     <div className="flex items-center gap-3 mt-auto">
                        <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800" />
-                       <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">By {post.User?.fullname || 'Admin'}</span>
+                       <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400">By {post.Author?.fullname || 'Admin'}</span>
                     </div>
                   </article>
                 </Link>

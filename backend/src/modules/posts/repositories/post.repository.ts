@@ -15,7 +15,37 @@ export class PostsRepository implements IPostsRepository {
     const skip = (page - 1) * limit;
 
     const where: any = {};
-    if (filter.is_published !== undefined) where.is_published = filter.is_published;
+    
+    // Handle Visibility Logic:
+    const viewerId = filter.viewer_id;
+    const isPublicSearch = !viewerId; // No viewer means public view
+
+    if (isPublicSearch) {
+      // Public only sees published and NOT blocked
+      where.is_published = true;
+      where.is_blocked = false;
+    } else {
+      // Logic for logged-in users (including admins)
+      where.AND = [
+        ...(where.AND || []),
+        {
+          OR: [
+            // 1. Author sees everything
+            { author_id: viewerId },
+            // 2. Published posts are visible to all (if not blocked)
+            { AND: [{ is_published: true }, { is_blocked: false }] },
+            // 3. Admins can see BLOCKED posts from anyone
+            { is_blocked: true }
+          ]
+        }
+      ];
+
+      // Note: Admins see blocked posts via the OR condition above.
+      // If a specific status was requested (like 'blocked'), we still apply that filter on top.
+      if (filter.is_published !== undefined) where.is_published = filter.is_published;
+      if (filter.is_blocked !== undefined) where.is_blocked = filter.is_blocked;
+    }
+
     if (filter.category_id !== undefined) where.category_id = filter.category_id;
     if (filter.author_id !== undefined) where.author_id = filter.author_id;
     if (filter.series_id !== undefined) where.series_id = filter.series_id;
@@ -37,8 +67,9 @@ export class PostsRepository implements IPostsRepository {
         take: limit,
         orderBy: { [filter.sortBy || 'created_at']: filter.sortOrder || 'desc' },
         include: {
-          Category: true,
-          User: { select: { id: true, fullname: true, avatar: true } },
+        Category: true,
+        Author: { select: { id: true, fullname: true, avatar: true } },
+        BlockedBy: { select: { id: true, fullname: true, avatar: true } },
           Series: true,
           Tag: true,
           _count: { select: { Comment: true, PostLike: true } },
@@ -60,7 +91,8 @@ export class PostsRepository implements IPostsRepository {
       where: { id },
       include: {
         Category: true,
-        User: { select: { id: true, fullname: true, avatar: true } },
+        Author: { select: { id: true, fullname: true, avatar: true } },
+        BlockedBy: { select: { id: true, fullname: true, avatar: true } },
         Series: true,
         Tag: true,
         Comment: {
@@ -92,7 +124,8 @@ export class PostsRepository implements IPostsRepository {
       where: { slug },
       include: {
         Category: true,
-        User: { select: { id: true, fullname: true, avatar: true } },
+        Author: { select: { id: true, fullname: true, avatar: true } },
+        BlockedBy: { select: { id: true, fullname: true, avatar: true } },
         Series: true,
         Tag: true,
         Comment: {
@@ -119,26 +152,43 @@ export class PostsRepository implements IPostsRepository {
     }) as any;
   }
 
+  async findByAuthorId(authorId: number): Promise<PostEntity[]> {
+    return this.prisma.post.findMany({
+      where: { author_id: authorId },
+      include: {
+        Category: true,
+        Author: { select: { id: true, fullname: true, avatar: true } },
+        Tag: true,
+        Series: true
+      }
+    }) as any;
+  }
+
   async create(authorId: number, data: CreatePostDto): Promise<PostEntity> {
     const { tags, series_name, series_id, category_id, ...postData } = data;
     
-    let seriesConnect: any = undefined;
+    let seriesData: any = undefined;
     if (series_name && series_name.trim()) {
       const slug = slugify(series_name.trim(), { lower: true, strict: true, locale: 'vi' });
-      seriesConnect = {
+      seriesData = {
         connectOrCreate: {
           where: { slug },
           create: { name: series_name.trim(), slug }
         }
       };
     } else if (series_id) {
-      seriesConnect = { connect: { id: series_id } };
+      seriesData = { connect: { id: series_id } };
     }
 
     return this.prisma.post.create({
       data: {
-        ...postData,
-        User: { connect: { id: authorId } },
+        title: postData.title,
+        slug: postData.slug,
+        content: postData.content,
+        cover_image: postData.cover_image,
+        is_published: postData.is_published,
+        is_pinned: postData.is_pinned,
+        Author: { connect: { id: authorId } },
         Category: category_id ? { connect: { id: category_id } } : undefined,
         Tag: tags ? {
           connectOrCreate: tags.split(',').map(tag => ({
@@ -146,11 +196,11 @@ export class PostsRepository implements IPostsRepository {
             create: { name: tag.trim() }
           }))
         } : undefined,
-        Series: seriesConnect
-      },
+        Series: seriesData
+      } as any,
       include: {
         Category: true,
-        User: { select: { id: true, fullname: true, avatar: true } },
+        Author: { select: { id: true, fullname: true, avatar: true } },
         Tag: true,
         Series: true
       }
@@ -180,20 +230,29 @@ export class PostsRepository implements IPostsRepository {
     return this.prisma.post.update({
       where: { id },
       data: {
-        ...postData,
+        title: postData.title,
+        slug: postData.slug,
+        content: postData.content,
+        cover_image: postData.cover_image,
+        is_published: postData.is_published,
+        is_pinned: postData.is_pinned,
+        is_blocked: postData.is_blocked,
+        BlockedBy: postData.blocked_by_id 
+          ? { connect: { id: postData.blocked_by_id } } 
+          : (postData.blocked_by_id === null ? { disconnect: true } : undefined),
         Category: category_id ? { connect: { id: category_id } } : undefined,
         Tag: tags !== undefined ? {
           set: [],
-          connectOrCreate: tags.split(',').map(tag => ({
+          connectOrCreate: (tags || '').split(',').filter(t => t.trim()).map(tag => ({
             where: { name: tag.trim() },
             create: { name: tag.trim() }
           }))
         } : undefined,
         Series: seriesData
-      },
+      } as any,
       include: {
         Category: true,
-        User: { select: { id: true, fullname: true, avatar: true } },
+        Author: { select: { id: true, fullname: true, avatar: true } },
         Tag: true,
         Series: true
       }
@@ -270,7 +329,7 @@ export class PostsRepository implements IPostsRepository {
           is_published: true,
         },
         orderBy: { series_order: 'desc' },
-        include: { Category: true },
+        include: { Category: true, Author: { select: { id: true, fullname: true, avatar: true } } },
       }),
       this.prisma.post.findFirst({
         where: {
@@ -279,7 +338,7 @@ export class PostsRepository implements IPostsRepository {
           is_published: true,
         },
         orderBy: { series_order: 'asc' },
-        include: { Category: true },
+        include: { Category: true, Author: { select: { id: true, fullname: true, avatar: true } } },
       }),
     ]);
 

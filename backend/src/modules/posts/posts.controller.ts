@@ -63,7 +63,7 @@ export class PostsController {
   ) {
     const pageNum = page ? parseInt(page) : 1;
     const limitNum = limit ? parseInt(limit) : 10;
-    return this.postsService.findAll(req.user, true, query, status, sort, undefined, pageNum, limitNum);
+    return this.postsService.findAll(req.user, true, query, status, sort, req.user.id, pageNum, limitNum);
   }
 
   @Get(':idOrSlug')

@@ -22,7 +22,7 @@ export class UsersRepository implements IUsersRepository {
   async findById(id: number): Promise<UserEntity | null> {
     return this.prisma.user.findUnique({
       where: { id },
-      include: { _count: { select: { Post: true } } },
+      include: { _count: { select: { Posts: true } } },
     }) as any;
   }
 

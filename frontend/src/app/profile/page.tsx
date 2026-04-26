@@ -472,11 +472,13 @@ function ProfilePageContent() {
                         );
                       })()}
                       <div className="flex items-center space-x-2 shrink-0">
-                        <Link href={`/posts/${post.id}/edit`}>
-                          <Button variant="outline" size="icon" className="hover:border-amber-200">
-                            <Edit size={18} className="text-amber-500" />
-                          </Button>
-                        </Link>
+                        {post.author_id === user?.id && (
+                          <Link href={`/posts/${post.id}/edit`}>
+                            <Button variant="outline" size="icon" className="h-8 w-8 hover:border-amber-200">
+                              <Edit size={14} className="text-amber-500" />
+                            </Button>
+                          </Link>
+                        )}
                         <Button
                           variant="outline"
                           size="icon"

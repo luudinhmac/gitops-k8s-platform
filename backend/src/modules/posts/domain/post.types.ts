@@ -18,6 +18,8 @@ export interface PostFilter {
   author_id?: number;
   series_id?: number;
   is_pinned?: boolean;
+  is_blocked?: boolean;
+  viewer_id?: number;
   search?: string;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';

@@ -59,7 +59,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, className, priority = false }
         <div className="flex items-center gap-4 text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-4">
           <div className="flex items-center text-primary group-hover:text-primary/80 transition-colors">
             <span className="w-1.5 h-1.5 rounded-full bg-primary mr-2 shadow-[0_0_8px_rgba(var(--primary),0.5)]" />
-            {post.User?.fullname || post.User?.username || 'GHOST AUTHOR'}
+            {post.Author?.fullname || post.Author?.username || 'GHOST AUTHOR'}
           </div>
           <FormattedDate date={post.created_at} className="opacity-80" />
         </div>
