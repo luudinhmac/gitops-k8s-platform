@@ -73,7 +73,17 @@ export async function proxy(request: NextRequest) {
     }
   } catch (error: any) {
     console.error(`[Proxy] Maintenance check failed: ${error.message}`);
-    return NextResponse.next();
+  }
+
+  // 4. Admin Stealth Protection
+  if (pathname.startsWith('/admin')) {
+    const token = request.cookies.get('token');
+    if (!token) {
+      console.log(`[Security] Unauthorized access to ${pathname}, performing stealth rewrite to 404.`);
+      // We rewrite to a non-existent path to trigger a real 404 response
+      // This ensures the HTTP status code is 404, not 200 or 302.
+      return NextResponse.rewrite(new URL('/not-found-stealth', request.url));
+    }
   }
 
   return NextResponse.next();

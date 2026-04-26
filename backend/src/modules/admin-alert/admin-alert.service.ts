@@ -26,7 +26,15 @@ export class AdminAlertService {
 
     try {
       results.telegram = await this.telegramService.sendSystemNotification(text);
-      const teamsText = text.replace(/<b>/g, '**').replace(/<\/b>/g, '**');
+      
+      // Convert HTML-like tags (used for Telegram) to Markdown (used for Teams)
+      // Note: Teams needs double newlines for actual line breaks in some Markdown versions
+      const teamsText = text
+        .replace(/<b>/g, '**').replace(/<\/b>/g, '**')
+        .replace(/<i>/g, '_').replace(/<\/i>/g, '_')
+        .replace(/<code>/g, '`').replace(/<\/code>/g, '`')
+        .replace(/\n+/g, '\n\n');
+        
       results.teams = await this.teamsService.sendMessage(teamsText);
 
       const mailEnabled = await this.settingsService.getSettingByKey('mail_enabled');

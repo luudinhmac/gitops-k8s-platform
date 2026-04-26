@@ -62,7 +62,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    checkAuth();
+    // Only check auth if we have a hint that a session exists
+    // This avoids unnecessary 401 logs in the console for visitors
+    const hasTokenHint = document.cookie.includes('logged_in=true');
+    if (hasTokenHint) {
+      checkAuth();
+    } else {
+      setLoading(false);
+    }
   }, []);
 
   const login = (userData: User) => {

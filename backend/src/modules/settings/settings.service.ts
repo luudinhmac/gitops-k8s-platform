@@ -180,7 +180,72 @@ export class SettingsService {
     }
 
     try {
-      const queries = items.filter(item => item.value !== MASK_VALUE).map((item) => {
+      // 1. Fetch current values to detect changes
+      const currentSettings = await this.prisma.setting.findMany({
+        where: { key: { in: items.map(i => i.key) } }
+      });
+      const currentMap = currentSettings.reduce((acc, s) => {
+        acc[s.key] = s.value || '';
+        return acc;
+      }, {} as Record<string, string>);
+
+      // 2. Identify actual changes
+      const changedItems = items.filter(item => {
+        if (item.value === MASK_VALUE) return false;
+        
+        const currentValue = currentMap[item.key];
+        let newValue = item.value;
+
+        // If sensitive, we need to compare with decrypted value
+        if (SENSITIVE_KEYS.includes(item.key)) {
+          const decryptedCurrent = currentValue ? EncryptionUtil.decrypt(currentValue) : null;
+          return newValue !== decryptedCurrent;
+        }
+
+        return newValue !== currentValue;
+      });
+
+      if (changedItems.length === 0) {
+        return { message: 'No changes detected' };
+      }
+
+      // 3. Prepare human-readable actions for notification
+      const SETTING_NAMES: Record<string, string> = {
+        site_title: 'Tên website',
+        site_tagline: 'Mô tả ngắn',
+        default_lang: 'Ngôn ngữ mặc định',
+        timezone: 'Múi giờ',
+        comments_enabled: 'Tính năng bình luận toàn trang',
+        footer_copyright: 'Bản quyền footer',
+        ads_enabled: 'Hiển thị quảng cáo',
+        maintenance_global: 'Chế độ bảo trì hệ thống',
+        maintenance_posts: 'Chế độ bảo trì bài viết',
+        maintenance_comments: 'Chế độ bảo trì bình luận',
+        maintenance_passcode: 'Mã bảo trì',
+        telegram_bot_token: 'Token Bot Telegram',
+        telegram_chat_id: 'ID Chat Telegram',
+        teams_webhook_url: 'Webhook MS Teams',
+        mail_user: 'Tài khoản Email',
+        mail_pass: 'Mật khẩu Email',
+        mail_host: 'Máy chủ Email',
+        mail_port: 'Cổng Email',
+        ga_id: 'Google Analytics ID',
+        fb_pixel_id: 'Facebook Pixel ID',
+      };
+
+      const actions = changedItems.map(item => {
+        const name = SETTING_NAMES[item.key] || item.key;
+        if (SENSITIVE_KEYS.includes(item.key)) return `Cập nhật ${name} (Bảo mật)`;
+        
+        if (item.value === 'true') return `<b>Bật</b> ${name}`;
+        if (item.value === 'false') return `<b>Tắt</b> ${name}`;
+        
+        // Truncate long text
+        const displayValue = item.value.length > 50 ? item.value.substring(0, 50) + '...' : item.value;
+        return `Thay đổi ${name} thành: "<i>${displayValue}</i>"`;
+      }).join('\n• ');
+
+      const queries = changedItems.map((item) => {
         let finalValue = item.value;
         if (SENSITIVE_KEYS.includes(item.key) && item.value && !EncryptionUtil.isEncrypted(item.value)) {
           let cleanValue = item.value.trim();
@@ -189,8 +254,6 @@ export class SettingsService {
               cleanValue = cleanValue.substring(3).trim();
             }
             cleanValue = cleanValue.replace(/[^0-9a-zA-Z:\-_]/g, '');
-          } else if (item.key === 'teams_webhook_url') {
-            cleanValue = cleanValue.trim();
           }
           finalValue = EncryptionUtil.encrypt(cleanValue);
         }
@@ -226,28 +289,19 @@ export class SettingsService {
 
       await this.prisma.$transaction(queries);
 
-      const changedKeys = items.map(i => i.key);
-      const username = user?.username || 'Hệ thống';
+      const username = user?.fullname || user?.username || 'Hệ thống';
       const userIp = ip || 'unknown';
-
-      const actions = changedKeys.map(key => {
-        if (key === 'maintenance_global') return 'Thay đổi trạng thái Bảo trì toàn cầu';
-        if (key === 'maintenance_posts') return 'Thay đổi trạng thái Bảo trì bài viết';
-        if (key === 'maintenance_comments') return 'Thay đổi trạng thái Bảo trì bình luận';
-        if (key === 'maintenance_passcode') return 'Cập nhật mã bảo trì';
-        return `Cập nhật cấu hình: ${key}`;
-      }).join(', ');
 
       this.adminAlertService.sendAlert({
         subject: `⚙️ Cài đặt hệ thống đã đổi: ${username}`,
         text: `⚙️ <b>CÀI ĐẶT HỆ THỐNG ĐÃ CẬP NHẬT</b>\n\n` +
-              `• <b>Hành động:</b> ${actions}\n` +
-              `• <b>IP:</b> ${userIp}\n` +
+              `• ${actions}\n\n` +
+              `• <b>IP:</b> <code>${userIp}</code>\n` +
               `• <b>User:</b> ${username}\n` +
               `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
       });
 
-      return { message: 'Settings updated successfully' };
+      return { message: 'Settings updated successfully', updatedCount: changedItems.length };
     } catch (error) {
       throw new InternalServerErrorException('Failed to update settings');
     }

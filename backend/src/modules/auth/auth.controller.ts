@@ -48,6 +48,13 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
+    // Public hint cookie (non-HttpOnly) to avoid unnecessary 401 fetch in frontend
+    res.cookie('logged_in', 'true', {
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     return result;
   }
 
@@ -65,6 +72,7 @@ export class AuthController {
   @Post('logout')
   logout(@Res({ passthrough: true }) res: Response) {
     res.clearCookie('token');
+    res.clearCookie('logged_in');
     return { success: true, message: 'Đã đăng xuất' };
   }
 }

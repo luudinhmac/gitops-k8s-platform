@@ -98,7 +98,7 @@ model Tag {
 model User {
   id                 Int            @id @default(autoincrement())
   username           String         @unique
-  email              String?
+  email              String?        @unique
   fullname           String?
   avatar             String?        @db.VarChar(500)
   profession         String?        @default("Người dùng mới")
