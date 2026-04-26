@@ -12,6 +12,15 @@ export class NotificationsRepository implements INotificationsRepository {
     return this.prisma.notification.findMany({
       where: { recipient_id: recipientId },
       orderBy: { created_at: 'desc' },
+      include: {
+        Sender: {
+          select: {
+            id: true,
+            fullname: true,
+            avatar: true,
+          },
+        },
+      },
     }) as any;
   }
 

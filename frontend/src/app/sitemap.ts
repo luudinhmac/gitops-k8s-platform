@@ -11,7 +11,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       categoryService.getAll()
     ]);
 
-    const postUrls = (posts || []).map((post: any) => ({
+    const postUrls = (posts?.items || []).map((post: any) => ({
       url: `${baseUrl}/${post.Category?.slug || 'uncategorized'}/${post.slug}`,
       lastModified: new Date(post.updated_at || post.created_at),
       changeFrequency: 'weekly' as const,

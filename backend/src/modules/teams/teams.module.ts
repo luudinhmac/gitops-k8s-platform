@@ -1,6 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TeamsService } from './teams.service';
-import { SettingsModule } from '../modules/settings/settings.module';
+import { SettingsModule } from '../settings/settings.module';
 
 @Module({
   imports: [forwardRef(() => SettingsModule)],

@@ -19,10 +19,7 @@ import FormattedDate from '@/shared/components/common/FormattedDate';
 import { postService } from '@/features/posts/services/postService';
 import { userService } from '@/features/users/services/userService';
 import { usePostActions } from '@/hooks/post/usePostActions';
-<<<<<<< HEAD
-=======
 import { seriesService } from '@/features/series/services/seriesService';
->>>>>>> feature/arch-refactor
 import Button from '@/shared/components/ui/Button';
 import IconBadge from '@/shared/components/ui/IconBadge';
 import AnimateList from '@/shared/components/ui/AnimateList';
@@ -101,12 +98,6 @@ function ProfilePageContent() {
         status: postFilter,
         sort: sortBy
       });
-<<<<<<< HEAD
-      setMyPosts(data?.data || []);
-    } catch (err) { console.error('Failed to fetch posts:', err); }
-    finally { setPostsLoading(false); }
-  }, [user?.id, postFilter, sortBy]);
-=======
       setMyPosts(data?.items || []);
     } catch (err) { console.error('Failed to fetch posts:', err); }
     finally { setPostsLoading(false); }
@@ -121,20 +112,15 @@ function ProfilePageContent() {
     } catch (err) { console.error('Failed to fetch series:', err); }
     finally { setSeriesLoading(false); }
   }, [user?.id]);
->>>>>>> feature/arch-refactor
 
   useEffect(() => {
     if (activeTab === 'posts' && user) {
       fetchMyPosts();
     }
-<<<<<<< HEAD
-  }, [activeTab, user, fetchMyPosts, sortBy, postFilter]);
-=======
     if (activeTab === 'series' && user) {
         fetchMySeries();
     }
   }, [activeTab, user, fetchMyPosts, fetchMySeries, sortBy, postFilter]);
->>>>>>> feature/arch-refactor
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -211,8 +197,6 @@ function ProfilePageContent() {
         const index = elements.indexOf(e.currentTarget as HTMLElement);
         if (index > -1 && index < elements.length - 1) {
           const nextElement = elements[index + 1];
-          // If the next element is the submit button, let the default Enter behavior (submit) happen
-          // Unless we want to explicitly focus it first. User said "nhập ô tiếp theo", implying focus.
           if (nextElement.getAttribute('type') !== 'submit') {
             e.preventDefault();
             nextElement.focus();
@@ -263,7 +247,7 @@ function ProfilePageContent() {
             <button
               key={tab.id}
               onClick={() => {
-                setActiveTab(tab.id as 'info' | 'posts' | 'password');
+                setActiveTab(tab.id as 'info' | 'posts' | 'series' | 'password');
                 if (tab.id !== 'info') setIsEditing(false);
               }}
               className={cn(
@@ -640,4 +624,3 @@ export default function ProfilePage() {
     </Suspense>
   );
 }
-

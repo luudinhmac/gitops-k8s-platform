@@ -5,11 +5,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './jwt.strategy';
-<<<<<<< HEAD
-import { AdminAlertModule } from '../../admin-alert/admin-alert.module';
-=======
 import { AdminAlertModule } from '../admin-alert/admin-alert.module';
->>>>>>> feature/arch-refactor
 import { UsersModule } from '../users/users.module';
 
 @Module({

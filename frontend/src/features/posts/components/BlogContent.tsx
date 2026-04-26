@@ -67,17 +67,12 @@ export default function BlogContent() {
         seriesService.getAll()
       ]);
 
-<<<<<<< HEAD
-      setPosts(postsData?.data || []);
-      setMeta(postsData?.meta || { total: 0, limit: 12, page: 1 });
-=======
       setPosts(postsData?.items || []);
       setMeta({
         total: postsData?.total || 0,
         limit: postsData?.limit || 12,
         page: postsData?.page || 1
       });
->>>>>>> feature/arch-refactor
       setCategories(catsData);
       setRecentSeries(Array.isArray(seriesData) ? seriesData.slice(0, 5) : []);
       setHasError(false);

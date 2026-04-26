@@ -3,8 +3,11 @@
   file:
     path: "{{ item }}"
     state: directory
-    mode: '0777'
+    mode: '0775'
+    owner: macld
+    group: macld
   loop:
+    - /data/k8s
     - /data/k8s/postgres-data
     - /data/k8s/uploads
     - /data/k8s/manifests

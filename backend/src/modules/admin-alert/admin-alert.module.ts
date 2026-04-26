@@ -4,7 +4,7 @@ import { MonitoringService } from './monitoring.service';
 import { TelegramModule } from '../telegram/telegram.module';
 import { TeamsModule } from '../teams/teams.module';
 import { MailModule } from '../mail/mail.module';
-import { SettingsModule } from '../modules/settings/settings.module';
+import { SettingsModule } from '../settings/settings.module';
 
 @Module({
   imports: [

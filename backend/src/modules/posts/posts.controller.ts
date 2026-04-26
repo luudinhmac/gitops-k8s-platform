@@ -14,12 +14,7 @@ import {
 import { PostsService } from './posts.service';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
-<<<<<<< HEAD
-import { AuthenticatedRequest } from '../users/interfaces/user.interface';
-import { CreatePostDto, UpdatePostDto } from './dto/create-post.dto';
-=======
 import { CreatePostDto, UpdatePostDto, User } from '@portfolio/contracts';
->>>>>>> feature/arch-refactor
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
 @ApiTags('Posts')
@@ -28,6 +23,7 @@ export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
   @Get()
+  @ApiOperation({ summary: 'Get all published posts' })
   findAll(
     @Query('q') query?: string,
     @Query('userId') userId?: string,
@@ -38,21 +34,14 @@ export class PostsController {
     const userIdNum = userId ? parseInt(userId) : undefined;
     const pageNum = page ? parseInt(page) : 1;
     const limitNum = limit ? parseInt(limit) : 10;
-<<<<<<< HEAD
-    return this.postsService.findAll(undefined, false, query, undefined, sort, userIdNum, pageNum, limitNum);
-=======
     return this.postsService.findAll(undefined, false, query, 'published', sort, userIdNum, pageNum, limitNum);
->>>>>>> feature/arch-refactor
   }
 
   @Get('admin')
+  @ApiOperation({ summary: 'Admin: Get all posts with full status' })
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   findAllAdmin(
-<<<<<<< HEAD
-    @Req() req: AuthenticatedRequest,
-=======
     @Req() req: any,
->>>>>>> feature/arch-refactor
     @Query('q') query?: string,
     @Query('status') status?: string,
     @Query('sort') sort?: string,
@@ -65,13 +54,10 @@ export class PostsController {
   }
 
   @Get('my-posts')
+  @ApiOperation({ summary: 'User: Get own posts' })
   @UseGuards(AuthGuard('jwt'))
   findMyPosts(
-<<<<<<< HEAD
-    @Req() req: AuthenticatedRequest,
-=======
     @Req() req: any,
->>>>>>> feature/arch-refactor
     @Query('q') query?: string,
     @Query('status') status?: string,
     @Query('sort') sort?: string,
@@ -80,14 +66,11 @@ export class PostsController {
   ) {
     const pageNum = page ? parseInt(page) : 1;
     const limitNum = limit ? parseInt(limit) : 10;
-<<<<<<< HEAD
-    return this.postsService.findAll(req.user, true, query, status, sort, undefined, pageNum, limitNum);
-=======
     return this.postsService.findAll(req.user, true, query, status, sort, req.user.id, pageNum, limitNum);
->>>>>>> feature/arch-refactor
   }
 
   @Get(':idOrSlug')
+  @ApiOperation({ summary: 'Get post by id or slug' })
   findOne(
     @Param('idOrSlug') idOrSlug: string,
     @Query('action') action?: string,
@@ -97,6 +80,7 @@ export class PostsController {
   }
 
   @Post()
+  @ApiOperation({ summary: 'Create new post' })
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   create(
     @Req() req: any,
@@ -106,6 +90,7 @@ export class PostsController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Update post' })
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   update(
     @Param('id', ParseIntPipe) id: number,
@@ -116,6 +101,7 @@ export class PostsController {
   }
 
   @Delete(':id')
+  @ApiOperation({ summary: 'Delete post' })
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   remove(
     @Param('id', ParseIntPipe) id: number,
@@ -125,6 +111,7 @@ export class PostsController {
   }
 
   @Post(':id/pin')
+  @ApiOperation({ summary: 'Toggle pin post' })
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   togglePin(
     @Param('id', ParseIntPipe) id: number,
@@ -134,6 +121,7 @@ export class PostsController {
   }
 
   @Post(':id/publish')
+  @ApiOperation({ summary: 'Toggle publish status' })
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   togglePublish(
     @Param('id', ParseIntPipe) id: number,
@@ -144,6 +132,7 @@ export class PostsController {
   }
 
   @Post(':id/like')
+  @ApiOperation({ summary: 'Toggle like post' })
   @UseGuards(AuthGuard('jwt'))
   toggleLike(
     @Param('id', ParseIntPipe) id: number,
@@ -153,6 +142,7 @@ export class PostsController {
   }
 
   @Get(':id/like-status')
+  @ApiOperation({ summary: 'Check if user liked post' })
   @UseGuards(AuthGuard('jwt'))
   checkLikeStatus(
     @Param('id', ParseIntPipe) id: number,

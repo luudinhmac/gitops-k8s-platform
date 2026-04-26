@@ -176,18 +176,6 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
         parent_id: replyingTo,
       });
 
-<<<<<<< HEAD
-      // Update local state by adding the new comment to the tree
-      if (replyingTo) {
-        setPost({
-          ...post,
-          Comment: (post.Comment || []).map(c => {
-            if (c.id === replyingTo) {
-              return { ...c, Replies: [formattedComment, ...(c.Replies || [])] };
-            }
-            return c;
-          })
-=======
       // Update local state by adding the new comment to the tree recursively
       if (replyingTo) {
         const updateComments = (comments: CommentType[]): CommentType[] => {
@@ -204,7 +192,6 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
         setPost({
           ...post,
           Comment: updateComments(post.Comment || [])
->>>>>>> feature/arch-refactor
         });
       } else {
         setPost({ ...post, Comment: [formattedComment, ...(post.Comment || [])] });

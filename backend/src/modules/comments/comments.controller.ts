@@ -14,14 +14,6 @@ import { CommentsService } from './comments.service';
 import { CreateCommentDto, User } from '@portfolio/contracts';
 import { AuthGuard } from '@nestjs/passport';
 import { OptionalJwtAuthGuard } from '../auth/guards/optional-jwt-auth.guard';
-<<<<<<< HEAD
-import { User } from '@prisma/client';
-=======
->>>>>>> feature/arch-refactor
-
-interface AuthenticatedRequest extends Request {
-  user: User;
-}
 
 @Controller('comments')
 export class CommentsController {
@@ -31,7 +23,7 @@ export class CommentsController {
   @UseGuards(OptionalJwtAuthGuard)
   create(
     @Body() createCommentDto: CreateCommentDto,
-    @Req() req: AuthenticatedRequest,
+    @Req() req: any,
   ) {
     return this.commentsService.create(createCommentDto, req.user);
   }
@@ -46,7 +38,7 @@ export class CommentsController {
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body('content') content: string,
-    @Req() req: AuthenticatedRequest,
+    @Req() req: any,
   ) {
     return this.commentsService.update(id, content, req.user);
   }
@@ -55,7 +47,7 @@ export class CommentsController {
   @UseGuards(AuthGuard('jwt'))
   remove(
     @Param('id', ParseIntPipe) id: number,
-    @Req() req: AuthenticatedRequest,
+    @Req() req: any,
   ) {
     return this.commentsService.remove(id, req.user);
   }

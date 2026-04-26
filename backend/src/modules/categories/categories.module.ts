@@ -2,14 +2,6 @@ import { Module } from '@nestjs/common';
 import { CategoriesService } from './categories.service';
 import { CategoriesController } from './categories.controller';
 import { PrismaModule } from '../../prisma/prisma.module';
-<<<<<<< HEAD
-import { AdminAlertModule } from '../../admin-alert/admin-alert.module';
-
-@Module({
-  imports: [PrismaModule, AdminAlertModule],
-  providers: [CategoriesService],
-  controllers: [CategoriesController],
-=======
 import { AdminAlertModule } from '../admin-alert/admin-alert.module';
 import { CategoriesRepository } from './repositories/category.repository';
 import { I_CATEGORIES_REPOSITORY } from './repositories/category.repository.interface';
@@ -25,6 +17,5 @@ import { I_CATEGORIES_REPOSITORY } from './repositories/category.repository.inte
     },
   ],
   exports: [CategoriesService, I_CATEGORIES_REPOSITORY],
->>>>>>> feature/arch-refactor
 })
 export class CategoriesModule {}

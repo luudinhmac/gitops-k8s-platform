@@ -1,6 +1,6 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { MailService } from './mail.service';
-import { SettingsModule } from '../modules/settings/settings.module';
+import { SettingsModule } from '../settings/settings.module';
 
 @Module({
   imports: [forwardRef(() => SettingsModule)],

@@ -4,27 +4,18 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
-<<<<<<< HEAD
-=======
   Logger,
->>>>>>> feature/arch-refactor
 } from '@nestjs/common';
 import { Response } from 'express';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
-<<<<<<< HEAD
-  catch(exception: unknown, host: ArgumentsHost) {
-    const ctx = host.switchToHttp();
-    const response = ctx.getResponse<Response>();
-=======
   private readonly logger = new Logger(GlobalExceptionFilter.name);
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
->>>>>>> feature/arch-refactor
 
     const status =
       exception instanceof HttpException
@@ -40,10 +31,6 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       message: typeof message === 'string' ? message : (message as any).message || 'Error',
       code: typeof message === 'object' ? (message as any).error || 'INTERNAL_ERROR' : 'INTERNAL_ERROR',
       status: status,
-<<<<<<< HEAD
-    };
-
-=======
       timestamp: new Date().toISOString(),
       path: (request as any).url,
     };
@@ -60,7 +47,6 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       this.logger.warn(`${(request as any).method} ${(request as any).url} ${status} - ${JSON.stringify(message)}`);
     }
 
->>>>>>> feature/arch-refactor
     response.status(status).json(errorResponse);
   }
 }
