@@ -129,7 +129,7 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
         postService.getAll({ limit: 5 })
       ]);
       setCategories(Array.isArray(cats) ? cats : []);
-      setRelatedPosts(Array.isArray(related) ? related : []);
+      setRelatedPosts(Array.isArray(related?.items) ? related.items : []);
     } catch (err) {
       console.error('Sidebar error:', err);
     }
@@ -176,6 +176,7 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
         parent_id: replyingTo,
       });
 
+<<<<<<< HEAD
       // Update local state by adding the new comment to the tree
       if (replyingTo) {
         setPost({
@@ -186,6 +187,24 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
             }
             return c;
           })
+=======
+      // Update local state by adding the new comment to the tree recursively
+      if (replyingTo) {
+        const updateComments = (comments: CommentType[]): CommentType[] => {
+          return comments.map(c => {
+            if (c.id === replyingTo) {
+              return { ...c, Replies: [formattedComment, ...(c.Replies || [])] };
+            }
+            if (c.Replies && c.Replies.length > 0) {
+              return { ...c, Replies: updateComments(c.Replies) };
+            }
+            return c;
+          });
+        };
+        setPost({
+          ...post,
+          Comment: updateComments(post.Comment || [])
+>>>>>>> feature/arch-refactor
         });
       } else {
         setPost({ ...post, Comment: [formattedComment, ...(post.Comment || [])] });
@@ -284,9 +303,9 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
             {/* Horizontal Metabar Row */}
             <div className="flex flex-wrap items-center justify-between gap-1 mb-1 py-1 border-y border-slate-100 dark:border-slate-800/50">
               <div className="flex flex-wrap items-center gap-3">
-                <Link href={`/author/${post.User?.id || 1}`} className="flex items-center text-primary font-bold uppercase tracking-widest text-[9px] hover:text-primary/80 transition-all">
-                  <UserAvatar user={post.User} size="xs" className="mr-2" />
-                  {post.User?.fullname || post.User?.username || 'Ẩn danh'}
+                <Link href={`/author/${post.Author?.id || 1}`} className="flex items-center text-primary font-bold uppercase tracking-widest text-[9px] hover:text-primary/80 transition-all">
+                  <UserAvatar user={post.Author} size="xs" className="mr-2" />
+                  {post.Author?.fullname || post.Author?.username || 'Ẩn danh'}
                 </Link>
                 <div className="w-px h-3 bg-slate-200 dark:bg-slate-800" />
                 {post.Category && (

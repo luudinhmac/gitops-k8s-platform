@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import sanitizeHtml from 'sanitize-html';
 import slugify from 'slugify';
+<<<<<<< HEAD
 import { User, UserRole, Post as PostInterface } from '@portfolio/contracts';
 import { CreatePostDto, UpdatePostDto } from './dto/create-post.dto';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -13,11 +14,24 @@ import { AdminAlertService } from '../../admin-alert/admin-alert.service';
 import { PostsRepository } from './posts.repository';
 import { IStorageService, STORAGE_SERVICE } from '../../infrastructure/storage/storage.interface';
 import { ImageProcessor } from '../../common/image-processor';
+=======
+import { User, UserRole, Post as PostInterface, CreatePostDto, UpdatePostDto } from '@portfolio/contracts';
+import { NotificationsService } from '../notifications/notifications.service';
+import { AdminAlertService } from '../admin-alert/admin-alert.service';
+import { IPostsRepository, I_POSTS_REPOSITORY } from './repositories/post.repository.interface';
+import { IStorageService, STORAGE_SERVICE } from '../../infrastructure/storage/storage.interface';
+import { PostStatus, PostSort, PostFilter, PaginationParams, PaginatedResult } from './domain/post.types';
+import { PostEntity } from './domain/post.entity';
+>>>>>>> feature/arch-refactor
 
 @Injectable()
 export class PostsService {
   constructor(
+<<<<<<< HEAD
     private repository: PostsRepository,
+=======
+    @Inject(I_POSTS_REPOSITORY) private repository: IPostsRepository,
+>>>>>>> feature/arch-refactor
     @Inject(STORAGE_SERVICE) private storageService: IStorageService,
     private notificationsService: NotificationsService,
     private adminAlertService: AdminAlertService,
@@ -25,6 +39,7 @@ export class PostsService {
 
   private calculateReadTime(content: string | null | undefined): number {
     if (!content) return 1;
+<<<<<<< HEAD
     const imageCount = (content.match(/<img/g) || []).length;
     const videoCount = (content.match(/<(iframe|video)/g) || []).length;
     const cleanText = content.replace(/<[^>]*>/g, '');
@@ -35,6 +50,11 @@ export class PostsService {
     const totalSeconds = wordsSeconds + imagesSeconds + videosSeconds;
     const readTime = Math.ceil(totalSeconds / 60);
     return readTime > 0 ? readTime : 1;
+=======
+    const cleanText = content.replace(/<[^>]*>/g, '');
+    const words = cleanText.trim().split(/\s+/).length;
+    return Math.ceil(words / 200) || 1;
+>>>>>>> feature/arch-refactor
   }
 
   private sanitizeOptions = {
@@ -49,11 +69,15 @@ export class PostsService {
     },
     allowedStyles: {
       '*': {
+<<<<<<< HEAD
         color: [
           /^#(?:[0-9a-fA-F]{3}){1,2}$/,
           /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/,
           /^rgba\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*([\d.]+)\s*\)$/,
         ],
+=======
+        color: [/.*/],
+>>>>>>> feature/arch-refactor
         'background-color': [/.*/],
         'text-align': [/^left$/, /^right$/, /^center$/, /^justify$/],
         'font-family': [/.*/],
@@ -62,8 +86,11 @@ export class PostsService {
         'text-decoration': [/.*/],
         margin: [/.*/],
         padding: [/.*/],
+<<<<<<< HEAD
         'padding-left': [/.*/],
         'list-style-type': [/.*/],
+=======
+>>>>>>> feature/arch-refactor
       },
     },
   };
@@ -77,6 +104,7 @@ export class PostsService {
     userId?: number,
     page: number = 1,
     limit: number = 10,
+<<<<<<< HEAD
   ): Promise<{ data: PostInterface[]; meta: { page: number; limit: number; total: number } }> {
     const where: Record<string, any> = {};
     if (userId) {
@@ -281,11 +309,88 @@ export class PostsService {
     let count = 0;
     while (true) {
       const existing = await this.repository.findUnique({ where: { slug: finalSlug } });
+=======
+  ): Promise<PaginatedResult<PostInterface>> {
+    const filter: PostFilter = {
+      search: query,
+      is_published: status === 'published' ? true : (status === 'draft' ? false : undefined),
+      is_blocked: status === 'blocked' ? true : (isAdmin ? undefined : false),
+      author_id: userId,
+      viewer_id: user?.id,
+      sortBy: sort === 'views' ? 'views' : (sort === 'likes' ? 'likes' : 'created_at'),
+      sortOrder: 'desc',
+    };
+
+    // If we are in admin view BUT no specific userId is requested, 
+    // we show everything (constrained by viewer_id logic in repo) 
+    // if the user is truly an admin.
+    if (isAdmin && user && !userId) {
+      if (user.role !== UserRole.ADMIN && user.role !== UserRole.SUPERADMIN) {
+        filter.author_id = user.id;
+      }
+    }
+
+    const pagination: PaginationParams = { page, limit };
+    const result = await this.repository.findAll(filter, pagination);
+
+    return {
+      ...result,
+      items: result.items.map(post => this.formatPost(post)),
+    };
+  }
+
+  private formatPost(post: any): PostInterface {
+    const cleanContent = post.content ? post.content.replace(/<[^>]*>/g, '') : '';
+    return {
+      ...post,
+      excerpt: post.excerpt || (cleanContent.substring(0, 160).trim() + (cleanContent.length > 160 ? '...' : '')),
+      readTime: this.calculateReadTime(post.content),
+      comment_count: post._count?.Comment || 0,
+      likes: post._count?.PostLike || post.likes || 0,
+    } as unknown as PostInterface;
+  }
+
+  async findOne(idOrSlug: string | number, incrementView: boolean = false): Promise<PostInterface> {
+    const isId = !isNaN(Number(idOrSlug));
+    const post = isId 
+      ? await this.repository.findById(Number(idOrSlug))
+      : await this.repository.findBySlug(String(idOrSlug));
+
+    if (!post) throw new NotFoundException('Post not found');
+
+    if (incrementView) {
+      await this.repository.incrementView(post.id).catch(() => {});
+    }
+
+    const formattedPost = this.formatPost(post);
+
+    // If part of a series, get next/prev in that series
+    if (post.series_id) {
+      const neighbors = await this.repository.findNeighborsInSeries(post.series_id, post.series_order || 0);
+      formattedPost.prevPost = neighbors.prev ? this.formatPost(neighbors.prev) : null;
+      formattedPost.nextPost = neighbors.next ? this.formatPost(neighbors.next) : null;
+    }
+
+    return formattedPost;
+  }
+
+  async create(user: User, data: CreatePostDto): Promise<PostInterface> {
+    if (!(user as any).can_post) throw new ForbiddenException('Tài khoản bị cấm đăng bài.');
+
+    const cleanContent = sanitizeHtml(data.content || '', this.sanitizeOptions);
+    const baseSlug = data.slug || slugify(data.title, { lower: true, strict: true, locale: 'vi' });
+    
+    let finalSlug = baseSlug;
+    let count = 0;
+    while (true) {
+      const existing = await this.repository.findBySlug(finalSlug);
+>>>>>>> feature/arch-refactor
       if (!existing) break;
       count++;
       finalSlug = `${baseSlug}-${count}`;
     }
 
+<<<<<<< HEAD
     const createData: Record<string, any> = {
       title,
       slug: finalSlug,
@@ -428,12 +533,76 @@ export class PostsService {
     this.adminAlertService.sendAlert({
       subject: `🗑️ Bài viết bị xóa: ${post.id}`,
       text: `🗑️ <b>BÀI VIẾT BỊ XÓA</b>\n\n• <b>Hành động:</b> Đã xóa bài viết ID #${post.id}\n• <b>IP:</b> ${userIp}\n• <b>User:</b> ${username}\n• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}`,
+=======
+    const post = await this.repository.create(user.id, {
+      ...data,
+      content: cleanContent,
+      slug: finalSlug,
+      is_pinned: (user.role === UserRole.ADMIN || user.role === UserRole.SUPERADMIN) && data.is_pinned ? true : false,
+    });
+
+    return this.formatPost(post);
+  }
+
+  async update(id: number, user: User, data: UpdatePostDto): Promise<PostInterface> {
+    const post = await this.repository.findById(id);
+    if (!post) throw new NotFoundException('Post not found');
+
+    if (!(user as any).can_post) throw new ForbiddenException('Tài khoản bị cấm sửa bài.');
+    if (post.author_id !== user.id) {
+      throw new ForbiddenException('Bạn chỉ có thể chỉnh sửa bài viết của chính mình.');
+    }
+
+    const cleanContent = data.content ? sanitizeHtml(data.content, this.sanitizeOptions) : post.content;
+    let finalSlug = post.slug;
+    if (data.slug && data.slug !== post.slug) {
+      const base = slugify(data.slug, { lower: true, strict: true, locale: 'vi' });
+      let temp = base;
+      let count = 0;
+      while (true) {
+        const ex = await this.repository.findBySlug(temp);
+        if (!ex || ex.id === id) break;
+        count++;
+        temp = `${base}-${count}`;
+      }
+      finalSlug = temp;
+    }
+
+    const updated = await this.repository.update(id, {
+      ...data,
+      content: cleanContent,
+      slug: finalSlug,
+    });
+
+    if (data.cover_image && post.cover_image && post.cover_image !== data.cover_image) {
+      await this.storageService.deleteFile(post.cover_image).catch(() => {});
+    }
+
+    return this.formatPost(updated);
+  }
+
+  async remove(id: number, user: User, ip?: string) {
+    const post = await this.repository.findById(id);
+    if (!post) throw new NotFoundException('Post not found');
+    
+    if (user.role !== UserRole.ADMIN && user.role !== UserRole.SUPERADMIN && post.author_id !== user.id) {
+      throw new ForbiddenException('Không có quyền xóa bài viết này.');
+    }
+
+    if (post.cover_image) await this.storageService.deleteFile(post.cover_image).catch(() => {});
+    await this.repository.delete(id);
+
+    this.adminAlertService.sendAlert({
+      subject: `🗑️ Bài viết bị xóa: ${id}`,
+      text: `🗑️ <b>BÀI VIẾT BỊ XÓA</b>\n\n• ID: #${id}\n• User: ${user.username}`,
+>>>>>>> feature/arch-refactor
     });
 
     return { success: true };
   }
 
   async togglePin(id: number, user: User, ip?: string) {
+<<<<<<< HEAD
     const post = await this.repository.findUnique({ where: { id }, select: { id: true, title: true, author_id: true, is_pinned: true } });
     if (!post) throw new NotFoundException('Post not found');
     if (user.role !== UserRole.ADMIN && user.role !== UserRole.SUPERADMIN && post.author_id !== user.id) {
@@ -529,5 +698,63 @@ export class PostsService {
       where: { user_id_post_id: { user_id: userId, post_id: id } },
     });
     return { liked: !!existingLike };
+=======
+    if (user.role !== UserRole.ADMIN && user.role !== UserRole.SUPERADMIN) {
+      throw new ForbiddenException('Chỉ Admin mới có thể ghim bài viết.');
+    }
+    const post = await this.repository.findById(id);
+    if (!post) throw new NotFoundException('Post not found');
+    if (post.author_id !== user.id) {
+      throw new ForbiddenException('Bạn chỉ có thể ghim bài viết của chính mình.');
+    }
+    return this.repository.togglePin(id);
+  }
+
+  async togglePublish(id: number, user: User, ip?: string, reason?: string) {
+    const post = await this.repository.findById(id);
+    if (!post) throw new NotFoundException('Post not found');
+    
+    const isAdmin = user.role === UserRole.ADMIN || user.role === UserRole.SUPERADMIN;
+    const isOwn = post.author_id === user.id;
+
+    // --- Admin Logic ---
+    if (isAdmin && !isOwn) {
+      // If currently blocked: Unblock it (becomes a draft for the author)
+      if (post.is_blocked) {
+        return this.repository.update(id, { is_blocked: false, blocked_by_id: null });
+      }
+
+      // If published: Block it (becomes a blocked draft)
+      if (post.is_published) {
+        return this.repository.update(id, { 
+          is_published: false, 
+          is_blocked: true, 
+          blocked_by_id: user.id 
+        });
+      }
+
+      // If it's just a draft: Admin can't do anything
+      throw new ForbiddenException('Admin không thể xuất bản bản nháp của người khác.');
+    }
+
+    // --- Author Logic ---
+    if (isOwn) {
+      if (post.is_blocked) {
+        const adminName = post.BlockedBy?.fullname || 'Administrator';
+        throw new ForbiddenException(`Bài viết bị ẩn bởi ${adminName}. Vui lòng liên hệ để được mở khóa.`);
+      }
+      return this.repository.togglePublish(id, reason);
+    }
+
+    throw new ForbiddenException('Bạn không có quyền thực hiện thao tác này.');
+  }
+
+  async toggleLike(id: number, userId: number) {
+    return this.repository.toggleLike(id, userId);
+  }
+
+  async checkLikeStatus(id: number, userId: number) {
+    return this.repository.checkLikeStatus(id, userId);
+>>>>>>> feature/arch-refactor
   }
 }

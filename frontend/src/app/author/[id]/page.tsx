@@ -2,7 +2,11 @@
 
 import { useState, useEffect, use, useCallback } from 'react';
 import Link from 'next/link';
+<<<<<<< HEAD
 import { Calendar, User as UserIcon, Mail, Eye, ArrowLeft, Sparkles, MapPin, Briefcase, Heart, MessageSquare } from 'lucide-react';
+=======
+import { Calendar, User as UserIcon, Mail, Eye, ArrowLeft, Sparkles, MapPin, Briefcase, Heart, MessageSquare, Layers } from 'lucide-react';
+>>>>>>> feature/arch-refactor
 import AnimateList from '@/shared/components/ui/AnimateList';
 import Button from '@/shared/components/ui/Button';
 import Skeleton from '@/shared/components/ui/Skeleton';
@@ -12,6 +16,10 @@ import Badge from '@/shared/components/common/Badge';
 // Modular Services
 import { userService } from '@/features/users/services/userService';
 import { postService } from '@/features/posts/services/postService';
+<<<<<<< HEAD
+=======
+import { seriesService } from '@/features/series/services/seriesService';
+>>>>>>> feature/arch-refactor
 
 import { Post, User as Author } from '@portfolio/contracts';
 
@@ -19,11 +27,13 @@ export default function AuthorPage({ params }: { params: Promise<{ id: string }>
   const { id } = use(params);
   const [author, setAuthor] = useState<Author | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [series, setSeries] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
     try {
       const authorId = parseInt(id);
+<<<<<<< HEAD
       const [userData, postsData] = await Promise.all([
         userService.getById(id),
         postService.getAll({ userId: authorId, limit: 100 })
@@ -31,12 +41,30 @@ export default function AuthorPage({ params }: { params: Promise<{ id: string }>
       
       setAuthor(userData as unknown as Author);
       setPosts(postsData?.data || []);
+=======
+      const [userData, postsData, seriesData] = await Promise.all([
+        userService.getById(id),
+        postService.getAll({ userId: authorId, limit: 100 }),
+        seriesService.getByAuthor(authorId)
+      ]);
+      
+      setAuthor(userData as unknown as Author);
+      setPosts(postsData?.items || []);
+      setSeries(seriesData || []);
+>>>>>>> feature/arch-refactor
     } catch (error: unknown) {
       console.error('Error fetching author data:', error);
     } finally {
       setLoading(false);
     }
   }, [id]);
+
+  const maskEmail = (email: string) => {
+    if (!email) return 'Private Email';
+    const [name, domain] = email.split('@');
+    if (!domain) return email;
+    return `${name[0]}***@${domain}`;
+  };
 
   useEffect(() => {
     fetchData();
@@ -121,10 +149,10 @@ export default function AuthorPage({ params }: { params: Promise<{ id: string }>
                  <span>@{author.username}</span>
               </div>
               
-              <div className="flex flex-wrap items-center justify-center gap-4 text-[12px] font-bold text-slate-500">
+              <div className="flex flex-wrap items-center justify-center gap-4 text-[12px] font-bold text-slate-500 mb-8">
                 <div className="flex items-center bg-slate-50 dark:bg-slate-950/50 px-4 py-2 rounded-2xl border border-slate-100 dark:border-slate-800/50">
                   <Mail size={14} className="mr-2.5 text-primary" />
-                  {author.email || 'Private Email'}
+                  {maskEmail(author.email || '')}
                 </div>
                 <div className="flex items-center bg-slate-50 dark:bg-slate-950/50 px-4 py-2 rounded-2xl border border-slate-100 dark:border-slate-800/50">
                    <FormattedDate date={author.created_at} showIcon iconSize={14} className="text-slate-500" />
@@ -132,6 +160,16 @@ export default function AuthorPage({ params }: { params: Promise<{ id: string }>
                 <div className="flex items-center bg-primary/10 text-primary px-4 py-2 rounded-2xl border border-primary/10">
                   <span className="mr-1.5">{posts.length}</span> BÀI VIẾT
                 </div>
+              </div>
+
+              <div className="flex items-center justify-center gap-4">
+                <Button size="lg" className="px-10 rounded-2xl shadow-xl shadow-primary/20 group">
+                  <Heart size={18} className="mr-2 group-hover:fill-current transition-all" />
+                  Theo dõi tác giả
+                </Button>
+                <Button variant="outline" size="lg" className="px-6 rounded-2xl">
+                  <MessageSquare size={18} />
+                </Button>
               </div>
            </div>
         </div>

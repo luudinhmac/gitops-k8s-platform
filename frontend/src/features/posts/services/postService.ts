@@ -4,19 +4,19 @@ import { Post } from '@portfolio/contracts';
 export const postService = {
   // Get all posts (public)
   async getAll(options: { q?: string; limit?: number; page?: number; userId?: number; sort?: string } = {}) {
-    const response = await api.get<{ data: Post[]; meta: any }>('/posts', { params: options });
+    const response = await api.get<{ items: Post[]; total: number; page: number; limit: number; totalPages: number }>('/posts', { params: options });
     return response.data;
   },
 
   // Get admin posts (for management)
   async getAdminPosts(params: { q?: string; status?: string; sort?: string; page?: number; limit?: number } = {}) {
-    const response = await api.get<{ data: Post[]; meta: any }>('/posts/admin', { params });
+    const response = await api.get<{ items: Post[]; total: number; page: number; limit: number; totalPages: number }>('/posts/admin', { params });
     return response.data;
   },
 
   // Get current user posts
   async getMyPosts(params: { q?: string; status?: string; sort?: string; page?: number; limit?: number } = {}) {
-    const response = await api.get<{ data: Post[]; meta: any }>('/posts/my-posts', { params });
+    const response = await api.get<{ items: Post[]; total: number; page: number; limit: number; totalPages: number }>('/posts/my-posts', { params });
     return response.data;
   },
 

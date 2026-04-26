@@ -13,9 +13,11 @@ const nextConfig: NextConfig = {
             },
         ],
     },
+    /*
     turbopack: {
-        root: '..',
+        root: '.',
     },
+    */
     async rewrites() {
         const internalApiUrl = process.env.INTERNAL_API_URL || 'http://localhost:3001/api';
         // Remove trailing slash and /api suffix to use as base destination

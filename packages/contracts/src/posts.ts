@@ -1,3 +1,4 @@
+import { IsString, IsOptional, IsNumber, IsBoolean, IsNotEmpty } from 'class-validator';
 import { User } from './users';
 
 export interface Post {
@@ -16,9 +17,12 @@ export interface Post {
   created_at: Date | string;
   updated_at: Date | string;
   is_blocked: boolean;
+  blocked_by_id?: number | null;
+  blocked_reason?: string | null;
+  BlockedBy?: Partial<User>;
   category_id?: number | null;
   author_id?: number | null;
-  User?: Partial<User>;
+  Author?: Partial<User>;
   Category?: any;
   Tag?: any[];
   Series?: any;
@@ -34,30 +38,102 @@ export interface Post {
 }
 
 export class CreatePostDto {
+  @IsString()
+  @IsNotEmpty()
   title: string;
+
+  @IsString()
+  @IsOptional()
   slug?: string;
+
+  @IsString()
+  @IsOptional()
   content?: string;
+
+  @IsNumber()
+  @IsOptional()
   category_id?: number | null;
+
+  @IsNumber()
+  @IsOptional()
   series_id?: number | null;
+
+  @IsNumber()
+  @IsOptional()
   series_order?: number | null;
+
+  @IsString()
+  @IsOptional()
   cover_image?: string | null;
+
+  @IsBoolean()
+  @IsOptional()
   is_pinned?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
   is_published?: boolean;
+
+  @IsString()
+  @IsOptional()
   tags?: string;
+
+  @IsString()
+  @IsOptional()
   series_name?: string;
 }
 
 export class UpdatePostDto {
+  @IsString()
+  @IsOptional()
   title?: string;
+
+  @IsString()
+  @IsOptional()
   slug?: string;
+
+  @IsString()
+  @IsOptional()
   content?: string;
+
+  @IsNumber()
+  @IsOptional()
   category_id?: number | null;
+
+  @IsNumber()
+  @IsOptional()
   series_id?: number | null;
+
+  @IsNumber()
+  @IsOptional()
   series_order?: number | null;
+
+  @IsString()
+  @IsOptional()
   cover_image?: string | null;
+
+  @IsBoolean()
+  @IsOptional()
   is_pinned?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
   is_published?: boolean;
+
+  @IsBoolean()
+  @IsOptional()
+  is_blocked?: boolean;
+
+  @IsNumber()
+  @IsOptional()
+  blocked_by_id?: number | null;
+
+  @IsString()
+  @IsOptional()
   tags?: string;
+
+  @IsString()
+  @IsOptional()
   series_name?: string;
 }
 

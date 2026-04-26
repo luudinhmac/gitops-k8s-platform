@@ -11,10 +11,15 @@ import {
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import type { Response } from 'express';
+<<<<<<< HEAD
 import { LoginDto, RegisterDto } from './dto/auth.dto';
 import { User } from '@portfolio/contracts';
 import { AuthenticatedRequest } from '../users/interfaces/user.interface';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
+=======
+import { LoginDto, RegisterDto, User } from '@portfolio/contracts';
+import { ApiTags } from '@nestjs/swagger';
+>>>>>>> feature/arch-refactor
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -36,12 +41,11 @@ export class AuthController {
     }
     const result = await this.authService.login(validatedUser);
 
-    // Set cookie
     res.cookie('token', result.token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
     return result;
@@ -54,7 +58,7 @@ export class AuthController {
 
   @UseGuards(AuthGuard('jwt'))
   @Get('profile')
-  getProfile(@Req() req: AuthenticatedRequest) {
+  getProfile(@Req() req: any) {
     return { success: true, user: req.user };
   }
 

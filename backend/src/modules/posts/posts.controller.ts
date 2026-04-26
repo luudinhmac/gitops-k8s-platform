@@ -14,8 +14,12 @@ import {
 import { PostsService } from './posts.service';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
+<<<<<<< HEAD
 import { AuthenticatedRequest } from '../users/interfaces/user.interface';
 import { CreatePostDto, UpdatePostDto } from './dto/create-post.dto';
+=======
+import { CreatePostDto, UpdatePostDto, User } from '@portfolio/contracts';
+>>>>>>> feature/arch-refactor
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
 @ApiTags('Posts')
@@ -34,13 +38,21 @@ export class PostsController {
     const userIdNum = userId ? parseInt(userId) : undefined;
     const pageNum = page ? parseInt(page) : 1;
     const limitNum = limit ? parseInt(limit) : 10;
+<<<<<<< HEAD
     return this.postsService.findAll(undefined, false, query, undefined, sort, userIdNum, pageNum, limitNum);
+=======
+    return this.postsService.findAll(undefined, false, query, 'published', sort, userIdNum, pageNum, limitNum);
+>>>>>>> feature/arch-refactor
   }
 
   @Get('admin')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   findAllAdmin(
+<<<<<<< HEAD
     @Req() req: AuthenticatedRequest,
+=======
+    @Req() req: any,
+>>>>>>> feature/arch-refactor
     @Query('q') query?: string,
     @Query('status') status?: string,
     @Query('sort') sort?: string,
@@ -55,7 +67,11 @@ export class PostsController {
   @Get('my-posts')
   @UseGuards(AuthGuard('jwt'))
   findMyPosts(
+<<<<<<< HEAD
     @Req() req: AuthenticatedRequest,
+=======
+    @Req() req: any,
+>>>>>>> feature/arch-refactor
     @Query('q') query?: string,
     @Query('status') status?: string,
     @Query('sort') sort?: string,
@@ -64,7 +80,11 @@ export class PostsController {
   ) {
     const pageNum = page ? parseInt(page) : 1;
     const limitNum = limit ? parseInt(limit) : 10;
+<<<<<<< HEAD
     return this.postsService.findAll(req.user, true, query, status, sort, undefined, pageNum, limitNum);
+=======
+    return this.postsService.findAll(req.user, true, query, status, sort, req.user.id, pageNum, limitNum);
+>>>>>>> feature/arch-refactor
   }
 
   @Get(':idOrSlug')
@@ -79,7 +99,7 @@ export class PostsController {
   @Post()
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   create(
-    @Req() req: AuthenticatedRequest,
+    @Req() req: any,
     @Body() createPostDto: CreatePostDto,
   ) {
     return this.postsService.create(req.user, createPostDto);
@@ -89,7 +109,7 @@ export class PostsController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   update(
     @Param('id', ParseIntPipe) id: number,
-    @Req() req: AuthenticatedRequest,
+    @Req() req: any,
     @Body() updatePostDto: UpdatePostDto,
   ) {
     return this.postsService.update(id, req.user, updatePostDto);
@@ -99,7 +119,7 @@ export class PostsController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   remove(
     @Param('id', ParseIntPipe) id: number,
-    @Req() req: AuthenticatedRequest,
+    @Req() req: any,
   ) {
     return this.postsService.remove(id, req.user, req.ip);
   }
@@ -108,7 +128,7 @@ export class PostsController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   togglePin(
     @Param('id', ParseIntPipe) id: number,
-    @Req() req: AuthenticatedRequest,
+    @Req() req: any,
   ) {
     return this.postsService.togglePin(id, req.user, req.ip);
   }
@@ -117,7 +137,7 @@ export class PostsController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   togglePublish(
     @Param('id', ParseIntPipe) id: number,
-    @Req() req: AuthenticatedRequest,
+    @Req() req: any,
     @Body('reason') reason?: string,
   ) {
     return this.postsService.togglePublish(id, req.user, req.ip, reason);
@@ -127,7 +147,7 @@ export class PostsController {
   @UseGuards(AuthGuard('jwt'))
   toggleLike(
     @Param('id', ParseIntPipe) id: number,
-    @Req() req: AuthenticatedRequest,
+    @Req() req: any,
   ) {
     return this.postsService.toggleLike(id, req.user.id);
   }
@@ -136,7 +156,7 @@ export class PostsController {
   @UseGuards(AuthGuard('jwt'))
   checkLikeStatus(
     @Param('id', ParseIntPipe) id: number,
-    @Req() req: AuthenticatedRequest,
+    @Req() req: any,
   ) {
     return this.postsService.checkLikeStatus(id, req.user.id);
   }

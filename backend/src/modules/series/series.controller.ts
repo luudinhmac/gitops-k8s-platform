@@ -8,12 +8,13 @@ import {
   UseGuards,
   Patch,
   ParseIntPipe,
+  Request,
 } from '@nestjs/common';
 import { SeriesService } from './series.service';
 import { AuthGuard } from '@nestjs/passport';
 import { Roles } from '../auth/roles.decorator';
 import { RolesGuard } from '../auth/roles.guard';
-import { CreateSeriesDto, UpdateSeriesDto } from './dto/series.dto';
+import { CreateSeriesDto, UpdateSeriesDto } from '@portfolio/contracts';
 
 @Controller('series')
 export class SeriesController {
@@ -22,6 +23,17 @@ export class SeriesController {
   @Get()
   findAll() {
     return this.seriesService.findAll();
+  }
+
+  @Get('mine')
+  @UseGuards(AuthGuard('jwt'))
+  findMine(@Request() req) {
+    return this.seriesService.findByAuthor(req.user.id);
+  }
+
+  @Get('author/:id')
+  findByAuthor(@Param('id', ParseIntPipe) id: number) {
+    return this.seriesService.findByAuthor(id);
   }
 
   @Get(':idOrSlug')
