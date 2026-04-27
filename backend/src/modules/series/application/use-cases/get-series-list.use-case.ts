@@ -3,12 +3,12 @@ import { ISeriesRepository, I_SERIES_REPOSITORY } from '../../domain/repositorie
 import { Series } from '@portfolio/types';
 
 @Injectable()
-export class GetSeriesListUseCase {
+export class GetSeriesListUseCaseV2 {
   constructor(
     @Inject(I_SERIES_REPOSITORY)
     private readonly seriesRepository: ISeriesRepository,
   ) {
-    console.log('--- GetSeriesListUseCase INITIALIZED (NO CACHE) ---');
+    console.log('--- GetSeriesListUseCaseV2 INITIALIZED ---');
   }
 
   async execute(params?: any): Promise<Series[]> {
