@@ -18,15 +18,15 @@ import FormattedDate from '@/shared/components/common/FormattedDate';
 // Professional Modules
 import { postService } from '@/features/posts/services/postService';
 import { userService } from '@/features/users/services/userService';
-import { usePostActions } from '@/hooks/post/usePostActions';
+import { usePostActions } from '@/features/posts/hooks/usePostActions';
 import { seriesService } from '@/features/series/services/seriesService';
 import Button from '@/shared/components/ui/Button';
 import IconBadge from '@/shared/components/ui/IconBadge';
 import AnimateList from '@/shared/components/ui/AnimateList';
 import ConfirmationDialog from '@/shared/components/ui/ConfirmationDialog';
 import MessageDialog from '@/shared/components/ui/MessageDialog';
-import { Post, SortOption } from '@portfolio/contracts';
-import { User as UserType } from '@portfolio/contracts';
+import { Post, SortOption } from '@portfolio/types';
+import { User as UserType } from '@portfolio/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Suspense } from 'react';
 

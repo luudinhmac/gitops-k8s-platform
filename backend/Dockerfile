@@ -1,60 +1,47 @@
 # Stage 1: Build
 FROM node:22-alpine AS builder
-
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat openssl
 RUN corepack enable && corepack prepare pnpm@latest --activate
-
 WORKDIR /app
 
-# Copy package files first for better caching
-COPY package.json pnpm-lock.yaml* ./
+# Copy root files for workspace awareness
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY packages ./packages
+COPY backend ./backend
 
-# Install dependencies
-RUN pnpm install --frozen-lockfile
+# Install all dependencies
+RUN pnpm install --no-frozen-lockfile
 
-# Copy source code and Prisma schema
-COPY . .
-
-# Generate Prisma Client
+# Build backend
+WORKDIR /app/backend
 RUN npx prisma generate
-
-# Build the application
 RUN pnpm run build
 
-# Compile seed files to JavaScript
-RUN npx tsc prisma/seed.ts --outDir dist --esModuleInterop --module CommonJS --target ES2021
-
-# Stage 2: Run
+# Stage 2: Runner
 FROM node:22-alpine AS runner
-
+RUN apk add --no-cache openssl
 WORKDIR /app
 
-RUN apk add --no-cache tzdata
-ENV TZ=Asia/Ho_Chi_Minh
-ENV NODE_ENV=production
-
-# Install pnpm for pruning if needed, but we'll copy only what's necessary
+# Install ONLY production dependencies in the runner stage
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
+COPY packages ./packages
+COPY backend/package.json ./backend/
 RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN pnpm install --prod --no-frozen-lockfile --filter backend...
 
-# Create a non-root user
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nestjs
+# Copy build artifacts
+COPY --from=builder /app/backend/dist ./backend/dist
+COPY --from=builder /app/backend/prisma ./backend/prisma
 
-# Copy built assets and production dependencies
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/prisma ./prisma
+# Cleanup node_modules to be even smaller (optional but recommended)
+# We keep the filter result
 
-# Prune dev dependencies (optional if builder stage is clean, but safer)
-RUN pnpm prune --prod
-
-# Create uploads directory and set permissions
-RUN mkdir -p /app/uploads && chown -R nestjs:nodejs /app
-
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nestjs && \
+    mkdir -p /app/backend/uploads && \
+    chown -R nestjs:nodejs /app
 USER nestjs
-
+WORKDIR /app/backend
 EXPOSE 3001
-
-CMD ["node", "dist/src/main.js"]
+ENV NODE_ENV=production
+CMD ["node", "dist/main.js"]

@@ -6,9 +6,9 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
-import { User, UserRole, RegisterDto } from '@portfolio/contracts';
+import { User, UserRole, RegisterDto } from '@portfolio/types';
 import { MonitoringService } from '../admin-alert/monitoring.service';
-import { IUsersRepository, I_USERS_REPOSITORY } from '../users/repositories/user.repository.interface';
+import { IUsersRepository, I_USERS_REPOSITORY } from '../users/domain/repositories/user.repository.interface';
 
 @Injectable()
 export class AuthService {

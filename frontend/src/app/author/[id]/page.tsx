@@ -14,7 +14,7 @@ import { userService } from '@/features/users/services/userService';
 import { postService } from '@/features/posts/services/postService';
 import { seriesService } from '@/features/series/services/seriesService';
 
-import { Post, User as Author } from '@portfolio/contracts';
+import { Post, User as Author } from '@portfolio/types';
 
 export default function AuthorPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);

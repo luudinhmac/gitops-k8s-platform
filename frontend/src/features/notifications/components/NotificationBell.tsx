@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Bell, Check, Trash2, MessageCircle, Reply, ShieldAlert, UserCheck, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { notificationService } from '@/features/notifications/services/notificationService';
-import { Notification } from '@portfolio/contracts';
+import { Notification } from '@portfolio/types';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import UserAvatar from '@/features/users/components/UserAvatar';

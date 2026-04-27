@@ -18,7 +18,7 @@ import Pagination from '@/shared/components/ui/Pagination';
 import { useAuth } from '@/context/AuthContext';
 import OfflineMessage from '@/shared/components/common/OfflineMessage';
 
-import { Post, User as Author } from '@portfolio/contracts';
+import { Post, User as Author } from '@portfolio/types';
 
 interface Category {
   id: number;

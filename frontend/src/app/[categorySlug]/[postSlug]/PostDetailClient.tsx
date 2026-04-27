@@ -30,7 +30,7 @@ import { commentService } from '@/features/comments/services/commentService';
 import { categoryService as catApi } from '@/features/categories/services/categoryService';
 import { seriesService } from '@/features/series/services/seriesService';
 
-import { Post, Comment as CommentType } from '@portfolio/contracts';
+import { Post, Comment as CommentType } from '@portfolio/types';
 
 
 
@@ -105,10 +105,22 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
 
       setPost(data);
 
+      // Fetch comments separately (Clean Architecture)
+      try {
+        const comments = await commentService.getByPost(data.id);
+        setPost(prev => prev ? { ...prev, Comment: comments } : null);
+      } catch (err) {
+        console.error('Error fetching comments:', err);
+      }
+
       // Check like status if authenticated
       if (isAuthenticated) {
-        const status = await postService.getLikeStatus(data.id);
-        setLiked(status.liked);
+        try {
+          const status = await postService.getLikeStatus(data.id);
+          setLiked(status.liked);
+        } catch (err) {
+          console.error('Error fetching like status:', err);
+        }
       }
 
       // Background view increment
@@ -499,7 +511,7 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
                                 {comment.User?.avatar ? (
                                   <img
                                     src={comment.User.avatar}
-                                    alt={comment.author_name}
+                                    alt={comment.author_name || 'User'}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
                                       const target = e.currentTarget;
@@ -514,7 +526,7 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
                               <div className="flex-grow min-w-0">
                                 <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-2xl rounded-tl-sm border border-slate-100 dark:border-slate-800 transition-all">
                                   <div className="flex items-center justify-between mb-1.5">
-                                    <span className="font-bold text-slate-900 dark:text-white text-[13px]">{comment.author_name}</span>
+                                    <span className="font-bold text-slate-900 dark:text-white text-[13px]">{comment.author_name || 'Ẩn danh'}</span>
                                     <span className="text-[10px] text-slate-400 font-medium">
                                       {new Date(comment.created_at).toLocaleDateString('vi-VN')}
                                     </span>

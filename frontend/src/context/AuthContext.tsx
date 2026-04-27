@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { User } from '@portfolio/contracts';
+import { User } from '@portfolio/types';
 
 interface AuthContextType {
   user: User | null;
@@ -26,7 +26,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const checkAuth = async () => {
     console.log('[Auth] Khởi động kiểm tra phiên đăng nhập...');
     try {
-      const response = await fetch(`/api/auth/profile`, {
+      const response = await fetch(`/api/v1/auth/profile`, {
         credentials: 'include',
         signal: AbortSignal.timeout(5000), // 5s timeout
       });
@@ -64,7 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Only check auth if we have a hint that a session exists
     // This avoids unnecessary 401 logs in the console for visitors
-    const hasTokenHint = document.cookie.includes('logged_in=true');
+    const hasTokenHint = typeof window !== 'undefined' && document.cookie.includes('logged_in=true');
     if (hasTokenHint) {
       checkAuth();
     } else {
@@ -79,7 +79,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      await fetch(`/api/auth/logout`, {
+      await fetch(`/api/v1/auth/logout`, {
         method: 'POST',
         credentials: 'include',
       });
@@ -91,7 +91,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Check if global maintenance is ON to decide where to redirect
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3001/api';
-        const maintenanceRes = await fetch(`${apiUrl}/settings/public`);
+        const finalUrl = apiUrl.endsWith('/v1') ? apiUrl : `${apiUrl}/v1`;
+        const maintenanceRes = await fetch(`${finalUrl}/settings/public`);
         const settings = await maintenanceRes.json();
         if (settings.maintenance_global === 'true' || settings.maintenance_global === true) {
           router.push('/maintenance');

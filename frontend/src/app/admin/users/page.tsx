@@ -22,7 +22,7 @@ import ConfirmationDialog from '@/shared/components/ui/ConfirmationDialog';
 import PromptDialog from '@/shared/components/ui/PromptDialog';
 
 import { userService } from '@/features/users/services/userService';
-import { User as AdminUser, UserRole } from '@portfolio/contracts';
+import { User as AdminUser, UserRole } from '@portfolio/types';
 
 const ROLE_HIERARCHY: Record<string, number> = {
   'superadmin': 100,

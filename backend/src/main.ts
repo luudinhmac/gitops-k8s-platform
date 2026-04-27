@@ -1,5 +1,6 @@
+import helmet from 'helmet';
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -8,15 +9,27 @@ import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Security: Helmet
+  app.use(helmet({
+    crossOriginEmbedderPolicy: false,
+    contentSecurityPolicy: false,
+  }));
+
   // Enable Graceful Shutdown
   app.enableShutdownHooks();
 
   // Set Global Prefix
   app.setGlobalPrefix('api');
 
-  // Trust proxy for accurate IP capture
+  // Enable Versioning
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
+  });
+
+  // Trust proxy for accurate IP capture (Essential for rate limiting)
   const expressApp = app.getHttpAdapter().getInstance();
-  expressApp.set('trust proxy', true);
+  expressApp.set('trust proxy', 1);
 
   // Global Validation Pipe
   app.useGlobalPipes(new ValidationPipe({
@@ -48,7 +61,7 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
   });
 
-  // Swagger Documentation - Only enabled in non-production or when explicitly enabled
+  // Swagger Documentation
   const isProduction = process.env.NODE_ENV === 'production';
   const isSwaggerEnabled = process.env.ENABLE_SWAGGER === 'true';
 
@@ -65,7 +78,7 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3001;
   await app.listen(port);
-  console.log(`Backend is running at http://localhost:${port}/api`);
+  console.log(`Backend is running at http://localhost:${port}/api/v1`);
 }
 bootstrap().catch((err) => {
   console.error('Error during bootstrap:', err);

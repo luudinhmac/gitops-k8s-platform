@@ -11,7 +11,7 @@ import {
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import type { Response } from 'express';
-import { LoginDto, RegisterDto, User } from '@portfolio/contracts';
+import { LoginDto, RegisterDto, User } from '@portfolio/types';
 import { ApiTags } from '@nestjs/swagger';
 
 @ApiTags('Auth')

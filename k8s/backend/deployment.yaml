@@ -16,7 +16,26 @@ spec:
       containers:
       - name: backend
         image: portfolio-backend:latest
-        imagePullPolicy: Never
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+        livenessProbe:
+          httpGet:
+            path: /api/v1/health
+            port: 3001
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/v1/health
+            port: 3001
+          initialDelaySeconds: 15
+          periodSeconds: 5
         env:
         - name: DATABASE_URL
           valueFrom:
@@ -38,6 +57,11 @@ spec:
             configMapKeyRef:
               name: app-config
               key: PORT
+        - name: REDIS_URL
+          valueFrom:
+            configMapKeyRef:
+              name: app-config
+              key: REDIS_URL
         ports:
         - containerPort: 3001
         volumeMounts:
@@ -45,9 +69,8 @@ spec:
           mountPath: /app/uploads
       volumes:
       - name: uploads-storage
-        hostPath:
-          path: /data/k8s/uploads
-          type: DirectoryOrCreate
+        persistentVolumeClaim:
+          claimName: uploads-pvc
 ---
 apiVersion: v1
 kind: Service

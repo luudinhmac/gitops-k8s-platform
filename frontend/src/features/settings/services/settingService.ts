@@ -1,7 +1,10 @@
 import api from '@/lib/axios';
 import axios from 'axios';
 
-const getBaseUrl = () => process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3001/api';
+const getBaseUrl = () => {
+  const base = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3001/api';
+  return base.endsWith('/v1') ? base : `${base}/v1`;
+};
 
 export interface SettingItem {
   key: string;

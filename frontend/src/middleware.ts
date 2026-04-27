@@ -40,9 +40,16 @@ export async function proxy(request: NextRequest) {
       
       if (!fetchUrl) {
         const backendHost = nodeEnv === 'production' ? 'backend' : '127.0.0.1';
-        fetchUrl = `http://${backendHost}:3001/api/settings/public`;
-      } else if (!fetchUrl.includes('/settings/public')) {
-        fetchUrl = fetchUrl.replace(/\/api\/?$/, '') + '/api/settings/public';
+        fetchUrl = `http://${backendHost}:3001/api/v1/settings/public`;
+      } else {
+        // Ensure /v1 is present
+        if (!fetchUrl.includes('/v1')) {
+          fetchUrl = fetchUrl.replace(/\/api\/?$/, '') + '/api/v1';
+        }
+        // Ensure /settings/public is at the end
+        if (!fetchUrl.endsWith('/settings/public')) {
+          fetchUrl = fetchUrl.replace(/\/$/, '') + '/settings/public';
+        }
       }
       
       const start = Date.now();

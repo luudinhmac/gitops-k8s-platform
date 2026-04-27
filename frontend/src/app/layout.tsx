@@ -23,7 +23,8 @@ export async function generateMetadata(): Promise<Metadata> {
   
   try {
     const apiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-    const res = await fetch(`${apiUrl}/settings/public`, { next: { revalidate: 10 } });
+    const finalApiUrl = apiUrl.endsWith('/v1') ? apiUrl : `${apiUrl}/v1`;
+    const res = await fetch(`${finalApiUrl}/settings/public`, { next: { revalidate: 10 } });
     if (res.ok) {
       const data = await res.json();
       if (data.site_title) siteTitle = data.site_title;

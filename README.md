@@ -27,13 +27,28 @@ Dự án Portfolio + Blog chuyên nghiệp dành cho Kỹ sư Hệ thống (Syst
 - **Series Navigation:** Tự động hiển thị bài viết trước và bài viết sau trong cùng một series, hỗ trợ điều hướng thông minh theo thứ tự (series_order) ngay trong trang chi tiết bài viết.
 - **Security-First API:** Tài liệu Swagger được bảo vệ theo môi trường và giới hạn IP. Các thông tin nhạy cảm (pass hash) được lọc bỏ hoàn toàn khỏi các phản hồi API.
 
+## Architecture Principles
+Dự án được xây dựng dựa trên các nguyên tắc thiết kế hiện đại nhằm đảm bảo khả năng mở rộng và bảo trì lâu dài:
+- **Backend (Clean Architecture):** Tách biệt hoàn toàn logic nghiệp vụ khỏi các yếu tố hạ tầng (Database, Framework). Sử dụng mô hình lớp: `Domain` -> `Application` -> `Infrastructure` -> `Presentation`.
+- **Frontend (Feature-based):** Phân tách ứng dụng theo tính năng (Features). Mỗi tính năng tự quản lý giao diện, logic và API riêng biệt, giúp giảm thiểu phụ thuộc chéo.
+- **Unified Types:** Hệ thống Type-safe đồng nhất giữa Frontend và Backend thông qua Shared Packages.
+
 ## Project Structure
 ```text
-frontend/      # Next.js Application (Feature-based structure)
-backend/       # NestJS API (Modular architecture)
-packages/      # Shared packages (e.g., @portfolio/contracts)
-ansible/       # Ansible Roles & Automation
-docs/          # Technical Documentation & Deployment Reports
+frontend/
+  src/features/    # Logic theo tính năng (Auth, Posts, Users, ...)
+  src/shared/      # Components và hooks dùng chung
+backend/
+  src/modules/     # Modules theo Clean Architecture
+    domain/        # Entities & Repository Interfaces
+    application/   # Use Cases (Business Logic)
+    infrastructure/# Prisma Repositories & Mappers
+    presentation/  # Controllers & Swagger
+packages/
+  types/           # Shared Type Definitions (@portfolio/types)
+ansible/           # Automation Playbooks & Roles
+k8s/               # Kubernetes Manifests (Production)
+docs/              # System Audit Reports & Documentation
 ```
 
 ## Local Development

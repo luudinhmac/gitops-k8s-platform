@@ -15,7 +15,7 @@ import AdminCard from '@/features/admin/components/AdminCard';
 // Professional Modules
 import { postService } from '@/features/posts/services/postService';
 import { categoryService } from '@/features/categories/services/categoryService';
-import { usePostActions } from '@/hooks/post/usePostActions';
+import { usePostActions } from '@/features/posts/hooks/usePostActions';
 import Button from '@/shared/components/ui/Button';
 import IconBadge from '@/shared/components/ui/IconBadge';
 import AnimateList from '@/shared/components/ui/AnimateList';
@@ -23,7 +23,7 @@ import ConfirmationDialog from '@/shared/components/ui/ConfirmationDialog';
 import MessageDialog from '@/shared/components/ui/MessageDialog';
 import PromptDialog from '@/shared/components/ui/PromptDialog';
 import Skeleton from '@/shared/components/ui/Skeleton';
-import { Post as AdminPost } from '@portfolio/contracts';
+import { Post as AdminPost } from '@portfolio/types';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AdminDashboardPage() {

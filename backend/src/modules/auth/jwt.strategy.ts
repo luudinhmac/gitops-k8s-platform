@@ -2,8 +2,8 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PrismaService } from '../../prisma/prisma.service';
-import { User } from '@portfolio/contracts';
+import { User } from '@portfolio/types';
+import { GetUserUseCase } from '../users/application/use-cases/get-user.use-case';
 
 interface JwtPayload {
   id: number;
@@ -24,7 +24,7 @@ interface RequestWithCookies {
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
     configService: ConfigService,
-    private prisma: PrismaService,
+    private readonly getUserUseCase: GetUserUseCase,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
@@ -50,19 +50,17 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   async validate(payload: JwtPayload): Promise<User> {
-    const user = await this.prisma.user.findUnique({
-      where: { id: payload.id },
-    });
+    try {
+      const user = await this.getUserUseCase.execute(payload.id);
 
-    if (!user) {
-      throw new UnauthorizedException('Không tìm thấy người dùng');
+      if (!user.is_active) {
+        throw new UnauthorizedException('Tài khoản đã bị vô hiệu hóa');
+      }
+      
+      const { password, ...result } = user as any;
+      return result as User;
+    } catch (error) {
+      throw new UnauthorizedException('Không tìm thấy người dùng hoặc lỗi xác thực');
     }
-
-    if (!user.is_active) {
-      throw new UnauthorizedException('Tài khoản đã bị vô hiệu hóa');
-    }
-    
-    const { password, ...result } = user;
-    return result as unknown as User;
   }
 }

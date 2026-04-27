@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, Inject } from '@nestjs/common';
-import { CreateNotificationDto } from '@portfolio/contracts';
-import { INotificationsRepository, I_NOTIFICATIONS_REPOSITORY } from './repositories/notification.repository.interface';
+import { CreateNotificationDto } from '@portfolio/types';
+import { INotificationsRepository, I_NOTIFICATIONS_REPOSITORY } from './domain/repositories/notification.repository.interface';
 
 @Injectable()
 export class NotificationsService {

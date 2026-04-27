@@ -16,7 +16,26 @@ spec:
       containers:
       - name: frontend
         image: portfolio-frontend:latest
-        imagePullPolicy: Never
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 3000
+          initialDelaySeconds: 15
+          periodSeconds: 5
         env:
         - name: INTERNAL_API_URL
           valueFrom:

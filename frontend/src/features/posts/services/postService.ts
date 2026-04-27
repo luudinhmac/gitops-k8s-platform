@@ -1,5 +1,5 @@
 import api from '@/lib/axios';
-import { Post } from '@portfolio/contracts';
+import { Post, PaginatedResponse } from '@portfolio/types';
 
 export const postService = {
   // Get all posts (public)
