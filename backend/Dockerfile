@@ -29,6 +29,7 @@ WORKDIR /app
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY packages ./packages
 COPY backend/package.json ./backend/
+COPY backend/prisma ./backend/prisma
 RUN corepack enable && corepack prepare pnpm@latest --activate
 RUN pnpm install --prod --no-frozen-lockfile --filter backend...
 
