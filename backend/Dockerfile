@@ -27,7 +27,7 @@ WORKDIR /app
 
 # Install ONLY production dependencies in the runner stage
 COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
-COPY packages ./packages
+COPY --from=builder /app/packages ./packages
 COPY backend/package.json ./backend/
 COPY backend/prisma ./backend/prisma
 RUN corepack enable && corepack prepare pnpm@latest --activate
