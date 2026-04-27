@@ -112,6 +112,10 @@
   become_user: macld
   shell: kubectl wait --for=condition=available --timeout=120s deployment/postgres -n portfolio
 
+- name: Wait for Redis to be ready
+  become_user: macld
+  shell: kubectl wait --for=condition=available --timeout=120s deployment/redis -n portfolio
+
 - name: Wait for Backend to be ready
   become_user: macld
   shell: kubectl wait --for=condition=available --timeout=120s deployment/backend -n portfolio
