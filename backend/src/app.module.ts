@@ -56,22 +56,10 @@ import { redisStore } from 'cache-manager-redis-yet';
       ttl: 60000,
       limit: 60, // 60 requests per minute
     }]),
-    CacheModule.registerAsync({
+    CacheModule.register({
       isGlobal: true,
-      useFactory: async () => {
-        if (process.env.REDIS_URL) {
-          const store = await redisStore({
-            url: process.env.REDIS_URL,
-            ttl: 600000,
-          });
-          return {
-            store: () => store,
-          };
-        }
-        return {
-          ttl: 600000,
-        };
-      },
+      ttl: 600000, // 10 minutes in milliseconds
+      max: 1000, // maximum number of items in cache
     }),
   ],
   controllers: [HealthController],
