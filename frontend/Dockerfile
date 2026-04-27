@@ -11,7 +11,7 @@ COPY . .
 RUN pnpm install --no-frozen-lockfile
 
 # Build workspace packages (like @portfolio/types)
-RUN pnpm build --filter "@portfolio/*"
+RUN pnpm --filter "@portfolio/*" build
 
 WORKDIR /app/frontend
 ENV NEXT_TELEMETRY_DISABLED=1

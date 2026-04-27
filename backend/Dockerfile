@@ -13,7 +13,7 @@ COPY backend ./backend
 RUN pnpm install --no-frozen-lockfile
 
 # Build workspace packages
-RUN pnpm build --filter "@portfolio/*"
+RUN pnpm --filter "@portfolio/*" build
 
 # Build backend
 WORKDIR /app/backend
