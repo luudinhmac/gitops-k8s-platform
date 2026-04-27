@@ -45,15 +45,15 @@ function LoginContent() {
 
       // Update AuthContext and redirect
       login(data.user);
-      
+
       // Determine redirect path based on role if default /admin is used
       let finalRedirect = redirectPath;
       const isAdmin = ['admin', 'superadmin'].includes(data.user.role);
-      
+
       if (redirectPath === '/admin' && !isAdmin) {
         finalRedirect = '/';
       }
-      
+
       router.push(finalRedirect);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
@@ -84,28 +84,29 @@ function LoginContent() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-6 relative overflow-hidden bg-slate-50 dark:bg-slate-950">
-      {/* Dynamic Background Elements */}
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/10 blur-[120px] rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+    <div className="min-h-screen flex items-center justify-center px-4 py-6 relative overflow-hidden bg-slate-50/50 dark:bg-slate-950">
+      {/* Decorative Elements */}
+      <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-primary/5 blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-500/5 blur-[100px] rounded-full translate-y-1/2 -translate-x-1/2 pointer-events-none" />
 
-      <div className="max-w-[400px] w-full relative z-10 flex flex-col items-center">
-        <Link
-          href="/"
-          className="inline-flex items-center text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-primary transition-all mb-6 group"
-        >
-          <ArrowLeft size={14} className="mr-2 group-hover:-translate-x-1 transition-transform" />
-          Quay lại TRANG CHỦ
-        </Link>
+      <div className="max-w-[380px] w-full relative z-10">
+        {/* Header Section */}
+        <div className="flex justify-between items-center mb-4 px-2">
+          <Link
+            href="/"
+            className="inline-flex items-center text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-primary transition-all group"
+          >
+            <ArrowLeft size={12} className="mr-1.5 group-hover:-translate-x-1 transition-transform" />
+            Home
+          </Link>
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-300 dark:text-slate-700">
+            Authentication
+          </span>
+        </div>
 
-        <div className="w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] border border-slate-200/50 dark:border-slate-800/50 shadow-2xl relative overflow-hidden ring-1 ring-black/5">
+        {/* Login Card */}
+        <div className="w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 md:p-8 rounded-[2.5rem] border border-slate-200/50 dark:border-slate-800/50 shadow-2xl relative overflow-hidden ring-1 ring-black/5">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" />
-
-          <div className="text-center mb-4">
-            <h1 className="text-lg font-display font-black text-slate-900 dark:text-white tracking-[0.2em] uppercase">
-              Đăng nhập
-            </h1>
-          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
@@ -119,15 +120,15 @@ function LoginContent() {
                 Tên đăng nhập
               </label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
-                  <Mail size={16} />
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+                  <Mail size={14} />
                 </div>
                 <input
                   type="text"
                   required
                   autoFocus
-                  className="w-full pl-10 pr-4 py-3 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-sm font-medium dark:text-white"
-                  placeholder="Tên đăng nhập hoặc email"
+                  className="w-full pl-9 pr-3.5 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
+                  placeholder="Username hoặc email"
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                   onKeyDown={handleKeyDown}
@@ -140,13 +141,13 @@ function LoginContent() {
                 Mật khẩu
               </label>
               <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
-                  <Lock size={16} />
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+                  <Lock size={14} />
                 </div>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   required
-                  className="w-full pl-10 pr-12 py-3 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-sm font-medium dark:text-white"
+                  className="w-full pl-9 pr-10 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
                   placeholder="••••••••"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
@@ -155,10 +156,10 @@ function LoginContent() {
                 <button
                   type="button"
                   tabIndex={-1}
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-primary transition-colors"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-primary transition-colors"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                 </button>
               </div>
             </div>
@@ -167,17 +168,17 @@ function LoginContent() {
               <Button
                 type="submit"
                 isLoading={loading}
-                className="w-full py-3 text-sm rounded-xl shadow-lg shadow-primary/20 bg-gradient-to-r from-primary to-blue-600 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                className="w-full py-3 text-xs font-black uppercase tracking-[0.2em] rounded-xl shadow-lg shadow-primary/20 bg-gradient-to-r from-primary to-blue-600 hover:scale-[1.02] active:scale-[0.98] transition-all"
               >
-                Tiếp tục đăng nhập
+                Đăng nhập
               </Button>
             </div>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-slate-100 dark:border-slate-800 text-center">
-            <p className="text-[11px] text-slate-500 font-medium">
+          <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800 text-center">
+            <p className="text-[10px] text-slate-500 font-medium">
               Chưa có tài khoản?{' '}
-              <Link href="/register" className="text-primary font-bold hover:text-blue-600 transition-colors">
+              <Link href="/register" className="text-primary font-bold hover:text-blue-600 transition-colors ml-1">
                 Đăng ký ngay
               </Link>
             </p>

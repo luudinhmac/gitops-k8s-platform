@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Lock, Mail, User, Eye, EyeOff, ArrowLeft, Phone, Calendar, Briefcase } from 'lucide-react';
+import { Lock, Mail, User, Eye, EyeOff, Loader2, ArrowLeft, Phone, Calendar, Briefcase } from 'lucide-react';
 import Button from '@/shared/components/ui/Button';
 
 // Modular Services
@@ -70,28 +70,29 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-6 relative overflow-hidden bg-slate-50 dark:bg-slate-950">
-      {/* Dynamic Background Elements */}
-      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-primary/10 blur-[120px] rounded-full -translate-y-1/2 -translate-x-1/2 pointer-events-none" />
-      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-blue-500/10 blur-[120px] rounded-full translate-y-1/2 translate-x-1/2 pointer-events-none" />
+    <div className="min-h-screen flex items-center justify-center px-4 py-4 md:py-8 relative overflow-hidden bg-slate-50/50 dark:bg-slate-950">
+      {/* Decorative Elements */}
+      <div className="absolute top-0 left-0 w-[400px] h-[400px] bg-primary/5 blur-[100px] rounded-full -translate-y-1/2 -translate-x-1/2 pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-blue-500/5 blur-[100px] rounded-full translate-y-1/2 translate-x-1/2 pointer-events-none" />
 
-      <div className="max-w-[550px] w-full relative z-10 flex flex-col items-center">
-        <Link
-          href="/"
-          className="inline-flex items-center text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400 hover:text-primary transition-all mb-6 group"
-        >
-          <ArrowLeft size={14} className="mr-2 group-hover:-translate-x-1 transition-transform" />
-          Quay lại TRANG CHỦ
-        </Link>
+      <div className="max-w-xl w-full relative z-10">
+        {/* Back to Home - More Compact */}
+        <div className="flex justify-between items-center mb-4 px-2">
+          <Link
+            href="/"
+            className="inline-flex items-center text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-primary transition-all group"
+          >
+            <ArrowLeft size={12} className="mr-1.5 group-hover:-translate-x-1 transition-transform" />
+            Home
+          </Link>
+          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-300 dark:text-slate-700">
+            Registration
+          </span>
+        </div>
 
-        <div className="w-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] border border-slate-200/50 dark:border-slate-800/50 shadow-2xl relative overflow-hidden ring-1 ring-black/5">
+        {/* Register Card - Optimized for 1366x768 */}
+        <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-6 md:p-8 rounded-[2.5rem] border border-slate-200/50 dark:border-slate-800/50 shadow-2xl relative overflow-hidden ring-1 ring-black/5">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" />
-
-          <div className="text-center mb-6">
-            <h1 className="text-lg font-display font-black text-slate-900 dark:text-white tracking-[0.2em] uppercase">
-              Tham gia cộng đồng
-            </h1>
-          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
@@ -100,21 +101,23 @@ export default function RegisterPage() {
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3">
-              <div className="space-y-1">
+            {/* Grid for efficiency */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3.5">
+              {/* Username */}
+              <div className="space-y-1.5">
                 <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                  Tên đăng nhập
+                  Tên tài khoản
                 </label>
                 <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
                     <User size={14} />
                   </div>
                   <input
                     type="text"
                     required
                     autoFocus
-                    className="w-full pl-9 pr-3 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
-                    placeholder="username"
+                    className="w-full pl-9 pr-3.5 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
+                    placeholder="Tên nguời dùng"
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                     onKeyDown={handleKeyDown}
@@ -122,19 +125,20 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              <div className="space-y-1">
+              {/* Fullname */}
+              <div className="space-y-1.5">
                 <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
                   Họ và tên
                 </label>
                 <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
                     <User size={14} />
                   </div>
                   <input
                     type="text"
                     required
-                    className="w-full pl-9 pr-3 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
-                    placeholder="Nguyễn Văn A"
+                    className="w-full pl-9 pr-3.5 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
+                    placeholder="họ và tên"
                     value={formData.fullname}
                     onChange={(e) => setFormData({ ...formData, fullname: e.target.value })}
                     onKeyDown={handleKeyDown}
@@ -142,18 +146,19 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              <div className="space-y-1 md:col-span-2">
+              {/* Email - Full Width in Grid */}
+              <div className="space-y-1.5 md:col-span-2">
                 <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                  Email công việc
+                  Email
                 </label>
                 <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
                     <Mail size={14} />
                   </div>
                   <input
                     type="email"
                     required
-                    className="w-full pl-9 pr-3 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
+                    className="w-full pl-9 pr-3.5 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
                     placeholder="email@example.com"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -162,17 +167,18 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              <div className="space-y-1">
+              {/* Phone */}
+              <div className="space-y-1.5">
                 <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
                   Số điện thoại
                 </label>
                 <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
                     <Phone size={14} />
                   </div>
                   <input
                     type="tel"
-                    className="w-full pl-9 pr-3 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
+                    className="w-full pl-9 pr-3.5 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
                     placeholder="0987..."
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -181,17 +187,18 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              <div className="space-y-1">
+              {/* Birthday */}
+              <div className="space-y-1.5">
                 <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
                   Ngày sinh
                 </label>
                 <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
                     <Calendar size={14} />
                   </div>
                   <input
                     type="date"
-                    className="w-full pl-9 pr-3 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
+                    className="w-full pl-9 pr-3.5 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
                     value={formData.birthday}
                     onChange={(e) => setFormData({ ...formData, birthday: e.target.value })}
                     onKeyDown={handleKeyDown}
@@ -199,18 +206,19 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              <div className="space-y-1 md:col-span-2">
+              {/* Profession - Full Width */}
+              <div className="space-y-1.5 md:col-span-2">
                 <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                  Lĩnh vực hoạt động
+                  Nghề nghiệp
                 </label>
                 <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
                     <Briefcase size={14} />
                   </div>
                   <input
                     type="text"
-                    className="w-full pl-9 pr-3 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
-                    placeholder="Kỹ sư hệ thống, DevOps, Developer..."
+                    className="w-full pl-9 pr-3.5 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
+                    placeholder="System Engineer, DevOps, Developer..."
                     value={formData.profession}
                     onChange={(e) => setFormData({ ...formData, profession: e.target.value })}
                     onKeyDown={handleKeyDown}
@@ -218,12 +226,13 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              <div className="space-y-1">
+              {/* Password */}
+              <div className="space-y-1.5">
                 <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
                   Mật khẩu
                 </label>
                 <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
                     <Lock size={14} />
                   </div>
                   <input
@@ -246,18 +255,19 @@ export default function RegisterPage() {
                 </div>
               </div>
 
-              <div className="space-y-1">
+              {/* Confirm Password */}
+              <div className="space-y-1.5">
                 <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
-                  Xác nhận lại
+                  Xác nhận mật khẩu
                 </label>
                 <div className="relative group">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
                     <Lock size={14} />
                   </div>
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
-                    className="w-full pl-9 pr-3 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
+                    className="w-full pl-9 pr-3.5 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
                     placeholder="••••••••"
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
@@ -267,22 +277,24 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <div className="pt-2">
+            {/* Action Section */}
+            <div className="pt-3">
               <Button
                 type="submit"
                 isLoading={loading}
-                className="w-full py-3 text-sm rounded-xl shadow-lg shadow-primary/20 bg-gradient-to-r from-primary to-blue-600 hover:scale-[1.01] active:scale-[0.99] transition-all"
+                className="w-full py-3 text-xs font-black uppercase tracking-[0.2em] rounded-xl shadow-lg shadow-primary/20 bg-gradient-to-r from-primary to-blue-600 hover:scale-[1.02] active:scale-[0.98] transition-all"
               >
-                Đăng ký thành viên
+                Đăng ký
               </Button>
             </div>
           </form>
 
-          <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 text-center">
-            <p className="text-[11px] text-slate-500 font-medium">
+          {/* Footer Section */}
+          <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800 text-center">
+            <p className="text-[10px] text-slate-500 font-medium">
               Đã có tài khoản?{' '}
-              <Link href="/login" className="text-primary font-bold hover:text-blue-600 transition-colors">
-                Đăng nhập tại đây
+              <Link href="/login" className="text-primary font-bold hover:text-blue-600 transition-colors ml-1">
+                Đăng nhập
               </Link>
             </p>
           </div>

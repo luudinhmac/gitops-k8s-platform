@@ -136,9 +136,13 @@ export default function AdminDashboardPage() {
               whileHover={{ y: -4 }}
               className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all"
             >
-              <IconBadge icon={stat.icon} color={stat.color} size="md" className="mb-3" />
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-white leading-none tracking-tight">{stat.count}</h3>
-              <p className="text-[10px] font-bold text-slate-400 mt-2 uppercase tracking-widest">{stat.label}</p>
+              <div className="flex items-center gap-3">
+                <IconBadge icon={stat.icon} color={stat.color} size="md" />
+                <div>
+                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white leading-none tracking-tight">{stat.count}</h3>
+                  <p className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-widest">{stat.label}</p>
+                </div>
+              </div>
             </motion.div>
           ))}
         </div>

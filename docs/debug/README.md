@@ -24,7 +24,7 @@ Tài liệu này ghi lại các lỗi kỹ thuật quan trọng gặp phải tro
 - **Nguyên nhân:** Sử dụng các giá trị động hoặc truy cập `window` trong quá trình render phía Server của Next.js.
 - **Giải pháp:** Sử dụng thuộc tính `suppressHydrationWarning` trên các thẻ `html` và `body` trong `layout.tsx` và đảm bảo các logic động chỉ chạy sau khi component đã mount.
 
-## 4. Lỗi Sai dấu tên người dùng
+## 4. Lỗi Sai dấu Tên nguời dùng
 - **Triệu chứng:** Tên hiển thị là "Mạc" (dấu nặng) thay vì "Mác" (dấu sắc).
 - **Nguyên nhân:** Nhầm lẫn trong quá trình nhập liệu nội dung.
 - **Giải pháp:** Rà soát và cập nhật đồng loạt từ `MẠC` sang `MÁC` trên tất cả các trang và Metadata.

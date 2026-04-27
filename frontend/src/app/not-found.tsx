@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Home, Search, ArrowRight, MessageSquare, Clock } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Button from '@/shared/components/ui/Button';
@@ -43,10 +44,13 @@ export default function NotFound() {
           >
             <div className="absolute inset-0 bg-primary/20 blur-[100px] rounded-full animate-pulse z-0" />
             <div className="relative z-10 w-full h-full rounded-[40px] overflow-hidden border border-white/10 shadow-2xl group">
-              <img 
+              <Image 
                 src="/images/meme-404.png" 
                 alt="404 Meme" 
-                className="w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-700 scale-105 group-hover:scale-100"
+                fill
+                priority
+                className="object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all duration-700 scale-105 group-hover:scale-100"
+                sizes="(max-width: 768px) 100vw, 50vw"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
               <div className="absolute bottom-6 left-6 right-6">
