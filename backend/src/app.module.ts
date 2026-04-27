@@ -23,8 +23,8 @@ import { HealthController } from './health.controller';
 import { StorageModule } from './infrastructure/storage/storage.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-import { CacheModule } from '@nestjs/cache-manager';
-import { redisStore } from 'cache-manager-redis-yet';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { caching } from 'cache-manager';
 
 @Module({
   imports: [
@@ -56,17 +56,21 @@ import { redisStore } from 'cache-manager-redis-yet';
       ttl: 60000,
       limit: 60, // 60 requests per minute
     }]),
-    CacheModule.register({
-      isGlobal: true,
-      ttl: 600000, // 10 minutes in milliseconds
-      max: 1000, // maximum number of items in cache
-    }),
   ],
   controllers: [HealthController],
   providers: [
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
+    },
+    {
+      provide: CACHE_MANAGER,
+      useFactory: async () => {
+        return await caching('memory', {
+          ttl: 600000,
+          max: 1000,
+        });
+      },
     },
   ],
 })
