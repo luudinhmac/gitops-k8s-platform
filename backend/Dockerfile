@@ -19,8 +19,8 @@ RUN pnpm --filter "@portfolio/*" build
 WORKDIR /app/backend
 RUN npx prisma generate
 RUN pnpm run build
-RUN npx tsc prisma/seed.ts --outDir dist/prisma --esModuleInterop --target es2023 --module commonjs --skipLibCheck
-RUN find dist -name "seed.js"
+RUN npx tsc prisma/seed.ts --outDir seed-bin --esModuleInterop --target es2023 --module commonjs --skipLibCheck
+RUN ls -R seed-bin
 
 # Stage 2: Runner
 FROM node:22-alpine AS runner
@@ -38,6 +38,7 @@ RUN pnpm install --prod --no-frozen-lockfile --filter backend...
 # Copy build artifacts
 COPY --from=builder /app/backend/dist ./backend/dist
 COPY --from=builder /app/backend/prisma ./backend/prisma
+COPY --from=builder /app/backend/seed-bin ./backend/seed-bin
 
 # Cleanup node_modules to be even smaller (optional but recommended)
 # We keep the filter result

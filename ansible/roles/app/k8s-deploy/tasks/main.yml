@@ -126,4 +126,4 @@
 
 - name: Run Prisma DB Seed
   become_user: macld
-  shell: kubectl exec -n portfolio deployment/backend -- npx prisma db seed
+  shell: kubectl exec -n portfolio deployment/backend -- node seed-bin/seed.js
