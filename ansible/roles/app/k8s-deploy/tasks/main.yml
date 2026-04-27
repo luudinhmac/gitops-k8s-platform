@@ -102,6 +102,7 @@
   become_user: macld
   command: kubectl apply -f /data/k8s/manifests/{{ item }}/deployment.yaml
   loop:
+    - redis
     - postgres
     - backend
     - frontend
