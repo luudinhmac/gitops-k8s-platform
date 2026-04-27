@@ -7,4 +7,3 @@ dist
 Dockerfile
 Dockerfile.*
 scratch
-EOF

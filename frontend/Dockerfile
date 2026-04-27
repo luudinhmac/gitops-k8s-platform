@@ -1,24 +1,15 @@
-# Stage 1: Dependencies
-FROM node:22-alpine AS deps
+# Stage 1: Builder
+FROM node:22-alpine AS builder
 RUN apk add --no-cache libc6-compat
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
-# Copy workspace files from root context
-COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml ./
-COPY packages/contracts/package.json ./packages/contracts/
-COPY frontend/package.json ./frontend/
+# Copy all files first
+COPY . .
 
-# Install dependencies (pnpm sẽ link các workspace packages)
+# Install all dependencies (including devDeps for build)
 RUN pnpm install --no-frozen-lockfile
 
-# Stage 2: Builder
-FROM node:22-alpine AS builder
-RUN corepack enable && corepack prepare pnpm@latest --activate
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-# Copy toàn bộ code (bao gồm cả thư mục packages)
-COPY . .
 WORKDIR /app/frontend
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm run build
