@@ -63,12 +63,12 @@ import { redisStore } from 'cache-manager-redis-yet';
           return {
             store: await redisStore({
               url: process.env.REDIS_URL,
-              ttl: 600, // 10 minutes
+              ttl: 600000, // 10 minutes in milliseconds (v5)
             }),
           };
         }
         return {
-          ttl: 600, // 10 minutes (memory)
+          ttl: 600000, // 10 minutes in milliseconds (v5)
         };
       },
     }),
