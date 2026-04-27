@@ -9,6 +9,9 @@ COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY packages ./packages
 COPY backend ./backend
 
+# Cache busting point
+ARG CACHEBUST=1
+
 # Install all dependencies
 RUN pnpm install --no-frozen-lockfile
 

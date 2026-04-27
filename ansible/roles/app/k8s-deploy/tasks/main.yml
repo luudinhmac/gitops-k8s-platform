@@ -37,7 +37,7 @@
   shell: docker save portfolio-frontend:latest | ctr -n k8s.io images import -
 
 - name: Build Backend Image on k8s node
-  command: docker build -t portfolio-backend:latest -f backend/Dockerfile .
+  shell: docker build --no-cache --build-arg CACHEBUST=$(date +%s) -t portfolio-backend:latest -f backend/Dockerfile .
   args:
     chdir: /data/Portfolio
 

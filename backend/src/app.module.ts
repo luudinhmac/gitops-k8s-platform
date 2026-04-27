@@ -81,6 +81,9 @@ import { caching } from 'cache-manager';
   ],
 })
 export class AppModule {
+  constructor() {
+    console.log('--- BACKEND STARTING: CACHE MOCK ENABLED (v2.0) ---');
+  }
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(StatsMiddleware)
