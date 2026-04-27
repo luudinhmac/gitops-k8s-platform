@@ -60,11 +60,13 @@ import { redisStore } from 'cache-manager-redis-yet';
       isGlobal: true,
       useFactory: async () => {
         if (process.env.REDIS_URL) {
-          return {
-            store: redisStore,
+          const store = await redisStore({
             url: process.env.REDIS_URL,
             ttl: 600000,
-          } as any;
+          });
+          return {
+            store: () => store,
+          };
         }
         return {
           ttl: 600000,
