@@ -65,11 +65,17 @@ import { caching } from 'cache-manager';
     },
     {
       provide: CACHE_MANAGER,
-      useFactory: async () => {
-        return await caching('memory', {
-          ttl: 600000,
-          max: 1000,
-        });
+      useValue: {
+        get: async () => null,
+        set: async () => {},
+        del: async () => {},
+        reset: async () => {},
+        wrap: async (key, fn) => fn(),
+        store: {
+          get: async () => null,
+          set: async () => {},
+          del: async () => {},
+        },
       },
     },
   ],
