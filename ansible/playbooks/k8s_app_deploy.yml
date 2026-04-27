@@ -10,8 +10,15 @@
         owner: macld
         group: macld
 
+    - name: Fetch latest code from GitHub
+      shell: git fetch origin && git checkout feature/clean-architecture-migration && git reset --hard origin/feature/clean-architecture-migration
+      delegate_to: localhost
+      become: no
+      args:
+        chdir: /data/Portfolio
+
     - name: Sync source code to k8s node
-      shell: rsync -avz -e "ssh -i /home/macld/.ssh/id_ed25519_ansible -o StrictHostKeyChecking=no" --exclude="node_modules" --exclude=".next" --exclude=".git" /data/Portfolio/ macld@192.168.157.110:/data/Portfolio/
+      shell: rsync -avz --delete --exclude="node_modules" --exclude=".next" --exclude=".git" -e "ssh -i /home/macld/.ssh/id_ed25519_ansible -o StrictHostKeyChecking=no" /data/Portfolio/ macld@192.168.157.110:/data/Portfolio/
       delegate_to: localhost
       become: no
   
