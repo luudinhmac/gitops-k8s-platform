@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Query,
+  Req,
 } from '@nestjs/common';
 import { CreateSeriesDto, UpdateSeriesDto } from '@portfolio/types';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
@@ -28,8 +29,27 @@ export class SeriesController {
   @Get()
   @ApiOperation({ summary: 'Get all series' })
   findAll(@Query('author_id') authorId?: string) {
-    const params = authorId ? { where: { author_id: +authorId } } : {};
+    const params = authorId 
+      ? { where: { Post: { some: { author_id: +authorId } } } } 
+      : {};
     return this.getSeriesListUseCase.execute(params);
+  }
+
+  @Get('mine')
+  @ApiOperation({ summary: 'Get current user series' })
+  @UseGuards(JwtAuthGuard)
+  findMine(@Req() req: any) {
+    return this.getSeriesListUseCase.execute({ 
+      where: { Post: { some: { author_id: req.user.id } } } 
+    });
+  }
+
+  @Get('author/:authorId')
+  @ApiOperation({ summary: 'Get series by author id' })
+  findByAuthor(@Param('authorId') authorId: string) {
+    return this.getSeriesListUseCase.execute({ 
+      where: { Post: { some: { author_id: +authorId } } } 
+    });
   }
 
   @Get(':idOrSlug')

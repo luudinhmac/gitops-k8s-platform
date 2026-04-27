@@ -21,9 +21,9 @@
 
 - name: Build Frontend Image on k8s node
   # Build the production image using Docker. This ensures the image is available locally.
-  command: docker build -t portfolio-frontend:latest .
+  command: docker build -t portfolio-frontend:latest -f frontend/Dockerfile .
   args:
-    chdir: /data/Portfolio/frontend
+    chdir: /data/Portfolio
 
 - name: Export Frontend Image and Import to Containerd
   # Kubernetes (containerd) cannot directly see images built in Docker's Moby storage.
@@ -31,9 +31,9 @@
   shell: docker save portfolio-frontend:latest | ctr -n k8s.io images import -
 
 - name: Build Backend Image on k8s node
-  command: docker build -t portfolio-backend:latest .
+  command: docker build -t portfolio-backend:latest -f backend/Dockerfile .
   args:
-    chdir: /data/Portfolio/backend
+    chdir: /data/Portfolio
 
 - name: Export Backend Image and Import to Containerd
   shell: docker save portfolio-backend:latest | ctr -n k8s.io images import -
