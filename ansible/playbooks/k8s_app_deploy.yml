@@ -18,8 +18,15 @@
         chdir: /data/Portfolio
 
     - name: Sync source code to k8s node
-      shell: rsync -avz --delete --exclude="node_modules" --exclude=".next" --exclude=".git" -e "ssh -i /home/macld/.ssh/id_ed25519_ansible -o StrictHostKeyChecking=no" /data/Portfolio/ macld@192.168.157.110:/data/Portfolio/
-      delegate_to: localhost
+      synchronize:
+        src: /data/Portfolio/
+        dest: /data/Portfolio/
+        delete: yes
+        recursive: yes
+        rsync_opts:
+          - "--exclude=node_modules"
+          - "--exclude=.next"
+          - "--exclude=.git"
       become: no
   
   roles:
