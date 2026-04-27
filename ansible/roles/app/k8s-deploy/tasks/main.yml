@@ -1,17 +1,23 @@
 ---
-- name: Create data directories for k8s
+- name: Create base data directories
   file:
     path: "{{ item }}"
     state: directory
     mode: '0775'
     owner: macld
     group: macld
-    recurse: yes
   loop:
     - /data/k8s
-    - /data/k8s/postgres-data
     - /data/k8s/uploads
     - /data/k8s/manifests
+
+- name: Create postgres data directory with open permissions
+  # Using 0777 ensures the postgres container (UID 70) can write regardless of host user
+  file:
+    path: /data/k8s/postgres-data
+    state: directory
+    mode: '0777'
+    recurse: yes
 
 - name: Sync k8s manifests
   become_user: macld
@@ -99,11 +105,11 @@
 
 - name: Wait for Postgres to be ready
   become_user: macld
-  shell: kubectl wait --for=condition=available --timeout=60s deployment/postgres -n portfolio
+  shell: kubectl wait --for=condition=available --timeout=120s deployment/postgres -n portfolio
 
 - name: Wait for Backend to be ready
   become_user: macld
-  shell: kubectl wait --for=condition=available --timeout=60s deployment/backend -n portfolio
+  shell: kubectl wait --for=condition=available --timeout=120s deployment/backend -n portfolio
 
 - name: Run Prisma DB Push
   become_user: macld
