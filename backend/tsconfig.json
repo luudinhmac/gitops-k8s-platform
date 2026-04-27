@@ -24,5 +24,6 @@
       "@prisma/client": ["generated/prisma-client"]
     }
   },
-  "exclude": ["node_modules", "dist", "test", "**/*spec.ts", "generated", "prisma", "check_macld.ts", "scratch", "scripts"]
+  "exclude": ["node_modules", "dist", "test", "**/*spec.ts", "generated", "check_macld.ts", "scratch", "scripts"],
+  "include": ["src", "prisma/seed.ts"]
 }
