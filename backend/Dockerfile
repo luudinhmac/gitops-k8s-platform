@@ -19,7 +19,8 @@ RUN pnpm --filter "@portfolio/*" build
 WORKDIR /app/backend
 RUN npx prisma generate
 RUN pnpm run build
-RUN npx tsc prisma/seed.ts --outDir dist --esModuleInterop --target es2023 --module commonjs --skipLibCheck --rootDir .
+RUN npx tsc prisma/seed.ts --outDir dist/prisma --esModuleInterop --target es2023 --module commonjs --skipLibCheck
+RUN find dist -name "seed.js"
 
 # Stage 2: Runner
 FROM node:22-alpine AS runner
