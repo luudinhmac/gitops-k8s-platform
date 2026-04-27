@@ -23,14 +23,14 @@ import { HealthController } from './health.controller';
 import { StorageModule } from './infrastructure/storage/storage.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { caching } from 'cache-manager';
+import { CacheConfigModule } from './cache-config.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    CacheConfigModule,
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'uploads'),
       serveRoot: '/uploads',
@@ -62,21 +62,6 @@ import { caching } from 'cache-manager';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
-    },
-    {
-      provide: CACHE_MANAGER,
-      useValue: {
-        get: async () => null,
-        set: async () => {},
-        del: async () => {},
-        reset: async () => {},
-        wrap: async (key, fn) => fn(),
-        store: {
-          get: async () => null,
-          set: async () => {},
-          del: async () => {},
-        },
-      },
     },
   ],
 })
