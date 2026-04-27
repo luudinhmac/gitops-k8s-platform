@@ -1,9 +1,9 @@
 node_modules
-.next
+**/node_modules
 dist
-*.log
+**/dist
+.next
+**/.next
 .git
 .env
-Dockerfile
-Dockerfile.*
-scratch
+*.log

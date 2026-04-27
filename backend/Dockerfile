@@ -20,6 +20,7 @@ RUN pnpm --filter "@portfolio/*" build
 
 # Build backend
 WORKDIR /app/backend
+RUN rm -rf dist
 RUN npx prisma generate
 RUN pnpm run build
 RUN npx tsc prisma/seed.ts --outDir seed-bin --esModuleInterop --target es2023 --module commonjs --skipLibCheck
