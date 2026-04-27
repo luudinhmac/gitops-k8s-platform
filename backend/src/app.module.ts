@@ -23,14 +23,12 @@ import { HealthController } from './health.controller';
 import { StorageModule } from './infrastructure/storage/storage.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-import { CacheConfigModule } from './cache-config.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-    CacheConfigModule,
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'uploads'),
       serveRoot: '/uploads',
@@ -67,7 +65,7 @@ import { CacheConfigModule } from './cache-config.module';
 })
 export class AppModule {
   constructor() {
-    console.log('--- BACKEND STARTING: CACHE MOCK ENABLED (v2.0) ---');
+    console.log('--- BACKEND STARTING: CACHE TOTALLY DISABLED (v3.0) ---');
   }
   configure(consumer: MiddlewareConsumer) {
     consumer

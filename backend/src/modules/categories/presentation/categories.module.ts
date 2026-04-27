@@ -11,10 +11,9 @@ import { CreateCategoryUseCase } from '../application/use-cases/create-category.
 import { UpdateCategoryUseCase } from '../application/use-cases/update-category.use-case';
 import { DeleteCategoryUseCase } from '../application/use-cases/delete-category.use-case';
 
-import { CacheConfigModule } from '../../../cache-config.module';
 
 @Module({
-  imports: [AdminAlertModule, CacheConfigModule],
+  imports: [AdminAlertModule],
   controllers: [CategoriesController],
   providers: [
     {
