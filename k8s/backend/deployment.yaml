@@ -16,7 +16,7 @@ spec:
       containers:
       - name: backend
         image: portfolio-backend:latest
-        imagePullPolicy: Always
+        imagePullPolicy: IfNotPresent
         resources:
           limits:
             cpu: "500m"

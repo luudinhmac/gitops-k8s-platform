@@ -52,6 +52,10 @@
   become_user: macld
   command: kubectl apply -f /data/k8s/manifests/app-config.yaml
 
+- name: Apply Storage Manifests (PV/PVC)
+  become_user: macld
+  command: kubectl apply -f /data/k8s/manifests/storage.yaml
+
 - name: Check if portfolio-secrets exists
   become_user: macld
   command: kubectl get secret portfolio-secrets -n portfolio
