@@ -2,16 +2,15 @@ import { Inject, Injectable } from '@nestjs/common';
 import { IPostRepository, I_POST_REPOSITORY, PostFilter, PaginationParams, PaginatedResult } from '../../domain/repositories/post.repository.interface';
 import { PostEntity } from '../../domain/entities/post.entity';
 import { User, UserRole } from '@portfolio/types';
-import { CACHE_MANAGER, Cache } from '@nestjs/cache-manager';
 
 @Injectable()
 export class GetPostsUseCase {
   constructor(
     @Inject(I_POST_REPOSITORY)
     private readonly postRepository: IPostRepository,
-    // @Inject(CACHE_MANAGER)
-    // private readonly cacheManager: Cache,
-  ) {}
+  ) {
+    console.log('--- GetPostsUseCase INITIALIZED (NO CACHE) ---');
+  }
 
   async execute(
     user?: User,
@@ -23,15 +22,6 @@ export class GetPostsUseCase {
     page: number = 1,
     limit: number = 10,
   ): Promise<PaginatedResult<PostEntity>> {
-    // Only cache public lists (no user, not admin)
-    const canCache = !user && !isAdmin && !query;
-    const cacheKey = `posts_list_p${page}_l${limit}_s${sort || 'latest'}_u${userId || 'all'}`;
-
-    // if (canCache) {
-    //   const cached = await this.cacheManager.get<PaginatedResult<PostEntity>>(cacheKey);
-    //   if (cached) return cached;
-    // }
-
     const filter: PostFilter = {
       search: query,
       is_published: status === 'published' ? true : (status === 'draft' ? false : undefined),
@@ -51,12 +41,7 @@ export class GetPostsUseCase {
     const pagination: PaginationParams = { page, limit };
     const result = await this.postRepository.findAll(filter, pagination);
 
-    // Format posts (excerpt, readTime) - this could be in a domain service or entity
     result.items = result.items.map(post => this.formatPost(post));
-
-    // if (canCache) {
-    //   await this.cacheManager.set(cacheKey, result, 300000); // 5 minutes
-    // }
 
     return result;
   }
