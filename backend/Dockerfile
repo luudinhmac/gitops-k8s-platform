@@ -12,6 +12,9 @@ COPY backend ./backend
 # Install all dependencies
 RUN pnpm install --no-frozen-lockfile
 
+# Build workspace packages
+RUN pnpm build --filter "@portfolio/*"
+
 # Build backend
 WORKDIR /app/backend
 RUN npx prisma generate

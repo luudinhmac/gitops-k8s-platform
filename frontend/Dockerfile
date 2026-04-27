@@ -10,6 +10,9 @@ COPY . .
 # Install all dependencies (including devDeps for build)
 RUN pnpm install --no-frozen-lockfile
 
+# Build workspace packages (like @portfolio/types)
+RUN pnpm build --filter "@portfolio/*"
+
 WORKDIR /app/frontend
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm run build
