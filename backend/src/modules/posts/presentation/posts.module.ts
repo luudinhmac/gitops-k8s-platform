@@ -19,8 +19,11 @@ import { TogglePublishPostUseCase } from '../application/use-cases/toggle-publis
 import { ToggleLikePostUseCase } from '../application/use-cases/toggle-like-post.use-case';
 import { GetLikeStatusUseCase } from '../application/use-cases/get-like-status.use-case';
 
+import { CacheConfigModule } from '../../../cache-config.module';
+
 @Module({
   imports: [
+    CacheConfigModule,
     PrismaModule,
     UploadModule,
     NotificationsModule,

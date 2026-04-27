@@ -7,7 +7,10 @@ import { I_SERIES_REPOSITORY } from '../domain/repositories/series.repository.in
 import { GetSeriesListUseCase } from '../application/use-cases/get-series-list.use-case';
 import { GetSeriesUseCase } from '../application/use-cases/get-series.use-case';
 
+import { CacheConfigModule } from '../../../cache-config.module';
+
 @Module({
+  imports: [CacheConfigModule],
   controllers: [SeriesController],
   providers: [
     {
