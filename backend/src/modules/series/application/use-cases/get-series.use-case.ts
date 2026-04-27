@@ -8,14 +8,14 @@ export class GetSeriesUseCase {
   constructor(
     @Inject(I_SERIES_REPOSITORY)
     private readonly seriesRepository: ISeriesRepository,
-    @Inject(CACHE_MANAGER)
-    private readonly cacheManager: Cache,
+    // @Inject(CACHE_MANAGER)
+    // private readonly cacheManager: Cache,
   ) {}
 
   async execute(idOrSlug: string | number): Promise<Series> {
     const cacheKey = `series_detail_${idOrSlug}`;
-    const cached = await this.cacheManager.get<Series>(cacheKey);
-    if (cached) return cached;
+    // const cached = await this.cacheManager.get<Series>(cacheKey);
+    // if (cached) return cached;
 
     const isId = !isNaN(Number(idOrSlug));
     const series = isId 
@@ -24,7 +24,7 @@ export class GetSeriesUseCase {
 
     if (!series) throw new NotFoundException('Series not found');
     
-    await this.cacheManager.set(cacheKey, series, 600000); // 10 minutes
+    // await this.cacheManager.set(cacheKey, series, 600000); // 10 minutes
     return series;
   }
 }
