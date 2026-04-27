@@ -8,20 +8,20 @@ export class GetCategoriesUseCase {
   constructor(
     @Inject(I_CATEGORIES_REPOSITORY)
     private readonly categoryRepository: ICategoriesRepository,
-    @Inject(CACHE_MANAGER)
-    private readonly cacheManager: Cache,
+    // @Inject(CACHE_MANAGER)
+    // private readonly cacheManager: Cache,
   ) {}
 
   async execute(): Promise<Category[]> {
     const cacheKey = 'categories_list';
-    const cachedData = await this.cacheManager.get<Category[]>(cacheKey);
-    
-    if (cachedData) {
-      return cachedData;
-    }
+    // const cachedData = await this.cacheManager.get<Category[]>(cacheKey);
+    // 
+    // if (cachedData) {
+    //   return cachedData;
+    // }
 
     const categories = await this.categoryRepository.findAll();
-    await this.cacheManager.set(cacheKey, categories, 600000); // 10 minutes
+    // await this.cacheManager.set(cacheKey, categories, 600000); // 10 minutes
     
     return categories;
   }
