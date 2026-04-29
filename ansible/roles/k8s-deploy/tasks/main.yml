@@ -22,7 +22,7 @@
 - name: Sync k8s manifests
   become_user: macld
   synchronize:
-    src: "{{ playbook_dir }}/../../k8s/"
+    src: "{{ playbook_dir }}/../k8s/"
     dest: /data/k8s/manifests/
 
 - name: Apply K8s Namespace
@@ -102,4 +102,4 @@
 
 - name: Run Prisma DB Seed
   become_user: macld
-  shell: kubectl exec -n portfolio deployment/backend -- node /app/backend/prisma/seed.js
+  shell: kubectl exec -n portfolio deployment/backend -- node dist/src/database/seed.js
