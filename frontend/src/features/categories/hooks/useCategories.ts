@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Category } from '@portfolio/types';
+import { Category } from '@/types';
 import { categoryApi } from '../api/category-api';
 import { toast } from 'react-hot-toast';
 

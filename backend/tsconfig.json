@@ -3,7 +3,7 @@
     "module": "CommonJS",
     "moduleResolution": "node",
     "esModuleInterop": true,
-    "isolatedModules": true,
+    "isolatedModules": false,
     "declaration": true,
     "removeComments": true,
     "emitDecoratorMetadata": true,
@@ -21,8 +21,9 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@prisma/client": ["generated/prisma-client"]
+      "@portfolio/contracts": ["src/_shared/contracts/index"],
+      "@portfolio/types": ["src/_shared/types/index"]
     }
   },
-  "exclude": ["node_modules", "dist", "test", "**/*spec.ts", "generated", "prisma", "check_macld.ts", "scratch", "scripts"]
+  "exclude": ["node_modules", "dist", "test", "**/*spec.ts", "prisma", "check_macld.ts", "scratch", "scripts"]
 }

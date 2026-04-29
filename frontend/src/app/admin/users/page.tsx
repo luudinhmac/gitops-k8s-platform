@@ -22,7 +22,7 @@ import ConfirmationDialog from '@/shared/components/ui/ConfirmationDialog';
 import PromptDialog from '@/shared/components/ui/PromptDialog';
 
 import { userService } from '@/features/users/services/userService';
-import { User as AdminUser, UserRole } from '@portfolio/types';
+import { User as AdminUser, UserRole } from '@/types';
 
 const ROLE_HIERARCHY: Record<string, number> = {
   'superadmin': 100,
@@ -60,7 +60,14 @@ export default function UsersPage() {
     fields: any;
   }>({ isOpen: false, title: '', message: '', userId: null, fields: null });
 
-  const [createForm, setCreateForm] = useState({
+  const [createForm, setCreateForm] = useState<{
+    username: string;
+    fullname: string;
+    email: string;
+    password: string;
+    role: UserRole;
+    profession: string;
+  }>({
     username: '', fullname: '', email: '', password: '', role: 'user', profession: ''
   });
   const [createLoading, setCreateLoading] = useState(false);
@@ -91,7 +98,7 @@ export default function UsersPage() {
     setCreateLoading(true);
     setCreateError('');
     try {
-      await userService.create(createForm);
+      await userService.create(createForm as any);
       setShowCreateForm(false);
       setCreateForm({ username: '', fullname: '', email: '', password: '', role: 'user', profession: '' });
       fetchUsers();
@@ -127,7 +134,7 @@ export default function UsersPage() {
       
       setUsers(users.map(u => u.id === userId ? { ...u, ...fields } as AdminUser : u));
       if (settingsUser?.id === userId) {
-        setSettingsUser(prev => prev ? { ...prev, ...fields } : null);
+        setSettingsUser(prev => prev ? ({ ...prev, ...fields } as any) : null);
       }
       setStatusMsg({ type: 'success', text: 'Đã cập nhật quyền hạn thành công' });
       setPromptData({ ...promptData, isOpen: false });
@@ -397,25 +404,25 @@ export default function UsersPage() {
             <form onSubmit={handleCreate} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Username</label>
-                  <input required placeholder="Username" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
+                  <label htmlFor="user-username" className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Username</label>
+                  <input id="user-username" name="username" required autoComplete="username" placeholder="Username" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
                     value={createForm.username} onChange={e => setCreateForm({ ...createForm, username: e.target.value })} />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Họ tên</label>
-                  <input placeholder="Họ và tên" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
+                  <label htmlFor="user-fullname" className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Họ tên</label>
+                  <input id="user-fullname" name="fullname" autoComplete="name" placeholder="Họ và tên" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
                     value={createForm.fullname} onChange={e => setCreateForm({ ...createForm, fullname: e.target.value })} />
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Email</label>
-                <input required type="email" placeholder="mac@example.com" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
+                <label htmlFor="user-email" className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Email</label>
+                <input id="user-email" name="email" required type="email" autoComplete="email" placeholder="mac@example.com" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
                   value={createForm.email} onChange={e => setCreateForm({ ...createForm, email: e.target.value })} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Mật khẩu</label>
-                  <input required type="password" placeholder="••••••••" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
+                  <label htmlFor="user-password" className="block text-xs font-bold text-slate-400 uppercase mb-2 ml-1">Mật khẩu</label>
+                  <input id="user-password" name="password" required type="password" autoComplete="new-password" placeholder="••••••••" className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
                     value={createForm.password} onChange={e => setCreateForm({ ...createForm, password: e.target.value })} />
                 </div>
               </div>
@@ -437,7 +444,7 @@ export default function UsersPage() {
 
             <form onSubmit={handleResetPassword} className="space-y-4">
               <div className="relative">
-                <input required type={showNewPass ? 'text' : 'password'} placeholder="Mật khẩu mới..."
+                <input id="reset-new-password" name="newPassword" required type={showNewPass ? 'text' : 'password'} autoComplete="new-password" placeholder="Mật khẩu mới..."
                   className="w-full px-4 py-3 pr-12 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary transition-all"
                   value={newPassword} onChange={e => setNewPassword(e.target.value)} />
                 <button type="button" onClick={() => setShowNewPass(!showNewPass)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors">

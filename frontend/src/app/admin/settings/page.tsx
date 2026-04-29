@@ -314,34 +314,34 @@ export default function SettingsAdminPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2 col-span-1 md:col-span-2">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tên Website (Site Title)</label>
-                    <input type="text" value={generalForm.site_title || ''} onChange={e => setGeneralForm({ ...generalForm, site_title: e.target.value })}
+                    <label htmlFor="setting-site-title" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tên Website (Site Title)</label>
+                    <input id="setting-site-title" name="site_title" type="text" value={generalForm.site_title || ''} onChange={e => setGeneralForm({ ...generalForm, site_title: e.target.value })}
                       className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all" />
                   </div>
                   <div className="space-y-2 col-span-1 md:col-span-2">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Mô tả ngắn (Tagline/Meta)</label>
-                    <textarea value={generalForm.site_tagline || ''} onChange={e => setGeneralForm({ ...generalForm, site_tagline: e.target.value })}
+                    <label htmlFor="setting-site-tagline" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Mô tả ngắn (Tagline/Meta)</label>
+                    <textarea id="setting-site-tagline" name="site_tagline" value={generalForm.site_tagline || ''} onChange={e => setGeneralForm({ ...generalForm, site_tagline: e.target.value })}
                       className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all min-h-[80px]" />
                   </div>
                   <div className="space-y-2">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Ngôn ngữ mặc định</label>
-                    <select value={generalForm.default_lang || 'vi'} onChange={e => setGeneralForm({ ...generalForm, default_lang: e.target.value })}
+                    <label htmlFor="setting-default-lang" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Ngôn ngữ mặc định</label>
+                    <select id="setting-default-lang" name="default_lang" value={generalForm.default_lang || 'vi'} onChange={e => setGeneralForm({ ...generalForm, default_lang: e.target.value })}
                       className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all">
                       <option value="vi">Tiếng Việt</option>
                       <option value="en">English</option>
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Múi giờ (Timezone)</label>
-                    <select value={generalForm.timezone || 'Asia/Ho_Chi_Minh'} onChange={e => setGeneralForm({ ...generalForm, timezone: e.target.value })}
+                    <label htmlFor="setting-timezone" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Múi giờ (Timezone)</label>
+                    <select id="setting-timezone" name="timezone" value={generalForm.timezone || 'Asia/Ho_Chi_Minh'} onChange={e => setGeneralForm({ ...generalForm, timezone: e.target.value })}
                       className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all">
                       <option value="Asia/Ho_Chi_Minh">Asia/Ho_Chi_Minh (GMT+7)</option>
                       <option value="UTC">UTC</option>
                     </select>
                   </div>
                   <div className="space-y-2 col-span-1 border-t border-slate-100 dark:border-slate-800 pt-6">
-                    <label className="flex items-center space-x-3 cursor-pointer">
-                      <input type="checkbox" checked={generalForm.comments_enabled === 'true'} onChange={e => setGeneralForm({ ...generalForm, comments_enabled: e.target.checked ? 'true' : 'false' })} className="rounded text-primary focus:ring-primary h-5 w-5 border-slate-300" />
+                    <label htmlFor="setting-comments-enabled" className="flex items-center space-x-3 cursor-pointer">
+                      <input id="setting-comments-enabled" name="comments_enabled" type="checkbox" checked={generalForm.comments_enabled === 'true'} onChange={e => setGeneralForm({ ...generalForm, comments_enabled: e.target.checked ? 'true' : 'false' })} className="rounded text-primary focus:ring-primary h-5 w-5 border-slate-300" />
                       <div>
                         <p className="text-sm font-bold text-slate-900 dark:text-white">Bật bình luận toàn trang</p>
                         <p className="text-[10px] text-slate-400">Cho phép người dùng tương tác</p>
@@ -349,8 +349,8 @@ export default function SettingsAdminPage() {
                     </label>
                   </div>
                   <div className="space-y-2 col-span-1 md:col-span-2 mt-4">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Bản quyền Footer (Copyright)</label>
-                    <input type="text" value={generalForm.footer_copyright || ''} onChange={e => setGeneralForm({ ...generalForm, footer_copyright: e.target.value })} placeholder="© 2026 Lưu Đình Mác..."
+                    <label htmlFor="setting-footer-copyright" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Bản quyền Footer (Copyright)</label>
+                    <input id="setting-footer-copyright" name="footer_copyright" type="text" value={generalForm.footer_copyright || ''} onChange={e => setGeneralForm({ ...generalForm, footer_copyright: e.target.value })} placeholder="© 2026 Lưu Đình Mác..."
                       className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all" />
                   </div>
                 </div>
@@ -460,26 +460,26 @@ export default function SettingsAdminPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Google Analytics ID (GA4)</label>
-                    <input type="text" value={marketingForm.ga_id || ''} onChange={e => setMarketingForm({ ...marketingForm, ga_id: e.target.value })} placeholder="G-XXXXXXXXXX"
+                    <label htmlFor="setting-ga-id" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Google Analytics ID (GA4)</label>
+                    <input id="setting-ga-id" name="ga_id" type="text" value={marketingForm.ga_id || ''} onChange={e => setMarketingForm({ ...marketingForm, ga_id: e.target.value })} placeholder="G-XXXXXXXXXX"
                       className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all font-mono" />
                   </div>
                   <div className="space-y-2">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Facebook Pixel ID</label>
-                    <input type="text" value={marketingForm.fb_pixel_id || ''} onChange={e => setMarketingForm({ ...marketingForm, fb_pixel_id: e.target.value })} placeholder="10293848576..."
+                    <label htmlFor="setting-fb-pixel-id" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Facebook Pixel ID</label>
+                    <input id="setting-fb-pixel-id" name="fb_pixel_id" type="text" value={marketingForm.fb_pixel_id || ''} onChange={e => setMarketingForm({ ...marketingForm, fb_pixel_id: e.target.value })} placeholder="10293848576..."
                       className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all font-mono" />
                   </div>
 
                   <div className="space-y-2 col-span-1 md:col-span-2">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Head Scripts (Chèn trước {'</head>'})</label>
-                    <textarea value={marketingForm.header_scripts || ''} onChange={e => setMarketingForm({ ...marketingForm, header_scripts: e.target.value })} placeholder="<!-- Nhúng các script custom vào đây -->"
+                    <label htmlFor="setting-header-scripts" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Head Scripts (Chèn trước {'</head>'})</label>
+                    <textarea id="setting-header-scripts" name="header_scripts" value={marketingForm.header_scripts || ''} onChange={e => setMarketingForm({ ...marketingForm, header_scripts: e.target.value })} placeholder="<!-- Nhúng các script custom vào đây -->"
                       className="w-full px-4 py-3 bg-[#0d1117] text-[#c9d1d9] border border-slate-200 dark:border-slate-800 rounded-xl text-xs outline-none transition-all min-h-[120px] font-mono leading-relaxed" />
                     <p className="text-[10px] text-slate-400">Không chèn tag {'<script>'} nếu tích hợp dạng ID. Chỉ dùng khi nhúng mã tùy chỉnh độc lập.</p>
                   </div>
 
                   <div className="space-y-2 col-span-1 md:col-span-2">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Footer Scripts (Chèn trước {'</body>'})</label>
-                    <textarea value={marketingForm.footer_scripts || ''} onChange={e => setMarketingForm({ ...marketingForm, footer_scripts: e.target.value })} placeholder="<!-- Chatbot, Popups, etc. -->"
+                    <label htmlFor="setting-footer-scripts" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Footer Scripts (Chèn trước {'</body>'})</label>
+                    <textarea id="setting-footer-scripts" name="footer_scripts" value={marketingForm.footer_scripts || ''} onChange={e => setMarketingForm({ ...marketingForm, footer_scripts: e.target.value })} placeholder="<!-- Chatbot, Popups, etc. -->"
                       className="w-full px-4 py-3 bg-[#0d1117] text-[#c9d1d9] border border-slate-200 dark:border-slate-800 rounded-xl text-xs outline-none transition-all min-h-[120px] font-mono leading-relaxed" />
                   </div>
                 </div>
@@ -521,8 +521,8 @@ export default function SettingsAdminPage() {
                           <p className="text-xs text-slate-500">Chuyển hướng tất cả khách viếng thăm về trang bảo trì.</p>
                         </div>
                       </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" className="sr-only peer" checked={maintenanceForm.maintenance_global === 'true'} onChange={e => setMaintenanceForm({ ...maintenanceForm, maintenance_global: e.target.checked ? 'true' : 'false' })} />
+                      <label htmlFor="setting-maintenance-global" className="relative inline-flex items-center cursor-pointer">
+                        <input id="setting-maintenance-global" name="maintenance_global" type="checkbox" className="sr-only peer" checked={maintenanceForm.maintenance_global === 'true'} onChange={e => setMaintenanceForm({ ...maintenanceForm, maintenance_global: e.target.checked ? 'true' : 'false' })} />
                         <div className="w-14 h-7 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-red-500"></div>
                       </label>
                     </div>
@@ -631,9 +631,11 @@ export default function SettingsAdminPage() {
                       alertsForm.telegram_enabled === 'false' && "opacity-50 pointer-events-none"
                     )}>
                       <div className="space-y-2 relative">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Bot Token</label>
+                        <label htmlFor="setting-telegram-bot-token" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Bot Token</label>
                         <div className="relative">
                           <input
+                            id="setting-telegram-bot-token"
+                            name="telegram_bot_token"
                             type={showSecrets['telegram_bot_token'] ? 'text' : 'password'}
                             value={alertsForm.telegram_bot_token || ''}
                             disabled={!isSuperAdmin}

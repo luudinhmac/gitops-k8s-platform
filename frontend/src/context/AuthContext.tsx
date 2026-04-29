@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { User } from '@portfolio/types';
+import { User } from '@/types';
 
 interface AuthContextType {
   user: User | null;
@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Check if global maintenance is ON to decide where to redirect
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3001/api';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3002/api';
         const finalUrl = apiUrl.endsWith('/v1') ? apiUrl : `${apiUrl}/v1`;
         const maintenanceRes = await fetch(`${finalUrl}/settings/public`);
         const settings = await maintenanceRes.json();

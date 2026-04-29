@@ -105,7 +105,7 @@ export default function RegisterPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-3.5">
               {/* Username */}
               <div className="space-y-1.5">
-                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                <label htmlFor="username" className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
                   Tên tài khoản
                 </label>
                 <div className="relative group">
@@ -113,9 +113,12 @@ export default function RegisterPage() {
                     <User size={14} />
                   </div>
                   <input
+                    id="username"
+                    name="username"
                     type="text"
                     required
                     autoFocus
+                    autoComplete="username"
                     className="w-full pl-9 pr-3.5 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
                     placeholder="Tên nguời dùng"
                     value={formData.username}
@@ -127,7 +130,7 @@ export default function RegisterPage() {
 
               {/* Fullname */}
               <div className="space-y-1.5">
-                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                <label htmlFor="fullname" className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
                   Họ và tên
                 </label>
                 <div className="relative group">
@@ -135,8 +138,11 @@ export default function RegisterPage() {
                     <User size={14} />
                   </div>
                   <input
+                    id="fullname"
+                    name="fullname"
                     type="text"
                     required
+                    autoComplete="name"
                     className="w-full pl-9 pr-3.5 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
                     placeholder="họ và tên"
                     value={formData.fullname}
@@ -148,7 +154,7 @@ export default function RegisterPage() {
 
               {/* Email - Full Width in Grid */}
               <div className="space-y-1.5 md:col-span-2">
-                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                <label htmlFor="email" className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
                   Email
                 </label>
                 <div className="relative group">
@@ -156,8 +162,11 @@ export default function RegisterPage() {
                     <Mail size={14} />
                   </div>
                   <input
+                    id="email"
+                    name="email"
                     type="email"
                     required
+                    autoComplete="email"
                     className="w-full pl-9 pr-3.5 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
                     placeholder="email@example.com"
                     value={formData.email}
@@ -169,7 +178,7 @@ export default function RegisterPage() {
 
               {/* Phone */}
               <div className="space-y-1.5">
-                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                <label htmlFor="phone" className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
                   Số điện thoại
                 </label>
                 <div className="relative group">
@@ -177,7 +186,10 @@ export default function RegisterPage() {
                     <Phone size={14} />
                   </div>
                   <input
+                    id="phone"
+                    name="phone"
                     type="tel"
+                    autoComplete="tel"
                     className="w-full pl-9 pr-3.5 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
                     placeholder="0987..."
                     value={formData.phone}
@@ -189,7 +201,7 @@ export default function RegisterPage() {
 
               {/* Birthday */}
               <div className="space-y-1.5">
-                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                <label htmlFor="birthday" className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
                   Ngày sinh
                 </label>
                 <div className="relative group">
@@ -197,7 +209,10 @@ export default function RegisterPage() {
                     <Calendar size={14} />
                   </div>
                   <input
+                    id="birthday"
+                    name="birthday"
                     type="date"
+                    autoComplete="bday"
                     className="w-full pl-9 pr-3.5 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
                     value={formData.birthday}
                     onChange={(e) => setFormData({ ...formData, birthday: e.target.value })}
@@ -208,7 +223,7 @@ export default function RegisterPage() {
 
               {/* Profession - Full Width */}
               <div className="space-y-1.5 md:col-span-2">
-                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                <label htmlFor="profession" className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
                   Nghề nghiệp
                 </label>
                 <div className="relative group">
@@ -216,7 +231,10 @@ export default function RegisterPage() {
                     <Briefcase size={14} />
                   </div>
                   <input
+                    id="profession"
+                    name="profession"
                     type="text"
+                    autoComplete="on"
                     className="w-full pl-9 pr-3.5 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
                     placeholder="System Engineer, DevOps, Developer..."
                     value={formData.profession}
@@ -228,7 +246,7 @@ export default function RegisterPage() {
 
               {/* Password */}
               <div className="space-y-1.5">
-                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                <label htmlFor="password" className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
                   Mật khẩu
                 </label>
                 <div className="relative group">
@@ -236,8 +254,11 @@ export default function RegisterPage() {
                     <Lock size={14} />
                   </div>
                   <input
+                    id="password"
+                    name="password"
                     type={showPassword ? 'text' : 'password'}
                     required
+                    autoComplete="new-password"
                     className="w-full pl-9 pr-10 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
                     placeholder="••••••••"
                     value={formData.password}
@@ -245,6 +266,7 @@ export default function RegisterPage() {
                     onKeyDown={handleKeyDown}
                   />
                   <button
+                    id="password-toggle"
                     type="button"
                     tabIndex={-1}
                     className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-primary transition-colors"
@@ -257,7 +279,7 @@ export default function RegisterPage() {
 
               {/* Confirm Password */}
               <div className="space-y-1.5">
-                <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
+                <label htmlFor="confirmPassword" className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
                   Xác nhận mật khẩu
                 </label>
                 <div className="relative group">
@@ -265,8 +287,11 @@ export default function RegisterPage() {
                     <Lock size={14} />
                   </div>
                   <input
+                    id="confirmPassword"
+                    name="confirmPassword"
                     type={showPassword ? 'text' : 'password'}
                     required
+                    autoComplete="new-password"
                     className="w-full pl-9 pr-3.5 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
                     placeholder="••••••••"
                     value={formData.confirmPassword}

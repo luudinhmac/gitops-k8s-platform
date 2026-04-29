@@ -83,10 +83,11 @@ export async function proxy(request: NextRequest) {
   }
 
   // 4. Admin Stealth Protection
-  if (pathname.startsWith('/admin')) {
-    const token = request.cookies.get('token');
+  if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
+    const allCookies = request.cookies.getAll().map(c => c.name);
+    const token = request.cookies.get('token') || request.cookies.get('access_token');
     if (!token) {
-      console.log(`[Security] Unauthorized access to ${pathname}, performing stealth rewrite to 404.`);
+      console.log(`[Security] Unauthorized access to ${pathname}. Cookies found: ${allCookies.join(', ') || 'none'}. Rewriting to 404.`);
       // We rewrite to a non-existent path to trigger a real 404 response
       // This ensures the HTTP status code is 404, not 200 or 302.
       return NextResponse.rewrite(new URL('/not-found-stealth', request.url));

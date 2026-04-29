@@ -51,6 +51,12 @@ export class PrismaNotificationRepository implements INotificationsRepository {
     await this.prisma.notification.delete({ where: { id } });
   }
 
+  async deleteAll(userId: number): Promise<void> {
+    await this.prisma.notification.deleteMany({
+      where: { recipient_id: userId }
+    });
+  }
+
   async countUnread(userId: number): Promise<number> {
     return this.prisma.notification.count({
       where: { recipient_id: userId, is_read: false },

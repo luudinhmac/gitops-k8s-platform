@@ -64,10 +64,13 @@ export default function Navbar() {
 
           {/* Search Bar in Navbar */}
           <div suppressHydrationWarning={true} className="hidden lg:flex flex-grow max-w-md mx-8 relative group">
+            <label htmlFor="nav-search" className="sr-only">Tìm kiếm bài viết</label>
             <div suppressHydrationWarning={true} className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
               <Search size={16} />
             </div>
             <input
+              id="nav-search"
+              name="q"
               type="text"
               placeholder="Tìm kiếm bài viết..."
               className="w-full pl-10 pr-4 py-2 bg-slate-100/50 dark:bg-slate-800/50 border border-transparent focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all rounded-full text-sm"

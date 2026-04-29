@@ -1,5 +1,5 @@
 import api from '@/lib/axios';
-import { Notification } from '@portfolio/types';
+import { Notification } from '@/types';
 
 export const notificationService = {
   async getAll(unreadOnly: boolean = false) {

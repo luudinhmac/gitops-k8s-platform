@@ -7,7 +7,7 @@
     "backend": "pnpm --prefix backend start:dev",
     "frontend": "pnpm --prefix frontend dev",
     "install:all": "pnpm --prefix backend install && pnpm --prefix frontend install",
-    "build": "pnpm -r build"
+    "build": "pnpm --prefix backend build && pnpm --prefix frontend build"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"

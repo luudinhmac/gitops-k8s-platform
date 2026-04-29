@@ -143,7 +143,7 @@ export class SettingsService {
       NODE_ENV: process.env.NODE_ENV || 'development',
       DATABASE_URL: process.env.DATABASE_URL ? '********' : 'Not setup',
       JWT_SECRET: process.env.JWT_SECRET ? '********' : 'Not setup',
-      PORT: process.env.PORT || '3001',
+      PORT: process.env.PORT || '3002',
       NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
     };
 

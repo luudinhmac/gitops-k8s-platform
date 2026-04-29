@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Portfolio Frontend (Decoupled)
 
-## Getting Started
+Ứng dụng Frontend cho dự án Portfolio, được xây dựng bằng Next.js (App Router) và Tailwind CSS.
 
-First, run the development server:
+## 🚀 Tính năng chính
+- **Standalone Repo:** Không còn phụ thuộc vào monorepo, build độc lập.
+- **Contract-First Consumption:** Tự động sinh Type từ Swagger của Backend.
+- **Modern UI:** Thiết kế Stealth UI tối giản, tối ưu cho trải nghiệm người dùng.
+- **Type Safety:** 100% TypeScript với Type được đồng bộ tự động.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🛠 Cấu trúc thư mục
+- `src/app/`: Next.js App Router (Pages & Layouts).
+- `src/components/`: UI Components dùng chung.
+- `src/features/`: Logic theo từng tính năng (Auth, Posts, Users...).
+- `src/types/`: Chứa `api.generated.ts` (sinh từ Swagger) và type bridge.
+- `k8s/`: Các manifest triển khai trên Kubernetes.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📦 Cài đặt & Chạy Local
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **Cài đặt dependencies:**
+   ```bash
+   pnpm install
+   ```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+2. **Đồng bộ API Type (Cần Backend đang chạy):**
+   ```bash
+   pnpm run api:sync
+   ```
 
-## Learn More
+3. **Chạy ở chế độ Development:**
+   ```bash
+   pnpm run dev
+   ```
 
-To learn more about Next.js, take a look at the following resources:
+## 📜 Quy trình Cập nhật Type
+Khi Backend có thay đổi về API Schema:
+1. Đảm bảo Backend đang chạy ở local hoặc có file `swagger-spec.json` mới nhất.
+2. Chạy lệnh:
+   ```bash
+   pnpm run api:sync
+   ```
+3. Kiểm tra các lỗi TypeScript (nếu có) và cập nhật code tương ứng.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🐳 Docker & CI/CD
+- **Dockerfile:** Cấu hình multi-stage build cho Next.js Standalone mode.
+- **CI/CD:** `.gitlab-ci.yml` tự động đồng bộ type và build image.

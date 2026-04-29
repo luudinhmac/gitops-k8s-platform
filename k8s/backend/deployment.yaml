@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
       - name: backend
-        image: portfolio-backend:latest
-        imagePullPolicy: IfNotPresent
+        image: luudinhmac/portfolio-backend:latest
+        imagePullPolicy: Always
         resources:
           limits:
             cpu: "500m"
@@ -57,11 +57,6 @@ spec:
             configMapKeyRef:
               name: app-config
               key: PORT
-        - name: REDIS_URL
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: REDIS_URL
         ports:
         - containerPort: 3001
         volumeMounts:

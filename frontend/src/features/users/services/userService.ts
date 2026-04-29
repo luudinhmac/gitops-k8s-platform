@@ -1,5 +1,5 @@
 import { userApi } from '../api/user-api';
-import { User, UpdateUserDto } from '@portfolio/types';
+import { User, UpdateUserDto } from '@/types';
 
 /**
  * @deprecated Use userApi or useUsers hook instead.

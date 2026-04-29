@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import UserAvatar from '@/features/users/components/UserAvatar';
 import FormattedDate from '@/shared/components/common/FormattedDate';
 import Badge from '@/shared/components/common/Badge';
-import { Post } from '@portfolio/types';
+import { Post } from '@/types';
 
 interface PostCardProps {
   post: Post;

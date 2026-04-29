@@ -6,6 +6,9 @@ import { I_SERIES_REPOSITORY } from '../domain/repositories/series.repository.in
 // Use Cases
 import { GetSeriesListUseCaseV2 as GetSeriesListUseCase } from '../application/use-cases/get-series-list.use-case';
 import { GetSeriesUseCase } from '../application/use-cases/get-series.use-case';
+import { CreateSeriesUseCase } from '../application/use-cases/create-series.use-case';
+import { UpdateSeriesUseCase } from '../application/use-cases/update-series.use-case';
+import { DeleteSeriesUseCase } from '../application/use-cases/delete-series.use-case';
 
 
 @Module({
@@ -18,6 +21,9 @@ import { GetSeriesUseCase } from '../application/use-cases/get-series.use-case';
     },
     GetSeriesListUseCase,
     GetSeriesUseCase,
+    CreateSeriesUseCase,
+    UpdateSeriesUseCase,
+    DeleteSeriesUseCase,
   ],
   exports: [I_SERIES_REPOSITORY],
 })

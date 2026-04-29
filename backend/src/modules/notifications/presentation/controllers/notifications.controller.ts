@@ -11,7 +11,8 @@ import {
   Query,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import { Notification as NotificationEntity } from '@portfolio/contracts';
 
 // Use Cases
 import { GetNotificationsUseCase } from '../../application/use-cases/get-notifications.use-case';
@@ -19,6 +20,7 @@ import { GetUnreadCountUseCase } from '../../application/use-cases/get-unread-co
 import { MarkAsReadUseCase } from '../../application/use-cases/mark-as-read.use-case';
 import { MarkAllAsReadUseCase } from '../../application/use-cases/mark-all-as-read.use-case';
 import { DeleteNotificationUseCase } from '../../application/use-cases/delete-notification.use-case';
+import { DeleteAllNotificationsUseCase } from '../../application/use-cases/delete-all-notifications.use-case';
 
 @ApiTags('Notifications')
 @Controller('notifications')
@@ -31,18 +33,21 @@ export class NotificationsController {
     private readonly markAsReadUseCase: MarkAsReadUseCase,
     private readonly markAllAsReadUseCase: MarkAllAsReadUseCase,
     private readonly deleteNotificationUseCase: DeleteNotificationUseCase,
+    private readonly deleteAllNotificationsUseCase: DeleteAllNotificationsUseCase,
   ) {}
 
   @Get()
   @ApiOperation({ summary: 'Get current user notifications' })
-  findAll(@Req() req: any, @Query('unread_only') unreadOnly?: string) {
+  @ApiResponse({ status: 200, type: [NotificationEntity] })
+  findAll(@Req() req: any, @Query('unreadOnly') unreadOnly?: string) {
     return this.getNotificationsUseCase.execute(req.user.id, unreadOnly === 'true');
   }
 
   @Get('unread-count')
   @ApiOperation({ summary: 'Get unread notifications count' })
-  getUnreadCount(@Req() req: any) {
-    return this.getUnreadCountUseCase.execute(req.user.id);
+  async getUnreadCount(@Req() req: any) {
+    const count = await this.getUnreadCountUseCase.execute(req.user.id);
+    return { count };
   }
 
   @Patch(':id/read')
@@ -51,10 +56,16 @@ export class NotificationsController {
     return this.markAsReadUseCase.execute(+id, req.user.id);
   }
 
-  @Post('mark-all-as-read')
+  @Patch('read-all')
   @ApiOperation({ summary: 'Mark all notifications as read' })
   markAllAsRead(@Req() req: any) {
     return this.markAllAsReadUseCase.execute(req.user.id);
+  }
+
+  @Delete('all')
+  @ApiOperation({ summary: 'Delete all notifications' })
+  removeAll(@Req() req: any) {
+    return this.deleteAllNotificationsUseCase.execute(req.user.id);
   }
 
   @Delete(':id')

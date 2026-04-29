@@ -13,8 +13,8 @@ import { authService } from '@/features/auth/services/authService';
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectPath = searchParams.get('redirect') || '/admin';
-  const { login, isAuthenticated, loading: authLoading } = useAuth();
+  const redirectPath = searchParams.get('redirect') || '/';
+  const { login, isAuthenticated, user: authUser, loading: authLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -26,10 +26,23 @@ function LoginContent() {
 
   // Auto-redirect if already logged in
   useEffect(() => {
-    if (!authLoading && isAuthenticated) {
-      router.push(redirectPath);
+    if (!authLoading && isAuthenticated && authUser) {
+      const isAdmin = ['admin', 'superadmin'].includes(authUser.role || '');
+      let target = redirectPath;
+      
+      // If user is admin and target is home, suggest admin dashboard
+      if (isAdmin && target === '/') {
+        target = '/admin';
+      }
+      
+      // If user is not admin but trying to go to admin, redirect to home
+      if (target.startsWith('/admin') && !isAdmin) {
+        target = '/';
+      }
+      
+      router.push(target);
     }
-  }, [authLoading, isAuthenticated, router, redirectPath]);
+  }, [authLoading, isAuthenticated, authUser, router, redirectPath]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,11 +59,15 @@ function LoginContent() {
       // Update AuthContext and redirect
       login(data.user);
 
-      // Determine redirect path based on role if default /admin is used
+      // Determine redirect path based on role
       let finalRedirect = redirectPath;
       const isAdmin = ['admin', 'superadmin'].includes(data.user.role);
 
-      if (redirectPath === '/admin' && !isAdmin) {
+      if (isAdmin && finalRedirect === '/') {
+        finalRedirect = '/admin';
+      }
+
+      if (finalRedirect.startsWith('/admin') && !isAdmin) {
         finalRedirect = '/';
       }
 
@@ -116,7 +133,7 @@ function LoginContent() {
             )}
 
             <div className="space-y-1.5">
-              <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
+              <label htmlFor="username" className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
                 Tên đăng nhập
               </label>
               <div className="relative group">
@@ -124,9 +141,12 @@ function LoginContent() {
                   <Mail size={14} />
                 </div>
                 <input
+                  id="username"
+                  name="username"
                   type="text"
                   required
                   autoFocus
+                  autoComplete="username"
                   className="w-full pl-9 pr-3.5 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
                   placeholder="Username hoặc email"
                   value={formData.username}
@@ -137,7 +157,7 @@ function LoginContent() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
+              <label htmlFor="password" className="block text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">
                 Mật khẩu
               </label>
               <div className="relative group">
@@ -145,8 +165,11 @@ function LoginContent() {
                   <Lock size={14} />
                 </div>
                 <input
+                  id="password"
+                  name="password"
                   type={showPassword ? 'text' : 'password'}
                   required
+                  autoComplete="current-password"
                   className="w-full pl-9 pr-10 py-2.5 bg-slate-100/50 dark:bg-slate-950/50 border border-transparent focus:border-primary/30 rounded-xl focus:ring-4 focus:ring-primary/5 transition-all outline-none text-xs font-medium dark:text-white"
                   placeholder="••••••••"
                   value={formData.password}
@@ -154,6 +177,7 @@ function LoginContent() {
                   onKeyDown={handleKeyDown}
                 />
                 <button
+                  id="password-toggle"
                   type="button"
                   tabIndex={-1}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-primary transition-colors"

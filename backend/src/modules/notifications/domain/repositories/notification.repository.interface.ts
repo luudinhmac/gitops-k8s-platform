@@ -9,5 +9,6 @@ export interface INotificationsRepository {
   markAsRead(id: number): Promise<NotificationEntity>;
   markAllAsRead(userId: number): Promise<void>;
   delete(id: number): Promise<void>;
+  deleteAll(userId: number): Promise<void>;
   countUnread(userId: number): Promise<number>;
 }

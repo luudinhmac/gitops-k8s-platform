@@ -15,8 +15,8 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: portfolio-frontend:latest
-        imagePullPolicy: IfNotPresent
+        image: luudinhmac/portfolio-frontend:latest
+        imagePullPolicy: Always
         resources:
           limits:
             cpu: "500m"

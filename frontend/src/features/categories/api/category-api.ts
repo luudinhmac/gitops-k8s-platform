@@ -1,5 +1,5 @@
 import api from '@/lib/axios';
-import { Category, CreateCategoryDto, UpdateCategoryDto } from '@portfolio/types';
+import { Category, CreateCategoryDto, UpdateCategoryDto } from '@/types';
 
 export const categoryApi = {
   getAll: async () => {

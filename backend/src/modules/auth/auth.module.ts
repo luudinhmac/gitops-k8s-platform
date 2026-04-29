@@ -1,12 +1,16 @@
 import { Module } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { AuthController } from './auth.controller';
+import { AuthController } from './controllers/auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { JwtStrategy } from './jwt.strategy';
+import { JwtStrategy } from './strategies/jwt.strategy';
 import { AdminAlertModule } from '../admin-alert/admin-alert.module';
-import { UsersModule } from '../users/presentation/users.module';
+import { UsersModule } from '../users/users.module';
+
+// Use Cases
+import { LoginUseCase } from './services/login.use-case';
+import { RegisterUseCase } from './services/register.use-case';
+import { ValidateUserUseCase } from './services/validate-user.use-case';
 
 @Module({
   imports: [
@@ -25,8 +29,13 @@ import { UsersModule } from '../users/presentation/users.module';
     AdminAlertModule,
     UsersModule,
   ],
-  providers: [AuthService, JwtStrategy],
+  providers: [
+    JwtStrategy,
+    LoginUseCase,
+    RegisterUseCase,
+    ValidateUserUseCase,
+  ],
   controllers: [AuthController],
-  exports: [AuthService],
+  exports: [LoginUseCase, RegisterUseCase, ValidateUserUseCase],
 })
 export class AuthModule {}

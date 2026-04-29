@@ -30,7 +30,7 @@ import { commentService } from '@/features/comments/services/commentService';
 import { categoryService as catApi } from '@/features/categories/services/categoryService';
 import { seriesService } from '@/features/series/services/seriesService';
 
-import { Post, Comment as CommentType } from '@portfolio/types';
+import { Post, Comment as CommentType } from '@/types';
 
 
 
@@ -469,7 +469,10 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
               ) : replyingTo === null && (
                 <form onSubmit={handleComment} className="mb-10 relative bg-slate-50/50 dark:bg-slate-950/50 p-5 rounded-3xl border border-slate-100 dark:border-slate-800">
                   <div className="relative mb-4">
+                    <label htmlFor="main-comment-textarea" className="sr-only">Nội dung bình luận</label>
                     <textarea
+                      id="main-comment-textarea"
+                      name="content"
                       placeholder="Hãy chia sẻ ý kiến của bạn tại đây..."
                       className="w-full px-5 py-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all min-h-[100px] text-sm resize-none shadow-sm"
                       value={commentText}
@@ -511,22 +514,22 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
                                 {comment.User?.avatar ? (
                                   <img
                                     src={comment.User.avatar}
-                                    alt={comment.author_name || 'User'}
+                                    alt={comment.User?.fullname || comment.User?.username || comment.author_name || 'User'}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
                                       const target = e.currentTarget;
                                       target.style.display = 'none';
                                       if (target.parentElement) {
-                                        target.parentElement.textContent = (comment.author_name || 'K')[0];
+                                        target.parentElement.textContent = (comment.User?.fullname || comment.User?.username || comment.author_name || 'K')[0];
                                       }
                                     }}
                                   />
-                                ) : (comment.author_name || 'K')[0]}
+                                ) : (comment.User?.fullname || comment.User?.username || comment.author_name || 'K')[0]}
                               </div>
                               <div className="flex-grow min-w-0">
                                 <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-2xl rounded-tl-sm border border-slate-100 dark:border-slate-800 transition-all">
                                   <div className="flex items-center justify-between mb-1.5">
-                                    <span className="font-bold text-slate-900 dark:text-white text-[13px]">{comment.author_name || 'Ẩn danh'}</span>
+                                    <span className="font-bold text-slate-900 dark:text-white text-[13px]">{comment.User?.fullname || comment.User?.username || comment.author_name || 'Khách'}</span>
                                     <span className="text-[10px] text-slate-400 font-medium">
                                       {new Date(comment.created_at).toLocaleDateString('vi-VN')}
                                     </span>
@@ -573,7 +576,8 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
                                 {replyingTo === comment.id && (
                                   <div className="mt-3 mb-2 animate-in fade-in slide-in-from-top-2">
                                     <form onSubmit={handleComment} className="flex flex-col space-y-2 p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl relative shadow-sm">
-                                      <input type="text" autoFocus value={commentText} onChange={(e) => { setCommentText(e.target.value); setCommentError(null); }} onKeyDown={(e) => { if (e.key === 'Escape') setReplyingTo(null); }} placeholder={`Trả lời ${comment.author_name}...`} className="w-full bg-transparent text-[13px] outline-none px-2 py-1 placeholder:text-slate-400" />
+                                      <label htmlFor={`reply-input-${comment.id}`} className="sr-only">Nội dung phản hồi</label>
+                                      <input id={`reply-input-${comment.id}`} name="content" type="text" autoFocus value={commentText} onChange={(e) => { setCommentText(e.target.value); setCommentError(null); }} onKeyDown={(e) => { if (e.key === 'Escape') setReplyingTo(null); }} placeholder={`Trả lời ${comment.User?.fullname || comment.User?.username || comment.author_name || 'người dùng'}...`} className="w-full bg-transparent text-[13px] outline-none px-2 py-1 placeholder:text-slate-400" />
                                       <div className="flex justify-between items-center px-1">
                                         <span className="text-[10px] text-slate-400 ml-1">Nhấn Esc để hủy</span>
                                         <Button type="submit" size="sm" isLoading={isSubmitting} disabled={!commentText.trim()} className="h-7 text-[11px] px-3">Gửi</Button>
@@ -610,10 +614,13 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
           <aside className="lg:w-3/12 w-full flex-shrink-0 space-y-1 lg:sticky lg:top-24 h-fit">
             {/* Search Box */}
             <div className="relative group">
+              <label htmlFor="sidebar-search" className="sr-only">Tìm kiếm bài viết</label>
               <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-all">
                 <Search size={18} />
               </div>
               <input
+                id="sidebar-search"
+                name="q"
                 type="text"
                 placeholder="Tìm nội dung hấp dẫn..."
                 className="w-full pl-12 pr-12 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm group-hover:shadow-md"

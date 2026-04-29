@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
             {
                 protocol: 'http',
                 hostname: 'localhost',
-                port: '3001',
+                port: '3002',
                 pathname: '/**',
             },
         ],
@@ -19,7 +19,7 @@ const nextConfig: NextConfig = {
     },
     */
     async rewrites() {
-        const internalApiUrl = process.env.INTERNAL_API_URL || 'http://localhost:3001/api';
+        const internalApiUrl = process.env.INTERNAL_API_URL || 'http://127.0.0.1:3002/api';
         // Remove trailing slash and /api suffix to use as base destination
         const destinationBase = internalApiUrl.replace(/\/api\/?$/, '');
         

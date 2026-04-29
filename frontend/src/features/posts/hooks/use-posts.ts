@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { postApi } from '../api/post-api';
-import { Post, PostSortOption } from '@portfolio/types';
+import { Post, PostSortOption } from '@/types';
 
 export const usePosts = () => {
   const [posts, setPosts] = useState<Post[]>([]);

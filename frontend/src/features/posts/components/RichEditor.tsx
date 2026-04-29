@@ -28,12 +28,13 @@ const ReactQuill = dynamic(async () => {
 });
 
 interface RichEditorProps {
+    id?: string;
     value: string;
     onChange: (content: string) => void;
     placeholder?: string;
 }
 
-export default function RichEditor({ value, onChange, placeholder }: RichEditorProps) {
+export default function RichEditor({ id, value, onChange, placeholder }: RichEditorProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [importing, setImporting] = useState(false);
     const [msgData, setMsgData] = useState<{ isOpen: boolean; title: string; message: string; variant: 'info' | 'success' | 'warning' | 'error' }>({ 
@@ -142,7 +143,7 @@ export default function RichEditor({ value, onChange, placeholder }: RichEditorP
     };
 
     return (
-        <div className="rich-editor-container border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50/50 dark:bg-slate-950/50">
+        <div id={id} className="rich-editor-container border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50/50 dark:bg-slate-950/50">
             {/* Auxiliary Actions Header */}
             <div className="flex items-center justify-between p-3 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
                 <div className="flex items-center space-x-2">

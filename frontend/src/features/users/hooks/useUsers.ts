@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { User, UpdateUserDto } from '@portfolio/types';
+import { User, UpdateUserDto } from '@/types';
 import { userApi } from '../api/user-api';
 import { toast } from 'react-hot-toast';
 

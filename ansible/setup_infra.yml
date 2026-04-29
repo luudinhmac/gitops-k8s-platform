@@ -1,0 +1,27 @@
+- name: Infrastructure Setup (Build, Staging, Production)
+  hosts: build, staging_k8s, production
+  become: yes
+  roles:
+    - { role: common, tags: ["common"] }
+    - { role: docker, tags: ["docker"] }
+
+- name: Kubernetes Cluster Setup
+  hosts: staging_k8s, production
+  become: yes
+  roles:
+    - { role: k8s-cluster, tags: ["k8s"] }
+
+- name: GitLab Runner Setup
+  hosts: build, production
+  become: yes
+  vars:
+    GITLAB_RUNNER_TOKEN_PROD: "{{ lookup('env', 'GITLAB_RUNNER_TOKEN_PROD') }}"
+    RUNNER_TOKEN_STAGING: "{{ lookup('env', 'RUNNER_TOKEN_STAGING') }}"
+  roles:
+    - { role: gitlab-runner, tags: ["runner"] }
+
+- name: Application Deployment (Staging)
+  hosts: staging_k8s
+  become: yes
+  roles:
+    - { role: k8s-deploy, tags: ["deploy"] }

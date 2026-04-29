@@ -1,0 +1,113 @@
+﻿
+> backend@0.0.1 start:dev
+> nest start --watch
+
+[2J[3J[H[[90m12:46:50 AM[0m] Starting compilation in watch mode...
+
+[[90m12:46:54 AM[0m] Found 0 errors. Watching for file changes.
+
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[NestFactory] [39m[32mStarting Nest application...[39m
+--- BACKEND STARTING: CACHE TOTALLY DISABLED (v3.0) ---
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPrismaModule dependencies initialized[39m[38;5;3m +23ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPassportModule dependencies initialized[39m[38;5;3m +0ms[39m
+--- GetPostsUseCase INITIALIZED (NO CACHE) ---
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigHostModule dependencies initialized[39m[38;5;3m +2ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mThrottlerModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTelegramModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mDiscoveryModule dependencies initialized[39m[38;5;3m +0ms[39m
+--- GetSeriesListUseCaseV2 INITIALIZED ---
+--- GetSeriesUseCase INITIALIZED (NO CACHE) ---
+--- GetCategoriesUseCase INITIALIZED (NO CACHE) ---
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mTeamsModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mMailModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mConfigModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mStorageModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAdminAlertModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mServeStaticModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mScheduleModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mStatsModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mJwtModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mUploadModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAppModule dependencies initialized[39m[38;5;3m +3ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSettingsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mNotificationsModule dependencies initialized[39m[38;5;3m +1ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mSeriesModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mCategoriesModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mPostsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mCommentsModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mUsersModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[InstanceLoader] [39m[32mAuthModule dependencies initialized[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mHealthController {/api/health} (version: 1):[39m[38;5;3m +127ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/health, GET} (version: 1) route[39m[38;5;3m +1ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mAuthController {/api/auth} (version: 1):[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/login, POST} (version: 1) route[39m[38;5;3m +1ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/register, POST} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/profile, GET} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/auth/logout, POST} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSettingsController {/api/settings} (version: 1):[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/settings/public, GET} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/settings/verify-maintenance-passcode, POST} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/settings/request-maintenance-code, POST} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/settings/admin, GET} (version: 1) route[39m[38;5;3m +1ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/settings/admin, PUT} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/settings/admin/test-telegram, POST} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/settings/admin/test-teams, POST} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/settings/admin/test-email, POST} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/settings/admin/flush-cache, POST} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mUsersController {/api/users} (version: 1):[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users, GET} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users/:id, GET} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users, POST} (version: 1) route[39m[38;5;3m +1ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users/:id, PATCH} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users/:id/role, PATCH} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users/:id/status, PATCH} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users/:id/permissions, PATCH} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users/:id/reset-password, PATCH} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users/:id/change-password, PATCH} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/users/:id, DELETE} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mNotificationsController {/api/notifications} (version: 1):[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/notifications, GET} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/notifications/unread-count, GET} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/notifications/:id/read, PATCH} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/notifications/read-all, PATCH} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/notifications/all, DELETE} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/notifications/:id, DELETE} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mPostsController {/api/posts} (version: 1):[39m[38;5;3m +1ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/posts, GET} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/posts/admin, GET} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/posts/my-posts, GET} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/posts/:idOrSlug, GET} (version: 1) route[39m[38;5;3m +1ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/posts, POST} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/posts/:id, PATCH} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/posts/:id, DELETE} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/posts/:id/pin, POST} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/posts/:id/publish, POST} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/posts/:id/like-status, GET} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/posts/:id/like, POST} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mUploadController {/api/upload} (version: 1):[39m[38;5;3m +1ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/upload, POST} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCategoriesController {/api/categories} (version: 1):[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/categories, GET} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/categories/:id, GET} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/categories, POST} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/categories/:id, PATCH} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/categories/:id, DELETE} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mCommentsController {/api/comments} (version: 1):[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/comments, GET} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/comments, POST} (version: 1) route[39m[38;5;3m +1ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/comments/:id, PATCH} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/comments/:id, DELETE} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mSeriesController {/api/series} (version: 1):[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/series, GET} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/series/mine, GET} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/series/author/:authorId, GET} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/series/:idOrSlug, GET} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/series, POST} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/series/:id, PATCH} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/series/:id, DELETE} (version: 1) route[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RoutesResolver] [39m[32mStatsController {/api/stats} (version: 1):[39m[38;5;3m +0ms[39m
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[RouterExplorer] [39m[32mMapped {/api/stats/counters, GET} (version: 1) route[39m[38;5;3m +0ms[39m
+[Database] Successfully connected to: portfolio_db
+[32m[Nest] 23772  - [39m04/28/2026, 12:46:55 AM [32m    LOG[39m [38;5;3m[NestApplication] [39m[32mNest application successfully started[39m[38;5;3m +41ms[39m
+Backend is running at http://localhost:3002/api/v1

@@ -4,55 +4,52 @@ RUN apk add --no-cache libc6-compat openssl
 RUN corepack enable && corepack prepare pnpm@latest --activate
 WORKDIR /app
 
-# Copy root files for workspace awareness
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
-COPY packages ./packages
-COPY backend ./backend
+# Standalone build within backend directory
+COPY package.json pnpm-lock.yaml ./
+COPY prisma ./prisma
+COPY shared ./shared
 
-# Cache busting point
-ARG CACHEBUST=1
+# Copy shared source code and inline it into src
+RUN mkdir -p src/_shared/contracts src/_shared/types
+RUN cp -r shared/packages/contracts/src/* src/_shared/contracts/
+RUN cp -r shared/packages/types/src/* src/_shared/types/
 
-# Install all dependencies
+# Install all dependencies (Prisma generate runs in postinstall)
 RUN pnpm install --no-frozen-lockfile
 
-# Build workspace packages
-RUN pnpm --filter "@portfolio/*" build
+# Copy the rest of the application code
+COPY . .
 
-# Build backend
-WORKDIR /app/backend
-RUN rm -rf dist
+# Generate Prisma Client for builder (types)
 RUN npx prisma generate
+
+# Build backend (Everything is now in src/)
+WORKDIR /app
+RUN rm -rf dist
 RUN pnpm run build
-RUN npx tsc prisma/seed.ts --outDir seed-bin --esModuleInterop --target es2023 --module commonjs --skipLibCheck
-RUN ls -R seed-bin
 
 # Stage 2: Runner
 FROM node:22-alpine AS runner
 RUN apk add --no-cache openssl
 WORKDIR /app
 
-# Install ONLY production dependencies in the runner stage
-COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
-COPY --from=builder /app/packages ./packages
-COPY backend/package.json ./backend/
-COPY backend/prisma ./backend/prisma
+# Production setup
+COPY package.json pnpm-lock.yaml ./
+COPY prisma ./prisma
+
 RUN corepack enable && corepack prepare pnpm@latest --activate
-RUN pnpm install --prod --no-frozen-lockfile --filter backend...
+RUN pnpm install --prod --no-frozen-lockfile
+RUN npx prisma generate
 
 # Copy build artifacts
-COPY --from=builder /app/backend/dist ./backend/dist
-COPY --from=builder /app/backend/prisma ./backend/prisma
-COPY --from=builder /app/backend/seed-bin ./backend/seed-bin
-
-# Cleanup node_modules to be even smaller (optional but recommended)
-# We keep the filter result
+COPY --from=builder /app/dist ./dist
 
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nestjs && \
-    mkdir -p /app/backend/uploads && \
+    mkdir -p /app/uploads && \
     chown -R nestjs:nodejs /app
+
 USER nestjs
-WORKDIR /app/backend
 EXPOSE 3001
 ENV NODE_ENV=production
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/src/main.js"]

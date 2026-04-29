@@ -8,7 +8,7 @@ import {
   Delete,
   UseGuards,
 } from '@nestjs/common';
-import { CreateCategoryDto, UpdateCategoryDto } from '@portfolio/types';
+import { CreateCategoryDto, UpdateCategoryDto } from '@portfolio/contracts';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 

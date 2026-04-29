@@ -25,8 +25,8 @@ import IconBadge from '@/shared/components/ui/IconBadge';
 import AnimateList from '@/shared/components/ui/AnimateList';
 import ConfirmationDialog from '@/shared/components/ui/ConfirmationDialog';
 import MessageDialog from '@/shared/components/ui/MessageDialog';
-import { Post, SortOption } from '@portfolio/types';
-import { User as UserType } from '@portfolio/types';
+import { Post, SortOption } from '@/types';
+import { User as UserType } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Suspense } from 'react';
 
@@ -326,20 +326,23 @@ function ProfilePageContent() {
                   <form onSubmit={handleSaveProfile} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {[
-                        { label: 'Họ và tên', key: 'fullname', placeholder: 'Nguyễn Văn A', icon: UserIcon },
-                        { label: 'Email', key: 'email', placeholder: 'email@example.com', icon: Mail, type: 'email' },
-                        { label: 'Số điện thoại', key: 'phone', placeholder: '0912 345 678', icon: Phone },
-                        { label: 'Ngành nghề', key: 'profession', placeholder: 'System Engineer', icon: Briefcase },
-                        { label: 'Ngày sinh', key: 'birthday', placeholder: '', icon: Calendar, type: 'date' },
-                        { label: 'Địa chỉ', key: 'address', placeholder: 'Hồ Chí Minh, Việt Nam', icon: MapPin },
+                        { label: 'Họ và tên', key: 'fullname', placeholder: 'Nguyễn Văn A', icon: UserIcon, auto: 'name' },
+                        { label: 'Email', key: 'email', placeholder: 'email@example.com', icon: Mail, type: 'email', auto: 'email' },
+                        { label: 'Số điện thoại', key: 'phone', placeholder: '0912 345 678', icon: Phone, auto: 'tel' },
+                        { label: 'Ngành nghề', key: 'profession', placeholder: 'System Engineer', icon: Briefcase, auto: 'on' },
+                        { label: 'Ngày sinh', key: 'birthday', placeholder: '', icon: Calendar, type: 'date', auto: 'bday' },
+                        { label: 'Địa chỉ', key: 'address', placeholder: 'Hồ Chí Minh, Việt Nam', icon: MapPin, auto: 'street-address' },
                       ].map(field => (
                         <div key={field.key}>
-                          <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">{field.label}</label>
+                          <label htmlFor={`profile-${field.key}`} className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">{field.label}</label>
                           <div className="relative">
                             <field.icon size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                             <input
+                              id={`profile-${field.key}`}
+                              name={field.key}
                               type={field.type || 'text'}
                               placeholder={field.placeholder}
+                              autoComplete={field.auto}
                               value={(profileForm as Record<string, string>)[field.key]}
                               onChange={e => setProfileForm({ ...profileForm, [field.key]: e.target.value })}
                               className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
@@ -554,17 +557,20 @@ function ProfilePageContent() {
               )}
               <form onSubmit={handleChangePassword} className="space-y-1">
                 {[
-                  { label: 'Mật khẩu hiện tại', key: 'oldPassword', show: showPass.old, toggle: () => setShowPass({ ...showPass, old: !showPass.old }) },
-                  { label: 'Mật khẩu mới', key: 'newPassword', show: showPass.new, toggle: () => setShowPass({ ...showPass, new: !showPass.new }) },
-                  { label: 'Xác nhận mật khẩu mới', key: 'confirmPassword', show: showPass.confirm, toggle: () => setShowPass({ ...showPass, confirm: !showPass.confirm }) },
+                  { label: 'Mật khẩu hiện tại', key: 'oldPassword', auto: 'current-password', show: showPass.old, toggle: () => setShowPass({ ...showPass, old: !showPass.old }) },
+                  { label: 'Mật khẩu mới', key: 'newPassword', auto: 'new-password', show: showPass.new, toggle: () => setShowPass({ ...showPass, new: !showPass.new }) },
+                  { label: 'Xác nhận mật khẩu mới', key: 'confirmPassword', auto: 'new-password', show: showPass.confirm, toggle: () => setShowPass({ ...showPass, confirm: !showPass.confirm }) },
                 ].map(field => (
                   <div key={field.key}>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">{field.label}</label>
+                    <label htmlFor={`pass-${field.key}`} className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">{field.label}</label>
                     <div className="relative">
                       <input
+                        id={`pass-${field.key}`}
+                        name={field.key}
                         required
                         autoFocus={field.key === 'oldPassword'}
                         type={field.show ? 'text' : 'password'}
+                        autoComplete={field.auto}
                         placeholder="••••••••"
                         value={(passForm as Record<string, string>)[field.key]}
                         onChange={e => setPassForm({ ...passForm, [field.key]: e.target.value })}

@@ -11,6 +11,7 @@ import { GetUnreadCountUseCase } from '../application/use-cases/get-unread-count
 import { MarkAsReadUseCase } from '../application/use-cases/mark-as-read.use-case';
 import { MarkAllAsReadUseCase } from '../application/use-cases/mark-all-as-read.use-case';
 import { DeleteNotificationUseCase } from '../application/use-cases/delete-notification.use-case';
+import { DeleteAllNotificationsUseCase } from '../application/use-cases/delete-all-notifications.use-case';
 
 @Module({
   controllers: [NotificationsController],
@@ -26,6 +27,7 @@ import { DeleteNotificationUseCase } from '../application/use-cases/delete-notif
     MarkAsReadUseCase,
     MarkAllAsReadUseCase,
     DeleteNotificationUseCase,
+    DeleteAllNotificationsUseCase,
   ],
   exports: [I_NOTIFICATIONS_REPOSITORY, NotificationsService],
 })

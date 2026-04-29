@@ -1,5 +1,5 @@
 import api from '@/lib/axios';
-import { User, CreateUserDto, UpdateUserDto } from '@portfolio/types';
+import { User, CreateUserDto, UpdateUserDto, UserRole } from '@/types';
 
 export const userApi = {
   getProfile: async () => {
@@ -37,7 +37,7 @@ export const userApi = {
     return response.data;
   },
 
-  updatePermissions: async (id: number, data: { role?: string; is_active?: boolean; can_comment?: boolean; can_post?: boolean; reason?: string }) => {
+  updatePermissions: async (id: number, data: { role?: UserRole | string; is_active?: boolean; can_comment?: boolean; can_post?: boolean; reason?: string }) => {
     const response = await api.patch(`/users/${id}/permissions`, data);
     return response.data;
   },

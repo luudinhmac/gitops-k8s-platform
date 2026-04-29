@@ -23,7 +23,7 @@ import ConfirmationDialog from '@/shared/components/ui/ConfirmationDialog';
 import MessageDialog from '@/shared/components/ui/MessageDialog';
 import PromptDialog from '@/shared/components/ui/PromptDialog';
 import Skeleton from '@/shared/components/ui/Skeleton';
-import { Post as AdminPost } from '@portfolio/types';
+import { Post as AdminPost } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function AdminDashboardPage() {

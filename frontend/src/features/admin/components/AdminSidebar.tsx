@@ -8,7 +8,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useSidebar } from '@/context/SidebarContext';
-import { User } from '@portfolio/types';
+import { User } from '@/types';
 
 interface AdminSidebarProps {
   sidebarOpen: boolean;

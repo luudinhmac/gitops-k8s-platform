@@ -8,7 +8,7 @@ import { motion } from 'framer-motion';
 import Button from '@/shared/components/ui/Button';
 import Navbar from '@/components/layout/Navbar';
 import { postService } from '@/features/posts/services/postService';
-import { Post } from '@portfolio/types';
+import { Post } from '@/types';
 
 export default function NotFound() {
   const [recentPosts, setRecentPosts] = useState<Post[]>([]);

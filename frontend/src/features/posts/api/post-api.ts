@@ -1,5 +1,5 @@
 import api from '../../../lib/axios';
-import { Post, ApiResponse, PaginatedResponse, PostSortOption } from '@portfolio/types';
+import { Post, ApiResponse, PaginatedResponse, PostSortOption } from '../../../types';
 
 export const postApi = {
   getPosts: async (params?: {

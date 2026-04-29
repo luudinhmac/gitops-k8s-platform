@@ -1,0 +1,54 @@
+stages:
+  - build
+  - staging
+  - deploy_prod
+
+variables:
+  DOCKER_DRIVER: overlay2
+  CI_REGISTRY: docker.io
+  IMAGE_NAME: $CI_REGISTRY_USER/portfolio-backend
+  IMAGE_TAG: $IMAGE_NAME:$CI_COMMIT_TAG
+  IMAGE_LATEST: $IMAGE_NAME:latest
+
+build_backend:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  tags:
+    - agent-1 # VM 192.168.157.109
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build --pull -t $IMAGE_TAG -t $IMAGE_LATEST .
+    - docker push $IMAGE_TAG
+    - docker push $IMAGE_LATEST
+  after_script:
+    - docker image prune -f
+  only:
+    - /^v.*$/ # Trigger only on tags starting with 'v'
+
+deploy_staging:
+  stage: staging
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: [""]
+  tags:
+    - agent-1 # Local VM can also reach Staging K8s
+  script:
+    - kubectl set image deployment/backend backend=$IMAGE_TAG -n portfolio
+  only:
+    - /^v.*$/
+
+deploy_prod:
+  stage: deploy_prod
+  image:
+    name: bitnami/kubectl:latest
+    entrypoint: [""]
+  tags:
+    - agent-2 # VPS K8s Agent
+  script:
+    - kubectl set image deployment/backend backend=$IMAGE_TAG -n portfolio
+  when: manual
+  only:
+    - /^v.*$/
