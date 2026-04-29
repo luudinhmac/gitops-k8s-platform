@@ -10,11 +10,19 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { AuthGuard } from '@nestjs/passport';
 import { FileService } from './file.service';
+import { PrismaService } from '../../prisma/prisma.service';
 
 @Controller('upload')
 @UseGuards(AuthGuard('jwt'))
 export class UploadController {
-  constructor(private readonly fileService: FileService) {}
+  private prisma: any;
+
+  constructor(
+    private readonly fileService: FileService,
+    prisma: PrismaService,
+  ) {
+    this.prisma = prisma;
+  }
 
   @Post()
   @UseInterceptors(
@@ -46,6 +54,19 @@ export class UploadController {
 
     // Save file using service (handles resizing, conversion and deduplication)
     const url = await this.fileService.saveFile(file.buffer, filename, type);
+
+    // Ensure Media record exists
+    const hash = filename.split('.')[0];
+    await this.prisma.media.upsert({
+      where: { hash },
+      update: {},
+      create: {
+        hash,
+        path: url,
+        size: file.size,
+        mime_type: 'image/webp',
+      }
+    });
 
     return {
       success: true,

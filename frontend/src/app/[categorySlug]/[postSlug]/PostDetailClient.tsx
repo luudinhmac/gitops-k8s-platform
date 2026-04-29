@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, use, useCallback } from 'react';
+import { useState, useEffect, use, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import {
@@ -57,6 +57,7 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
   const [msgData, setMsgData] = useState<{ isOpen: boolean; title: string; message: string; variant: 'info' | 'success' | 'warning' | 'error' }>({
     isOpen: false, title: '', message: '', variant: 'info'
   });
+  const viewIncremented = useRef(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -125,8 +126,15 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
 
       // Background view increment
       setTimeout(() => {
-        postService.incrementView(data.id);
-      }, 60000);
+        if (viewIncremented.current) return;
+        viewIncremented.current = true;
+        
+        postService.incrementView(data.id).then(updated => {
+          if (updated && typeof updated.views === 'number') {
+            setPost(prev => prev ? { ...prev, views: updated.views } : updated);
+          }
+        }).catch(err => console.error('Failed to increment view:', err));
+      }, 5000);
 
     } catch (error) {
       console.error('Error fetching post:', error);
@@ -554,12 +562,14 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
                                 </div>
 
                                 <div className="flex items-center space-x-4 mt-1.5 ml-2 opacity-80 hover:opacity-100 transition-opacity">
-                                  <button onClick={() => { setReplyingTo(replyingTo === comment.id ? null : comment.id); setCommentText(''); }} className="text-[11px] font-bold text-slate-500 hover:text-primary transition-colors">
-                                    Phản hồi
-                                  </button>
+                                  {!isMaintenanceComments && (
+                                    <button onClick={() => { setReplyingTo(replyingTo === comment.id ? null : comment.id); setCommentText(''); }} className="text-[11px] font-bold text-slate-500 hover:text-primary transition-colors">
+                                      Phản hồi
+                                    </button>
+                                  )}
                                   {isAuthenticated && (user?.id === comment.user_id || ['admin', 'superadmin'].includes(user?.role || '')) && (
                                     <>
-                                      {user?.id === comment.user_id && <button onClick={() => { setEditingCommentId(comment.id); setEditingText(comment.content || ''); }} className="text-[11px] font-bold text-slate-500 hover:text-primary transition-colors">Sửa</button>}
+                                      {user?.id === comment.user_id && !isMaintenanceComments && <button onClick={() => { setEditingCommentId(comment.id); setEditingText(comment.content || ''); }} className="text-[11px] font-bold text-slate-500 hover:text-primary transition-colors">Sửa</button>}
                                       {deleteConfirmId === comment.id ? (
                                         <div className="flex items-center space-x-2 text-[10px] bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded border border-red-100 dark:border-red-900/30">
                                           <span className="text-red-500 font-bold">Xóa?</span>
@@ -567,13 +577,13 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
                                           <button onClick={() => setDeleteConfirmId(null)} className="text-slate-500 hover:text-slate-700">Không</button>
                                         </div>
                                       ) : (
-                                        <button onClick={() => setDeleteConfirmId(comment.id)} className="text-[11px] font-bold text-slate-500 hover:text-red-500 transition-colors">Xóa</button>
+                                        <button onClick={() => setDeleteConfirmId(comment.id)} className="text-[11px] font-bold text-slate-500 hover:text-red-500 transition-colors" disabled={isMaintenanceComments}>Xóa</button>
                                       )}
                                     </>
                                   )}
                                 </div>
 
-                                {replyingTo === comment.id && (
+                                {replyingTo === comment.id && !isMaintenanceComments && (
                                   <div className="mt-3 mb-2 animate-in fade-in slide-in-from-top-2">
                                     <form onSubmit={handleComment} className="flex flex-col space-y-2 p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl relative shadow-sm">
                                       <label htmlFor={`reply-input-${comment.id}`} className="sr-only">Nội dung phản hồi</label>

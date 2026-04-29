@@ -126,24 +126,26 @@ export default function SeriesAdminPage() {
         searchPlaceholder="Tìm series..."
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-1">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Form */}
         <div className="lg:col-span-1">
            <AdminCard title="Tạo Series" icon={Plus} className="sticky top-12">
               <form onSubmit={handleAddSeries} className="space-y-1">
                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Tên Series</label>
-                    <input type="text" placeholder="Ví dụ: NestJS Cơ bản..." value={newSeries.name} onChange={e => setNewSeries({...newSeries, name: e.target.value})} required
+                    <label htmlFor="series-name" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Tên Series</label>
+                    <input id="series-name" name="series_name" type="text" placeholder="Ví dụ: NestJS Cơ bản..." value={newSeries.name} onChange={e => setNewSeries({...newSeries, name: e.target.value})} required
                       className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all" />
                  </div>
                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Mô tả (Tùy chọn)</label>
-                    <textarea placeholder="Mô tả ngắn gọn về series này..." value={newSeries.description} onChange={e => setNewSeries({...newSeries, description: e.target.value})}
+                    <label htmlFor="series-description" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Mô tả (Tùy chọn)</label>
+                    <textarea id="series-description" name="series_description" placeholder="Mô tả ngắn gọn về series này..." value={newSeries.description} onChange={e => setNewSeries({...newSeries, description: e.target.value})}
                       className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all min-h-[80px]" />
                  </div>
-                 <Button type="submit" isLoading={submitting} className="w-full" size="lg">
-                    Lưu Series
-                 </Button>
+                 <div className="flex justify-end pt-2">
+                    <Button type="submit" isLoading={submitting} size="lg" className="min-w-[140px]">
+                       Lưu Series
+                    </Button>
+                 </div>
               </form>
            </AdminCard>
         </div>
@@ -168,9 +170,11 @@ export default function SeriesAdminPage() {
                           <div className="flex-grow min-w-0">
                              {editingId === item.id ? (
                                 <div className="space-y-3 animate-in fade-in slide-in-from-left-4">
-                                   <input type="text" value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} autoFocus
+                                   <label htmlFor={`edit-series-name-${item.id}`} className="sr-only">Sửa tên series</label>
+                                   <input id={`edit-series-name-${item.id}`} name="edit_series_name" type="text" value={editData.name} onChange={e => setEditData({...editData, name: e.target.value})} autoFocus
                                       className="w-full px-4 py-2 bg-white dark:bg-slate-800 border-2 border-primary/50 rounded-xl text-sm outline-none shadow-lg" />
-                                   <textarea value={editData.description} onChange={e => setEditData({...editData, description: e.target.value})}
+                                   <label htmlFor={`edit-series-desc-${item.id}`} className="sr-only">Sửa mô tả series</label>
+                                   <textarea id={`edit-series-desc-${item.id}`} name="edit_series_description" value={editData.description} onChange={e => setEditData({...editData, description: e.target.value})}
                                       className="w-full px-4 py-2 bg-white dark:bg-slate-800 border-2 border-primary/50 rounded-xl text-sm outline-none" />
                                    <div className="flex space-x-2">
                                       <Button onClick={() => handleUpdate(item.id)} size="sm">Lưu</Button>

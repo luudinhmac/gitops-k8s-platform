@@ -149,6 +149,30 @@ model Setting {
   updated_at DateTime @default(now()) @updatedAt
 }
 
+model Media {
+  id         Int          @id @default(autoincrement())
+  hash       String       @unique
+  path       String       @unique // e.g., "123456.webp"
+  mime_type  String?
+  size       Int?
+  created_at DateTime     @default(now())
+  Usage      MediaUsage[]
+
+  @@index([hash])
+}
+
+model MediaUsage {
+  id          Int    @id @default(autoincrement())
+  media_id    Int
+  entity_type String // 'USER', 'POST', 'SETTING'
+  entity_id   Int
+  field       String // 'avatar', 'cover', 'content'
+  Media       Media  @relation(fields: [media_id], references: [id], onDelete: Cascade)
+
+  @@unique([media_id, entity_type, entity_id, field])
+  @@index([entity_type, entity_id])
+}
+
 model MaintenanceCode {
   id         Int      @id @default(autoincrement())
   code       String

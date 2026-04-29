@@ -15,7 +15,7 @@ export default function Footer() {
   const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
-    if (pathname.startsWith('/admin') || pathname === '/maintenance') return;
+    if (pathname.startsWith('/portal-dashboard') || pathname === '/maintenance') return;
 
     const fetchStats = async () => {
       try {
@@ -37,7 +37,7 @@ export default function Footer() {
     return () => clearInterval(interval);
   }, [pathname]);
 
-  if (pathname.startsWith('/admin') || pathname === '/maintenance') {
+  if (pathname.startsWith('/portal-dashboard') || pathname === '/maintenance') {
     return null;
   }
 
@@ -92,7 +92,7 @@ export default function Footer() {
             <ul className="mt-4 space-y-2">
               {isAuthenticated && user && ['admin', 'superadmin'].includes(user.role) && (
                 <li>
-                  <Link href="/admin" className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Dashboard</Link>
+                  <Link href="/portal-dashboard" className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Dashboard</Link>
                 </li>
               )}
               {!isAuthenticated && (

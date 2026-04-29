@@ -229,10 +229,10 @@ function ProfilePageContent() {
           <div className="flex flex-col md:flex-row items-center gap-6">
             <div className="relative group/avatar cursor-pointer">
               <UserAvatar user={user} size="xl" className="rounded-2xl border-4 border-white dark:border-slate-800 shadow-xl" />
-              <label className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover/avatar:opacity-100 rounded-2xl transition-opacity cursor-pointer">
+              <label htmlFor="avatar-upload" className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover/avatar:opacity-100 rounded-2xl transition-opacity cursor-pointer">
                 {avatarLoading ? <Loader2 size={24} className="text-white animate-spin" /> : <Edit size={24} className="text-white drop-shadow-md" />}
                 <span className="text-[10px] text-white font-bold uppercase mt-1">Đổi ảnh</span>
-                <input type="file" className="hidden" accept="image/*" onChange={handleUploadAvatar} disabled={avatarLoading} />
+                <input id="avatar-upload" name="avatar" type="file" className="hidden" accept="image/*" onChange={handleUploadAvatar} disabled={avatarLoading} />
               </label>
             </div>
             <div>
@@ -558,6 +558,15 @@ function ProfilePageContent() {
                 </div>
               )}
               <form onSubmit={handleChangePassword} className="space-y-1">
+                {/* Hidden username field for accessibility/autofill */}
+                <input 
+                  type="text" 
+                  name="username" 
+                  autoComplete="username" 
+                  value={user?.username || ''} 
+                  readOnly 
+                  className="hidden" 
+                />
                 {[
                   { label: 'Mật khẩu hiện tại', key: 'oldPassword', auto: 'current-password', show: showPass.old, toggle: () => setShowPass({ ...showPass, old: !showPass.old }) },
                   { label: 'Mật khẩu mới', key: 'newPassword', auto: 'new-password', show: showPass.new, toggle: () => setShowPass({ ...showPass, new: !showPass.new }) },

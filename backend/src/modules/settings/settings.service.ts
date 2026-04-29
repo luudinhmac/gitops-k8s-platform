@@ -71,10 +71,12 @@ export class SettingsService {
     try {
       const prisma = this.prisma as any;
       await prisma.maintenanceCode.deleteMany({
-        where: { OR: [
-          { expires_at: { lt: new Date() } },
-          { is_used: true }
-        ]}
+        where: {
+          OR: [
+            { expires_at: { lt: new Date() } },
+            { is_used: true }
+          ]
+        }
       });
 
       await prisma.maintenanceCode.create({
@@ -88,11 +90,11 @@ export class SettingsService {
       this.adminAlertService.sendAlert({
         subject: `🔐 MÃ TRUY CẬP BẢO TRÌ (Maintenance Code)`,
         text: `🔐 <b>YÊU CẦU TRUY CẬP HỆ THỐNG</b>\n\n` +
-              `Hệ thống đang trong trạng thái bảo trì. Một yêu cầu truy cập đã được thực hiện:\n\n` +
-              `• <b>Mã xác thực:</b> <code>${code}</code>\n` +
-              `• <b>Hiệu lực:</b> 10 phút (đến ${expiry.toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })})\n` +
-              `• <b>Địa chỉ IP:</b> ${ip}\n\n` +
-              `<i>Vui lòng không chia sẻ mã này với bất kỳ ai.</i>`,
+          `Hệ thống đang trong trạng thái bảo trì. Một yêu cầu truy cập đã được thực hiện:\n\n` +
+          `• <b>Mã xác thực:</b> <code>${code}</code>\n` +
+          `• <b>Hiệu lực:</b> 10 phút (đến ${expiry.toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })})\n` +
+          `• <b>Địa chỉ IP:</b> ${ip}\n\n` +
+          `<i>Vui lòng không chia sẻ mã này với bất kỳ ai.</i>`,
       });
 
       return { success: true, message: 'Mã truy cập đã được gửi qua các hệ thống thông báo.' };
@@ -166,7 +168,7 @@ export class SettingsService {
   async updateSettings(items: { key: string; value: string; group?: string; is_public?: boolean }[], user?: any, ip?: string) {
     const sensitiveGroups = ['telegram', 'teams', 'mail'];
     const isUpdatingSensitive = items.some(item => item.group && sensitiveGroups.includes(item.group));
-    
+
     if (isUpdatingSensitive && user?.role !== 'superadmin') {
       const { ForbiddenException } = require('@nestjs/common');
       throw new ForbiddenException('Chỉ Superadmin mới có quyền thay đổi cấu hình Cảnh báo Quản trị.');
@@ -185,7 +187,7 @@ export class SettingsService {
       // 2. Identify actual changes
       const changedItems = items.filter(item => {
         if (item.value === MASK_VALUE) return false;
-        
+
         const currentValue = currentMap[item.key];
         let newValue = item.value;
 
@@ -229,10 +231,10 @@ export class SettingsService {
       const actions = changedItems.map(item => {
         const name = SETTING_NAMES[item.key] || item.key;
         if (SENSITIVE_KEYS.includes(item.key)) return `Cập nhật ${name} (Bảo mật)`;
-        
+
         if (item.value === 'true') return `<b>Bật</b> ${name}`;
         if (item.value === 'false') return `<b>Tắt</b> ${name}`;
-        
+
         // Truncate long text
         const displayValue = item.value.length > 50 ? item.value.substring(0, 50) + '...' : item.value;
         return `Thay đổi ${name} thành: "<i>${displayValue}</i>"`;
@@ -284,10 +286,10 @@ export class SettingsService {
       this.adminAlertService.sendAlert({
         subject: `⚙️ Cài đặt hệ thống đã đổi: ${username}`,
         text: `⚙️ <b>CÀI ĐẶT HỆ THỐNG ĐÃ CẬP NHẬT</b>\n\n` +
-              `• ${actions}\n\n` +
-              `• <b>IP:</b> <code>${userIp}</code>\n` +
-              `• <b>User:</b> ${username}\n` +
-              `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
+          `• ${actions}\n\n` +
+          `• <b>IP:</b> <code>${userIp}</code>\n` +
+          `• <b>User:</b> ${username}\n` +
+          `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
       });
 
       return { message: 'Settings updated successfully', updatedCount: changedItems.length };
@@ -330,7 +332,7 @@ export class SettingsService {
         return { success: false, error: 'Thiếu cấu hình Webhook URL của MS Teams.' };
       }
 
-      const msg = `🔔 <b>Thông báo thử nghiệm MS Teams</b>\n\nCấu hình kết nối Webhook thành công! Đã có thể nhận cảnh báo từ ứng dụng.\n\n📅 <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`;
+      const msg = `🔔 <b>Thông báo MS Teams</b>\n\nCấu hình kết nối Webhook thành công! Đã có thể nhận cảnh báo từ ứng dụng.\n\n📅 <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`;
       return await this.teamsService.sendMessage(msg, webhookUrl);
     } catch (error: any) {
       return { success: false, error: error.message };
@@ -338,7 +340,7 @@ export class SettingsService {
   }
 
   async testEmail(config: { host: string; port: string; user: string; pass: string; to: string }) {
-    const subject = '🔔 Thông báo thử nghiệm Email';
+    const subject = '🔔 Thông báo Email';
     const text = 'Hệ thống đã kết nối thành công với máy chủ Email của bạn.';
     const html = `<h3>Thành công!</h3><p>${text}</p><p>📅 <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</p>`;
 

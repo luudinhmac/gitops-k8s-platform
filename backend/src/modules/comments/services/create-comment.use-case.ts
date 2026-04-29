@@ -4,6 +4,7 @@ import { I_POST_REPOSITORY, IPostRepository } from '../../posts/domain/post.repo
 import { User } from '@portfolio/types';
 import { CreateCommentDto, Comment } from '@portfolio/contracts';
 import { NotificationsService } from '../../notifications/notifications.service';
+import { SettingsService } from '../../settings/settings.service';
 
 @Injectable()
 export class CreateCommentUseCase {
@@ -13,9 +14,19 @@ export class CreateCommentUseCase {
     @Inject(I_POST_REPOSITORY)
     private readonly postRepository: IPostRepository,
     private readonly notificationsService: NotificationsService,
+    private readonly settingsService: SettingsService,
   ) {}
 
   async execute(data: CreateCommentDto, user?: User | null): Promise<Comment> {
+    // Maintenance Check
+    const settings = await this.settingsService.getPublicSettings();
+    const isMaintenance = (settings as any).maintenance_comments === 'true' || (settings as any).maintenance_comments === true;
+    const isAdmin = ['admin', 'superadmin'].includes(user?.role || '');
+
+    if (isMaintenance && !isAdmin) {
+      throw new ForbiddenException('Tính năng bình luận hiện đang bảo trì. Vui lòng quay lại sau.');
+    }
+
     const post = await this.postRepository.findById(data.post_id);
     if (!post) throw new NotFoundException('Post not found');
 

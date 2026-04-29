@@ -90,23 +90,6 @@ export default function AdminDashboardPage() {
 
   const sortedPosts = posts; // Now handled by backend
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <Skeleton className="h-10 w-48" />
-          <Skeleton className="h-10 w-32" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 w-full" />)}
-        </div>
-        <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 space-y-4">
-          {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-12 w-full" />)}
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
       <AdminPageHeader
@@ -122,9 +105,20 @@ export default function AdminDashboardPage() {
         }}
       />
 
-      <div className="space-y-1">
+      {loading ? (
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)}
+          </div>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-200 dark:border-slate-800 space-y-4 shadow-sm">
+            {[1, 2, 3, 4, 5].map(i => <Skeleton key={i} className="h-12 w-full rounded-xl" />)}
+          </div>
+        </div>
+      ) : (
+
+      <div className="space-y-6">
         {/* ── Stats Grid ── */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-1">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[
             { label: 'Tổng bài viết', count: posts.length, icon: FileText, color: 'blue' as const },
             { label: 'Tổng lượt xem', count: posts.reduce((a, p) => a + (p.views || 0), 0), icon: Eye, color: 'sky' as const },
@@ -291,6 +285,7 @@ export default function AdminDashboardPage() {
           </div>
         </AdminCard>
       </div>
+      )}
 
       <ConfirmationDialog
         isOpen={isDeleteModalOpen}

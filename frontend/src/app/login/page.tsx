@@ -32,11 +32,11 @@ function LoginContent() {
       
       // If user is admin and target is home, suggest admin dashboard
       if (isAdmin && target === '/') {
-        target = '/admin';
+        target = '/portal-dashboard';
       }
       
       // If user is not admin but trying to go to admin, redirect to home
-      if (target.startsWith('/admin') && !isAdmin) {
+      if (target.startsWith('/portal-dashboard') && !isAdmin) {
         target = '/';
       }
       
@@ -64,10 +64,10 @@ function LoginContent() {
       const isAdmin = ['admin', 'superadmin'].includes(data.user.role);
 
       if (isAdmin && finalRedirect === '/') {
-        finalRedirect = '/admin';
+        finalRedirect = '/portal-dashboard';
       }
 
-      if (finalRedirect.startsWith('/admin') && !isAdmin) {
+      if (finalRedirect.startsWith('/portal-dashboard') && !isAdmin) {
         finalRedirect = '/';
       }
 

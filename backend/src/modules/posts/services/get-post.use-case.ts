@@ -21,6 +21,7 @@ export class GetPostUseCase {
 
     if (incrementView) {
       await this.postRepository.incrementView(post.id).catch(() => {});
+      post.views = (post.views || 0) + 1;
     }
 
     const formattedPost = this.formatPost(post);

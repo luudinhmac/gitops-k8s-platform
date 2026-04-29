@@ -117,19 +117,21 @@ export default function CategoriesPage() {
         searchPlaceholder="Tìm danh mục..."
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-1">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Form */}
         <div className="lg:col-span-1">
            <AdminCard title="Tạo mới" icon={Plus} className="sticky top-12">
               <form onSubmit={handleAddCategory} className="space-y-1">
                  <div>
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Tên danh mục</label>
-                    <input type="text" placeholder="Ví dụ: Công nghệ, Đời sống..." value={newCategory} onChange={e => setNewCategory(e.target.value)} required
+                    <label htmlFor="category-name" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Tên danh mục</label>
+                    <input id="category-name" name="category_name" type="text" placeholder="Ví dụ: Công nghệ, Đời sống..." value={newCategory} onChange={e => setNewCategory(e.target.value)} required
                       className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all" />
                  </div>
-                 <Button type="submit" isLoading={submitting} className="w-full" size="lg">
-                    Lưu danh mục
-                 </Button>
+                 <div className="flex justify-end pt-2">
+                    <Button type="submit" isLoading={submitting} size="lg" className="min-w-[140px]">
+                       Lưu danh mục
+                    </Button>
+                 </div>
               </form>
            </AdminCard>
         </div>
@@ -154,7 +156,10 @@ export default function CategoriesPage() {
                           <div className="flex-grow min-w-0">
                              {editingId === cat.id ? (
                                <div className="flex items-center space-x-2 w-full max-w-md animate-in fade-in slide-in-from-left-2 transition-all">
+                                  <label htmlFor={`edit-category-${cat.id}`} className="sr-only">Sửa tên danh mục</label>
                                   <input 
+                                    id={`edit-category-${cat.id}`}
+                                    name="edit_category_name"
                                     type="text" 
                                     value={editName} 
                                     onChange={e => setEditName(e.target.value)} 

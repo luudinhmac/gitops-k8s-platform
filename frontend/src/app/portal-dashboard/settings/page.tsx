@@ -13,6 +13,7 @@ import Skeleton from '@/shared/components/ui/Skeleton';
 import { settingService, SettingsConfig } from '@/features/settings/services/settingService';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import MessageDialog from '@/shared/components/ui/MessageDialog';
 
 export default function SettingsAdminPage() {
   const [activeTab, setActiveTab] = useState<'general' | 'system' | 'security' | 'marketing' | 'maintenance' | 'alerts'>('general');
@@ -20,6 +21,9 @@ export default function SettingsAdminPage() {
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [msgData, setMsgData] = useState<{ isOpen: boolean; title: string; message: string; variant: 'info' | 'success' | 'warning' | 'error' }>({ 
+    isOpen: false, title: '', message: '', variant: 'success' 
+  });
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
   const { user } = useAuth();
   const isSuperAdmin = user?.role === 'superadmin';
@@ -144,17 +148,25 @@ export default function SettingsAdminPage() {
       }));
 
       await settingService.updateSettings(items);
-      setStatusMsg({ type: 'success', text: 'Đã lưu cấu hình thành công!' });
+      setMsgData({
+        isOpen: true,
+        title: 'Thành công',
+        message: 'Đã lưu cấu hình hệ thống thành công!',
+        variant: 'success'
+      });
 
       // Update original form state after success
       setOriginalForms(prev => ({
         ...prev,
         [group]: { ...targetForm }
       }));
-
-      setTimeout(() => setStatusMsg(null), 4000);
     } catch (error) {
-      setStatusMsg({ type: 'error', text: 'Có lỗi xảy ra khi lưu cấu hình.' });
+      setMsgData({
+        isOpen: true,
+        title: 'Lỗi',
+        message: 'Có lỗi xảy ra khi lưu cấu hình. Vui lòng kiểm tra lại.',
+        variant: 'error'
+      });
     } finally {
       setSaving(false);
     }
@@ -163,10 +175,19 @@ export default function SettingsAdminPage() {
   const handleFlushCache = async () => {
     try {
       await settingService.flushCache();
-      setStatusMsg({ type: 'success', text: 'Đã xóa bộ nhớ đệm (Cache) thành công!' });
-      setTimeout(() => setStatusMsg(null), 4000);
+      setMsgData({
+        isOpen: true,
+        title: 'Cache Flushed',
+        message: 'Đã xóa toàn bộ bộ nhớ đệm (Cache) hệ thống thành công!',
+        variant: 'success'
+      });
     } catch {
-      setStatusMsg({ type: 'error', text: 'Lỗi xóa bộ nhớ đệm.' });
+      setMsgData({
+        isOpen: true,
+        title: 'Lỗi',
+        message: 'Không thể xóa bộ nhớ đệm vào lúc này.',
+        variant: 'error'
+      });
     }
   };
 
@@ -180,12 +201,27 @@ export default function SettingsAdminPage() {
     try {
       const result = await settingService.testTelegram(alertsForm.telegram_bot_token, alertsForm.telegram_chat_id);
       if (result.success) {
-        setStatusMsg({ type: 'success', text: 'Đã gửi tin nhắn test thành công! Hãy kiểm tra Telegram.' });
+        setMsgData({
+          isOpen: true,
+          title: 'Telegram Test',
+          message: 'Đã gửi tin nhắn test thành công! Hãy kiểm tra Telegram của bạn.',
+          variant: 'success'
+        });
       } else {
-        setStatusMsg({ type: 'error', text: `Lỗi: ${result.error?.description || 'Không thể gửi tin'}` });
+        setMsgData({
+          isOpen: true,
+          title: 'Telegram Test Failed',
+          message: `Lỗi: ${result.error?.description || 'Không thể gửi tin'}`,
+          variant: 'error'
+        });
       }
     } catch (error) {
-      setStatusMsg({ type: 'error', text: 'Lỗi kết nối tới Telegram API.' });
+      setMsgData({
+        isOpen: true,
+        title: 'Lỗi kết nối',
+        message: 'Không thể kết nối tới Telegram API.',
+        variant: 'error'
+      });
     } finally {
       setTesting(false);
     }
@@ -201,12 +237,27 @@ export default function SettingsAdminPage() {
     try {
       const result = await settingService.testTeams(alertsForm.teams_webhook_url);
       if (result.success) {
-        setStatusMsg({ type: 'success', text: 'Đã gửi tin nhắn test thành công! Hãy kiểm tra MS Teams.' });
+        setMsgData({
+          isOpen: true,
+          title: 'MS Teams Test',
+          message: 'Đã gửi tin nhắn test tới MS Teams thành công!',
+          variant: 'success'
+        });
       } else {
-        setStatusMsg({ type: 'error', text: `Lỗi: ${result.error || 'Không thể gửi tin'}` });
+        setMsgData({
+          isOpen: true,
+          title: 'MS Teams Test Failed',
+          message: `Lỗi: ${result.error || 'Không thể gửi tin'}`,
+          variant: 'error'
+        });
       }
     } catch (error) {
-      setStatusMsg({ type: 'error', text: 'Lỗi kết nối tới MS Teams Webhook.' });
+      setMsgData({
+        isOpen: true,
+        title: 'Lỗi kết nối',
+        message: 'Không thể kết nối tới MS Teams Webhook.',
+        variant: 'error'
+      });
     } finally {
       setTesting(false);
     }
@@ -229,12 +280,27 @@ export default function SettingsAdminPage() {
         to: mail_admin_recipient
       });
       if (result.success) {
-        setStatusMsg({ type: 'success', text: 'Đã gửi Email test thành công! Hãy kiểm tra hộp thư của bạn.' });
+        setMsgData({
+          isOpen: true,
+          title: 'Email Test',
+          message: 'Đã gửi Email test thành công! Hãy kiểm tra hộp thư của bạn.',
+          variant: 'success'
+        });
       } else {
-        setStatusMsg({ type: 'error', text: `Lỗi: ${result.error || 'Không thể gửi Email'}` });
+        setMsgData({
+          isOpen: true,
+          title: 'Email Test Failed',
+          message: `Lỗi: ${result.error || 'Không thể gửi Email'}`,
+          variant: 'error'
+        });
       }
     } catch (error) {
-      setStatusMsg({ type: 'error', text: 'Lỗi kết nối tới máy chủ Email.' });
+      setMsgData({
+        isOpen: true,
+        title: 'Lỗi kết nối',
+        message: 'Không thể kết nối tới máy chủ Email.',
+        variant: 'error'
+      });
     } finally {
       setTesting(false);
     }
@@ -269,22 +335,22 @@ export default function SettingsAdminPage() {
         subtitle="Quản lý toàn bộ cấu hình lõi, SEO, và biến môi trường của hệ thống"
       />
 
-      <div className="flex flex-col lg:flex-row gap-6 p-4 md:p-6 lg:p-0">
+      <div className="flex flex-col lg:flex-row gap-1 p-4 md:p-6 lg:p-0">
         {/* Sidebar Tabs */}
-        <div className="w-full lg:w-64 shrink-0">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-3 border border-slate-200 dark:border-slate-800 shadow-sm sticky top-24">
+        <div className="w-full lg:w-60 shrink-0">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-1.5 border border-slate-200 dark:border-slate-800 shadow-sm sticky top-14">
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
                 className={cn(
-                  "w-full flex items-center px-4 py-3 rounded-xl text-sm font-bold transition-all mb-1 last:mb-0",
+                  "w-full flex items-center px-4 py-2.5 rounded-xl text-sm font-bold transition-all mb-1 last:mb-0",
                   activeTab === tab.id
                     ? "bg-primary/10 text-primary"
                     : "text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
                 )}
               >
-                <tab.icon size={18} className="mr-3 shrink-0" />
+                <tab.icon size={18} className="mr-2.5 shrink-0" />
                 {tab.label}
               </button>
             ))}
@@ -541,10 +607,10 @@ export default function SettingsAdminPage() {
                           <div className="p-2 bg-amber-500/10 text-amber-500 rounded-xl">
                             <TrendingUp size={20} />
                           </div>
-                          <h4 className="font-bold text-sm dark:text-white">Bảo trì Viết bài</h4>
+                          <label htmlFor="setting-maintenance-posts" className="font-bold text-sm dark:text-white cursor-pointer">Bảo trì Viết bài</label>
                         </div>
-                        <label className="relative inline-flex items-center cursor-pointer scale-75">
-                          <input type="checkbox" className="sr-only peer" checked={maintenanceForm.maintenance_posts === 'true'} onChange={e => setMaintenanceForm({ ...maintenanceForm, maintenance_posts: e.target.checked ? 'true' : 'false' })} />
+                        <label htmlFor="setting-maintenance-posts" className="relative inline-flex items-center cursor-pointer scale-75">
+                          <input id="setting-maintenance-posts" name="maintenance_posts" type="checkbox" className="sr-only peer" checked={maintenanceForm.maintenance_posts === 'true'} onChange={e => setMaintenanceForm({ ...maintenanceForm, maintenance_posts: e.target.checked ? 'true' : 'false' })} />
                           <div className="w-14 h-7 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-amber-500"></div>
                         </label>
                       </div>
@@ -558,10 +624,10 @@ export default function SettingsAdminPage() {
                           <div className="p-2 bg-blue-500/10 text-blue-500 rounded-xl">
                             <Globe size={20} />
                           </div>
-                          <h4 className="font-bold text-sm dark:text-white">Bảo trì Bình luận</h4>
+                          <label htmlFor="setting-maintenance-comments" className="font-bold text-sm dark:text-white cursor-pointer">Bảo trì Bình luận</label>
                         </div>
-                        <label className="relative inline-flex items-center cursor-pointer scale-75">
-                          <input type="checkbox" className="sr-only peer" checked={maintenanceForm.maintenance_comments === 'true'} onChange={e => setMaintenanceForm({ ...maintenanceForm, maintenance_comments: e.target.checked ? 'true' : 'false' })} />
+                        <label htmlFor="setting-maintenance-comments" className="relative inline-flex items-center cursor-pointer scale-75">
+                          <input id="setting-maintenance-comments" name="maintenance_comments" type="checkbox" className="sr-only peer" checked={maintenanceForm.maintenance_comments === 'true'} onChange={e => setMaintenanceForm({ ...maintenanceForm, maintenance_comments: e.target.checked ? 'true' : 'false' })} />
                           <div className="w-14 h-7 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all dark:border-gray-600 peer-checked:bg-blue-500"></div>
                         </label>
                       </div>
@@ -652,9 +718,11 @@ export default function SettingsAdminPage() {
                         </div>
                       </div>
                       <div className="space-y-2 relative">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Admin Chat ID</label>
+                        <label htmlFor="setting-telegram-chat-id" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Admin Chat ID</label>
                         <div className="relative">
                           <input
+                            id="setting-telegram-chat-id"
+                            name="telegram_chat_id"
                             type={showSecrets['telegram_chat_id'] ? 'text' : 'password'}
                             value={alertsForm.telegram_chat_id || ''}
                             disabled={!isSuperAdmin}
@@ -709,9 +777,11 @@ export default function SettingsAdminPage() {
                       alertsForm.teams_enabled === 'false' && "opacity-50 pointer-events-none"
                     )}>
                       <div className="space-y-2 relative">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Incoming Webhook URL</label>
+                        <label htmlFor="setting-teams-webhook-url" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Incoming Webhook URL</label>
                         <div className="relative">
                           <input
+                            id="setting-teams-webhook-url"
+                            name="teams_webhook_url"
                             type={showSecrets['teams_webhook_url'] ? 'text' : 'password'}
                             value={alertsForm.teams_webhook_url || ''}
                             disabled={!isSuperAdmin}
@@ -771,21 +841,23 @@ export default function SettingsAdminPage() {
                       </div>
 
                       <div className="space-y-2">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">SMTP Host</label>
-                        <input type="text" value={alertsForm.mail_host || ''} disabled={!isSuperAdmin} onChange={e => setAlertsForm({ ...alertsForm, mail_host: e.target.value })} placeholder="smtp.gmail.com"
+                        <label htmlFor="setting-mail-host" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">SMTP Host</label>
+                        <input id="setting-mail-host" name="mail_host" type="text" value={alertsForm.mail_host || ''} disabled={!isSuperAdmin} onChange={e => setAlertsForm({ ...alertsForm, mail_host: e.target.value })} placeholder="smtp.gmail.com"
                           className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary disabled:opacity-70 disabled:cursor-not-allowed" />
                       </div>
 
                       <div className="space-y-2">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">SMTP Port</label>
-                        <input type="text" value={alertsForm.mail_port || ''} disabled={!isSuperAdmin} onChange={e => setAlertsForm({ ...alertsForm, mail_port: e.target.value })} placeholder="587 hoặc 465"
+                        <label htmlFor="setting-mail-port" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">SMTP Port</label>
+                        <input id="setting-mail-port" name="mail_port" type="text" value={alertsForm.mail_port || ''} disabled={!isSuperAdmin} onChange={e => setAlertsForm({ ...alertsForm, mail_port: e.target.value })} placeholder="587 hoặc 465"
                           className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary disabled:opacity-70 disabled:cursor-not-allowed" />
                       </div>
 
                       <div className="space-y-2 relative">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">SMTP User</label>
+                        <label htmlFor="setting-mail-user" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">SMTP User</label>
                         <div className="relative">
                           <input
+                            id="setting-mail-user"
+                            name="mail_user"
                             type={showSecrets['mail_user'] ? 'text' : 'password'}
                             value={alertsForm.mail_user || ''}
                             disabled={!isSuperAdmin}
@@ -849,6 +921,13 @@ export default function SettingsAdminPage() {
           </div>
         </div>
       </div>
+      <MessageDialog 
+        isOpen={msgData.isOpen}
+        onClose={() => setMsgData({ ...msgData, isOpen: false })}
+        title={msgData.title}
+        message={msgData.message}
+        variant={msgData.variant}
+      />
     </>
   );
 }

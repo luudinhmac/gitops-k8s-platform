@@ -5,12 +5,14 @@ import { User, UserRole } from '@portfolio/types';
 import { CreatePostDto } from '@portfolio/contracts';
 import sanitizeHtml from 'sanitize-html';
 import slugify from 'slugify';
+import { MediaManagerService } from '../../upload/media-manager.service';
 
 @Injectable()
 export class CreatePostUseCase {
   constructor(
     @Inject(I_POST_REPOSITORY)
     private readonly postRepository: IPostRepository,
+    private readonly mediaManager: MediaManagerService,
   ) {}
 
   private sanitizeOptions = {
@@ -61,6 +63,14 @@ export class CreatePostUseCase {
       slug: finalSlug,
       is_pinned: (user.role === UserRole.ADMIN || user.role === UserRole.SUPERADMIN) && data.is_pinned ? true : false,
     });
+
+    // Register media usages
+    if (post.cover_image) {
+      await this.mediaManager.registerUsage(post.cover_image, 'POST', post.id, 'cover');
+    }
+    if (post.content) {
+      await this.mediaManager.syncContentUsages('POST', post.id, post.content);
+    }
 
     return post;
   }

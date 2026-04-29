@@ -3,7 +3,7 @@ import { IPostRepository, I_POST_REPOSITORY } from '../domain/post.repository.in
 import { PostEntity } from '../domain/post.entity';
 import { User } from '@portfolio/types';
 import { UpdatePostDto } from '@portfolio/contracts';
-import { IStorageService, STORAGE_SERVICE } from '../../../infrastructure/storage/storage.interface';
+import { MediaManagerService } from '../../upload/media-manager.service';
 import { PostNotFoundException, UnauthorizedPostActionException } from '../domain/post.errors';
 import sanitizeHtml from 'sanitize-html';
 import slugify from 'slugify';
@@ -13,8 +13,7 @@ export class UpdatePostUseCase {
   constructor(
     @Inject(I_POST_REPOSITORY)
     private readonly postRepository: IPostRepository,
-    @Inject(STORAGE_SERVICE)
-    private readonly storageService: IStorageService,
+    private readonly mediaManager: MediaManagerService,
   ) {}
 
   private sanitizeOptions = {
@@ -74,8 +73,17 @@ export class UpdatePostUseCase {
       slug: finalSlug,
     });
 
-    if (data.cover_image && post.cover_image && post.cover_image !== data.cover_image) {
-      await this.storageService.deleteFile(post.cover_image).catch(() => {});
+    // Cover image usage registration
+    if (data.cover_image && data.cover_image !== post.cover_image) {
+      await this.mediaManager.registerUsage(data.cover_image, 'POST', id, 'cover');
+      if (post.cover_image) {
+        await this.mediaManager.unregisterUsage(post.cover_image, 'POST', id, 'cover');
+      }
+    }
+
+    // Sync content images
+    if (cleanContent !== undefined) {
+      await this.mediaManager.syncContentUsages('POST', id, cleanContent);
     }
 
     return updated;

@@ -3,6 +3,7 @@ import { CommentsController } from './controllers/comments.controller';
 import { NotificationsModule } from '../notifications/presentation/notifications.module';
 import { PostsModule } from '../posts/posts.module';
 import { PrismaCommentRepository } from './repositories/prisma-comment.repository';
+import { SettingsModule } from '../settings/settings.module';
 import { I_COMMENTS_REPOSITORY } from './domain/comment.repository.interface';
 
 // Use Cases
@@ -12,7 +13,7 @@ import { UpdateCommentUseCase } from './services/update-comment.use-case';
 import { DeleteCommentUseCase } from './services/delete-comment.use-case';
 
 @Module({
-  imports: [NotificationsModule, PostsModule],
+  imports: [NotificationsModule, PostsModule, SettingsModule],
   controllers: [CommentsController],
   providers: [
     {

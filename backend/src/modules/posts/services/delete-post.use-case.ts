@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { IPostRepository, I_POST_REPOSITORY } from '../domain/post.repository.interface';
 import { User, UserRole } from '@portfolio/types';
-import { IStorageService, STORAGE_SERVICE } from '../../../infrastructure/storage/storage.interface';
+import { MediaManagerService } from '../../upload/media-manager.service';
 import { AdminAlertService } from '../../admin-alert/admin-alert.service';
 import { PostNotFoundException, UnauthorizedPostActionException } from '../domain/post.errors';
 
@@ -10,8 +10,7 @@ export class DeletePostUseCase {
   constructor(
     @Inject(I_POST_REPOSITORY)
     private readonly postRepository: IPostRepository,
-    @Inject(STORAGE_SERVICE)
-    private readonly storageService: IStorageService,
+    private readonly mediaManager: MediaManagerService,
     private readonly adminAlertService: AdminAlertService,
   ) {}
 
@@ -23,7 +22,9 @@ export class DeletePostUseCase {
       throw new UnauthorizedPostActionException('delete');
     }
 
-    if (post.cover_image) await this.storageService.deleteFile(post.cover_image).catch(() => {});
+    // Unregister all media usages for this post
+    await this.mediaManager.unregisterAllForEntity('POST', id);
+    
     await this.postRepository.delete(id);
 
     this.adminAlertService.sendAlert({

@@ -8,7 +8,7 @@ export class TeamsService {
   constructor(
     @Inject(forwardRef(() => SettingsService))
     private settingsService: SettingsService,
-  ) {}
+  ) { }
 
   async sendMessage(text: string, webhookUrlOverride?: string) {
     try {
@@ -44,7 +44,7 @@ export class TeamsService {
                     type: 'TextBlock',
                     size: 'Medium',
                     weight: 'Bolder',
-                    text: '🔔 Thông báo Thử nghiệm',
+                    text: '🔔 Thông báo',
                   },
                   {
                     type: 'TextBlock',

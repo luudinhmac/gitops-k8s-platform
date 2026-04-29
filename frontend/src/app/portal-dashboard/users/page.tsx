@@ -51,7 +51,7 @@ export default function UsersPage() {
   const [showNewPass, setShowNewPass] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  
+
   const [promptData, setPromptData] = useState<{
     isOpen: boolean;
     title: string;
@@ -131,14 +131,14 @@ export default function UsersPage() {
 
       const updateData = { ...fields, reason };
       await userService.updatePermissions(userId, updateData);
-      
+
       setUsers(users.map(u => u.id === userId ? { ...u, ...fields } as AdminUser : u));
       if (settingsUser?.id === userId) {
         setSettingsUser(prev => prev ? ({ ...prev, ...fields } as any) : null);
       }
       setStatusMsg({ type: 'success', text: 'Đã cập nhật quyền hạn thành công' });
       setPromptData({ ...promptData, isOpen: false });
-    } catch (err: any) { 
+    } catch (err: any) {
       setStatusMsg({ type: 'error', text: err.response?.data?.message || 'Không thể cập nhật quyền hạn' });
     }
   };
@@ -221,10 +221,10 @@ export default function UsersPage() {
     if (!currentUser) return false;
     if (currentUser.role === 'superadmin') return true;
     if (targetUser.id === currentUser.id) return false; // Usually handle self via profile, but here we block self-mod in table actions
-    
+
     const currentLevel = ROLE_HIERARCHY[currentUser.role] || 0;
     const targetLevel = ROLE_HIERARCHY[targetUser.role] || 0;
-    
+
     return currentLevel > targetLevel;
   };
 
@@ -306,10 +306,10 @@ export default function UsersPage() {
                           {u.is_active ? "Hoạt động" : "Bị chặn Login"}
                         </span>
                         {(!u.can_comment || !u.can_post) && (
-                           <div className="flex gap-1 justify-center mt-0.5">
-                             {!u.can_comment && <span className="bg-orange-100/80 text-orange-700 px-1.5 py-[2px] text-[9px] rounded font-bold" title="Cấm bình luận"><MessageSquareOff size={8} className="inline mr-1" />Cmt</span>}
-                             {!u.can_post && <span className="bg-orange-100/80 text-orange-700 px-1.5 py-[2px] text-[9px] rounded font-bold" title="Cấm đăng bài"><Edit3 size={8} className="inline mr-1" />Bài</span>}
-                           </div>
+                          <div className="flex gap-1 justify-center mt-0.5">
+                            {!u.can_comment && <span className="bg-orange-100/80 text-orange-700 px-1.5 py-[2px] text-[9px] rounded font-bold" title="Cấm bình luận"><MessageSquareOff size={8} className="inline mr-1" />Cmt</span>}
+                            {!u.can_post && <span className="bg-orange-100/80 text-orange-700 px-1.5 py-[2px] text-[9px] rounded font-bold" title="Cấm đăng bài"><Edit3 size={8} className="inline mr-1" />Bài</span>}
+                          </div>
                         )}
                       </div>
                     </td>
@@ -426,9 +426,11 @@ export default function UsersPage() {
                     value={createForm.password} onChange={e => setCreateForm({ ...createForm, password: e.target.value })} />
                 </div>
               </div>
-              <Button type="submit" isLoading={createLoading} className="w-full" size="lg">
-                Tạo tài khoản
-              </Button>
+              <div className="flex justify-end pt-2">
+                <Button type="submit" isLoading={createLoading} size="lg" className="min-w-[140px]">
+                  Tạo tài khoản
+                </Button>
+              </div>
             </form>
           </div>
         </div>
@@ -451,9 +453,11 @@ export default function UsersPage() {
                   {showNewPass ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-              <Button type="submit" isLoading={resetLoading} className="w-full" size="lg">
-                Xác nhận thay đổi
-              </Button>
+              <div className="flex justify-end pt-2">
+                <Button type="submit" isLoading={resetLoading} size="lg" className="min-w-[160px]">
+                  Xác nhận thay đổi
+                </Button>
+              </div>
             </form>
           </div>
         </div>
@@ -465,72 +469,72 @@ export default function UsersPage() {
           <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-slate-200 dark:border-slate-800 p-8 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="px-1 py-1 border-b border-slate-100 dark:border-slate-800 mb-6 flex items-center justify-between">
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
-                 <IconBadge icon={Settings} size="sm" color="blue" /> Box Cài Đặt
+                <IconBadge icon={Settings} size="sm" color="blue" /> Box Cài Đặt
               </span>
               <button onClick={() => setSettingsUser(null)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full text-slate-400 hover:text-red-500 transition-all">
-                <X size={18}/>
+                <X size={18} />
               </button>
             </div>
 
             <div className="flex items-center gap-3 mb-8 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-2xl">
-               <UserAvatar user={settingsUser} size="md" />
-               <div className="min-w-0">
-                  <p className="font-bold text-slate-900 dark:text-white truncate">{settingsUser.fullname || settingsUser.username}</p>
-                  <p className="text-[10px] text-slate-400 font-bold tracking-widest uppercase">@{settingsUser.username}</p>
-               </div>
+              <UserAvatar user={settingsUser} size="md" />
+              <div className="min-w-0">
+                <p className="font-bold text-slate-900 dark:text-white truncate">{settingsUser.fullname || settingsUser.username}</p>
+                <p className="text-[10px] text-slate-400 font-bold tracking-widest uppercase">@{settingsUser.username}</p>
+              </div>
             </div>
 
             <div className="space-y-1.5">
-              <button 
-                className="w-full flex items-center justify-between px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all group" 
+              <button
+                className="w-full flex items-center justify-between px-4 py-3 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-2xl transition-all group"
                 onClick={() => { setResetModal({ open: true, userId: settingsUser.id, username: settingsUser.username }); setSettingsUser(null); }}
               >
-                <div className="flex items-center"><Lock size={16} className="mr-3 text-slate-400 group-hover:text-primary transition-colors" /> Đổi mật khẩu</div>
+                <div className="flex items-center"><Lock size={16} className="mr-3 text-slate-400 group-hover:text-primary transition-colors" /> Reset mật khẩu</div>
                 <div className="text-[9px] uppercase tracking-tighter text-slate-400 group-hover:text-primary">Update</div>
               </button>
 
               <div className="h-px bg-slate-100 dark:bg-slate-800 mx-2 my-2" />
 
               {[
-                { 
-                   label: settingsUser.role === 'superadmin' ? 'Quyền Master (Tối cao)' : 'Quyền Admin', 
-                   icon: settingsUser.role === 'superadmin' ? ShieldAlert : Shield, 
-                   color: settingsUser.role === 'superadmin' ? 'text-primary' : 'text-blue-500', 
-                   active: settingsUser.role === 'superadmin' || settingsUser.role === 'admin',
-                   disabled: settingsUser.role === 'superadmin',
-                   onClick: () => {
-                     if (settingsUser.role === 'superadmin') return;
-                     handleUpdatePermissions(settingsUser.id, { role: settingsUser.role === 'admin' ? 'user' : 'admin' });
-                   }
+                {
+                  label: settingsUser.role === 'superadmin' ? 'Quyền Master (Tối cao)' : 'Quyền Admin',
+                  icon: settingsUser.role === 'superadmin' ? ShieldAlert : Shield,
+                  color: settingsUser.role === 'superadmin' ? 'text-primary' : 'text-blue-500',
+                  active: settingsUser.role === 'superadmin' || settingsUser.role === 'admin',
+                  disabled: settingsUser.role === 'superadmin',
+                  onClick: () => {
+                    if (settingsUser.role === 'superadmin') return;
+                    handleUpdatePermissions(settingsUser.id, { role: settingsUser.role === 'admin' ? 'user' : 'admin' });
+                  }
                 },
-                { 
-                   label: 'Khóa Đăng nhập', 
-                   icon: ShieldAlert, 
-                   color: 'text-red-500', 
-                   active: !settingsUser.is_active,
-                   onClick: () => handleUpdatePermissions(settingsUser.id, { is_active: !settingsUser.is_active })
+                {
+                  label: 'Khóa đăng nhập',
+                  icon: ShieldAlert,
+                  color: 'text-red-500',
+                  active: !settingsUser.is_active,
+                  onClick: () => handleUpdatePermissions(settingsUser.id, { is_active: !settingsUser.is_active })
                 },
-                { 
-                   label: 'Cấm Bình luận', 
-                   icon: MessageSquareOff, 
-                   color: 'text-orange-500', 
-                   active: !settingsUser.can_comment,
-                   onClick: () => handleUpdatePermissions(settingsUser.id, { can_comment: !settingsUser.can_comment })
+                {
+                  label: 'Cấm Bình luận',
+                  icon: MessageSquareOff,
+                  color: 'text-orange-500',
+                  active: !settingsUser.can_comment,
+                  onClick: () => handleUpdatePermissions(settingsUser.id, { can_comment: !settingsUser.can_comment })
                 },
-                { 
-                   label: 'Cấm Đăng bài', 
-                   icon: Edit3, 
-                   color: 'text-orange-500', 
-                   active: !settingsUser.can_post,
-                   onClick: () => handleUpdatePermissions(settingsUser.id, { can_post: !settingsUser.can_post })
+                {
+                  label: 'Cấm Đăng bài',
+                  icon: Edit3,
+                  color: 'text-orange-500',
+                  active: !settingsUser.can_post,
+                  onClick: () => handleUpdatePermissions(settingsUser.id, { can_post: !settingsUser.can_post })
                 }
               ].map((item, idx) => (
-                <button 
+                <button
                   key={idx}
                   className={cn(
                     "w-full justify-between flex items-center px-4 py-3 text-xs font-bold transition-all rounded-2xl",
-                    item.disabled 
-                      ? "opacity-50 cursor-not-allowed bg-slate-50/50 dark:bg-slate-800/20 text-slate-400" 
+                    item.disabled
+                      ? "opacity-50 cursor-not-allowed bg-slate-50/50 dark:bg-slate-800/20 text-slate-400"
                       : "text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                   )}
                   onClick={item.onClick}
@@ -538,7 +542,7 @@ export default function UsersPage() {
                 >
                   <div className="flex items-center"><item.icon size={16} className={cn("mr-3", item.color)} /> {item.label}</div>
                   <div className={cn(
-                    "w-8 h-4 rounded-full transition-all relative p-0.5", 
+                    "w-8 h-4 rounded-full transition-all relative p-0.5",
                     item.active ? "bg-primary shadow-inner shadow-primary/20" : "bg-slate-200 dark:bg-slate-700",
                     item.disabled && "grayscale"
                   )}>
@@ -549,7 +553,7 @@ export default function UsersPage() {
             </div>
 
             <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
-               <Button variant="outline" className="w-full rounded-2xl py-2" onClick={() => setSettingsUser(null)}>Đóng</Button>
+              <Button variant="outline" className="w-full rounded-2xl py-2 font-bold" onClick={() => setSettingsUser(null)}>Đóng</Button>
             </div>
           </div>
         </div>

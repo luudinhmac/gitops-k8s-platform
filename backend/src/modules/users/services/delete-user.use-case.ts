@@ -1,7 +1,7 @@
 import { Inject, Injectable, ForbiddenException } from '@nestjs/common';
 import { IUsersRepository, I_USERS_REPOSITORY } from '../domain/user.repository.interface';
 import { User, UserRole } from '@portfolio/contracts';
-import { IStorageService, STORAGE_SERVICE } from '../../../infrastructure/storage/storage.interface';
+import { MediaManagerService } from '../../upload/media-manager.service';
 import { AdminAlertService } from '../../admin-alert/admin-alert.service';
 import { UserNotFoundException } from '../domain/user.errors';
 
@@ -10,8 +10,7 @@ export class DeleteUserUseCase {
   constructor(
     @Inject(I_USERS_REPOSITORY)
     private readonly userRepository: IUsersRepository,
-    @Inject(STORAGE_SERVICE)
-    private readonly storageService: IStorageService,
+    private readonly mediaManager: MediaManagerService,
     private readonly adminAlertService: AdminAlertService,
   ) {}
 
@@ -27,9 +26,8 @@ export class DeleteUserUseCase {
       throw new ForbiddenException('Không thể xóa tài khoản Super Admin.');
     }
 
-    if (user.avatar) {
-      await this.storageService.deleteFile(user.avatar).catch(() => {});
-    }
+    // Unregister all media usages for this user
+    await this.mediaManager.unregisterAllForEntity('USER', id);
 
     await this.userRepository.delete(id);
 

@@ -1,7 +1,7 @@
 import { Inject, Injectable, ForbiddenException } from '@nestjs/common';
 import { IUsersRepository, I_USERS_REPOSITORY } from '../domain/user.repository.interface';
 import { User, UserRole, UpdateUserDto } from '@portfolio/contracts';
-import { IStorageService, STORAGE_SERVICE } from '../../../infrastructure/storage/storage.interface';
+import { MediaManagerService } from '../../upload/media-manager.service';
 import { UserNotFoundException } from '../domain/user.errors';
 
 @Injectable()
@@ -9,8 +9,7 @@ export class UpdateUserUseCase {
   constructor(
     @Inject(I_USERS_REPOSITORY)
     private readonly userRepository: IUsersRepository,
-    @Inject(STORAGE_SERVICE)
-    private readonly storageService: IStorageService,
+    private readonly mediaManager: MediaManagerService,
   ) {}
 
   async execute(id: number, currentUser: User, data: UpdateUserDto) {
@@ -23,9 +22,15 @@ export class UpdateUserUseCase {
       throw new ForbiddenException('Bạn không có quyền cập nhật thông tin này.');
     }
 
-    // Avatar cleanup
-    if (data.avatar && user.avatar && data.avatar !== user.avatar) {
-      await this.storageService.deleteFile(user.avatar).catch(() => {});
+    // Avatar usage registration
+    if (data.avatar && data.avatar !== user.avatar) {
+      // Register new usage
+      await this.mediaManager.registerUsage(data.avatar, 'USER', id, 'avatar');
+      
+      // Cleanup old usage
+      if (user.avatar) {
+        await this.mediaManager.unregisterUsage(user.avatar, 'USER', id, 'avatar');
+      }
     }
 
     const updatedUser = await this.userRepository.update(id, data);

@@ -93,7 +93,10 @@ export default function PromptDialog({
 
               <form onSubmit={handleSubmit} className="w-full space-y-6 mt-2">
                  <div className="relative group">
+                    <label htmlFor="prompt-input" className="sr-only">{title}</label>
                     <textarea
+                      id="prompt-input"
+                      name="prompt_value"
                       autoFocus
                       required
                       placeholder={placeholder}

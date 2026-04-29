@@ -10,16 +10,17 @@ import * as mammoth from 'mammoth';
 
 // Register fonts in Quill
 const registerQuill = async () => {
+    if (typeof window === 'undefined') return;
     const Quill = (await import('react-quill-new')).default.Quill;
     const Font = Quill.import('formats/font') as { whitelist: string[] };
     Font.whitelist = ['inter', 'roboto', 'georgia', 'times-new-roman', 'courier-new'];
     // @ts-expect-error - Quill type definition doesn't fully match the dynamically imported Font module
     Quill.register(Font, true);
 };
-registerQuill();
 
 // Dynamic import to avoid SSR issues with Quill
 const ReactQuill = dynamic(async () => {
+    await registerQuill();
     const { default: RQ } = await import('react-quill-new');
     return RQ;
 }, {
@@ -71,7 +72,7 @@ export default function RichEditor({ id, value, onChange, placeholder }: RichEdi
                         formData.append('file', file);
 
                         try {
-                            const res = await fetch(`/api/upload?type=content`, {
+                            const res = await fetch(`/api/v1/upload?type=content`, {
                                 method: 'POST',
                                 body: formData,
                                 credentials: 'include'
@@ -161,6 +162,8 @@ export default function RichEditor({ id, value, onChange, placeholder }: RichEdi
                         <span>NHẬP TỪ FILE</span>
                     </button>
                     <input
+                        id="rich-editor-file-import"
+                        name="import_file"
                         type="file"
                         ref={fileInputRef}
                         onChange={handleFileImport}

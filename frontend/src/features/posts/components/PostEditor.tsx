@@ -362,7 +362,10 @@ export default function PostEditor({ postId }: PostEditorProps) {
                        <span className="text-[10px] font-bold uppercase tracking-widest block text-slate-500">Chọn ảnh bìa</span>
                      </div>
                    )}
+                   <label htmlFor="post-cover-upload" className="sr-only">Tải ảnh bìa</label>
                    <input
+                     id="post-cover-upload"
+                     name="cover_image_file"
                      type="file"
                      accept="image/*"
                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"

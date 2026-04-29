@@ -11,7 +11,7 @@ export class StatsMiddleware implements NestMiddleware {
   ) {}
 
   use(req: Request, res: Response, next: NextFunction) {
-    if (!req.url.includes('/api/stats/counters')) {
+    if (!req.url.includes('/stats/counters')) {
       // 1. Update Online Status & Track Request for DOS
       let identifier = req.ip || req.header('x-forwarded-for') || 'unknown';
       
@@ -24,14 +24,24 @@ export class StatsMiddleware implements NestMiddleware {
       this.monitoringService.trackRequest(identifier as string);
 
       // 2. Increment total visits only for "main" entries
-      // We only count when the user hits the posts list OR a specific post
-      // This avoids counting sub-calls for settings, categories, series, etc.
-      const isMainContent = req.url === '/api/posts' || 
-                           req.url.startsWith('/api/posts?') || 
-                           (req.url.startsWith('/api/posts/') && !req.url.includes('/like') && !req.url.includes('/pin'));
+      // Handle both /api/posts and /api/v1/posts
+      const url = req.url;
+      const isPostsList = url.endsWith('/posts') || url.includes('/posts?');
+      const isPostDetail = url.includes('/posts/') && !url.includes('/like') && !url.includes('/pin') && !url.includes('/publish');
 
-      if (req.method === 'GET' && isMainContent) {
-        this.statsService.incrementTotalVisits();
+      if (req.method === 'GET' && (isPostsList || isPostDetail)) {
+        // Session-based visit counting
+        const hasVisited = req.cookies['visitor_session'];
+        if (!hasVisited) {
+          this.statsService.incrementTotalVisits();
+          // Set a session cookie (expires when browser/tab is closed)
+          res.cookie('visitor_session', 'true', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: 'lax',
+            path: '/',
+          });
+        }
       }
     }
 

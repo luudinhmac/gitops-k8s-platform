@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server';
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  console.log(`[Proxy] Processing request: ${pathname}`);
 
   // 1. Define excluded paths (always accessible)
   const isExcludedPath = 
@@ -16,17 +17,19 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. Check for Bypass Cookie
+  // 2. Check for Bypass Cookie and User Role
   const bypassCookie = request.cookies.get('MAINTENANCE_BYPASS');
+  const userToken = request.cookies.get('access_token');
+  const userRole = request.cookies.get('user_role')?.value;
   
+  const isAdmin = ['admin', 'superadmin'].includes(userRole || '');
+  const hasPasscode = !!bypassCookie;
+
   // 3. Fetch Maintenance Status (with simple in-memory cache)
   try {
     const nodeEnv = process.env.NODE_ENV || 'development';
-    
-    // Simple global-like cache for Edge Runtime (persists as long as worker is alive)
     const CACHE_KEY = 'MAINTENANCE_STATUS_CACHE';
     const CACHE_TTL = 10000; // 10 seconds
-    
     const now = Date.now();
     const cached = (globalThis as any)[CACHE_KEY];
     
@@ -34,25 +37,21 @@ export async function proxy(request: NextRequest) {
     
     if (cached && (now - cached.timestamp < CACHE_TTL)) {
       isGlobalMaintenance = cached.status;
-      // console.debug(`[Proxy] Using cached maintenance status: ${isGlobalMaintenance}`);
     } else {
       let fetchUrl = process.env.INTERNAL_API_URL;
       
       if (!fetchUrl) {
         const backendHost = nodeEnv === 'production' ? 'backend' : '127.0.0.1';
-        fetchUrl = `http://${backendHost}:3001/api/v1/settings/public`;
+        fetchUrl = `http://${backendHost}:3002/api/v1/settings/public`;
       } else {
-        // Ensure /v1 is present
         if (!fetchUrl.includes('/v1')) {
           fetchUrl = fetchUrl.replace(/\/api\/?$/, '') + '/api/v1';
         }
-        // Ensure /settings/public is at the end
         if (!fetchUrl.endsWith('/settings/public')) {
           fetchUrl = fetchUrl.replace(/\/$/, '') + '/settings/public';
         }
       }
       
-      const start = Date.now();
       const response = await fetch(fetchUrl, { 
         cache: 'no-store',
         signal: AbortSignal.timeout(3000) 
@@ -61,29 +60,39 @@ export async function proxy(request: NextRequest) {
       if (response.ok) {
         const settings = await response.json();
         isGlobalMaintenance = settings.maintenance_global === 'true' || settings.maintenance_global === true;
-        
-        // Update cache
         (globalThis as any)[CACHE_KEY] = {
           status: isGlobalMaintenance,
           timestamp: now
         };
-        
-        console.log(`[Proxy] Fetched maintenance status: ${isGlobalMaintenance} (${Date.now() - start}ms)`);
       }
     }
     
-    if (isGlobalMaintenance && !bypassCookie) {
-      console.log(`[Proxy] REDIRECTING to /maintenance from ${pathname}`);
-      const url = new URL('/maintenance', request.url);
-      url.searchParams.set('from', pathname);
-      return NextResponse.redirect(url);
+    // Maintenance Enforcement Logic
+    if (isGlobalMaintenance) {
+      // 1. If user is Admin, they can bypass EVERYTHING
+      if (isAdmin && userToken) {
+        return NextResponse.next();
+      }
+
+      // 2. If user has passcode, they can ONLY access /login (and its resources)
+      if (hasPasscode && (pathname === '/login' || pathname.startsWith('/_next') || pathname.startsWith('/api'))) {
+        return NextResponse.next();
+      }
+
+      // 3. Otherwise, if not on maintenance page, redirect to it
+      if (pathname !== '/maintenance') {
+        console.log(`[Proxy] REDIRECTING to /maintenance from ${pathname} (Maintenance ON, No Admin/Passcode)`);
+        const url = new URL('/maintenance', request.url);
+        url.searchParams.set('from', pathname);
+        return NextResponse.redirect(url);
+      }
     }
   } catch (error: any) {
     console.error(`[Proxy] Maintenance check failed: ${error.message}`);
   }
 
-  // 4. Admin Stealth Protection
-  if (pathname.startsWith('/admin') && pathname !== '/admin/login') {
+  // 4. Admin Stealth Protection (Original logic preserved)
+  if (pathname.startsWith('/portal-dashboard') && pathname !== '/portal-dashboard/login') {
     const allCookies = request.cookies.getAll().map(c => c.name);
     const token = request.cookies.get('token') || request.cookies.get('access_token');
     if (!token) {

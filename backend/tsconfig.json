@@ -21,8 +21,8 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@portfolio/contracts": ["src/_shared/contracts/index"],
-      "@portfolio/types": ["src/_shared/types/index"]
+      "@portfolio/contracts": ["shared/packages/contracts/src/index"],
+      "@portfolio/types": ["shared/packages/types/src/index"]
     }
   },
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts", "prisma", "check_macld.ts", "scratch", "scripts"]

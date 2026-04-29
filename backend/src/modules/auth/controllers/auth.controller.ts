@@ -60,6 +60,14 @@ export class AuthController {
       sameSite: 'lax',
     });
 
+    // Set user role hint for middleware
+    res.cookie('user_role', user.role, {
+      path: '/',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      httpOnly: false,
+      sameSite: 'lax',
+    });
+
     return result;
   }
 
@@ -86,6 +94,7 @@ export class AuthController {
   async logout(@Res({ passthrough: true }) res: any) {
     res.clearCookie('access_token');
     res.clearCookie('logged_in');
+    res.clearCookie('user_role');
     return { success: true, message: 'Đăng xuất thành công' };
   }
 }
