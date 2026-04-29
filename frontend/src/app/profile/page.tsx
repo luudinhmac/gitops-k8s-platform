@@ -503,9 +503,11 @@ function ProfilePageContent() {
             <div>
                <div className="flex items-center justify-between mb-1">
                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">Series của tôi ({mySeries.length})</h2>
-                 <Link href="/admin/series" className="text-xs font-bold text-primary hover:underline flex items-center">
-                   <Edit size={12} className="mr-1" /> Quản lý tất cả series
-                 </Link>
+                 {user && ['admin', 'superadmin'].includes(user.role) && (
+                   <Link href="/admin/series" className="text-xs font-bold text-primary hover:underline flex items-center">
+                     <Edit size={12} className="mr-1" /> Quản lý tất cả series
+                   </Link>
+                 )}
                </div>
 
                {seriesLoading ? (
