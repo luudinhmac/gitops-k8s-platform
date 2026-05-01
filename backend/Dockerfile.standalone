@@ -8,13 +8,13 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 COPY shared ./shared
 
-# Install dependencies (including local shared packages)
+# Install dependencies
 RUN pnpm install --frozen-lockfile
 
 # Copy source code
 COPY . .
 
-# Generate Prisma client
+# Generate Prisma client for build
 RUN npx prisma generate
 
 # Build the application
@@ -25,24 +25,30 @@ FROM node:22-alpine AS runner
 RUN apk add --no-cache openssl
 WORKDIR /app
 
+ENV NODE_ENV=production
+
 # Install production dependencies
 COPY package.json pnpm-lock.yaml ./
 COPY shared ./shared
 RUN corepack enable && corepack prepare pnpm@latest --activate
 RUN pnpm install --prod --frozen-lockfile
 
-# Copy build artifacts
+# Copy build artifacts and prisma schema
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package.json ./package.json
+
+# Regenerate Prisma client in runner stage to ensure it exists in node_modules
+RUN npx prisma generate
 
 # Setup user
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nestjs && \
     mkdir -p /app/uploads && \
-    chown -R nestjs:nodejs /app
+    chown -R nestjs:nodejs /app && \
+    chown -R nestjs:nodejs /app/prisma
+
 USER nestjs
 
 EXPOSE 3001
-ENV NODE_ENV=production
 CMD ["node", "dist/main.js"]

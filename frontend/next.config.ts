@@ -20,8 +20,8 @@ const nextConfig: NextConfig = {
     */
     async rewrites() {
         const internalApiUrl = process.env.INTERNAL_API_URL || 'http://127.0.0.1:3002/api';
-        // Remove trailing slash and /api suffix to use as base destination
-        const destinationBase = internalApiUrl.replace(/\/api\/?$/, '');
+        // Use the origin from INTERNAL_API_URL to avoid double-prefixing
+        const destinationBase = new URL(internalApiUrl).origin;
         
         return [
             {

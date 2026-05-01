@@ -63,26 +63,28 @@ export default function Navbar() {
           </Link>
 
           {/* Search Bar in Navbar */}
-          <div suppressHydrationWarning={true} className="hidden lg:flex flex-grow max-w-md mx-8 relative group">
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              router.push(`/?q=${encodeURIComponent(searchValue)}`);
+            }}
+            className="hidden lg:flex flex-grow max-w-md mx-8 relative group"
+          >
             <label htmlFor="nav-search" className="sr-only">Tìm kiếm bài viết</label>
-            <div suppressHydrationWarning={true} className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
               <Search size={16} />
             </div>
             <input
               id="nav-search"
-              name="q"
+              name="nav-search"
               type="text"
               placeholder="Tìm kiếm bài viết..."
               className="w-full pl-10 pr-4 py-2 bg-slate-100/50 dark:bg-slate-800/50 border border-transparent focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all rounded-full text-sm"
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  router.push(`/?q=${encodeURIComponent(searchValue)}`);
-                }
-              }}
+              autoComplete="off"
             />
-          </div>
+          </form>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center space-x-8">

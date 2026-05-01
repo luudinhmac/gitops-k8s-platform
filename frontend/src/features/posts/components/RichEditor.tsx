@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import 'react-quill-new/dist/quill.snow.css';
 import { FileUp, Loader2 } from 'lucide-react';
@@ -30,38 +30,47 @@ const ReactQuill = dynamic(async () => {
 
 interface RichEditorProps {
     id?: string;
+    name?: string;
     value: string;
     onChange: (content: string) => void;
     placeholder?: string;
 }
 
-export default function RichEditor({ id, value, onChange, placeholder }: RichEditorProps) {
+export default function RichEditor({ id, name, value, onChange, placeholder }: RichEditorProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [importing, setImporting] = useState(false);
     const [msgData, setMsgData] = useState<{ isOpen: boolean; title: string; message: string; variant: 'info' | 'success' | 'warning' | 'error' }>({ 
         isOpen: false, title: '', message: '', variant: 'error' 
     });
+    
+    useEffect(() => {
+        // Fix accessibility for dynamic Quill inputs (formula, link, video tooltips)
+        const fixDynamicInputs = () => {
+            const inputs = document.querySelectorAll('input[data-formula], input[data-link], input[data-video]');
+            inputs.forEach((input, index) => {
+                if (!input.id) input.id = `ql-dynamic-${id}-${index}`;
+                if (!input.getAttribute('name')) input.setAttribute('name', `ql-dynamic-name-${id}-${index}`);
+                if (!input.getAttribute('aria-label')) input.setAttribute('aria-label', 'quill-tool-input');
+            });
+        };
+
+        const observer = new MutationObserver(fixDynamicInputs);
+        observer.observe(document.body, { childList: true, subtree: true });
+        
+        fixDynamicInputs();
+        return () => observer.disconnect();
+    }, [id]);
 
     const modules = useMemo(() => ({
         toolbar: {
-            container: [
-                [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-                [{ 'font': ['inter', 'roboto', 'georgia', 'times-new-roman', 'courier-new'] }],
-                [{ 'size': ['small', false, 'large', 'huge'] }],
-                ['bold', 'italic', 'underline', 'strike'],
-                [{ 'color': [] }, { 'background': [] }],
-                [{ 'script': 'sub' }, { 'script': 'super' }],
-                [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
-                [{ 'direction': 'rtl' }, { 'align': [] }],
-                ['blockquote', 'code-block'],
-                ['link', 'image', 'video'],
-                ['clean']
-            ],
+            container: `#toolbar-${id || 'editor'}`,
             handlers: {
                 image: function() {
                     const input = document.createElement('input');
                     input.setAttribute('type', 'file');
                     input.setAttribute('accept', 'image/*');
+                    input.setAttribute('id', 'quill-image-upload');
+                    input.setAttribute('name', 'quill-image-upload');
                     input.click();
 
                     input.onchange = async () => {
@@ -96,7 +105,7 @@ export default function RichEditor({ id, value, onChange, placeholder }: RichEdi
         clipboard: {
             matchVisual: false,
         }
-    }), []);
+    }), [id]);
 
     const formats = [
         'header', 'font', 'size',
@@ -143,8 +152,10 @@ export default function RichEditor({ id, value, onChange, placeholder }: RichEdi
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
+    const fileInputId = `file-import-${id || 'editor'}`;
+
     return (
-        <div id={id} className="rich-editor-container border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50/50 dark:bg-slate-950/50">
+        <div className="rich-editor-container border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-slate-50/50 dark:bg-slate-950/50">
             {/* Auxiliary Actions Header */}
             <div className="flex items-center justify-between p-3 border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
                 <div className="flex items-center space-x-2">
@@ -162,7 +173,7 @@ export default function RichEditor({ id, value, onChange, placeholder }: RichEdi
                         <span>NHẬP TỪ FILE</span>
                     </button>
                     <input
-                        id="rich-editor-file-import"
+                        id={fileInputId}
                         name="import_file"
                         type="file"
                         ref={fileInputRef}
@@ -173,8 +184,82 @@ export default function RichEditor({ id, value, onChange, placeholder }: RichEdi
                 </div>
             </div>
             
+            {/* Custom Toolbar HTML to fix accessibility issues with hidden select/input elements */}
+            <div id={`toolbar-${id || 'editor'}`} className="ql-toolbar-custom">
+                <span className="ql-formats">
+                    <select className="ql-header" id={`ql-header-${id}`} name={`ql-header-${id}`} aria-label="Header" defaultValue="">
+                        <option value="1" />
+                        <option value="2" />
+                        <option value="3" />
+                        <option value="4" />
+                        <option value="5" />
+                        <option value="6" />
+                        <option value="" />
+                    </select>
+                    <select className="ql-font" id={`ql-font-${id}`} name={`ql-font-${id}`} aria-label="Font" defaultValue="inter">
+                        <option value="inter" />
+                        <option value="roboto" />
+                        <option value="georgia" />
+                        <option value="times-new-roman" />
+                        <option value="courier-new" />
+                    </select>
+                    <select className="ql-size" id={`ql-size-${id}`} name={`ql-size-${id}`} aria-label="Size" defaultValue="">
+                        <option value="small" />
+                        <option value="" />
+                        <option value="large" />
+                        <option value="huge" />
+                    </select>
+                </span>
+                <span className="ql-formats">
+                    <button className="ql-bold" aria-label="Bold" />
+                    <button className="ql-italic" aria-label="Italic" />
+                    <button className="ql-underline" aria-label="Underline" />
+                    <button className="ql-strike" aria-label="Strike" />
+                </span>
+                <span className="ql-formats">
+                    <select className="ql-color" id={`ql-color-${id}`} name={`ql-color-${id}`} aria-label="Color" />
+                    <select className="ql-background" id={`ql-background-${id}`} name={`ql-background-${id}`} aria-label="Background" />
+                </span>
+                <span className="ql-formats">
+                    <button className="ql-script" value="sub" aria-label="Subscript" />
+                    <button className="ql-script" value="super" aria-label="Superscript" />
+                </span>
+                <span className="ql-formats">
+                    <button className="ql-list" value="ordered" aria-label="Ordered List" />
+                    <button className="ql-list" value="bullet" aria-label="Bullet List" />
+                    <button className="ql-indent" value="-1" aria-label="Decrease Indent" />
+                    <button className="ql-indent" value="+1" aria-label="Increase Indent" />
+                </span>
+                <span className="ql-formats">
+                    <select className="ql-align" id={`ql-align-${id}`} name={`ql-align-${id}`} aria-label="Align" />
+                    <button className="ql-direction" value="rtl" aria-label="Text Direction" />
+                </span>
+                <span className="ql-formats">
+                    <button className="ql-blockquote" aria-label="Blockquote" />
+                    <button className="ql-code-block" aria-label="Code Block" />
+                </span>
+                <span className="ql-formats">
+                    <button className="ql-link" aria-label="Insert Link" />
+                    <button className="ql-image" aria-label="Insert Image" />
+                    <button className="ql-video" aria-label="Insert Video" />
+                </span>
+                <span className="ql-formats">
+                    <button className="ql-clean" aria-label="Remove Formatting" />
+                </span>
+            </div>
+
             <div className="relative">
+                {/* Hidden textarea for form label association and accessibility */}
+                <textarea 
+                    id={id} 
+                    name={name} 
+                    value={value} 
+                    onChange={(e) => onChange(e.target.value)}
+                    className="sr-only" 
+                    tabIndex={-1}
+                />
                 <ReactQuill
+                    id={`${id}-quill`}
                     theme="snow"
                     value={value}
                     onChange={onChange}

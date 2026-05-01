@@ -205,7 +205,10 @@ export default function PostEditor({ postId }: PostEditorProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+    <form 
+      onSubmit={(e) => e.preventDefault()}
+      className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20"
+    >
       <AdminPageHeader 
         title={isEditMode ? "Chỉnh sửa bài viết" : "Viết bài mới"}
         subtitle={isEditMode ? `ID: #${postId} • ${formData.title || 'Đang soạn thảo'}` : "Bắt đầu chia sẻ kiến thức của bạn"}
@@ -247,15 +250,15 @@ export default function PostEditor({ postId }: PostEditorProps) {
             
             <AdminCard>
                 <div className="mb-1 flex items-center justify-between">
-                  <label htmlFor="post-title" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Tiêu đề bài viết</label>
+                  <label htmlFor="pe-title" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Tiêu đề bài viết</label>
                   {!formData.is_published && (
                     <Badge variant="warning" className="mb-2 text-[8px] px-2 py-0.5">Bản nháp</Badge>
                   )}
                 </div>
                 <div className="mb-1">
                   <input 
-                    id="post-title"
-                    name="title"
+                    id="pe-title"
+                    name="pe-title"
                     type="text" 
                     placeholder="Nhập tiêu đề..." 
                     value={formData.title} 
@@ -267,13 +270,15 @@ export default function PostEditor({ postId }: PostEditorProps) {
                         slug: slugify(newTitle) 
                       });
                     }}
+                    autoComplete="off"
                     className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-none rounded-xl outline-none focus:ring-2 focus:ring-primary text-base font-bold placeholder:text-slate-400" 
                   />
                </div>
                <div>
-                  <label htmlFor="post-content-editor" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">Nội dung bài viết</label>
+                  <label htmlFor="pe-content-editor" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1 cursor-pointer">Nội dung bài viết</label>
                   <RichEditor 
-                    id="post-content-editor"
+                    id="pe-content-editor"
+                    name="content"
                     value={formData.content} 
                     onChange={(content) => setFormData({ ...formData, content })} 
                   />
@@ -285,59 +290,83 @@ export default function PostEditor({ postId }: PostEditorProps) {
              <AdminCard title="Cài đặt" icon={Layout} padding="p-5 md:p-6">
                 <div className="space-y-1">
                     <div>
-                      <label htmlFor="post-category" className="block text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1.5 ml-1">Danh mục</label>
-                      <select id="post-category" name="category_id" value={formData.category_id} onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-                        className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs appearance-none outline-none focus:ring-2 focus:ring-primary">
+                      <label htmlFor="pe-category" className="block text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1.5 ml-1">Danh mục</label>
+                      <select 
+                        id="pe-category" 
+                        name="pe-category" 
+                        value={formData.category_id} 
+                        onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
+                        className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs appearance-none outline-none focus:ring-2 focus:ring-primary"
+                        autoComplete="off"
+                      >
                          <option value="">Chọn danh mục</option>
                          {categories.map(cat => ( <option key={cat.id} value={cat.id}>{cat.name}</option> ))}
                       </select>
                    </div>
                     <div>
-                      <label htmlFor="post-tags" className="block text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1.5 ml-1">Thẻ (ngăn cách bởi dấu phẩy)</label>
+                      <label htmlFor="pe-tags" className="block text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1.5 ml-1">Thẻ (ngăn cách bởi dấu phẩy)</label>
                       <div className="relative">
                         <Tag size={12} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input id="post-tags" name="tags" type="text" placeholder="tag1, tag2..." value={formData.tags} onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                          className="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm" />
+                        <input 
+                          id="pe-tags" 
+                          name="pe-tags" 
+                          type="text" 
+                          placeholder="tag1, tag2..." 
+                          value={formData.tags} 
+                          onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
+                          autoComplete="off"
+                          className="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm" 
+                        />
                       </div>
                    </div>
                     <div>
-                      <label htmlFor="post-slug" className="block text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1.5 ml-1">Đường dẫn (Slug)</label>
+                      <label htmlFor="pe-slug" className="block text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1.5 ml-1">Đường dẫn (Slug)</label>
                       <input 
-                        id="post-slug"
-                        name="slug"
+                        id="pe-slug"
+                        name="pe-slug"
                         type="text" 
                         placeholder="bai-viet-seo..." 
                         value={formData.slug} 
                         onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                        autoComplete="off"
                         className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm" 
                       />
                    </div>
                     <div>
-                      <label htmlFor="post-series" className="block text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1.5 ml-1">Series bài viết</label>
+                      <label htmlFor="pe-series" className="block text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1.5 ml-1">Series bài viết</label>
                       <input 
-                        id="post-series"
-                        name="series_name"
-                        list="series-options"
+                        id="pe-series"
+                        name="pe-series"
+                        list="pe-series-options"
                         placeholder="Chọn hoặc nhập mới..."
                         value={formData.series_name}
                         onChange={(e) => setFormData({ ...formData, series_name: e.target.value })}
+                        autoComplete="off"
                         className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm"
                       />
-                      <datalist id="series-options">
+                      <datalist id="pe-series-options">
                         {seriesList.map(s => ( <option key={s.id} value={s.name} /> ))}
                       </datalist>
                    </div>
                     {formData.series_name && (
                       <div className="animate-in slide-in-from-top-2 duration-300">
-                         <label htmlFor="post-series-order" className="block text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1.5 ml-1">Thứ tự trong Series</label>
-                         <input id="post-series-order" name="series_order" type="number" placeholder="0" value={formData.series_order} onChange={(e) => setFormData({ ...formData, series_order: e.target.value })}
-                           className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm" />
+                         <label htmlFor="pe-series-order" className="block text-[9px] font-bold text-slate-400 uppercase tracking-tighter mb-1.5 ml-1">Thứ tự trong Series</label>
+                         <input 
+                           id="pe-series-order" 
+                           name="pe-series-order" 
+                           type="number" 
+                           placeholder="0" 
+                           value={formData.series_order} 
+                           onChange={(e) => setFormData({ ...formData, series_order: e.target.value })}
+                           autoComplete="off"
+                           className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-xs outline-none focus:ring-2 focus:ring-primary transition-all shadow-sm" 
+                         />
                       </div>
                     )}
                     {['admin', 'superadmin'].includes(user?.role || '') && (
                       <div className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800">
-                         <label htmlFor="post-pinned" className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tight cursor-pointer">Ghim bài viết</label>
-                         <input id="post-pinned" name="is_pinned" type="checkbox" className="w-4 h-4 accent-primary cursor-pointer" checked={formData.is_pinned} onChange={(e) => setFormData({ ...formData, is_pinned: e.target.checked })} />
+                         <label htmlFor="pe-pinned" className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tight cursor-pointer">Ghim bài viết</label>
+                         <input id="pe-pinned" name="is_pinned" type="checkbox" className="w-4 h-4 accent-primary cursor-pointer" checked={formData.is_pinned} onChange={(e) => setFormData({ ...formData, is_pinned: e.target.checked })} />
                       </div>
                     )}
                 </div>
@@ -362,9 +391,9 @@ export default function PostEditor({ postId }: PostEditorProps) {
                        <span className="text-[10px] font-bold uppercase tracking-widest block text-slate-500">Chọn ảnh bìa</span>
                      </div>
                    )}
-                   <label htmlFor="post-cover-upload" className="sr-only">Tải ảnh bìa</label>
+                   <label htmlFor="pe-cover-upload" className="sr-only">Tải ảnh bìa</label>
                    <input
-                     id="post-cover-upload"
+                     id="pe-cover-upload"
                      name="cover_image_file"
                      type="file"
                      accept="image/*"
@@ -384,7 +413,7 @@ export default function PostEditor({ postId }: PostEditorProps) {
         message={msgData.message}
         variant={msgData.variant}
       />
-    </div>
+    </form>
   );
 }
 

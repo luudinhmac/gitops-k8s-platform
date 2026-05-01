@@ -43,6 +43,7 @@ async function main() {
         { key: 'maintenance_posts', value: 'false', group: 'maintenance', is_public: true },
         { key: 'maintenance_comments', value: 'false', group: 'maintenance', is_public: true },
         { key: 'maintenance_passcode', value: '123456', group: 'maintenance', is_public: false },
+        { key: 'stats_total_visits', value: '0', group: 'stats', is_public: true },
     ];
     for (const item of settings) {
         await prisma.setting.upsert({

@@ -11,17 +11,22 @@ export class StatsMiddleware implements NestMiddleware {
   ) {}
 
   use(req: Request, res: Response, next: NextFunction) {
-    if (!req.url.includes('/stats/counters')) {
-      // 1. Update Online Status & Track Request for DOS
-      let identifier = req.ip || req.header('x-forwarded-for') || 'unknown';
+    const url = req.url;
+    
+    // 1. Skip tracking for internal health checks and counters endpoint
+    const isInternal = url.includes('/health') || url.includes('/stats/counters');
+    
+    if (!isInternal) {
+      // Get real IP from Traefik header or fallback
+      let identifier = (req.header('x-forwarded-for') || req.ip || 'unknown').split(',')[0].trim();
       
       // Normalize local IP (Windows IPv6 to IPv4)
       if (identifier === '::1' || identifier === '::ffff:127.0.0.1') {
         identifier = '127.0.0.1';
       }
 
-      this.statsService.updateUserActivity(identifier as string);
-      this.monitoringService.trackRequest(identifier as string);
+      this.statsService.updateUserActivity(identifier);
+      this.monitoringService.trackRequest(identifier);
 
       // 2. Increment total visits only for "main" entries
       // Handle both /api/posts and /api/v1/posts

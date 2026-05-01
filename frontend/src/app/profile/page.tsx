@@ -150,7 +150,7 @@ function ProfilePageContent() {
       formData.append('file', file);
 
       const uploadData = await userService.uploadAvatar(formData);
-      const avatarUrl = `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${uploadData.url}`;
+      const avatarUrl = uploadData.url;
 
       await userService.updateProfile(user.id, { avatar: avatarUrl });
       await checkAuth();

@@ -41,8 +41,9 @@ export async function proxy(request: NextRequest) {
       let fetchUrl = process.env.INTERNAL_API_URL;
       
       if (!fetchUrl) {
-        const backendHost = nodeEnv === 'production' ? 'backend' : '127.0.0.1';
-        fetchUrl = `http://${backendHost}:3002/api/v1/settings/public`;
+        const backendHost = nodeEnv === 'production' ? 'portfolio-backend' : '127.0.0.1';
+        const backendPort = nodeEnv === 'production' ? '3001' : '3002';
+        fetchUrl = `http://${backendHost}:${backendPort}/api/v1/settings/public`;
       } else {
         if (!fetchUrl.includes('/v1')) {
           fetchUrl = fetchUrl.replace(/\/api\/?$/, '') + '/api/v1';

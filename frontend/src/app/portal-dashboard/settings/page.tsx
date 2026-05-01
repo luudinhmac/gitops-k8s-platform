@@ -142,10 +142,20 @@ export default function SettingsAdminPage() {
       else if (group === 'alerts') targetForm = alertsForm;
       else targetForm = maintenanceForm;
 
-      const items = Object.entries(targetForm).map(([key, value]) => ({
-        key,
-        value: String(value)
-      }));
+      const items = Object.entries(targetForm)
+        .filter(([key, value]) => {
+          // Only include if value is different from original
+          return String(value) !== String(originalForms[group][key]);
+        })
+        .map(([key, value]) => ({
+          key,
+          value: String(value)
+        }));
+
+      if (items.length === 0) {
+        setSaving(false);
+        return;
+      }
 
       await settingService.updateSettings(items);
       setMsgData({

@@ -4,7 +4,7 @@ import axios from 'axios';
 const getBaseUrl = () => {
   const isServer = typeof window === 'undefined';
   const defaultBase = isServer 
-    ? (process.env.NODE_ENV === 'production' ? 'http://backend:3001/api' : 'http://127.0.0.1:3001/api')
+    ? (process.env.NODE_ENV === 'production' ? 'http://portfolio-backend:3001/api' : 'http://127.0.0.1:3002/api')
     : '/api';
   
   const base = process.env.NEXT_PUBLIC_API_URL || defaultBase;

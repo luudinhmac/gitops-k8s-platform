@@ -10,6 +10,9 @@ variables:
   IMAGE_NAME: $CI_REGISTRY_USER/portfolio-frontend
   IMAGE_TAG: $IMAGE_NAME:$CI_COMMIT_TAG
   IMAGE_LATEST: $IMAGE_NAME:latest
+  K8S_NAMESPACE: portfolio
+  K8S_DEPLOYMENT_NAME: portfolio-frontend
+  K8S_CONTAINER_NAME: frontend
 
 sync_api:
   stage: sync
@@ -43,8 +46,6 @@ build_frontend:
     - docker:dind
   tags:
     - agent-1
-  # needs:
-  #   - sync_api
   before_script:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
   script:
@@ -52,6 +53,7 @@ build_frontend:
     - docker push $IMAGE_TAG
     - docker push $IMAGE_LATEST
   after_script:
+    - docker rmi $IMAGE_TAG $IMAGE_LATEST || true
     - docker image prune -f
   only:
     - /^v.*$/
@@ -64,7 +66,7 @@ deploy_staging:
   tags:
     - agent-1
   script:
-    - kubectl set image deployment/frontend frontend=$IMAGE_TAG -n portfolio
+    - kubectl set image deployment/$K8S_DEPLOYMENT_NAME $K8S_CONTAINER_NAME=$IMAGE_TAG -n $K8S_NAMESPACE
   only:
     - /^v.*$/
 
@@ -76,7 +78,7 @@ deploy_prod:
   tags:
     - agent-2
   script:
-    - kubectl set image deployment/frontend frontend=$IMAGE_TAG -n portfolio
+    - kubectl set image deployment/$K8S_DEPLOYMENT_NAME $K8S_CONTAINER_NAME=$IMAGE_TAG -n $K8S_NAMESPACE
   when: manual
   only:
     - /^v.*$/

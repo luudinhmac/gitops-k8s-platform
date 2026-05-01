@@ -22,13 +22,20 @@ export async function generateMetadata(): Promise<Metadata> {
   let siteDesc = 'Portfolio giới thiệu các dự án và kỹ năng chuyên môn về System Engineering và Web Development.';
   
   try {
-    const apiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002/api';
+    const apiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || '/api';
     const finalApiUrl = apiUrl.endsWith('/v1') ? apiUrl : `${apiUrl}/v1`;
-    const res = await fetch(`${finalApiUrl}/settings/public`, { next: { revalidate: 10 } });
-    if (res.ok) {
-      const data = await res.json();
-      if (data.site_title) siteTitle = data.site_title;
-      if (data.site_tagline) siteDesc = data.site_tagline;
+    
+    // Only fetch if we have an absolute URL (needed for SSR/Build time)
+    if (finalApiUrl.startsWith('http')) {
+      const res = await fetch(`${finalApiUrl}/settings/public`, { 
+        next: { revalidate: 10 },
+        signal: AbortSignal.timeout(5000)
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.site_title) siteTitle = data.site_title;
+        if (data.site_tagline) siteDesc = data.site_tagline;
+      }
     }
   } catch (err) {
     console.error('Failed to fetch settings for metadata:', err instanceof Error ? err.message : String(err));
