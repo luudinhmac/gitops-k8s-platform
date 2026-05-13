@@ -1,125 +1,161 @@
 'use client';
 
 import { 
-  Server, Shield, Database, Award, Rocket, FileCode, Coffee, User as UserIcon, Cloud
+  Server, Shield, Database, Award, Rocket, FileCode, User as UserIcon, Cloud, 
+  Cpu, Terminal, Activity, Layers, Globe, Settings, Lock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 
 export default function AboutSection() {
   const stats = [
-    { label: 'Năm kinh nghiệm', value: '4+', icon: Award, color: 'text-blue-500' },
-    { label: 'Dự án đã triển khai', value: '20+', icon: Rocket, color: 'text-blue-500' },
-    { label: 'Chứng chỉ chuyên môn', value: '15+', icon: FileCode, color: 'text-sky-500' },
-    { label: 'Tách trà mỗi năm', value: '1000+', icon: Coffee, color: 'text-amber-500' },
+    { label: 'Năm kinh nghiệm', value: '7+', icon: Award, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+    { label: 'Dự án triển khai', value: '50+', icon: Rocket, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+    { label: 'Chứng chỉ chuyên môn', value: '10+', icon: FileCode, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+    { label: 'Uptime duy trì', value: '99.9%', icon: Activity, color: 'text-rose-500', bg: 'bg-rose-500/10' },
   ];
 
-  const technologies = [
+  const skillGroups = [
     {
-      category: "Infrastructure & DevOps",
-      icon: Server,
-      skills: ["Linux (CentOS, Ubuntu)", "Docker & K8s", "Ansible", "CI/CD (GitLab, Jenkins)", "Nginx / Apache"]
+      category: "Infrastructure & Virtualization",
+      icon: Layers,
+      skills: ["VMware ESXi & vCenter", "OpenStack", "Proxmox", "KVM", "CEPH Storage", "Docker & Kubernetes"]
     },
     {
-      category: "Public Cloud",
-      icon: Cloud,
-      skills: ["AWS", "Google Cloud", "DigitalOcean", "Cloudflare"]
+      category: "Operating Systems",
+      icon: Terminal,
+      skills: ["Linux (Ubuntu, CentOS, Debian)", "Oracle Linux", "Windows Server", "OpenVMS"]
     },
     {
-      category: "System Security",
+      category: "Networking & Security",
       icon: Shield,
-      skills: ["Hardening Linux", "WAF & Firewall", "SSL/TLS Optimization", "Security Auditing"]
+      skills: ["Firewalls (Sophos, Fortinet, pfSense)", "VPN & HA", "Wazuh Security Monitoring", "CVE Patching", "Web Security (Modsecurity)"]
     },
     {
-      category: "Databases & Monitoring",
-      icon: Database,
-      skills: ["PostgreSQL", "MariaDB", "Redis", "Prometheus & Grafana", "Zabbix"]
+      category: "Automation & DevOps",
+      icon: Cpu,
+      skills: ["Python & Bash Scripting", "Ansible & Terraform", "Git & GitLab CI/CD", "Jenkins", "Harbor & Rancher"]
+    },
+    {
+      category: "Monitoring & Logging",
+      icon: Activity,
+      skills: ["Prometheus & Grafana", "Zabbix", "Nagios", "ELK Stack"]
+    },
+    {
+      category: "Cloud & Web Servers",
+      icon: Globe,
+      skills: ["AWS (EC2, S3, VPC, IAM)", "Nginx & Apache", "HAProxy", "Nextcloud Private Cloud"]
     }
   ];
 
   return (
-    <section id="about" className="py-24 px-4 bg-white dark:bg-slate-950 overflow-hidden relative border-t border-slate-100 dark:border-slate-800">
-      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+    <section id="about" className="py-20 px-4 bg-white dark:bg-slate-950 overflow-hidden relative border-t border-slate-100 dark:border-slate-800">
+      {/* Abstract Background Decoration */}
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2 -z-10" />
+      <div className="absolute bottom-0 left-0 w-[350px] h-[350px] bg-blue-500/5 rounded-full blur-[80px] translate-y-1/2 -translate-x-1/2 -z-10" />
       
       <div className="max-w-7xl mx-auto relative z-10">
-        <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16 mb-24">
-          <div className="lg:w-1/2 lg:pr-8">
-            <div className="inline-flex items-center px-4 py-2 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest mb-6 animate-fade-in shadow-sm">
-              <span className="relative flex h-2 w-2 mr-3">
+        <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16 mb-20">
+          <div className="lg:w-3/5">
+            <div className="inline-flex items-center px-3 py-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-widest mb-6 animate-fade-in border border-primary/20 shadow-sm">
+              <span className="relative flex h-2 w-2 mr-2.5">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
               </span>
               Về tôi
             </div>
-            <h2 className="text-3xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6 leading-tight">
-              System Engineer <br />
-              <span className="text-primary italic">& Automation Enthusiast</span>
+            <h2 className="text-3xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6 leading-tight tracking-tight">
+              Kỹ sư Hệ thống & <br />
+              <span className="text-primary italic font-display">Chuyên gia Tự động hóa</span>
             </h2>
-            <p className="text-base md:text-lg text-slate-500 dark:text-slate-400 leading-relaxed mb-8">
-              Xin chào! Tôi là Lưu Đình Mác, một kỹ sư hệ thống với niềm đam mê sâu sắc trong việc xây dựng và tối ưu hóa hạ tầng công nghệ. 
-              Với hơn 4 năm kinh nghiệm trong lĩnh vực DevOps và System Admin, tôi tập trung vào việc tạo ra các hệ thống có tính sẵn sàng cao, bảo mật và khả năng mở rộng linh hoạt.
+            <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 leading-relaxed mb-8 max-w-3xl italic--vibrant font-medium">
+              Tôi là <span className="font-bold text-slate-900 dark:text-white">Lưu Đình Mác</span>, một Kỹ sư Hệ thống với kinh nghiệm vận hành các hạ tầng công nghệ trọng yếu. 
+              Tôi chuyên sâu về Linux, ảo hóa, và Cloud Native, luôn tập trung vào <span className="text-primary font-bold">Tính sẵn sàng cao (High Availability)</span> và <span className="text-primary font-bold">Tối ưu hóa vận hành</span> thông qua tự động hóa.
             </p>
             <div className="flex flex-wrap gap-4">
-              <Link href="#projects" className="px-8 py-4 bg-primary text-white rounded-xl font-bold shadow-xl shadow-primary/30 hover:-translate-y-1 transition-all">
-                Dự án của tôi
+              <Link href="#resume" className="px-7 py-3.5 bg-primary text-white rounded-xl font-bold shadow-xl shadow-primary/20 hover:-translate-y-1 transition-all flex items-center group text-sm">
+                Hành trình chuyên môn
+                <Rocket size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
               </Link>
-              <Link href="/" className="px-8 py-4 glass dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold hover:bg-slate-50 transition-all">
-                Đọc Blog
+              <Link href="/projects" className="px-7 py-3.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl font-bold hover:bg-white dark:hover:bg-slate-800 transition-all flex items-center text-sm">
+                Dự án tiêu biểu
               </Link>
             </div>
           </div>
           
-          <div className="lg:w-1/2 relative w-full max-w-md lg:max-w-none mx-auto">
-             <div className="relative z-10 rounded-xl overflow-hidden border-8 border-white dark:border-slate-900 shadow-2xl skew-y-0 hover:skew-y-1 transition-transform duration-500">
-                <div className="aspect-square bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-blue-600/20" />
-                  <UserIcon size={120} className="text-slate-300 dark:text-slate-700" />
+          <div className="lg:w-2/5 relative w-full max-w-sm lg:max-w-none mx-auto">
+             <div className="relative z-10 rounded-[2rem] overflow-hidden border-[8px] border-white dark:border-slate-900 shadow-2xl group">
+                <div className="aspect-[4/5] bg-slate-100 dark:bg-slate-800 flex items-center justify-center relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-blue-600/5 group-hover:opacity-60 transition-opacity" />
+                  <UserIcon size={140} className="text-slate-300 dark:text-slate-700 relative z-10 transition-transform duration-700 group-hover:scale-105" />
+                  
+                  {/* Focus Badge */}
+                  <div className="absolute bottom-6 left-6 right-6 p-3.5 glass rounded-xl border border-white/20 backdrop-blur-xl z-20 transform translate-y-3 group-hover:translate-y-0 transition-transform opacity-0 group-hover:opacity-100 duration-500">
+                    <p className="text-[9px] font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-0.5">Current Focus</p>
+                    <p className="text-xs font-semibold text-primary">Kubernetes & DevOps Automation</p>
+                  </div>
                 </div>
              </div>
-             <div className="absolute -top-6 -right-6 w-32 h-32 bg-amber-400/20 rounded-full blur-2xl -z-10" />
-             <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-primary/20 rounded-full blur-3xl animate-pulse -z-10" />
+             {/* Decorative Elements */}
+             <div className="absolute -top-6 -right-6 w-32 h-32 bg-amber-400/10 rounded-full blur-2xl -z-10" />
+             <div className="absolute -bottom-8 -left-8 w-40 h-40 bg-primary/10 rounded-full blur-2xl -z-10" />
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-24">
+        {/* Professional Stats */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-20">
           {stats.map((stat, i) => (
-            <div key={i} className="glass p-6 md:p-8 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-primary/30 transition-all text-center group">
-              <div className={cn("w-12 h-12 md:w-14 md:h-14 rounded-xl flex items-center justify-center mx-auto mb-4 bg-slate-50 dark:bg-slate-900 transition-all group-hover:scale-110 shadow-sm", stat.color)}>
+            <div key={i} className="glass p-6 md:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 hover:border-primary/20 transition-all text-center group">
+              <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-5 transition-all group-hover:scale-110 shadow-inner", stat.bg, stat.color)}>
                 <stat.icon size={24} />
               </div>
-              <h3 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white mb-1 md:mb-2">{stat.value}</h3>
-              <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 font-medium">{stat.label}</p>
+              <h3 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white mb-1 tracking-tight">{stat.value}</h3>
+              <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-widest leading-tight">{stat.label}</p>
             </div>
           ))}
         </div>
 
-        {/* Knowledge Area */}
-        <div className="grid md:grid-cols-2 gap-6 md:gap-8">
-          {technologies.map((tech, i) => (
-            <div key={i} className="group p-6 md:p-8 glass rounded-xl border border-slate-100 dark:border-slate-800 hover:border-primary/20 transition-all">
-              <div className="flex items-center space-x-4 mb-6">
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
-                  <tech.icon size={20} />
+        {/* Skill Categorization */}
+        <div className="mb-8">
+          <div className="text-center mb-12">
+            <h3 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white mb-3">Hệ sinh thái Kỹ năng</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto">Tập hợp các công nghệ và giải pháp tôi đã triển khai và vận hành thực tế.</p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5 md:gap-6">
+            {skillGroups.map((group, i) => (
+              <div key={i} className="group p-6 md:p-8 glass rounded-3xl border border-slate-100 dark:border-slate-800 hover:border-primary/20 transition-all">
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                    <group.icon size={20} />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">{group.category}</h3>
                 </div>
-                <h3 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white uppercase tracking-wider">{tech.category}</h3>
+                <div className="flex flex-wrap gap-2">
+                  {group.skills.map((skill, si) => (
+                    <span key={si} className="px-3 py-1.5 bg-slate-50/80 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 rounded-lg text-[11px] font-bold border border-slate-100 dark:border-slate-800 hover:text-primary transition-colors">
+                      {skill}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2">
-                {tech.skills.map((skill, si) => (
-                  <span key={si} className="px-3 py-1.5 md:px-4 md:py-2 bg-slate-50 dark:bg-slate-900/50 text-slate-600 dark:text-slate-400 rounded-xl text-xs md:text-sm font-medium border border-slate-100 dark:border-slate-800 group-hover:border-primary/10 transition-all">
-                    {skill}
-                  </span>
-                ))}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
         
-        <div className="mt-16 p-6 md:p-8 glass rounded-xl bg-gradient-to-br from-primary/5 to-blue-500/5 border border-primary/10">
-           <h4 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white mb-4 italic">&quot;Duy trì tính sẵn sàng cao là ưu tiên hàng đầu.&quot;</h4>
-           <p className="text-slate-500 text-xs md:text-sm leading-relaxed max-w-4xl">
-             &quot;Học tập là hạt giống của kiến thức, kiến thức là hạt giống của hạnh phúc.&quot; Tôi cam kết tối ưu hóa hạ tầng và tự động hóa quy trình để đạt được hiệu quả vận hành tối đa cho doanh nghiệp.
-           </p>
+        {/* Professional Commitment */}
+        <div className="mt-16 p-8 md:p-10 rounded-[2rem] glass relative overflow-hidden border border-primary/10 group">
+           <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:rotate-6 transition-transform duration-700">
+             <Settings size={140} />
+           </div>
+           <div className="relative z-10 max-w-3xl">
+             <h4 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white mb-5 italic tracking-tight leading-snug">
+               &quot;Duy trì tính sẵn sàng cao không chỉ là mục tiêu kỹ thuật, mà là cam kết đối với sự ổn định của hệ thống.&quot;
+             </h4>
+             <p className="text-sm md:text-base text-slate-500 dark:text-slate-400 leading-relaxed italic--vibrant font-medium">
+               Trong kỷ nguyên Cloud Native, việc không ngừng cập nhật các công nghệ như Kubernetes, Terraform và kiến trúc HA là chìa khóa để xây dựng các hệ thống hiện đại, bảo mật và hiệu quả.
+             </p>
+           </div>
         </div>
       </div>
     </section>

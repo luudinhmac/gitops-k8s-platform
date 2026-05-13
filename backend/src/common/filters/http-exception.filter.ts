@@ -17,10 +17,15 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
 
-    const status =
+    let status =
       exception instanceof HttpException
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
+
+    // Map domain errors to HTTP errors
+    if (exception instanceof Error && exception.name === 'PostNotFoundException') {
+      status = HttpStatus.NOT_FOUND;
+    }
 
     const message =
       exception instanceof HttpException

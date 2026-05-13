@@ -5,6 +5,7 @@ export class PostEntity {
   title!: string;
   slug!: string;
   excerpt?: string | null;
+  focus_keyword?: string | null;
   content?: string | null;
   series_id?: number | null;
   series_order?: number | null;

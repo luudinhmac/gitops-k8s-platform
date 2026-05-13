@@ -28,6 +28,9 @@ export class Post {
   excerpt?: string;
 
   @ApiProperty({ required: false })
+  focus_keyword?: string;
+
+  @ApiProperty({ required: false })
   content?: string;
 
   @ApiProperty({ required: false, nullable: true })
@@ -161,6 +164,16 @@ export class CreatePostDto {
   @IsString()
   @IsOptional()
   series_name?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  excerpt?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  focus_keyword?: string;
 }
 
 export class UpdatePostDto {
@@ -228,6 +241,16 @@ export class UpdatePostDto {
   @IsString()
   @IsOptional()
   series_name?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  excerpt?: string;
+
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  focus_keyword?: string;
 }
 
 export type SortOption = 'newest' | 'oldest' | 'most_viewed' | 'most_liked' | 'latest' | 'views' | 'likes' | 'comments';

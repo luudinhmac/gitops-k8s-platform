@@ -1,7 +1,7 @@
 # Stage 1: Build
 FROM node:22-alpine AS builder
 RUN apk add --no-cache libc6-compat openssl
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 WORKDIR /app
 
 # Standalone build within backend directory
@@ -14,7 +14,7 @@ RUN mkdir -p src/_shared/contracts src/_shared/types
 RUN cp -r shared/packages/contracts/src/* src/_shared/contracts/
 RUN cp -r shared/packages/types/src/* src/_shared/types/
 
-# Install all dependencies (Prisma generate runs in postinstall)
+# Install all dependencies
 RUN pnpm install --no-frozen-lockfile
 
 # Copy the rest of the application code
@@ -37,7 +37,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml ./
 COPY prisma ./prisma
 
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 RUN pnpm install --prod --no-frozen-lockfile
 RUN npx prisma generate
 

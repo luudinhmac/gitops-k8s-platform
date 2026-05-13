@@ -26,10 +26,10 @@ export default function Navbar() {
 
   const navItems = [
     { name: 'Trang chủ', href: '/' },
-    { name: 'Hồ sơ', href: '/about' },
-    { name: 'Khóa học', href: '/about#courses' },
+    { name: 'Giới thiệu', href: '/about' },
+    { name: 'Hồ sơ', href: '/about#resume' },
     { name: 'Dự án', href: '/about#projects' },
-    { name: 'Giới thiệu', href: '/about#about' },
+    { name: 'Khóa học', href: '/courses' },
   ];
 
   useEffect(() => {

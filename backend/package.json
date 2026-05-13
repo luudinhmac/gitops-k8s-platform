@@ -107,5 +107,15 @@
   },
   "prisma": {
     "seed": "node dist/prisma/seed.js"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "@prisma/client",
+      "@prisma/engines",
+      "@scarf/scarf",
+      "prisma",
+      "sharp"
+    ]
   }
 }

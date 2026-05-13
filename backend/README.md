@@ -1,43 +1,42 @@
-# Portfolio Backend (Decoupled)
+# Portfolio Backend (Professional GitOps Edition)
 
-Hệ thống Backend cho dự án Portfolio, được xây dựng bằng NestJS và Prisma.
+Dịch vụ Backend (API) cho dự án Portfolio, xây dựng bằng NestJS và quản lý theo mô hình GitOps, hỗ trợ kiến trúc hướng môi trường (Environment-Driven).
 
-## 🚀 Tính năng chính
-- **Clean Architecture:** Phân tách rõ ràng giữa Domain, Application và Infrastructure.
-- **Contract-First:** Sử dụng `@portfolio/contracts` để định nghĩa API Schema chung cho cả Backend và Frontend.
-- **Swagger Integration:** Tự động sinh tài liệu API và cung cấp JSON Spec cho Frontend.
-- **Multi-Repo Ready:** Có Dockerfile độc lập và CI/CD Pipeline.
+## 🚀 Tính năng & Công nghệ
+- **NestJS:** Framework mạnh mẽ, có tính module cao và dễ mở rộng.
+- **PostgreSQL:** Lưu trữ dữ liệu quan hệ ổn định.
+- **Swagger/OpenAPI:** Tự động tạo tài liệu API và cung cấp schema cho Frontend đồng bộ Type.
+- **GitOps Ready:** Tách biệt cấu hình và mã nguồn, triển khai tự động qua Repo Infrastructure.
 
-## 🛠 Cấu trúc thư mục
-- `src/`: Mã nguồn chính của NestJS.
-- `shared/packages/contracts/`: Định nghĩa API DTOs và Entities (Source of Truth).
-- `shared/packages/types/`: Các kiểu dữ liệu bổ trợ.
-- `prisma/`: Schema và Migrations của database.
-- `k8s/`: Các manifest triển khai trên Kubernetes.
+## 🔄 Quy trình Release & CI/CD
+Hệ thống sử dụng quy trình **Automated Infrastructure Update**:
 
-## 📦 Cài đặt & Chạy Local
+1. **Staging (Nhánh `dev`):**
+   - CI build image và đẩy lên Docker Hub.
+   - CI tự động cập nhật file `environments/staging/backend-values.yaml` trong repo Infrastructure.
+   - ArgoCD tự động Sync lên Cluster.
 
-1. **Cài đặt dependencies:**
-   ```bash
-   pnpm install
-   ```
+2. **Production (Tag `v*`):**
+   - Tương tự Staging nhưng yêu cầu kích hoạt thủ công (Manual Gate).
+   - Cập nhật vào thư mục `environments/production/`.
 
-2. **Chạy Prisma Generate:**
-   ```bash
-   npx prisma generate
-   ```
+## ⚙️ Cấu hình Biến môi trường
+Cần cấu hình các biến sau trong Kubernetes Secrets hoặc `.env` local:
 
-3. **Chạy ở chế độ Development:**
-   ```bash
-   pnpm run start:dev
-   ```
+| Biến | Mô tả |
+| :--- | :--- |
+| `DATABASE_URL` | Chuỗi kết nối Postgres (postgresql://user:pass@host:port/db) |
+| `JWT_SECRET` | Mã bí mật dùng để ký Token xác thực |
+| `PORT` | Cổng ứng dụng chạy (mặc định 3001) |
 
-## 📜 Quy trình Sync Type với Frontend
-Mỗi khi thay đổi DTO hoặc Entity trong `shared/packages/contracts`:
-1. Chạy `pnpm build` trong thư mục `shared/packages/contracts`.
-2. Chạy `pnpm run swagger:export` ở thư mục gốc backend để cập nhật `swagger-spec.json`.
-3. Frontend sẽ tự động nhận diện thay đổi qua CI/CD hoặc chạy `pnpm run api:sync` thủ công.
+## 🛠 Lập trình cục bộ
 
-## 🐳 Docker & CI/CD
-- **Dockerfile:** Sử dụng multi-stage build để tối ưu dung lượng image.
-- **CI/CD:** Cấu hình qua `.gitlab-ci.yml`, tự động build và push image lên GitLab Registry.
+1. **Cài đặt:** `pnpm install`
+2. **Chạy ứng dụng:** `pnpm run start:dev`
+3. **Xem tài liệu API:** Truy cập `http://localhost:3001/api/docs` (sau khi chạy).
+
+## 🐳 Docker
+File `Dockerfile` được tối ưu hóa để chạy trong môi trường Kubernetes, hỗ trợ health-check và graceful shutdown.
+
+---
+*Cập nhật lần cuối: 09/05/2026 bởi Antigravity Assistant.*
