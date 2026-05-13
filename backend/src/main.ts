@@ -1,6 +1,7 @@
 import helmet from 'helmet';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
+// CI/CD Test Trigger: 2026-05-12-17-54 (Final Validation)
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -51,8 +52,6 @@ async function bootstrap() {
   const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
-    'https://192.168.157.110',
-    'http://192.168.157.110',
   ];
 
   app.enableCors({

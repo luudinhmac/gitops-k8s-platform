@@ -4,7 +4,7 @@ const isServer = typeof window === 'undefined';
 
 const api = axios.create({
   baseURL: isServer 
-    ? (process.env.INTERNAL_API_URL || 'http://portfolio-backend:3001/api/v1')
+    ? (process.env.INTERNAL_API_URL)
     : '/api/v1',
   withCredentials: true,
   timeout: 5000, // 5 seconds timeout

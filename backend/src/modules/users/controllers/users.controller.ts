@@ -38,17 +38,21 @@ export class UsersController {
   ) {}
 
   @Get()
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({ status: 200, type: [User] })
-  findAll() {
-    return this.getUsersUseCase.execute();
+  findAll(@Req() req: any) {
+    return this.getUsersUseCase.execute(req.user);
   }
 
   @Get(':id')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Get user by id' })
   @ApiResponse({ status: 200, type: User })
-  findOne(@Param('id') id: string) {
-    return this.getUserUseCase.execute(+id);
+  findOne(@Param('id') id: string, @Req() req: any) {
+    return this.getUserUseCase.execute(+id, req.user);
   }
 
   @Post()

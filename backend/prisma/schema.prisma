@@ -59,6 +59,8 @@ model Post {
   updated_at   DateTime   @default(now())
   category_id  Int?
   author_id    Int?
+  excerpt      String?
+  focus_keyword String?
   is_blocked   Boolean    @default(false)
   blocked_by_id Int?
   blocked_reason String?

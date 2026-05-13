@@ -322,7 +322,7 @@ export default function SettingsAdminPage() {
     { id: 'system', label: 'Hệ thống (System)', icon: Server },
     { id: 'security', label: 'Bảo mật & Users', icon: Shield },
     { id: 'marketing', label: 'Marketing & SEO', icon: TrendingUp },
-    { id: 'alerts', label: 'Cảnh báo Admin', icon: Send },
+    ...(isSuperAdmin ? [{ id: 'alerts', label: 'Cảnh báo Admin', icon: Send }] : []),
   ];
 
   if (loading) {
@@ -506,7 +506,7 @@ export default function SettingsAdminPage() {
                     <div>
                       <h3 className="font-bold text-slate-900 dark:text-white text-lg">Hệ thống phân quyền</h3>
                       <p className="text-xs text-slate-500 mt-1 mb-4 leading-relaxed">Website hiện sử dụng cơ chế RBAC (Admin, Editor, User) được cấu hình sâu trong Database.</p>
-                      <Link href="/admin/users">
+                      <Link href="/portal-dashboard/users">
                         <Button variant="outline" size="sm">Quản lý người dùng</Button>
                       </Link>
                     </div>
@@ -666,16 +666,6 @@ export default function SettingsAdminPage() {
                   </h2>
                   <p className="text-sm text-slate-500">Tùy chọn nhận thông báo tức thời qua các kênh khác nhau khi hệ thống có sự kiện mới.</p>
                 </div>
-
-                {!isSuperAdmin && (
-                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 p-4 rounded-2xl flex items-start gap-4 text-amber-700 dark:text-amber-400">
-                    <ShieldAlert className="shrink-0 mt-0.5" size={20} />
-                    <div className="text-sm">
-                      <p className="font-bold mb-1">Quyền hạn hạn chế</p>
-                      <p>Chỉ <b>Superadmin (Master)</b> mới có quyền thay đổi các cấu hình cảnh báo, Webhook và máy chủ Email để đảm bảo an ninh hệ thống.</p>
-                    </div>
-                  </div>
-                )}
 
                 <div className="grid grid-cols-1 gap-10">
                   {/* CHANNEL: TELEGRAM */}
@@ -886,9 +876,11 @@ export default function SettingsAdminPage() {
                       </div>
 
                       <div className="space-y-2 relative">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">SMTP Password</label>
+                        <label htmlFor="setting-mail-pass" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">SMTP Password</label>
                         <div className="relative">
                           <input
+                            id="setting-mail-pass"
+                            name="mail_pass"
                             type={showSecrets['mail_pass'] ? 'text' : 'password'}
                             value={alertsForm.mail_pass || ''}
                             disabled={!isSuperAdmin}
@@ -907,8 +899,8 @@ export default function SettingsAdminPage() {
                       </div>
 
                       <div className="space-y-2 md:col-span-2">
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Email Nhận Cảnh Báo (Admin Recipient)</label>
-                        <input type="email" value={alertsForm.mail_admin_recipient || ''} disabled={!isSuperAdmin} onChange={e => setAlertsForm({ ...alertsForm, mail_admin_recipient: e.target.value })} placeholder="admin@domain.com"
+                        <label htmlFor="setting-mail-admin-recipient" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Email Nhận Cảnh Báo (Admin Recipient)</label>
+                        <input id="setting-mail-admin-recipient" name="mail_admin_recipient" type="email" value={alertsForm.mail_admin_recipient || ''} disabled={!isSuperAdmin} onChange={e => setAlertsForm({ ...alertsForm, mail_admin_recipient: e.target.value })} placeholder="admin@domain.com"
                           className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-emerald-200 dark:border-emerald-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary font-bold disabled:opacity-70 disabled:cursor-not-allowed" />
                       </div>
 

@@ -30,4 +30,27 @@ export class PrismaService
   async onModuleDestroy() {
     await this.$disconnect();
   }
+
+  async reconnect(newUrl: string) {
+    console.log(`[Database] Attempting to reconnect to new database...`);
+    try {
+      await this.$disconnect();
+      
+      // Update the internal datasource URL
+      // In Prisma v5+, this is the way to override the URL at runtime
+      (this as any)._activeDatasources = undefined; // Force internal reset
+      (this as any)._engineConfig.datasources = [
+        {
+          name: 'db',
+          url: newUrl,
+        },
+      ];
+      
+      await this.$connect();
+      console.log(`[Database] Reconnected successfully to new database.`);
+    } catch (err: any) {
+      console.error(`[Database] Reconnect failed: ${err.message}`);
+      throw err;
+    }
+  }
 }

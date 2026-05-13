@@ -168,6 +168,7 @@ export default function RichEditor({ id, name, value, onChange, placeholder }: R
                         onClick={() => fileInputRef.current?.click()}
                         className="flex items-center space-x-2 px-3 py-1.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-[10px] font-bold text-slate-600 dark:text-slate-400 hover:text-primary hover:bg-primary/5 transition-all shadow-sm"
                         disabled={importing}
+                        tabIndex={-1}
                     >
                         {importing ? <Loader2 size={14} className="animate-spin" /> : <FileUp size={14} />}
                         <span>NHẬP TỪ FILE</span>
@@ -187,7 +188,7 @@ export default function RichEditor({ id, name, value, onChange, placeholder }: R
             {/* Custom Toolbar HTML to fix accessibility issues with hidden select/input elements */}
             <div id={`toolbar-${id || 'editor'}`} className="ql-toolbar-custom">
                 <span className="ql-formats">
-                    <select className="ql-header" id={`ql-header-${id}`} name={`ql-header-${id}`} aria-label="Header" defaultValue="">
+                    <select className="ql-header" id={`ql-header-${id}`} name={`ql-header-${id}`} aria-label="Header" defaultValue="" tabIndex={-1}>
                         <option value="1" />
                         <option value="2" />
                         <option value="3" />
@@ -196,14 +197,14 @@ export default function RichEditor({ id, name, value, onChange, placeholder }: R
                         <option value="6" />
                         <option value="" />
                     </select>
-                    <select className="ql-font" id={`ql-font-${id}`} name={`ql-font-${id}`} aria-label="Font" defaultValue="inter">
+                    <select className="ql-font" id={`ql-font-${id}`} name={`ql-font-${id}`} aria-label="Font" defaultValue="inter" tabIndex={-1}>
                         <option value="inter" />
                         <option value="roboto" />
                         <option value="georgia" />
                         <option value="times-new-roman" />
                         <option value="courier-new" />
                     </select>
-                    <select className="ql-size" id={`ql-size-${id}`} name={`ql-size-${id}`} aria-label="Size" defaultValue="">
+                    <select className="ql-size" id={`ql-size-${id}`} name={`ql-size-${id}`} aria-label="Size" defaultValue="" tabIndex={-1}>
                         <option value="small" />
                         <option value="" />
                         <option value="large" />
@@ -211,40 +212,40 @@ export default function RichEditor({ id, name, value, onChange, placeholder }: R
                     </select>
                 </span>
                 <span className="ql-formats">
-                    <button className="ql-bold" aria-label="Bold" />
-                    <button className="ql-italic" aria-label="Italic" />
-                    <button className="ql-underline" aria-label="Underline" />
-                    <button className="ql-strike" aria-label="Strike" />
+                    <button className="ql-bold" aria-label="Bold" tabIndex={-1} />
+                    <button className="ql-italic" aria-label="Italic" tabIndex={-1} />
+                    <button className="ql-underline" aria-label="Underline" tabIndex={-1} />
+                    <button className="ql-strike" aria-label="Strike" tabIndex={-1} />
                 </span>
                 <span className="ql-formats">
-                    <select className="ql-color" id={`ql-color-${id}`} name={`ql-color-${id}`} aria-label="Color" />
-                    <select className="ql-background" id={`ql-background-${id}`} name={`ql-background-${id}`} aria-label="Background" />
+                    <select className="ql-color" id={`ql-color-${id}`} name={`ql-color-${id}`} aria-label="Color" tabIndex={-1} />
+                    <select className="ql-background" id={`ql-background-${id}`} name={`ql-background-${id}`} aria-label="Background" tabIndex={-1} />
                 </span>
                 <span className="ql-formats">
-                    <button className="ql-script" value="sub" aria-label="Subscript" />
-                    <button className="ql-script" value="super" aria-label="Superscript" />
+                    <button className="ql-script" value="sub" aria-label="Subscript" tabIndex={-1} />
+                    <button className="ql-script" value="super" aria-label="Superscript" tabIndex={-1} />
                 </span>
                 <span className="ql-formats">
-                    <button className="ql-list" value="ordered" aria-label="Ordered List" />
-                    <button className="ql-list" value="bullet" aria-label="Bullet List" />
-                    <button className="ql-indent" value="-1" aria-label="Decrease Indent" />
-                    <button className="ql-indent" value="+1" aria-label="Increase Indent" />
+                    <button className="ql-list" value="ordered" aria-label="Ordered List" tabIndex={-1} />
+                    <button className="ql-list" value="bullet" aria-label="Bullet List" tabIndex={-1} />
+                    <button className="ql-indent" value="-1" aria-label="Decrease Indent" tabIndex={-1} />
+                    <button className="ql-indent" value="+1" aria-label="Increase Indent" tabIndex={-1} />
                 </span>
                 <span className="ql-formats">
-                    <select className="ql-align" id={`ql-align-${id}`} name={`ql-align-${id}`} aria-label="Align" />
-                    <button className="ql-direction" value="rtl" aria-label="Text Direction" />
+                    <select className="ql-align" id={`ql-align-${id}`} name={`ql-align-${id}`} aria-label="Align" tabIndex={-1} />
+                    <button className="ql-direction" value="rtl" aria-label="Text Direction" tabIndex={-1} />
                 </span>
                 <span className="ql-formats">
-                    <button className="ql-blockquote" aria-label="Blockquote" />
-                    <button className="ql-code-block" aria-label="Code Block" />
+                    <button className="ql-blockquote" aria-label="Blockquote" tabIndex={-1} />
+                    <button className="ql-code-block" aria-label="Code Block" tabIndex={-1} />
                 </span>
                 <span className="ql-formats">
-                    <button className="ql-link" aria-label="Insert Link" />
-                    <button className="ql-image" aria-label="Insert Image" />
-                    <button className="ql-video" aria-label="Insert Video" />
+                    <button className="ql-link" aria-label="Insert Link" tabIndex={-1} />
+                    <button className="ql-image" aria-label="Insert Image" tabIndex={-1} />
+                    <button className="ql-video" aria-label="Insert Video" tabIndex={-1} />
                 </span>
                 <span className="ql-formats">
-                    <button className="ql-clean" aria-label="Remove Formatting" />
+                    <button className="ql-clean" aria-label="Remove Formatting" tabIndex={-1} />
                 </span>
             </div>
 

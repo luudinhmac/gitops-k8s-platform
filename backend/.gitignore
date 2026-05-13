@@ -28,7 +28,7 @@ Thumbs.db
 
 # Prisma
 /generated
-/prisma/migrations
+
 # Uploads
 /uploads/
 /uploads.tar.gz

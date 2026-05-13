@@ -11,6 +11,7 @@ export async function proxy(request: NextRequest) {
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api') ||
     pathname === '/favicon.ico' ||
+    pathname.startsWith('/uploads') ||
     pathname.startsWith('/images');
 
   if (isExcludedPath) {
@@ -41,9 +42,7 @@ export async function proxy(request: NextRequest) {
       let fetchUrl = process.env.INTERNAL_API_URL;
       
       if (!fetchUrl) {
-        const backendHost = nodeEnv === 'production' ? 'portfolio-backend' : '127.0.0.1';
-        const backendPort = nodeEnv === 'production' ? '3001' : '3002';
-        fetchUrl = `http://${backendHost}:${backendPort}/api/v1/settings/public`;
+        throw new Error('INTERNAL_API_URL is not defined in proxy middleware');
       } else {
         if (!fetchUrl.includes('/v1')) {
           fetchUrl = fetchUrl.replace(/\/api\/?$/, '') + '/api/v1';

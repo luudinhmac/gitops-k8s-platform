@@ -1,17 +1,20 @@
 # Stage 1: Builder
 FROM node:22-alpine AS builder
 RUN apk add --no-cache libc6-compat
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 WORKDIR /app
 
 # Standalone build - only copy frontend files
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --ignore-scripts
 
-# Copy source
+# Copy source (Force no-cache by adding a unique comment)
+# BUILD_TIMESTAMP: 2026-05-09-17-11
 COPY . .
 
-# Build frontend (Note: api.generated.ts must exist in src/types)
+# Build frontend
+ARG INTERNAL_API_URL
+ENV INTERNAL_API_URL=$INTERNAL_API_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm run build
 

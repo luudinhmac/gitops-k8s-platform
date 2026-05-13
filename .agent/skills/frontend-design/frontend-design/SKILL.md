@@ -35,6 +35,14 @@ Focus on:
 
 NEVER use generic AI-generated aesthetics like overused font families (Inter, Roboto, Arial, system fonts), cliched color schemes (particularly purple gradients on white backgrounds), predictable layouts and component patterns, and cookie-cutter design that lacks context-specific character.
 
+## Technical Excellence & Accessibility
+
+To ensure production-grade quality and a premium user experience:
+- **Form Integrity**: Always provide a unique `id` and `name` attribute to every form field element. This is non-negotiable for enabling smooth browser **Autofill** and improving UX.
+- **Label Association**: Every form field MUST have a corresponding `<label>` (or `htmlFor` in React) that matches the field's `id`. "No label associated with a form field" warnings are unacceptable.
+- **Zero-Issue Policy**: Actively ensure that no warnings appear in the **Issues** tab of Chrome DevTools. Polished code means zero accessibility or performance warnings.
+- **Data Safety**: When handling sensitive strings (like connection URLs) in the UI, always account for special characters (e.g., `@`, `:`, `#`) by using proper encoding or robust parsing (like the `URL` class) to prevent interface breakage.
+
 Interpret creatively and make unexpected choices that feel genuinely designed for the context. No design should be the same. Vary between light and dark themes, different fonts, different aesthetics. NEVER converge on common choices (Space Grotesk, for example) across generations.
 
 **IMPORTANT**: Match implementation complexity to the aesthetic vision. Maximalist designs need elaborate code with extensive animations and effects. Minimalist or refined designs need restraint, precision, and careful attention to spacing, typography, and subtle details. Elegance comes from executing the vision well.

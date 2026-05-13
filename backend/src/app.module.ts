@@ -23,6 +23,8 @@ import { HealthController } from './health.controller';
 import { StorageModule } from './infrastructure/storage/storage.module';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { SetupModule } from './modules/setup/setup.module';
+import { SeoModule } from './modules/seo/seo.module';
 
 @Module({
   imports: [
@@ -54,6 +56,8 @@ import { APP_GUARD } from '@nestjs/core';
       ttl: 60000,
       limit: 60, // 60 requests per minute
     }]),
+    SetupModule,
+    SeoModule,
   ],
   controllers: [HealthController],
   providers: [
