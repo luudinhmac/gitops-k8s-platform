@@ -18,8 +18,8 @@ export default function GooglePreview({ title, slug, metaDescription }: GooglePr
         <div className="flex items-center space-x-2 mb-1">
           <div className="w-6 h-6 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-[10px] text-slate-400">G</div>
           <div className="flex flex-col text-[10px]">
-            <span className="text-slate-900 dark:text-slate-200 leading-none">luumac.io.vn</span>
-            <span className="text-slate-400 mt-0.5 leading-none">https://luumac.io.vn › blog › {displaySlug}</span>
+            <span className="text-slate-900 dark:text-slate-200 leading-none">blog.luumac.io.vn</span>
+            <span className="text-slate-400 mt-0.5 leading-none">https://blog.luumac.io.vn › blog › {displaySlug}</span>
           </div>
         </div>
         <h3 className="text-sm font-medium text-blue-700 dark:text-blue-400 hover:underline cursor-pointer transition-colors line-clamp-1 mb-1">
