@@ -21,7 +21,8 @@ import { StatsModule } from './modules/stats/stats.module';
 import { StatsMiddleware } from './modules/stats/stats.middleware';
 import { HealthController } from './health.controller';
 import { StorageModule } from './infrastructure/storage/storage.module';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { SetupModule } from './modules/setup/setup.module';
 import { SeoModule } from './modules/seo/seo.module';
@@ -63,7 +64,7 @@ import { SeoModule } from './modules/seo/seo.module';
   providers: [
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: CustomThrottlerGuard,
     },
   ],
 })

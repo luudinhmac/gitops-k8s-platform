@@ -61,6 +61,9 @@ build_staging:
 build_production:
   stage: build
   image: docker:latest
+  variables:
+    # Ghi đè biến build-time riêng cho Production ở đây!
+    INTERNAL_API_URL: "http://portfolio-backend-production:3001"
   services:
     - docker:dind
   tags:

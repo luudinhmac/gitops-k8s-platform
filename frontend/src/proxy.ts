@@ -3,22 +3,48 @@ import type { NextRequest } from 'next/server';
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  console.log(`[Proxy] Processing request: ${pathname}`);
+  
+  const rawIp = 
+    request.headers.get('cf-connecting-ip') || 
+    request.headers.get('x-forwarded-for') || 
+    request.headers.get('x-real-ip') || 
+    '';
+  const clientIp = rawIp.split(',')[0].trim();
+  
+  const requestHeaders = new Headers(request.headers);
+  if (clientIp) {
+    requestHeaders.set('x-original-client-ip', clientIp);
+  }
 
-  // 1. Define excluded paths (always accessible)
+  // 2. Log incoming requests for diagnostics (useful for identifying scanning/attacks)
+  console.log(`[Proxy] Processing request: ${pathname} from IP: ${clientIp || 'unknown'}`);
+
+  // 3. Early pass-through for API and Uploads with client IP header injected
+  const isApiOrUpload = pathname.startsWith('/api') || pathname.startsWith('/uploads');
+  if (isApiOrUpload) {
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
+  }
+
+  // 4. Define excluded paths (always accessible pages)
   const isExcludedPath = 
     pathname.startsWith('/maintenance') ||
     pathname.startsWith('/_next') ||
-    pathname.startsWith('/api') ||
     pathname === '/favicon.ico' ||
-    pathname.startsWith('/uploads') ||
     pathname.startsWith('/images');
 
   if (isExcludedPath) {
-    return NextResponse.next();
+    return NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    });
   }
 
-  // 2. Check for Bypass Cookie and User Role
+  // 5. Check for Bypass Cookie and User Role
   const bypassCookie = request.cookies.get('MAINTENANCE_BYPASS');
   const userToken = request.cookies.get('access_token');
   const userRole = request.cookies.get('user_role')?.value;
@@ -26,7 +52,7 @@ export async function proxy(request: NextRequest) {
   const isAdmin = ['admin', 'superadmin'].includes(userRole || '');
   const hasPasscode = !!bypassCookie;
 
-  // 3. Fetch Maintenance Status (with simple in-memory cache)
+  // 6. Fetch Maintenance Status (with simple in-memory cache)
   try {
     const nodeEnv = process.env.NODE_ENV || 'development';
     const CACHE_KEY = 'MAINTENANCE_STATUS_CACHE';
@@ -69,17 +95,25 @@ export async function proxy(request: NextRequest) {
     
     // Maintenance Enforcement Logic
     if (isGlobalMaintenance) {
-      // 1. If user is Admin, they can bypass EVERYTHING
+      // Admin can bypass everything
       if (isAdmin && userToken) {
-        return NextResponse.next();
+        return NextResponse.next({
+          request: {
+            headers: requestHeaders,
+          },
+        });
       }
 
-      // 2. If user has passcode, they can ONLY access /login (and its resources)
+      // Users with passcode can access login and static pages
       if (hasPasscode && (pathname === '/login' || pathname.startsWith('/_next') || pathname.startsWith('/api'))) {
-        return NextResponse.next();
+        return NextResponse.next({
+          request: {
+            headers: requestHeaders,
+          },
+        });
       }
 
-      // 3. Otherwise, if not on maintenance page, redirect to it
+      // Redirect general traffic to maintenance page
       if (pathname !== '/maintenance') {
         console.log(`[Proxy] REDIRECTING to /maintenance from ${pathname} (Maintenance ON, No Admin/Passcode)`);
         const url = new URL('/maintenance', request.url);
@@ -91,32 +125,33 @@ export async function proxy(request: NextRequest) {
     console.error(`[Proxy] Maintenance check failed: ${error.message}`);
   }
 
-  // 4. Admin Stealth Protection (Original logic preserved)
+  // 7. Admin Stealth Protection (Original logic preserved)
   if (pathname.startsWith('/portal-dashboard') && pathname !== '/portal-dashboard/login') {
     const allCookies = request.cookies.getAll().map(c => c.name);
     const token = request.cookies.get('token') || request.cookies.get('access_token');
     if (!token) {
       console.log(`[Security] Unauthorized access to ${pathname}. Cookies found: ${allCookies.join(', ') || 'none'}. Rewriting to 404.`);
-      // We rewrite to a non-existent path to trigger a real 404 response
-      // This ensures the HTTP status code is 404, not 200 or 302.
       return NextResponse.rewrite(new URL('/not-found-stealth', request.url));
     }
   }
 
-  return NextResponse.next();
+  return NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  });
 }
 
-// See "Matching Paths" below to learn more
+// Next.js middleware matching configurations
 export const config = {
   matcher: [
     /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
+     * Match all request paths except for:
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 };
 

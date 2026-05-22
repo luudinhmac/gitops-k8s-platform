@@ -34,7 +34,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
   async validate(payload: any) {
     try {
-      const user = await this.getUserUseCase.execute(Number(payload.id));
+      const user = await this.getUserUseCase.execute(Number(payload.id), payload);
       if (!user) {
         this.logger.warn(`Auth failed: User ID ${payload.id} not found`);
         throw new UnauthorizedException('Tài khoản không tồn tại.');

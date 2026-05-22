@@ -15,6 +15,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../../auth/roles.guard';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CreatePostDto, UpdatePostDto, Post as PostEntity } from '@portfolio/contracts';
+import { getClientIp } from '../../../common/utils/ip';
 import { GetPostsUseCase } from '../services/get-posts.use-case';
 import { GetPostUseCase } from '../services/get-post.use-case';
 import { CreatePostUseCase } from '../services/create-post.use-case';
@@ -127,7 +128,7 @@ export class PostsController {
     @Param('id', ParseIntPipe) id: number,
     @Req() req: any,
   ) {
-    return this.deletePostUseCase.execute(id, req.user, req.ip);
+    return this.deletePostUseCase.execute(id, req.user, getClientIp(req));
   }
 
   @Post(':id/pin')
