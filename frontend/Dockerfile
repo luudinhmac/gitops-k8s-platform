@@ -6,17 +6,23 @@ WORKDIR /app
 
 # Standalone build - only copy frontend files
 COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile --ignore-scripts
 
-# Copy source (Force no-cache by adding a unique comment)
-# BUILD_TIMESTAMP: 2026-05-09-17-11
+# [TỐI ƯU] Sử dụng Docker Cache Mount để cache lại pnpm store giữa các lần build
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
+    pnpm install --frozen-lockfile --ignore-scripts --store-dir /pnpm/store
+
+# Copy source
 COPY . .
 
 # Build frontend
 ARG INTERNAL_API_URL
 ENV INTERNAL_API_URL=$INTERNAL_API_URL
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN pnpm run build
+
+# [TỐI ƯU ĐẶC BIỆT] Sử dụng Docker Cache Mount cho thư mục .next/cache để lưu lại SWC/Babel/Webpack cache
+# Giúp giảm thời gian biên dịch (build time) của Next.js từ các lần chạy sau xuống mức tối đa!
+RUN --mount=type=cache,target=/app/.next/cache \
+    pnpm run build
 
 # Stage 2: Runner
 FROM node:22-alpine AS runner
@@ -24,12 +30,13 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
+
+# Tạo nhóm và user hệ thống bảo mật (non-root)
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs
 
-# Set output to standalone mode in next.config.ts if not already set
-# But assuming the build produced the standalone folder
-COPY --from=builder /app/public ./public
+# Sử dụng --chown đồng bộ cho toàn bộ tài nguyên mang sang từ builder
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 

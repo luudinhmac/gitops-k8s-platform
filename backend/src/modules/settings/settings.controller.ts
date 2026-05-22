@@ -3,6 +3,7 @@ import { SettingsService } from './settings.service';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { getClientIp } from '../../common/utils/ip';
 
 @Controller('settings')
 export class SettingsController {
@@ -21,7 +22,7 @@ export class SettingsController {
 
   @Post('request-maintenance-code')
   async requestMaintenanceCode(@Req() req: any) {
-    return this.settingsService.requestMaintenanceCode(req.ip);
+    return this.settingsService.requestMaintenanceCode(getClientIp(req));
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -41,7 +42,7 @@ export class SettingsController {
     if (!data.items || !Array.isArray(data.items)) {
       return { message: 'Invalid data format' };
     }
-    return this.settingsService.updateSettings(data.items, req.user, req.ip);
+    return this.settingsService.updateSettings(data.items, req.user, getClientIp(req));
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)

@@ -27,14 +27,38 @@ export class GlobalExceptionFilter implements ExceptionFilter {
       status = HttpStatus.NOT_FOUND;
     }
 
-    const message =
-      exception instanceof HttpException
-        ? exception.getResponse()
-        : 'Internal server error';
+    // Extract error message and map custom error code
+    let message = 'Internal server error';
+    let errorCode = 'INTERNAL_ERROR';
+
+    if (exception instanceof HttpException) {
+      const resBody = exception.getResponse();
+      if (typeof resBody === 'string') {
+        message = resBody;
+      } else if (typeof resBody === 'object' && resBody !== null) {
+        message = (resBody as any).message || exception.message || 'Error';
+      }
+
+      // Map status codes to descriptive error codes
+      if (status === HttpStatus.UNAUTHORIZED) {
+        errorCode = 'UNAUTHORIZED';
+      } else if (status === HttpStatus.NOT_FOUND) {
+        errorCode = 'NOT_FOUND';
+      } else if (status === HttpStatus.FORBIDDEN) {
+        errorCode = 'FORBIDDEN';
+      } else if (status >= 400 && status < 500) {
+        errorCode = 'BAD_REQUEST';
+      }
+    } else if (exception instanceof Error) {
+      message = exception.message;
+      if (exception.name === 'PostNotFoundException') {
+        errorCode = 'NOT_FOUND';
+      }
+    }
 
     const errorResponse = {
-      message: typeof message === 'string' ? message : (message as any).message || 'Error',
-      code: typeof message === 'object' ? (message as any).error || 'INTERNAL_ERROR' : 'INTERNAL_ERROR',
+      message: message,
+      code: errorCode,
       status: status,
       timestamp: new Date().toISOString(),
       path: (request as any).url,
@@ -55,3 +79,4 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     response.status(status).json(errorResponse);
   }
 }
+

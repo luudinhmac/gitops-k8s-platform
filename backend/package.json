@@ -115,7 +115,9 @@
       "@prisma/engines",
       "@scarf/scarf",
       "prisma",
-      "sharp"
+      "sharp",
+      "unrs-resolver"
     ]
   }
 }
+

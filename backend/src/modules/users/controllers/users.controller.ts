@@ -12,6 +12,7 @@ import {
 import { CreateUserDto, UpdateUserDto, User } from '@portfolio/contracts';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import { getClientIp } from '../../../common/utils/ip';
 
 // Use Cases
 import { GetUsersUseCase } from '../services/get-users.use-case';
@@ -96,8 +97,8 @@ export class UsersController {
     @Req() req: any,
     @Body('is_active') isActive: boolean,
   ) {
-    const ip = req.ip || req.headers['x-forwarded-for'] || (req.socket.remoteAddress as string);
-    return this.updateUserPermissionsUseCase.execute(+id, req.user, { is_active: isActive }, Array.isArray(ip) ? ip[0] : ip);
+    const ip = getClientIp(req);
+    return this.updateUserPermissionsUseCase.execute(+id, req.user, { is_active: isActive }, ip);
   }
 
   @Patch(':id/permissions')
@@ -115,8 +116,8 @@ export class UsersController {
       reason?: string; 
     },
   ) {
-    const ip = req.ip || req.headers['x-forwarded-for'] || (req.socket.remoteAddress as string);
-    return this.updateUserPermissionsUseCase.execute(+id, req.user, data, Array.isArray(ip) ? ip[0] : ip);
+    const ip = getClientIp(req);
+    return this.updateUserPermissionsUseCase.execute(+id, req.user, data, ip);
   }
 
   @Patch(':id/reset-password')
@@ -128,8 +129,8 @@ export class UsersController {
     @Req() req: any,
     @Body('password') password: string,
   ) {
-    const ip = req.ip || req.headers['x-forwarded-for'] || (req.socket.remoteAddress as string);
-    return this.resetPasswordUseCase.execute(+id, password, req.user, Array.isArray(ip) ? ip[0] : ip);
+    const ip = getClientIp(req);
+    return this.resetPasswordUseCase.execute(+id, password, req.user, ip);
   }
 
   @Patch(':id/change-password')
@@ -141,13 +142,13 @@ export class UsersController {
     @Req() req: any,
     @Body() data: any,
   ) {
-    const ip = req.ip || req.headers['x-forwarded-for'] || (req.socket.remoteAddress as string);
+    const ip = getClientIp(req);
     return this.changePasswordUseCase.execute(
       +id,
       data.oldPassword,
       data.newPassword,
       req.user,
-      Array.isArray(ip) ? ip[0] : ip
+      ip
     );
   }
 
@@ -156,7 +157,7 @@ export class UsersController {
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   remove(@Param('id') id: string, @Req() req: any) {
-    const ip = req.ip || req.headers['x-forwarded-for'] || (req.socket.remoteAddress as string);
-    return this.deleteUserUseCase.execute(+id, req.user, Array.isArray(ip) ? ip[0] : ip);
+    const ip = getClientIp(req);
+    return this.deleteUserUseCase.execute(+id, req.user, ip);
   }
 }

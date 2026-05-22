@@ -17,8 +17,15 @@ export class StatsMiddleware implements NestMiddleware {
     const isInternal = url.includes('/health') || url.includes('/stats/counters');
     
     if (!isInternal) {
-      // Get real IP from Traefik header or fallback
-      let identifier = (req.header('x-forwarded-for') || req.ip || 'unknown').split(',')[0].trim();
+      // Get real IP from custom header, Traefik header, or fallback
+      let identifier = (
+        req.header('cf-connecting-ip') ||
+        req.header('x-original-client-ip') ||
+        req.header('x-real-ip') ||
+        req.header('x-forwarded-for') ||
+        req.ip ||
+        'unknown'
+      ).split(',')[0].trim();
       
       // Normalize local IP (Windows IPv6 to IPv4)
       if (identifier === '::1' || identifier === '::ffff:127.0.0.1') {
