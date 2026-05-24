@@ -124,16 +124,25 @@ promote_production:
   <<: *docker_template
   stage: push
   script:
-    - 'export SOURCE_TAG="dev-$CI_COMMIT_SHORT_SHA"'
     - 'export TARGET_TAG=$CI_COMMIT_TAG'
-    - 'echo "Promoting staging image $IMAGE_NAME:$SOURCE_TAG to production $IMAGE_NAME:$TARGET_TAG"'
+    - 'echo "Searching for built staging image in recent commit history..."'
     - |
-      if docker pull $IMAGE_NAME:$SOURCE_TAG; then
-        echo "Staging image found. Promoting..."
-        docker tag $IMAGE_NAME:$SOURCE_TAG $IMAGE_NAME:$TARGET_TAG
-        docker push $IMAGE_NAME:$TARGET_TAG
-      else
-        echo "ERROR: Staging image $IMAGE_NAME:$SOURCE_TAG not found in registry! Aborting deployment."
+      COMMITS=$(git log --pretty=format:"%h" -n 10)
+      FOUND=false
+      for SHA in $COMMITS; do
+        SOURCE_TAG="dev-$SHA"
+        echo "Checking registry for image: $IMAGE_NAME:$SOURCE_TAG"
+        if docker pull $IMAGE_NAME:$SOURCE_TAG; then
+          echo "Staging image found: $IMAGE_NAME:$SOURCE_TAG"
+          echo "Promoting to production: $IMAGE_NAME:$TARGET_TAG"
+          docker tag $IMAGE_NAME:$SOURCE_TAG $IMAGE_NAME:$TARGET_TAG
+          docker push $IMAGE_NAME:$TARGET_TAG
+          FOUND=true
+          break
+        fi
+      done
+      if [ "$FOUND" = false ]; then
+        echo "ERROR: Staging image not found in registry for the last 10 commits!"
         exit 1
       fi
   rules:
