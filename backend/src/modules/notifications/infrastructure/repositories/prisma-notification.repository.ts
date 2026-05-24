@@ -35,15 +35,15 @@ export class PrismaNotificationRepository implements INotificationsRepository {
   async markAsRead(id: number): Promise<NotificationEntity> {
     const notification = await this.prisma.notification.update({
       where: { id },
-      data: { is_read: true },
+      data: { read_at: new Date() },
     });
     return NotificationMapper.toDomain(notification) as NotificationEntity;
   }
 
   async markAllAsRead(userId: number): Promise<void> {
     await this.prisma.notification.updateMany({
-      where: { recipient_id: userId, is_read: false },
-      data: { is_read: true },
+      where: { recipient_id: userId, read_at: null },
+      data: { read_at: new Date() },
     });
   }
 
@@ -59,7 +59,7 @@ export class PrismaNotificationRepository implements INotificationsRepository {
 
   async countUnread(userId: number): Promise<number> {
     return this.prisma.notification.count({
-      where: { recipient_id: userId, is_read: false },
+      where: { recipient_id: userId, read_at: null },
     });
   }
 }

@@ -319,7 +319,7 @@ export default function SettingsAdminPage() {
   const tabs = [
     { id: 'general', label: 'Cấu hình Website', icon: Globe },
     { id: 'maintenance', label: 'Bảo trì hệ thống', icon: ShieldAlert },
-    { id: 'system', label: 'Hệ thống (System)', icon: Server },
+    ...(isSuperAdmin ? [{ id: 'system', label: 'Hệ thống (System)', icon: Server }] : []),
     { id: 'security', label: 'Bảo mật & Users', icon: Shield },
     { id: 'marketing', label: 'Marketing & SEO', icon: TrendingUp },
     ...(isSuperAdmin ? [{ id: 'alerts', label: 'Cảnh báo Admin', icon: Send }] : []),
@@ -440,7 +440,7 @@ export default function SettingsAdminPage() {
             )}
 
             {/* TAB: SYSTEM */}
-            {activeTab === 'system' && (
+            {activeTab === 'system' && isSuperAdmin && (
               <div className="space-y-8">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>

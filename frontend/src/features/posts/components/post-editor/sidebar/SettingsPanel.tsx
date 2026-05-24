@@ -2,6 +2,7 @@
 
 import { Tag, Link as LinkIcon, Layers, Bookmark } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { seriesService } from '@/features/series/services/seriesService';
 
 interface SettingsPanelProps {
   categories: { id: number; name: string }[];
@@ -18,6 +19,39 @@ export default function SettingsPanel({
   setFormData,
   userRole
 }: SettingsPanelProps) {
+  const handleSeriesChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setFormData({ ...formData, series_name: value });
+
+    if (!value.trim()) {
+      return;
+    }
+
+    const existing = seriesList.find(s => s.name.toLowerCase() === value.trim().toLowerCase());
+    if (existing) {
+      try {
+        const fullSeries = await seriesService.getById(existing.id);
+        const posts = fullSeries.Post || [];
+        const maxOrder = posts.reduce((max: number, p: any) => {
+          const order = p.series_order !== null && p.series_order !== undefined ? Number(p.series_order) : 0;
+          return order > max ? order : max;
+        }, 0);
+        setFormData({ 
+          ...formData, 
+          series_name: value,
+          series_order: maxOrder + 1 
+        });
+      } catch (err) {
+        console.error('Error fetching series order', err);
+      }
+    } else {
+      setFormData({ 
+        ...formData, 
+        series_name: value,
+        series_order: 1 
+      });
+    }
+  };
   return (
     <div className="space-y-6">
       {/* Category */}
@@ -88,7 +122,7 @@ export default function SettingsPanel({
             list="pe-series-options"
             placeholder="Chọn hoặc nhập mới..."
             value={formData.series_name}
-            onChange={(e) => setFormData({ ...formData, series_name: e.target.value })}
+            onChange={handleSeriesChange}
             autoComplete="off"
             className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
           />

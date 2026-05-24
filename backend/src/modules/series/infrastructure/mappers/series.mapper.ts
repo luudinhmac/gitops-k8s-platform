@@ -13,6 +13,7 @@ export class SeriesMapper {
         id: p.id,
         title: p.title,
         slug: p.slug,
+        series_order: p.series_order,
         created_at: p.created_at,
       })) : undefined,
     });

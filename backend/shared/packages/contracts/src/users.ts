@@ -51,6 +51,27 @@ export class User {
   @ApiProperty()
   can_post: boolean;
 
+  @ApiProperty({ required: false })
+  role_id?: number;
+
+  @ApiProperty({ required: false })
+  bio?: string;
+
+  @ApiProperty({ required: false })
+  can_manage_categories?: boolean;
+
+  @ApiProperty({ required: false })
+  can_manage_series?: boolean;
+
+  @ApiProperty({ required: false })
+  can_manage_comments?: boolean;
+
+  @ApiProperty({ required: false })
+  can_manage_settings?: boolean;
+
+  @ApiProperty({ required: false })
+  can_manage_users?: boolean;
+
   @ApiProperty({ type: String })
   created_at: Date | string;
 }
@@ -167,4 +188,29 @@ export class UpdateUserDto {
   @IsBoolean()
   @IsOptional()
   can_post?: boolean;
+
+  @ApiProperty({ required: false })
+  @IsBoolean()
+  @IsOptional()
+  can_manage_categories?: boolean;
+
+  @ApiProperty({ required: false })
+  @IsBoolean()
+  @IsOptional()
+  can_manage_series?: boolean;
+
+  @ApiProperty({ required: false })
+  @IsBoolean()
+  @IsOptional()
+  can_manage_comments?: boolean;
+
+  @ApiProperty({ required: false })
+  @IsBoolean()
+  @IsOptional()
+  can_manage_settings?: boolean;
+
+  @ApiProperty({ required: false })
+  @IsBoolean()
+  @IsOptional()
+  can_manage_users?: boolean;
 }

@@ -11,7 +11,7 @@ export class NotificationMapper {
       title: raw.title,
       content: raw.content,
       link: raw.link,
-      is_read: raw.is_read,
+      is_read: raw.read_at !== null && raw.read_at !== undefined,
       created_at: raw.created_at,
     });
   }

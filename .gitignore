@@ -22,6 +22,7 @@ out/
 ansible/group_vars/all/vault.yml
 backend/.env
 frontend/.env
+infra/certs
 
 # Misc
 .DS_Store

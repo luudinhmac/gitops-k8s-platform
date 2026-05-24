@@ -12,7 +12,7 @@ export class SetupService {
   async getStatus() {
     // Check if any user with role 'superadmin' exists
     const superadmin = await this.prisma.user.findFirst({
-      where: { role: 'superadmin' },
+      where: { Role: { name: 'superadmin' } },
     });
 
     // Check if the 'system_initialized' setting exists
@@ -49,7 +49,7 @@ export class SetupService {
           port: url.port || '5432',
           dbName: url.pathname.substring(1).split('?')[0]
         };
-      } catch (e) {
+      } catch (e: any) {
         console.error('[Setup] Failed to parse DATABASE_URL:', e.message);
       }
     }
@@ -76,6 +76,14 @@ export class SetupService {
       throw new ForbiddenException(`Database name mismatch. System is connected to "${status.database.dbName}" but you provided "${dbName}".`);
     }
 
+    // Ensure superadmin role exists
+    let superadminRole = await this.prisma.role.findUnique({ where: { name: 'superadmin' } });
+    if (!superadminRole) {
+      superadminRole = await this.prisma.role.create({
+        data: { name: 'superadmin', description: 'Super Admin', is_system: true }
+      });
+    }
+
     // 1. Create Superuser
     const hashedPassword = await bcrypt.hash(superuser.password, 10);
     await this.prisma.user.create({
@@ -83,10 +91,14 @@ export class SetupService {
         username: superuser.username,
         email: superuser.email,
         password: hashedPassword,
-        role: 'superadmin',
-        fullname: 'System Administrator',
+        role_id: superadminRole.id,
         is_active: true,
-        profession: 'Superadmin',
+        Profile: {
+          create: {
+            fullname: 'System Administrator',
+            profession: 'Superadmin',
+          }
+        }
       },
     });
 
@@ -103,8 +115,13 @@ export class SetupService {
     for (const setting of defaultSettings) {
       await this.prisma.setting.upsert({
         where: { key: setting.key },
-        update: { value: setting.value },
-        create: setting,
+        update: { value: setting.value as any },
+        create: {
+          key: setting.key,
+          value: setting.value as any,
+          group: setting.group,
+          is_public: setting.is_public,
+        },
       });
     }
 

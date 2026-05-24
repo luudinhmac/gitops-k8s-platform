@@ -12,7 +12,8 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { RolesGuard } from '../../auth/roles.guard';
+import { PermissionsGuard } from '../../auth/permissions.guard';
+import { Permissions } from '../../auth/permissions.decorator';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { CreatePostDto, UpdatePostDto, Post as PostEntity } from '@portfolio/contracts';
 import { getClientIp } from '../../../common/utils/ip';
@@ -59,7 +60,8 @@ export class PostsController {
 
   @Get('admin')
   @ApiOperation({ summary: 'Admin: Get all posts with full status' })
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(AuthGuard('jwt'), PermissionsGuard)
+  @Permissions('posts:create')
   findAllAdmin(
     @Req() req: any,
     @Query('q') query?: string,
@@ -102,7 +104,8 @@ export class PostsController {
 
   @Post()
   @ApiOperation({ summary: 'Create new post' })
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(AuthGuard('jwt'), PermissionsGuard)
+  @Permissions('posts:create')
   create(
     @Req() req: any,
     @Body() data: CreatePostDto,
@@ -112,7 +115,8 @@ export class PostsController {
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update post' })
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(AuthGuard('jwt'), PermissionsGuard)
+  @Permissions('posts:create')
   update(
     @Param('id', ParseIntPipe) id: number,
     @Req() req: any,
@@ -123,7 +127,8 @@ export class PostsController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete post' })
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(AuthGuard('jwt'), PermissionsGuard)
+  @Permissions('posts:create')
   remove(
     @Param('id', ParseIntPipe) id: number,
     @Req() req: any,
@@ -133,7 +138,8 @@ export class PostsController {
 
   @Post(':id/pin')
   @ApiOperation({ summary: 'Toggle pin post' })
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(AuthGuard('jwt'), PermissionsGuard)
+  @Permissions('posts:create')
   togglePin(
     @Param('id', ParseIntPipe) id: number,
     @Req() req: any,
@@ -143,7 +149,8 @@ export class PostsController {
 
   @Post(':id/publish')
   @ApiOperation({ summary: 'Toggle publish status' })
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @UseGuards(AuthGuard('jwt'), PermissionsGuard)
+  @Permissions('posts:create')
   togglePublish(
     @Param('id', ParseIntPipe) id: number,
     @Req() req: any,

@@ -100,8 +100,10 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
       const data = await postService.getBySlug(postSlug);
 
       // Safety check for category
-      if (data.Category?.slug !== categorySlug && categorySlug !== 'uncategorized') {
-        console.warn('Category slug mismatch');
+      const decodedCategorySlug = decodeURIComponent(categorySlug);
+      const dbCategorySlug = data.Category?.slug || 'uncategorized';
+      if (data.Category && dbCategorySlug !== decodedCategorySlug && decodedCategorySlug !== 'uncategorized') {
+        console.warn(`Category slug mismatch: URL=${decodedCategorySlug}, DB=${dbCategorySlug}`);
       }
 
       setPost(data);
@@ -513,8 +515,7 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
                             id={`comment-${comment.id}`}
                             className={cn(
                               "group/comment relative transition-all duration-700",
-                              isReply ? "ml-6 md:ml-10 mt-3 md:mt-4 before:content-[''] before:absolute before:-left-4 md:before:-left-6 before:top-4 before:w-3 md:before:w-4 before:h-px before:bg-slate-200 dark:before:bg-slate-700 before:z-0 after:content-[''] after:absolute after:-left-4 md:after:-left-6 after:-top-6 after:h-10 after:w-px after:bg-slate-200 dark:after:bg-slate-700 after:z-0" : "mb-6",
-                              isTarget && "ring-2 ring-primary/40 ring-offset-8 rounded-3xl bg-primary/5 p-4 -m-4 shadow-xl shadow-primary/5 z-20"
+                              isReply ? "ml-6 md:ml-10 mt-3 md:mt-4 before:content-[''] before:absolute before:-left-4 md:before:-left-6 before:top-4 before:w-3 md:before:w-4 before:h-px before:bg-slate-200 dark:before:bg-slate-700 before:z-0 after:content-[''] after:absolute after:-left-4 md:after:-left-6 after:-top-6 after:h-10 after:w-px after:bg-slate-200 dark:after:bg-slate-700 after:z-0" : "mb-6"
                             )}
                           >
                             <div className="flex space-x-3 relative z-10">

@@ -9,6 +9,7 @@ import {
   UseGuards,
   Req,
   Res,
+  Header,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -30,6 +31,7 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @Header('Cache-Control', 'no-transform')
   @ApiOperation({ summary: 'Login user and return JWT token' })
   async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: any) {
     const user = await this.validateUserUseCase.execute(
@@ -72,6 +74,7 @@ export class AuthController {
   }
 
   @Post('register')
+  @Header('Cache-Control', 'no-transform')
   @ApiOperation({ summary: 'Register new user' })
   async register(@Body() registerDto: RegisterDto) {
     return this.registerUseCase.execute(registerDto);
@@ -79,6 +82,7 @@ export class AuthController {
 
   @Get('profile')
   @UseGuards(AuthGuard('jwt'))
+  @Header('Cache-Control', 'no-transform')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user profile' })
   async getProfile(@Req() req: any) {

@@ -24,6 +24,7 @@ export class PostEntity {
 
   // Relations
   Author?: Partial<User> | null;
+  BlockedBy?: Partial<User> | null;
   Category?: any;
   Series?: any;
   Comment?: any[];

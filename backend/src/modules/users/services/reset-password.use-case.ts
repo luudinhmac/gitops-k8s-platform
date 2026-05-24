@@ -29,6 +29,10 @@ export class ResetPasswordUseCase {
     const user = await this.userRepository.findById(id);
     if (!user) throw new UserNotFoundException(id);
 
+    if (currentUser.id === id) {
+      throw new ForbiddenException('Bạn không thể tự reset mật khẩu của chính mình.');
+    }
+
     const targetLevel = this.roleHierarchy[user.role as string] || 0;
     const currentLevel = this.roleHierarchy[currentUser.role as string] || 0;
 

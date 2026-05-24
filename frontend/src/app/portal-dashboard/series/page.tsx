@@ -43,7 +43,7 @@ export default function SeriesAdminPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await seriesService.getAll();
+      const data = await seriesService.getMySeries();
       setSeries(Array.isArray(data) ? data : []);
     } catch {
       console.error('Error fetching series');

@@ -26,7 +26,7 @@ const ReactQuill = dynamic(async () => {
 }, {
     ssr: false,
     loading: () => <div className="h-[400px] w-full bg-slate-50 animate-pulse rounded-xl flex items-center justify-center text-slate-400">Đang tải trình soạn thảo...</div>
-});
+}) as any;
 
 interface RichEditorProps {
     id?: string;
@@ -38,6 +38,9 @@ interface RichEditorProps {
 
 export default function RichEditor({ id, name, value, onChange, placeholder }: RichEditorProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const imageInputRef = useRef<HTMLInputElement>(null);
+    const quillRef = useRef<any>(null);
+    const lastRangeRef = useRef<{ index: number; length: number } | null>(null);
     const [importing, setImporting] = useState(false);
     const [msgData, setMsgData] = useState<{ isOpen: boolean; title: string; message: string; variant: 'info' | 'success' | 'warning' | 'error' }>({ 
         isOpen: false, title: '', message: '', variant: 'error' 
@@ -64,43 +67,6 @@ export default function RichEditor({ id, name, value, onChange, placeholder }: R
     const modules = useMemo(() => ({
         toolbar: {
             container: `#toolbar-${id || 'editor'}`,
-            handlers: {
-                image: function() {
-                    const input = document.createElement('input');
-                    input.setAttribute('type', 'file');
-                    input.setAttribute('accept', 'image/*');
-                    input.setAttribute('id', 'quill-image-upload');
-                    input.setAttribute('name', 'quill-image-upload');
-                    input.click();
-
-                    input.onchange = async () => {
-                        const file = input.files?.[0];
-                        if (!file) return;
-
-                        const formData = new FormData();
-                        formData.append('file', file);
-
-                        try {
-                            const res = await fetch(`/api/v1/upload?type=content`, {
-                                method: 'POST',
-                                body: formData,
-                                credentials: 'include'
-                            });
-                            const data = await res.json();
-                            
-                            if (data.success && data.url) {
-                                // @ts-ignore - this context points to the Quill editor
-                                const quill = this.quill;
-                                const range = quill.getSelection();
-                                quill.insertEmbed(range.index, 'image', `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${data.url}`);
-                            }
-                        } catch (error) {
-                            console.error('Lỗi khi upload ảnh:', error);
-                            setMsgData({ isOpen: true, title: 'Lỗi upload', message: 'Không thể tải ảnh vào bài viết vào lúc này.', variant: 'error' });
-                        }
-                    };
-                }
-            }
         },
         clipboard: {
             matchVisual: false,
@@ -152,6 +118,49 @@ export default function RichEditor({ id, name, value, onChange, placeholder }: R
         if (fileInputRef.current) fileInputRef.current.value = '';
     };
 
+    const handleImageUploadChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('file', file);
+
+        try {
+            const res = await fetch(`/api/v1/upload?type=content`, {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            });
+            const data = await res.json();
+            
+            if (data.success && data.url) {
+                const quill = quillRef.current?.getEditor();
+                if (quill) {
+                    quill.focus();
+                    const range = lastRangeRef.current;
+                    const insertIndex = range ? range.index : quill.getLength();
+                    let baseUrl = 'http://localhost:3002';
+                    try {
+                        baseUrl = new URL(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002').origin;
+                    } catch {
+                        baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002').replace('/api/v1', '').replace('/v1', '').replace('/api', '');
+                    }
+                    quill.insertEmbed(insertIndex, 'image', `${baseUrl}${data.url}`);
+                    setTimeout(() => {
+                        quill.setSelection(insertIndex + 1, 0);
+                    }, 50);
+                }
+            }
+        } catch (error) {
+            console.error('Lỗi khi upload ảnh:', error);
+            setMsgData({ isOpen: true, title: 'Lỗi upload', message: 'Không thể tải ảnh vào bài viết vào lúc này.', variant: 'error' });
+        } finally {
+            if (imageInputRef.current) {
+                imageInputRef.current.value = '';
+            }
+        }
+    };
+
     const fileInputId = `file-import-${id || 'editor'}`;
 
     return (
@@ -180,6 +189,15 @@ export default function RichEditor({ id, name, value, onChange, placeholder }: R
                         ref={fileInputRef}
                         onChange={handleFileImport}
                         accept=".txt,.html,.md,.docx"
+                        className="hidden"
+                    />
+                    <input
+                        id="quill-image-upload-helper"
+                        name="quill-image-upload-helper"
+                        type="file"
+                        ref={imageInputRef}
+                        onChange={handleImageUploadChange}
+                        accept="image/*"
                         className="hidden"
                     />
                 </div>
@@ -241,7 +259,19 @@ export default function RichEditor({ id, name, value, onChange, placeholder }: R
                 </span>
                 <span className="ql-formats">
                     <button className="ql-link" aria-label="Insert Link" tabIndex={-1} />
-                    <button className="ql-image" aria-label="Insert Image" tabIndex={-1} />
+                    <button
+                        type="button"
+                        className="image-custom-btn"
+                        aria-label="Insert Image"
+                        tabIndex={-1}
+                        onClick={() => imageInputRef.current?.click()}
+                    >
+                        <svg viewBox="0 0 18 18">
+                            <rect className="ql-stroke" height="10" width="12" x="3" y="4"></rect>
+                            <circle className="ql-fill" cx="6" cy="8" r="1"></circle>
+                            <polyline className="ql-stroke" points="5 12 9 8 11 10 13 8 15 10"></polyline>
+                        </svg>
+                    </button>
                     <button className="ql-video" aria-label="Insert Video" tabIndex={-1} />
                 </span>
                 <span className="ql-formats">
@@ -260,10 +290,16 @@ export default function RichEditor({ id, name, value, onChange, placeholder }: R
                     tabIndex={-1}
                 />
                 <ReactQuill
+                    ref={quillRef}
                     id={`${id}-quill`}
                     theme="snow"
                     value={value}
                     onChange={onChange}
+                    onChangeSelection={(range: any) => {
+                        if (range) {
+                            lastRangeRef.current = range;
+                        }
+                    }}
                     modules={modules}
                     formats={formats}
                     placeholder={placeholder || 'Bắt đầu viết nội dung bài viết của bạn...'}

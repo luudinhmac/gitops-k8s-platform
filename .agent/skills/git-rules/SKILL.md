@@ -1,149 +1,148 @@
-# 🧠 Antigravity Git Skill
+# Antigravity Git Skill (Improved Spec)
 
 ## Context
-After each bug fix or feature implementation, README.md MUST be updated if:
-- new feature added
-- API changed
-- setup/process changed
+
+After each code change:
+
+- If a new feature is added
+- If API changes
+- If setup or install process changes
+
+MUST update `README.md` (or related documentation).
 
 ---
 
 ## Role
-You are a Git + DevOps expert.
+
+You are a Git + DevOps expert agent.
 
 ---
 
 ## Environment Detection (CRITICAL)
 
-Agent MUST detect shell environment:
+The agent MUST detect shell environment before generating commands.
 
 ### Windows PowerShell
+
 - Command separator: `;`
-- Example:
-  git add .; git commit -m "message"; git push
 
-### Linux / macOS (bash, zsh)
-- Command separator: `&&`
-- Example:
-  git add . && git commit -m "message" && git push
-
-Rules:
-- ALWAYS detect environment before generating commands
-- NEVER mix `;` and `&&`
-- Prefer chaining commands in ONE line to reduce token usage
-- Avoid multi-line commands unless necessary
-
----
-
-## Branch Workflow
-- feature/* → dev → main
-
-Rules:
-- NEVER commit directly to main
-- ALWAYS go through dev
-- Use feature branch for all changes
-
----
-
-## Commit Convention
-
-Format:
+```bash
+git add .; git commit -m "message"; git push
+Linux / macOS (bash/zsh)
+Command separator: &&
+git add . && git commit -m "message" && git push
+Rules
+NEVER mix ; and &&
+ALWAYS use single-line commands
+Prefer chained commands
+Branch Workflow
+main
+ ↑
+dev
+ ↑
+feature/*
+Rules
+NEVER commit directly to main
+ALL changes go through dev
+Feature branches must be created from dev
+Branch Naming Convention
+feature/<scope>-<short-name>
+fix/<scope>-<short-name>
+refactor/<scope>-<short-name>
+chore/<scope>-<short-name>
+docs/<scope>-<short-name>
+Examples
+feature/auth-login
+fix/payment-timeout
+refactor/api-response
+Rules
+MUST be lowercase
+MUST be descriptive
+Commit Convention
+Format
 type(scope): short message
+Types
+feat
+fix
+refactor
+chore
+docs
+Rules
+MUST include scope
+MUST be in English
+MUST be clear and specific
+SHOULD be ≤ 72 characters
+Breaking Change
+feat(api)!: remove v1 endpoints
 
-Types:
-- feat
-- fix
-- refactor
-- chore
-- docs
+OR
 
-Rules:
-- MUST include scope
-- MUST use English
-- MUST be concise (<= 10 words)
-- NO vague messages (e.g. "update", "fix bug")
+BREAKING CHANGE: describe change
+Merge Convention
+Format
+type(scope): merge <source> into <target>
 
----
-
-## Merge Convention
-
-Format:
-type(scope): merge <source-branch> into <target-branch>
-
-<short description>
+summary
 
 - change 1
 - change 2
+Strategy
+Prefer squash merge
+Or use platform default (GitHub/GitLab)
+README / Documentation Rule (STRICT)
 
----
+The agent MUST update documentation if:
 
-## README Rule (STRICT)
+New feature added
+API modified
+Setup or install process changed
+Allowed files
+README.md
+API.md
+CHANGELOG.md
+docs/*
+Quality Checks (if available)
 
-Agent MUST:
-- detect if change affects:
-  - API
-  - setup
-  - feature
-- IF YES → suggest updating README.md
-- IF NO → do nothing
+Before commit:
 
----
+Run tests
+Run lint
+Run build
+Ignored Files (DO NOT COMMIT)
+node_modules
+dist
+build
+cache
+logs (if auto-generated)
+Safety Rules
+NEVER commit directly to main
+NEVER force push to shared branches
+If branch exists → reuse it (do not recreate)
+Always sync dev before feature work
+git checkout dev && git pull origin dev
+Task Pipeline
 
-## Task
+When processing changes:
 
-Given code changes, you MUST:
-
-1. Detect:
-   - type
-   - scope
-
-2. Detect:
-   - environment (PowerShell or Linux)
-
-3. Generate:
-   - commit message
-
-4. Suggest:
-   - git commands (optimized, chained)
-
-5. Check:
-   - whether README.md needs update
-
----
-
-## Output Format (STRICT)
-
-### Commit Message
+Detect change type:
+feat / fix / refactor / chore / docs
+Detect scope
+Detect environment:
+PowerShell or Linux/macOS
+Generate commit message
+Generate optimized git commands (single line)
+Check whether README.md or docs update is required
+Output Format
+Commit Message
 <message>
-
-### Git Commands
+Git Commands
 <single-line commands based on detected shell>
-
-### README.md Update
-- Required / Not required
-- Reason
-
-## Example Powershell
-### Commit Message
-feat(auth): add login API
-
-### Git Commands
-git checkout -b feature/login-api; git add .; git commit -m "feat(auth): add login API"; git push origin feature/login-api
-
-### README.md Update
-- Required
-- Added new authentication API
-
-## Example Linux
-### Commit Message
-feat(auth): add login API
-
-### Git Commands
-git checkout -b feature/login-api && git add . && git commit -m "feat(auth): add login API" && git push origin feature/login-api
-
-### README.md Update
-- Required
-- Added new authentication API
-
-## Smart fallback
-Ask user: "PowerShell or Linux?" if not sure
+README.md Update
+Required / Not required
+Reason
+Goal
+Safe Git workflow
+Clean commit history
+CI/CD friendly structure
+Minimal human error
+Automation ready

@@ -1,22 +1,22 @@
 import { Controller, Post, Body, UseGuards } from '@nestjs/common';
 import { SeoService } from '../services/seo.service';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
-import { RolesGuard } from '../../auth/roles.guard';
-import { Roles } from '../../auth/roles.decorator';
+import { PermissionsGuard } from '../../auth/permissions.guard';
+import { Permissions } from '../../auth/permissions.decorator';
 
 @Controller('seo')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(JwtAuthGuard, PermissionsGuard)
 export class SeoController {
   constructor(private readonly seoService: SeoService) {}
 
   @Post('analyze')
-  @Roles('admin', 'superadmin', 'editor')
+  @Permissions('posts:create')
   async analyze(@Body() data: { content: string; title: string }) {
     return this.seoService.analyzeContent(data.content, data.title);
   }
 
   @Post('suggest-keywords')
-  @Roles('admin', 'superadmin', 'editor')
+  @Permissions('posts:create')
   async suggestKeywords(@Body() data: { topic: string }) {
     return this.seoService.suggestKeywords(data.topic);
   }

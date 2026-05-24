@@ -20,6 +20,12 @@ export class UserEntity {
   updated_at!: Date;
   can_comment!: boolean;
   can_post!: boolean;
+  role_id?: number | null;
+  can_manage_categories?: boolean;
+  can_manage_series?: boolean;
+  can_manage_comments?: boolean;
+  can_manage_settings?: boolean;
+  can_manage_users?: boolean;
 
   constructor(partial: Partial<UserEntity>) {
     Object.assign(this, partial);
