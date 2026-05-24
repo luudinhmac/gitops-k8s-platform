@@ -107,7 +107,7 @@ promote_production:
     - 'export TARGET_TAG=$CI_COMMIT_TAG'
     - 'echo "Searching for built staging image in recent commit history..."'
     - |
-      COMMITS=$(git log --pretty=format:"%h" -n 10)
+      COMMITS=$(git log --pretty=format:"%H" -n 10 | cut -c 1-8)
       FOUND=false
       for SHA in $COMMITS; do
         SOURCE_TAG="dev-$SHA"
