@@ -49,7 +49,7 @@ build_staging:
       - backend-image.tar
     expire_in: 1 hour
   rules:
-    - if: '$CI_COMMIT_BRANCH == "dev"'
+    - if: '$CI_COMMIT_BRANCH'
 
 scan_staging:
   stage: scan
@@ -65,7 +65,7 @@ scan_staging:
   dependencies:
     - build_staging
   rules:
-    - if: '$CI_COMMIT_BRANCH == "dev"'
+    - if: '$CI_COMMIT_BRANCH'
 
 push_staging:
   <<: *docker_template
@@ -76,7 +76,7 @@ push_staging:
   dependencies:
     - build_staging
   rules:
-    - if: '$CI_COMMIT_BRANCH == "dev"'
+    - if: '$CI_COMMIT_BRANCH'
 
 deploy_staging_backend:
   stage: deploy
