@@ -38,9 +38,8 @@ sync_api:
   tags:
     - agent-1
   script:
-    - corepack enable && corepack prepare pnpm@latest --activate
-    - pnpm config set allowed-build-scripts sharp,unrs-resolver
-    - pnpm install --no-frozen-lockfile
+    - corepack enable && corepack prepare pnpm@9.15.4 --activate
+    - pnpm install --no-frozen-lockfile --ignore-scripts
     - |
       if [ -n "$BACKEND_SWAGGER_URL" ]; then
         curl -sSL $BACKEND_SWAGGER_URL -o backend-swagger.json
