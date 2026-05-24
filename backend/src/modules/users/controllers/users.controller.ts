@@ -8,9 +8,12 @@ import {
   Delete,
   UseGuards,
   Req,
+  Header,
 } from '@nestjs/common';
 import { CreateUserDto, UpdateUserDto, User } from '@portfolio/contracts';
 import { AuthGuard } from '@nestjs/passport';
+import { PermissionsGuard } from '../../auth/permissions.guard';
+import { Permissions } from '../../auth/permissions.decorator';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { getClientIp } from '../../../common/utils/ip';
 
@@ -39,8 +42,10 @@ export class UsersController {
   ) {}
 
   @Get()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), PermissionsGuard)
+  @Permissions('users:manage')
   @ApiBearerAuth()
+  @Header('Cache-Control', 'no-transform')
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({ status: 200, type: [User] })
   findAll(@Req() req: any) {
@@ -50,6 +55,7 @@ export class UsersController {
   @Get(':id')
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
+  @Header('Cache-Control', 'no-transform')
   @ApiOperation({ summary: 'Get user by id' })
   @ApiResponse({ status: 200, type: User })
   findOne(@Param('id') id: string, @Req() req: any) {
@@ -58,7 +64,8 @@ export class UsersController {
 
   @Post()
   @ApiOperation({ summary: 'Create new user' })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), PermissionsGuard)
+  @Permissions('users:manage')
   @ApiBearerAuth()
   create(@Body() createUserDto: CreateUserDto, @Req() req: any) {
     return this.createUserUseCase.execute(createUserDto, req.user);
@@ -68,6 +75,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Update user' })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
+  @Header('Cache-Control', 'no-transform')
   update(
     @Param('id') id: string,
     @Req() req: any,
@@ -78,7 +86,8 @@ export class UsersController {
 
   @Patch(':id/role')
   @ApiOperation({ summary: 'Update user role' })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), PermissionsGuard)
+  @Permissions('users:manage')
   @ApiBearerAuth()
   updateRole(
     @Param('id') id: string,
@@ -90,7 +99,8 @@ export class UsersController {
 
   @Patch(':id/status')
   @ApiOperation({ summary: 'Update user status (active/inactive)' })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), PermissionsGuard)
+  @Permissions('users:manage')
   @ApiBearerAuth()
   updateStatus(
     @Param('id') id: string,
@@ -103,7 +113,8 @@ export class UsersController {
 
   @Patch(':id/permissions')
   @ApiOperation({ summary: 'Update user permissions and status' })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), PermissionsGuard)
+  @Permissions('users:manage')
   @ApiBearerAuth()
   updatePermissions(
     @Param('id') id: string,
@@ -122,7 +133,8 @@ export class UsersController {
 
   @Patch(':id/reset-password')
   @ApiOperation({ summary: 'Admin reset user password' })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), PermissionsGuard)
+  @Permissions('users:manage')
   @ApiBearerAuth()
   resetPassword(
     @Param('id') id: string,
@@ -154,7 +166,8 @@ export class UsersController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete user' })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), PermissionsGuard)
+  @Permissions('users:manage')
   @ApiBearerAuth()
   remove(@Param('id') id: string, @Req() req: any) {
     const ip = getClientIp(req);

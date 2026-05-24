@@ -52,7 +52,15 @@ export default function CoverImagePanel({
         {coverImage ? (
           <>
             <img 
-              src={`${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${coverImage}`} 
+              src={`${(() => {
+                let baseUrl = 'http://localhost:3002';
+                try {
+                  baseUrl = new URL(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002').origin;
+                } catch {
+                  baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002').replace('/api/v1', '').replace('/v1', '').replace('/api', '');
+                }
+                return baseUrl;
+              })()}${coverImage}`} 
               alt="Post Cover" 
               className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
             />

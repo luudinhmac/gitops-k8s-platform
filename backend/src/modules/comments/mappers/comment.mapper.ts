@@ -16,8 +16,8 @@ export class CommentMapper {
       User: raw.User ? {
         id: raw.User.id,
         username: raw.User.username,
-        fullname: raw.User.fullname,
-        avatar: raw.User.avatar,
+        fullname: raw.User.Profile?.fullname ?? raw.User.fullname ?? null,
+        avatar: raw.User.Profile?.avatar ?? raw.User.avatar ?? null,
       } : undefined,
     });
   }

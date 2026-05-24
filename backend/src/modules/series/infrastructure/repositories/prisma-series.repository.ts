@@ -31,6 +31,7 @@ export class PrismaSeriesRepository implements ISeriesRepository {
             id: true,
             title: true,
             slug: true,
+            series_order: true,
             created_at: true,
           }
         },
@@ -43,7 +44,7 @@ export class PrismaSeriesRepository implements ISeriesRepository {
   }
 
   async findBySlug(slug: string): Promise<SeriesEntity | null> {
-    const series = await this.prisma.series.findUnique({
+    const series = await this.prisma.series.findFirst({
       where: { slug },
       include: {
         Post: {
@@ -51,6 +52,7 @@ export class PrismaSeriesRepository implements ISeriesRepository {
             id: true,
             title: true,
             slug: true,
+            series_order: true,
             created_at: true,
           }
         },

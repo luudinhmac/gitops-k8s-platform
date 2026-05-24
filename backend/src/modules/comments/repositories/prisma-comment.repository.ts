@@ -5,6 +5,17 @@ import { CommentEntity } from '../domain/comment.entity';
 import { CommentMapper } from '../mappers/comment.mapper';
 import { CreateCommentDto, UpdateCommentDto } from '@portfolio/contracts';
 
+const defaultUserSelect = {
+  id: true,
+  username: true,
+  Profile: {
+    select: {
+      fullname: true,
+      avatar: true,
+    }
+  }
+};
+
 @Injectable()
 export class PrismaCommentRepository implements ICommentsRepository {
   constructor(private readonly prisma: PrismaService) {}
@@ -14,12 +25,7 @@ export class PrismaCommentRepository implements ICommentsRepository {
       where: { post_id: postId },
       include: {
         User: {
-          select: {
-            id: true,
-            username: true,
-            fullname: true,
-            avatar: true,
-          }
+          select: defaultUserSelect
         }
       },
       orderBy: { created_at: 'asc' }
@@ -32,12 +38,7 @@ export class PrismaCommentRepository implements ICommentsRepository {
       where: { id },
       include: {
         User: {
-          select: {
-            id: true,
-            username: true,
-            fullname: true,
-            avatar: true,
-          }
+          select: defaultUserSelect
         }
       }
     });
@@ -49,12 +50,7 @@ export class PrismaCommentRepository implements ICommentsRepository {
       data: data as any,
       include: {
         User: {
-          select: {
-            id: true,
-            username: true,
-            fullname: true,
-            avatar: true,
-          }
+          select: defaultUserSelect
         }
       }
     });
@@ -67,12 +63,7 @@ export class PrismaCommentRepository implements ICommentsRepository {
       data: data as any,
       include: {
         User: {
-          select: {
-            id: true,
-            username: true,
-            fullname: true,
-            avatar: true,
-          }
+          select: defaultUserSelect
         }
       }
     });

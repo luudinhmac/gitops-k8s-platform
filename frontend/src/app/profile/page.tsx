@@ -293,7 +293,7 @@ function ProfilePageContent() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {[
                       { label: 'Họ và tên', value: user?.fullname, icon: UserIcon },
-                      { label: 'Email', value: user?.email, icon: Mail },
+                      { label: 'Email', value: user?.email ? <span dangerouslySetInnerHTML={{ __html: `<!--email_off-->${user.email}<!--/email_off-->` }} /> : undefined, icon: Mail },
                       { label: 'Số điện thoại', value: user?.phone, icon: Phone },
                       { label: 'Ngành nghề', value: user?.profession, icon: Briefcase },
                       { label: 'Ngày sinh', value: <FormattedDate date={user?.birthday || ''} />, icon: Calendar },

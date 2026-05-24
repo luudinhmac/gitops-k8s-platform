@@ -94,7 +94,7 @@ export default function PostEditorPage({ postId }: PostEditorPageProps) {
     try {
       const [cats, seriesData] = await Promise.all([
         categoryService.getAll(),
-        seriesService.getAll()
+        seriesService.getMySeries()
       ]);
 
       setCategories(Array.isArray(cats) ? cats : []);
@@ -162,7 +162,7 @@ export default function PostEditorPage({ postId }: PostEditorPageProps) {
   };
 
   if (authLoading || (isEditMode && loading)) {
-    return <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950"><Loader2 size={40} className="animate-spin text-primary" /></div>;
+    return <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950" suppressHydrationWarning={true}><Loader2 size={40} className="animate-spin text-primary" /></div>;
   }
 
   if (permissionError) {
@@ -170,7 +170,7 @@ export default function PostEditorPage({ postId }: PostEditorPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20" suppressHydrationWarning={true}>
       <EditorHeader 
         title={formData.title}
         isEditMode={isEditMode}

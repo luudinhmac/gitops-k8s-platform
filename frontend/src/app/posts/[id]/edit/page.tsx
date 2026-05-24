@@ -10,8 +10,8 @@ export default function EditPostPage({ params }: EditPostPageProps) {
   const { id } = use(params);
   
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <div className="pt-20 md:pt-24">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950" suppressHydrationWarning={true}>
+      <div className="pt-20 md:pt-24" suppressHydrationWarning={true}>
         <SidebarProvider>
           <PostEditor postId={parseInt(id)} />
         </SidebarProvider>

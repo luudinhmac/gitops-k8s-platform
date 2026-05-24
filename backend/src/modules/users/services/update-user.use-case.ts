@@ -18,7 +18,7 @@ export class UpdateUserUseCase {
 
     // Only self or Admin can update
     const isAdmin = currentUser.role === UserRole.ADMIN || currentUser.role === UserRole.SUPERADMIN;
-    if (currentUser.id !== id && !isAdmin) {
+    if (String(currentUser.id) !== String(id) && !isAdmin) {
       throw new ForbiddenException('Bạn không có quyền cập nhật thông tin này.');
     }
 

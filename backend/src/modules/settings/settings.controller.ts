@@ -3,6 +3,8 @@ import { SettingsService } from './settings.service';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
+import { PermissionsGuard } from '../auth/permissions.guard';
+import { Permissions } from '../auth/permissions.decorator';
 import { getClientIp } from '../../common/utils/ip';
 
 @Controller('settings')
@@ -25,15 +27,15 @@ export class SettingsController {
     return this.settingsService.requestMaintenanceCode(getClientIp(req));
   }
 
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('admin', 'editor')
+  @UseGuards(AuthGuard('jwt'), PermissionsGuard)
+  @Permissions('settings:manage')
   @Get('admin')
-  async getAllSettings() {
-    return this.settingsService.getAllSettings();
+  async getAllSettings(@Req() req: any) {
+    return this.settingsService.getAllSettings(req.user);
   }
 
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('admin') // Only admins can update settings
+  @UseGuards(AuthGuard('jwt'), PermissionsGuard)
+  @Permissions('settings:manage') // Only users with settings:manage permission can update settings
   @Put('admin')
   async updateSettings(
     @Req() req: any,
@@ -66,8 +68,8 @@ export class SettingsController {
     return this.settingsService.testEmail(data);
   }
 
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('admin')
+  @UseGuards(AuthGuard('jwt'), PermissionsGuard)
+  @Permissions('settings:manage')
   @Post('admin/flush-cache')
   async flushCache() {
     return this.settingsService.flushCache();

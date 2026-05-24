@@ -34,28 +34,44 @@ export class SettingsService {
     private adminAlertService: AdminAlertService,
   ) { }
 
+  private coerceToString(value: any): string {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'string') return value;
+    const str = JSON.stringify(value);
+    if (str.startsWith('"') && str.endsWith('"')) {
+      try {
+        return JSON.parse(str);
+      } catch {
+        return str;
+      }
+    }
+    return str;
+  }
+
   async getPublicSettings() {
     const settings = await this.prisma.setting.findMany({
       where: { is_public: true },
     });
 
     return settings.reduce((acc, current) => {
-      acc[current.key] = current.value;
+      acc[current.key] = this.coerceToString(current.value);
       return acc;
-    }, {});
+    }, {} as Record<string, string>);
   }
 
-  async getSettingByKey(key: string) {
+  async getSettingByKey(key: string): Promise<string | null> {
     const setting = await this.prisma.setting.findUnique({
       where: { key },
     });
     if (!setting) return null;
 
+    const stringValue = this.coerceToString(setting.value);
+
     if (SENSITIVE_KEYS.includes(key)) {
-      return EncryptionUtil.decrypt(setting.value);
+      return EncryptionUtil.decrypt(stringValue);
     }
 
-    return setting.value;
+    return stringValue;
   }
 
   async requestMaintenanceCode(ip: string = 'unknown') {
@@ -128,18 +144,25 @@ export class SettingsService {
     return savedPasscode === passcode;
   }
 
-  async getAllSettings() {
+  async getAllSettings(user?: any) {
     const settings = await this.prisma.setting.findMany();
 
     const dbSettings = settings.reduce((acc, current) => {
       if (!acc[current.group]) acc[current.group] = {};
-      let value = current.value;
+      const valStr = this.coerceToString(current.value);
+      let value = valStr;
       if (SENSITIVE_KEYS.includes(current.key)) {
         value = MASK_VALUE;
       }
       acc[current.group][current.key] = value;
       return acc;
     }, {} as Record<string, any>);
+
+    if (user?.role !== 'superadmin') {
+      return {
+        dbConfig: dbSettings,
+      };
+    }
 
     const envSettings = {
       NODE_ENV: process.env.NODE_ENV || 'development',
@@ -171,7 +194,7 @@ export class SettingsService {
 
     if (isUpdatingSensitive && user?.role !== 'superadmin') {
       const { ForbiddenException } = require('@nestjs/common');
-      throw new ForbiddenException('Chỉ Superadmin mới có quyền thay đổi cấu hình Cảnh báo Quản trị.');
+      throw new ForbiddenException('Chỉ Superadmin mới có quyền thay đổi cấu hình Cảnh báo Quận trị.');
     }
 
     try {
@@ -180,7 +203,7 @@ export class SettingsService {
         where: { key: { in: items.map(i => i.key) } }
       });
       const currentMap = currentSettings.reduce((acc, s) => {
-        acc[s.key] = s.value || '';
+        acc[s.key] = this.coerceToString(s.value);
         return acc;
       }, {} as Record<string, string>);
 

@@ -30,7 +30,7 @@ export class StatsService {
 
     return {
       onlineCount,
-      totalVisits: parseInt(totalVisitsSetting?.value || '0', 10),
+      totalVisits: parseInt(String(totalVisitsSetting?.value || '0'), 10),
     };
   }
 
@@ -40,7 +40,7 @@ export class StatsService {
         where: { key: 'stats_total_visits' }
       });
 
-      const newValue = (parseInt(current?.value || '0', 10) + 1).toString();
+      const newValue = (parseInt(String(current?.value || '0'), 10) + 1).toString();
 
       await this.prisma.setting.upsert({
         where: { key: 'stats_total_visits' },

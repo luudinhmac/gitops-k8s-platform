@@ -18,7 +18,7 @@ export class GetUserUseCase {
 
     // Nếu không phải Admin và không phải chính chủ, lọc bỏ thông tin nhạy cảm
     const isAdmin = currentUser?.role === 'superadmin' || currentUser?.role === 'admin';
-    const isOwner = currentUser?.id === id;
+    const isOwner = currentUser?.id !== undefined && String(currentUser.id) === String(id);
 
     if (!isAdmin && !isOwner) {
       return {

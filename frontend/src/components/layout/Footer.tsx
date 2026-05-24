@@ -42,7 +42,7 @@ export default function Footer() {
   }
 
   return (
-    <footer className="bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800">
+    <footer suppressHydrationWarning={true} className="bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800">
       <div suppressHydrationWarning={true} className="max-w-7xl mx-auto px-4 py-12 md:py-16">
         <div suppressHydrationWarning={true} className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {/* Brand Section */}

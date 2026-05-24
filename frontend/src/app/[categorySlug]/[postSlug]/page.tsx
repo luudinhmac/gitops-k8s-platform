@@ -2,6 +2,17 @@ import { Metadata } from 'next';
 import PostDetailClient from './PostDetailClient';
 import { postService } from '@/features/posts/services/postService';
 
+const getMediaUrl = (path?: string | null) => {
+  if (!path) return '';
+  let baseUrl = 'http://localhost:3002';
+  try {
+    baseUrl = new URL(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002').origin;
+  } catch {
+    baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002').replace('/api/v1', '').replace('/v1', '').replace('/api', '');
+  }
+  return `${baseUrl}${path}`;
+};
+
 interface Props {
   params: Promise<{ categorySlug: string; postSlug: string }>;
 }
@@ -17,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     const title = post.title;
     const description = post.excerpt || `${post.title} - Bài viết mới nhất trên blog của Lưu Đình Mác.`;
     const image = post.cover_image 
-      ? `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${post.cover_image}`
+      ? getMediaUrl(post.cover_image)
       : `${baseUrl}/favicon.ico`;
 
     return {
@@ -58,7 +69,7 @@ export default async function Page({ params }: Props) {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: post.title,
-    image: post.cover_image ? `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${post.cover_image}` : `${baseUrl}/favicon.ico`,
+    image: post.cover_image ? getMediaUrl(post.cover_image) : `${baseUrl}/favicon.ico`,
     datePublished: post.created_at as string,
     author: {
       '@type': 'Person',

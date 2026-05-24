@@ -19,7 +19,7 @@ export class ChangePasswordUseCase {
   }
 
   async execute(id: number, oldPassword: string, newPassword: string, currentUser: User, ip?: string) {
-    if (currentUser.id !== id) throw new ForbiddenException('Bạn chỉ có thể đổi mật khẩu của chính mình.');
+    if (String(currentUser.id) !== String(id)) throw new ForbiddenException('Bạn chỉ có thể đổi mật khẩu của chính mình.');
     if (!this.validatePassword(newPassword)) throw new BadRequestException('Mật khẩu mới phải tối thiểu 8 ký tự.');
     
     const user = await this.userRepository.findById(id);

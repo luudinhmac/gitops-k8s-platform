@@ -14,6 +14,7 @@ async function bootstrap() {
   app.use(helmet({
     crossOriginEmbedderPolicy: false,
     contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
   }));
 
   // Enable Graceful Shutdown

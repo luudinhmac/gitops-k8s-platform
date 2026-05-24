@@ -54,6 +54,8 @@ RUN npx prisma generate
 # ==========================================
 FROM node:22-alpine AS runner
 RUN apk add --no-cache openssl
+# Remove npm and npx to eliminate base image security vulnerabilities
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 WORKDIR /app
 
 ENV NODE_ENV=production
