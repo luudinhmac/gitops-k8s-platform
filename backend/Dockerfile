@@ -64,7 +64,7 @@ ENV NODE_ENV=production
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nestjs && \
     mkdir -p /app/uploads && \
-    chown -R nestjs:nodejs /app/uploads
+    chown -R nestjs:nodejs /app
 
 # Copy toàn bộ tài nguyên từ các stage trước sang với quyền user nestjs
 COPY --from=prod-deps --chown=nestjs:nodejs /app/node_modules ./node_modules
