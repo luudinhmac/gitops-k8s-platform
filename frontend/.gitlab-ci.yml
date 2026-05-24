@@ -12,7 +12,6 @@ variables:
   IMAGE_TAG: $IMAGE_NAME:dev-$CI_COMMIT_SHORT_SHA
   K8S_NAMESPACE: portfolio
   TZ: Asia/Ho_Chi_Minh
-  INTERNAL_API_URL: "http://portfolio-backend-staging:3001"
 
 .notify_template: &notify_template
   after_script:
@@ -61,7 +60,7 @@ build_staging:
   before_script: [] # Overwrite before_script since we don't login here
   script:
     - 'echo "Building Staging Image: $IMAGE_TAG"'
-    - 'docker build --pull --build-arg INTERNAL_API_URL=$INTERNAL_API_URL -t $IMAGE_TAG .'
+    - 'docker build --pull -t $IMAGE_TAG .'
     - 'docker save -o frontend-image.tar $IMAGE_TAG'
   dependencies:
     - sync_api
