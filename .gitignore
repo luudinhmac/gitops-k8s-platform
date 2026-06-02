@@ -1,4 +1,5 @@
 .codegraph/
+.agent/
 # Dependencies
 node_modules/
 .pnp
@@ -24,6 +25,7 @@ ansible/group_vars/all/vault.yml
 backend/.env
 frontend/.env
 infra/certs
+infra/.git
 
 # Misc
 .DS_Store
@@ -47,3 +49,7 @@ context.md
 admin.conf
 info_connect.md
 quytac.md
+
+# 
+admin.conf
+ZMigrate/
