@@ -15,7 +15,9 @@ export class PrismaNotificationRepository implements INotificationsRepository {
       orderBy: { created_at: 'desc' },
       take: 50,
     });
-    return notifications.map(n => NotificationMapper.toDomain(n) as NotificationEntity);
+    return notifications.map(
+      (n) => NotificationMapper.toDomain(n) as NotificationEntity,
+    );
   }
 
   async findById(id: number): Promise<NotificationEntity | null> {
@@ -53,7 +55,7 @@ export class PrismaNotificationRepository implements INotificationsRepository {
 
   async deleteAll(userId: number): Promise<void> {
     await this.prisma.notification.deleteMany({
-      where: { recipient_id: userId }
+      where: { recipient_id: userId },
     });
   }
 

@@ -19,7 +19,6 @@ import { TogglePublishPostUseCase } from './services/toggle-publish-post.use-cas
 import { ToggleLikePostUseCase } from './services/toggle-like-post.use-case';
 import { GetLikeStatusUseCase } from './services/get-like-status.use-case';
 
-
 @Module({
   imports: [
     PrismaModule,
@@ -44,10 +43,6 @@ import { GetLikeStatusUseCase } from './services/get-like-status.use-case';
     ToggleLikePostUseCase,
     GetLikeStatusUseCase,
   ],
-  exports: [
-    I_POST_REPOSITORY,
-    GetPostsUseCase,
-    GetPostUseCase,
-  ],
+  exports: [I_POST_REPOSITORY, GetPostsUseCase, GetPostUseCase],
 })
 export class PostsModule {}

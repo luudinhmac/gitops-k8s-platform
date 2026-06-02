@@ -4,11 +4,11 @@ import { postService } from '@/features/posts/services/postService';
 
 const getMediaUrl = (path?: string | null) => {
   if (!path) return '';
-  let baseUrl = 'http://localhost:3002';
+  let baseUrl = 'http://localhost:3001';
   try {
-    baseUrl = new URL(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002').origin;
+    baseUrl = new URL(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').origin;
   } catch {
-    baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002').replace('/api/v1', '').replace('/v1', '').replace('/api', '');
+    baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').replace('/api/v1', '').replace('/v1', '').replace('/api', '');
   }
   return `${baseUrl}${path}`;
 };
@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
     const title = post.title;
     const description = post.excerpt || `${post.title} - Bài viết mới nhất trên blog của Lưu Đình Mác.`;
-    const image = post.cover_image 
+    const image = post.cover_image
       ? getMediaUrl(post.cover_image)
       : `${baseUrl}/favicon.ico`;
 

@@ -1,5 +1,8 @@
 import { Inject, Injectable, ForbiddenException } from '@nestjs/common';
-import { IPostRepository, I_POST_REPOSITORY } from '../domain/post.repository.interface';
+import {
+  IPostRepository,
+  I_POST_REPOSITORY,
+} from '../domain/post.repository.interface';
 import { PostEntity } from '../domain/post.entity';
 import { User, UserRole } from '@portfolio/types';
 import { CreatePostDto } from '@portfolio/contracts';
@@ -17,8 +20,27 @@ export class CreatePostUseCase {
 
   private sanitizeOptions = {
     allowedTags: sanitizeHtml.defaults.allowedTags.concat([
-      'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'div', 'p', 'br',
-      'strong', 'em', 'u', 's', 'blockquote', 'pre', 'ol', 'ul', 'li', 'a',
+      'img',
+      'h1',
+      'h2',
+      'h3',
+      'h4',
+      'h5',
+      'h6',
+      'span',
+      'div',
+      'p',
+      'br',
+      'strong',
+      'em',
+      'u',
+      's',
+      'blockquote',
+      'pre',
+      'ol',
+      'ul',
+      'li',
+      'a',
     ]),
     allowedAttributes: {
       '*': ['style', 'class', 'id', 'align'],
@@ -43,11 +65,14 @@ export class CreatePostUseCase {
   };
 
   async execute(user: User, data: CreatePostDto): Promise<PostEntity> {
-    if (!user.can_post) throw new ForbiddenException('Tài khoản bị cấm đăng bài.');
+    if (!user.can_post)
+      throw new ForbiddenException('Tài khoản bị cấm đăng bài.');
 
     const cleanContent = sanitizeHtml(data.content || '', this.sanitizeOptions);
-    const baseSlug = data.slug || slugify(data.title, { lower: true, strict: true, locale: 'vi' });
-    
+    const baseSlug =
+      data.slug ||
+      slugify(data.title, { lower: true, strict: true, locale: 'vi' });
+
     let finalSlug = baseSlug;
     let count = 0;
     while (true) {
@@ -61,12 +86,21 @@ export class CreatePostUseCase {
       ...data,
       content: cleanContent,
       slug: finalSlug,
-      is_pinned: (user.role === UserRole.ADMIN || user.role === UserRole.SUPERADMIN) && data.is_pinned ? true : false,
+      is_pinned:
+        (user.role === UserRole.ADMIN || user.role === UserRole.SUPERADMIN) &&
+        data.is_pinned
+          ? true
+          : false,
     });
 
     // Register media usages
     if (post.cover_image) {
-      await this.mediaManager.registerUsage(post.cover_image, 'POST', post.id, 'cover');
+      await this.mediaManager.registerUsage(
+        post.cover_image,
+        'POST',
+        post.id,
+        'cover',
+      );
     }
     if (post.content) {
       await this.mediaManager.syncContentUsages('POST', post.id, post.content);

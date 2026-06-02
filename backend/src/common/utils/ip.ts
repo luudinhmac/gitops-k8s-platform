@@ -13,5 +13,7 @@ export function getClientIp(req: Request | any): string {
     req.socket?.remoteAddress ||
     'unknown';
 
-  return (typeof rawIp === 'string' ? rawIp : String(rawIp)).split(',')[0].trim();
+  return (typeof rawIp === 'string' ? rawIp : String(rawIp))
+    .split(',')[0]
+    .trim();
 }

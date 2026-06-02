@@ -29,12 +29,7 @@ import { ValidateUserUseCase } from './services/validate-user.use-case';
     AdminAlertModule,
     UsersModule,
   ],
-  providers: [
-    JwtStrategy,
-    LoginUseCase,
-    RegisterUseCase,
-    ValidateUserUseCase,
-  ],
+  providers: [JwtStrategy, LoginUseCase, RegisterUseCase, ValidateUserUseCase],
   controllers: [AuthController],
   exports: [LoginUseCase, RegisterUseCase, ValidateUserUseCase],
 })

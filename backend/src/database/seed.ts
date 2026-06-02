@@ -7,10 +7,54 @@ async function main() {
   console.log('--- SEEDING SETTINGS ---');
 
   const settings = [
-    { key: 'maintenance_global', value: 'false', group: 'maintenance', is_public: true },
-    { key: 'maintenance_posts', value: 'false', group: 'maintenance', is_public: true },
-    { key: 'maintenance_comments', value: 'false', group: 'maintenance', is_public: true },
-    { key: 'maintenance_passcode', value: '"123456"', group: 'maintenance', is_public: false },
+    {
+      key: 'maintenance_global',
+      value: 'false',
+      group: 'maintenance',
+      is_public: true,
+    },
+    {
+      key: 'maintenance_posts',
+      value: 'false',
+      group: 'maintenance',
+      is_public: true,
+    },
+    {
+      key: 'maintenance_comments',
+      value: 'false',
+      group: 'maintenance',
+      is_public: true,
+    },
+    {
+      key: 'maintenance_passcode',
+      value: '"123456"',
+      group: 'maintenance',
+      is_public: false,
+    },
+    {
+      key: 'post_show_created_at',
+      value: 'true',
+      group: 'display',
+      is_public: true,
+    },
+    {
+      key: 'post_show_author',
+      value: 'true',
+      group: 'display',
+      is_public: true,
+    },
+    {
+      key: 'post_show_views',
+      value: 'true',
+      group: 'display',
+      is_public: true,
+    },
+    {
+      key: 'post_show_read_time',
+      value: 'true',
+      group: 'display',
+      is_public: true,
+    },
   ];
 
   for (const item of settings) {
@@ -30,10 +74,18 @@ async function main() {
   // 1. Seed Roles
   console.log('--- SEEDING ROLES ---');
   const rolesData = [
-    { name: 'superadmin', description: 'Quyền quản trị tối cao', is_system: true },
+    {
+      name: 'superadmin',
+      description: 'Quyền quản trị tối cao',
+      is_system: true,
+    },
     { name: 'admin', description: 'Quản trị viên hệ thống', is_system: true },
     { name: 'editor', description: 'Biên tập viên nội dung', is_system: true },
-    { name: 'user', description: 'Thành viên/Người dùng thường', is_system: true },
+    {
+      name: 'user',
+      description: 'Thành viên/Người dùng thường',
+      is_system: true,
+    },
   ];
 
   const rolesMap: Record<string, number> = {};
@@ -50,20 +102,59 @@ async function main() {
   // 2. Seed Permissions
   console.log('--- SEEDING PERMISSIONS ---');
   const permissionsData = [
-    { key: 'categories:manage', name: 'Quản lý Danh mục', description: 'Thêm, sửa, xóa danh mục bài viết', is_system: true },
-    { key: 'series:manage', name: 'Quản lý Series', description: 'Thêm, sửa, xóa chuỗi bài viết', is_system: true },
-    { key: 'comments:manage', name: 'Quản lý Bình luận', description: 'Kiểm duyệt và xóa bình luận của người khác', is_system: true },
-    { key: 'settings:manage', name: 'Quản lý Cài đặt', description: 'Thay đổi cấu hình hệ thống', is_system: true },
-    { key: 'users:manage', name: 'Quản lý Thành viên', description: 'Xem, thêm, sửa, khóa tài khoản thành viên', is_system: true },
-    { key: 'posts:create', name: 'Đăng bài viết', description: 'Quyền viết bài và gửi duyệt', is_system: true },
-    { key: 'comments:create', name: 'Gửi bình luận', description: 'Quyền gửi bình luận trên các bài viết', is_system: true },
+    {
+      key: 'categories:manage',
+      name: 'Quản lý Danh mục',
+      description: 'Thêm, sửa, xóa danh mục bài viết',
+      is_system: true,
+    },
+    {
+      key: 'series:manage',
+      name: 'Quản lý Series',
+      description: 'Thêm, sửa, xóa chuỗi bài viết',
+      is_system: true,
+    },
+    {
+      key: 'comments:manage',
+      name: 'Quản lý Bình luận',
+      description: 'Kiểm duyệt và xóa bình luận của người khác',
+      is_system: true,
+    },
+    {
+      key: 'settings:manage',
+      name: 'Quản lý Cài đặt',
+      description: 'Thay đổi cấu hình hệ thống',
+      is_system: true,
+    },
+    {
+      key: 'users:manage',
+      name: 'Quản lý Thành viên',
+      description: 'Xem, thêm, sửa, khóa tài khoản thành viên',
+      is_system: true,
+    },
+    {
+      key: 'posts:create',
+      name: 'Đăng bài viết',
+      description: 'Quyền viết bài và gửi duyệt',
+      is_system: true,
+    },
+    {
+      key: 'comments:create',
+      name: 'Gửi bình luận',
+      description: 'Quyền gửi bình luận trên các bài viết',
+      is_system: true,
+    },
   ];
 
   const permissionsMap: Record<string, number> = {};
   for (const perm of permissionsData) {
     const upserted = await prisma.permission.upsert({
       where: { key: perm.key },
-      update: { name: perm.name, description: perm.description, is_system: perm.is_system },
+      update: {
+        name: perm.name,
+        description: perm.description,
+        is_system: perm.is_system,
+      },
       create: perm,
     });
     permissionsMap[perm.key] = upserted.id;
@@ -74,19 +165,31 @@ async function main() {
   console.log('--- MAPPING ROLE PERMISSIONS ---');
   const rolePermissions: Record<string, string[]> = {
     superadmin: [
-      'categories:manage', 'series:manage', 'comments:manage', 'settings:manage',
-      'users:manage', 'posts:create', 'comments:create'
+      'categories:manage',
+      'series:manage',
+      'comments:manage',
+      'settings:manage',
+      'users:manage',
+      'posts:create',
+      'comments:create',
     ],
     admin: [
-      'categories:manage', 'series:manage', 'comments:manage', 'settings:manage',
-      'users:manage', 'posts:create', 'comments:create'
+      'categories:manage',
+      'series:manage',
+      'comments:manage',
+      'settings:manage',
+      'users:manage',
+      'posts:create',
+      'comments:create',
     ],
     editor: [
-      'categories:manage', 'series:manage', 'comments:manage', 'posts:create', 'comments:create'
+      'categories:manage',
+      'series:manage',
+      'comments:manage',
+      'posts:create',
+      'comments:create',
     ],
-    user: [
-      'comments:create'
-    ]
+    user: ['comments:create'],
   };
 
   for (const [roleName, permKeys] of Object.entries(rolePermissions)) {
@@ -102,13 +205,13 @@ async function main() {
           role_id_permission_id: {
             role_id: roleId,
             permission_id: permissionId,
-          }
+          },
         },
         update: {},
         create: {
           role_id: roleId,
-          permission_id: permissionId
-        }
+          permission_id: permissionId,
+        },
       });
     }
   }
@@ -142,7 +245,7 @@ async function main() {
       user_id: macldUser.id,
       fullname: 'Super Admin',
       profession: 'System Administrator',
-    }
+    },
   });
 
   console.log(`- Upserted superuser: ${macldUser.username} with profile`);

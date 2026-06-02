@@ -20,7 +20,9 @@ export class PrismaService
         break;
       } catch (err: any) {
         retries--;
-        console.error(`[Database] Connection failed. Retries left: ${retries}. Error: ${err.message}`);
+        console.error(
+          `[Database] Connection failed. Retries left: ${retries}. Error: ${err.message}`,
+        );
         if (retries === 0) throw err;
         await new Promise((res) => setTimeout(res, 3000)); // Wait 3s before retry
       }
@@ -35,7 +37,7 @@ export class PrismaService
     console.log(`[Database] Attempting to reconnect to new database...`);
     try {
       await this.$disconnect();
-      
+
       // Update the internal datasource URL
       // In Prisma v5+, this is the way to override the URL at runtime
       (this as any)._activeDatasources = undefined; // Force internal reset
@@ -45,7 +47,7 @@ export class PrismaService
           url: newUrl,
         },
       ];
-      
+
       await this.$connect();
       console.log(`[Database] Reconnected successfully to new database.`);
     } catch (err: any) {

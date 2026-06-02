@@ -23,7 +23,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
     // Map domain errors to HTTP errors
-    if (exception instanceof Error && exception.name === 'PostNotFoundException') {
+    if (
+      exception instanceof Error &&
+      exception.name === 'PostNotFoundException'
+    ) {
       status = HttpStatus.NOT_FOUND;
     }
 
@@ -73,10 +76,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         exception instanceof Error ? exception.stack : undefined,
       );
     } else {
-      this.logger.warn(`${(request as any).method} ${(request as any).url} ${status} - ${JSON.stringify(message)}`);
+      this.logger.warn(
+        `${(request as any).method} ${(request as any).url} ${status} - ${JSON.stringify(message)}`,
+      );
     }
 
     response.status(status).json(errorResponse);
   }
 }
-

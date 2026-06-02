@@ -27,10 +27,10 @@ export default function CoverImagePanel({
       const data = await uploadService.uploadImage(file, 'post');
       setCoverImage(data.url);
     } catch (err: any) {
-      onMessage({ 
-        title: 'Lỗi tải ảnh', 
-        message: err.response?.data?.message || 'Không thể tải ảnh lên vào lúc này. Vui lòng kiểm tra lại định dạng hoặc kích thước ảnh.', 
-        variant: 'error' 
+      onMessage({
+        title: 'Lỗi tải ảnh',
+        message: err.response?.data?.message || 'Không thể tải ảnh lên vào lúc này. Vui lòng kiểm tra lại định dạng hoặc kích thước ảnh.',
+        variant: 'error'
       });
     } finally {
       setUploading(false);
@@ -44,38 +44,41 @@ export default function CoverImagePanel({
   return (
     <div className="space-y-4">
       <label htmlFor="pe-cover-upload-sidebar" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Ảnh bìa bài viết</label>
-      
+
       <div className={cn(
         "relative aspect-video bg-slate-50 dark:bg-slate-800 rounded-3xl border-2 border-dashed transition-all overflow-hidden group",
         coverImage ? "border-transparent shadow-lg" : "border-slate-200 dark:border-slate-700 hover:border-primary/50"
       )}>
         {coverImage ? (
-          <>
-            <img 
-              src={`${(() => {
-                let baseUrl = 'http://localhost:3002';
-                try {
-                  baseUrl = new URL(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002').origin;
-                } catch {
-                  baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002').replace('/api/v1', '').replace('/v1', '').replace('/api', '');
-                }
-                return baseUrl;
-              })()}${coverImage}`} 
-              alt="Post Cover" 
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-            />
-            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-              <label htmlFor="pe-cover-upload-sidebar" className="px-4 py-2 bg-white/20 backdrop-blur-md border border-white/30 rounded-xl text-[10px] font-bold text-white uppercase tracking-wider cursor-pointer hover:bg-white/30 transition-all">
-                Thay đổi
-              </label>
-              <button 
-                onClick={removeImage}
-                className="p-2 bg-red-500/20 backdrop-blur-md border border-red-500/30 rounded-xl text-red-100 hover:bg-red-500/40 transition-all"
-              >
-                <Trash2 size={16} />
-              </button>
-            </div>
-          </>
+          (() => {
+            let baseUrl = 'http://localhost:3001';
+            try {
+              baseUrl = new URL(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').origin;
+            } catch {
+              baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').replace('/api/v1', '').replace('/v1', '').replace('/api', '');
+            }
+            const imageUrl = `${baseUrl}${coverImage}`;
+            return (
+              <>
+                <img
+                  src={imageUrl}
+                  alt="Post Cover"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <label htmlFor="pe-cover-upload-sidebar" className="px-4 py-2 bg-white/20 backdrop-blur-md border border-white/30 rounded-xl text-[10px] font-bold text-white uppercase tracking-wider cursor-pointer hover:bg-white/30 transition-all">
+                    Thay đổi
+                  </label>
+                  <button
+                    onClick={removeImage}
+                    className="p-2 bg-red-500/20 backdrop-blur-md border border-red-500/30 rounded-xl text-red-100 hover:bg-red-500/40 transition-all"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              </>
+            );
+          })()
         ) : (
           <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 p-4">
             {uploading ? (
@@ -86,12 +89,12 @@ export default function CoverImagePanel({
                   <ImageIcon size={24} className="text-slate-400 group-hover:text-primary transition-colors" />
                 </div>
                 <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300">Chọn ảnh bìa</span>
-                <p className="text-[9px] text-slate-400 mt-2 text-center">Định dạng JPG, PNG, WebP<br/>Kích thước tối ưu 1200x630</p>
+                <p className="text-[9px] text-slate-400 mt-2 text-center">Định dạng JPG, PNG, WebP<br />Kích thước tối ưu 1200x630</p>
               </>
             )}
           </div>
         )}
-        
+
         <input
           id="pe-cover-upload-sidebar"
           name="cover_image_file"

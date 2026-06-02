@@ -14,7 +14,12 @@ import { CreateUserDto, UpdateUserDto, User } from '@portfolio/contracts';
 import { AuthGuard } from '@nestjs/passport';
 import { PermissionsGuard } from '../../auth/permissions.guard';
 import { Permissions } from '../../auth/permissions.decorator';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { getClientIp } from '../../../common/utils/ip';
 
 // Use Cases
@@ -108,7 +113,12 @@ export class UsersController {
     @Body('is_active') isActive: boolean,
   ) {
     const ip = getClientIp(req);
-    return this.updateUserPermissionsUseCase.execute(+id, req.user, { is_active: isActive }, ip);
+    return this.updateUserPermissionsUseCase.execute(
+      +id,
+      req.user,
+      { is_active: isActive },
+      ip,
+    );
   }
 
   @Patch(':id/permissions')
@@ -119,12 +129,13 @@ export class UsersController {
   updatePermissions(
     @Param('id') id: string,
     @Req() req: any,
-    @Body() data: { 
-      role?: string; 
-      is_active?: boolean; 
-      can_comment?: boolean; 
+    @Body()
+    data: {
+      role?: string;
+      is_active?: boolean;
+      can_comment?: boolean;
       can_post?: boolean;
-      reason?: string; 
+      reason?: string;
     },
   ) {
     const ip = getClientIp(req);
@@ -149,18 +160,14 @@ export class UsersController {
   @ApiOperation({ summary: 'User self change password' })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  changePassword(
-    @Param('id') id: string,
-    @Req() req: any,
-    @Body() data: any,
-  ) {
+  changePassword(@Param('id') id: string, @Req() req: any, @Body() data: any) {
     const ip = getClientIp(req);
     return this.changePasswordUseCase.execute(
       +id,
       data.oldPassword,
       data.newPassword,
       req.user,
-      ip
+      ip,
     );
   }
 

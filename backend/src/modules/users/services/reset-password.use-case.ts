@@ -1,6 +1,14 @@
-import { Inject, Injectable, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
-import { IUsersRepository, I_USERS_REPOSITORY } from '../domain/user.repository.interface';
+import {
+  IUsersRepository,
+  I_USERS_REPOSITORY,
+} from '../domain/user.repository.interface';
 import { User, UserRole } from '@portfolio/contracts';
 import { AdminAlertService } from '../../admin-alert/admin-alert.service';
 import { UserNotFoundException } from '../domain/user.errors';
@@ -30,18 +38,27 @@ export class ResetPasswordUseCase {
     if (!user) throw new UserNotFoundException(id);
 
     if (currentUser.id === id) {
-      throw new ForbiddenException('Bạn không thể tự reset mật khẩu của chính mình.');
+      throw new ForbiddenException(
+        'Bạn không thể tự reset mật khẩu của chính mình.',
+      );
     }
 
     const targetLevel = this.roleHierarchy[user.role as string] || 0;
-    const currentLevel = this.roleHierarchy[currentUser.role as string] || 0;
+    const currentLevel = this.roleHierarchy[currentUser.role] || 0;
 
-    if (currentLevel <= targetLevel && currentUser.role !== UserRole.SUPERADMIN) {
-      throw new ForbiddenException('Bạn không có quyền reset mật khẩu của người này.');
+    if (
+      currentLevel <= targetLevel &&
+      currentUser.role !== UserRole.SUPERADMIN
+    ) {
+      throw new ForbiddenException(
+        'Bạn không có quyền reset mật khẩu của người này.',
+      );
     }
 
     if (!this.validatePassword(password)) {
-      throw new BadRequestException('Mật khẩu mới phải tối thiểu 8 ký tự, bao gồm cả chữ và số.');
+      throw new BadRequestException(
+        'Mật khẩu mới phải tối thiểu 8 ký tự, bao gồm cả chữ và số.',
+      );
     }
 
     const hash = await bcrypt.hash(password, 10);
@@ -49,11 +66,12 @@ export class ResetPasswordUseCase {
 
     this.adminAlertService.sendAlert({
       subject: `🔑 Reset mật khẩu: ${user.username}`,
-      text: `🔑 <b>MẬT KHẨU ĐÃ ĐƯỢC RESET BỞI ADMIN</b>\n\n` +
-            `• <b>Username:</b> ${user.username}\n` +
-            `• <b>Admin thực hiện:</b> ${currentUser.username}\n` +
-            `• <b>IP:</b> ${ip || 'unknown'}\n` +
-            `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}`,
+      text:
+        `🔑 <b>MẬT KHẨU ĐÃ ĐƯỢC RESET BỞI ADMIN</b>\n\n` +
+        `• <b>Username:</b> ${user.username}\n` +
+        `• <b>Admin thực hiện:</b> ${currentUser.username}\n` +
+        `• <b>IP:</b> ${ip || 'unknown'}\n` +
+        `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN')}`,
     });
 
     return { success: true };

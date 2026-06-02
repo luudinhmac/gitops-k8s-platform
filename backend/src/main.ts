@@ -11,11 +11,13 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Security: Helmet
-  app.use(helmet({
-    crossOriginEmbedderPolicy: false,
-    contentSecurityPolicy: false,
-    crossOriginResourcePolicy: { policy: 'cross-origin' },
-  }));
+  app.use(
+    helmet({
+      crossOriginEmbedderPolicy: false,
+      contentSecurityPolicy: false,
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
 
   // Enable Graceful Shutdown
   app.enableShutdownHooks();
@@ -34,14 +36,16 @@ async function bootstrap() {
   expressApp.set('trust proxy', 1);
 
   // Global Validation Pipe
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    transform: true,
-    forbidNonWhitelisted: true,
-    transformOptions: {
-      enableImplicitConversion: true,
-    },
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+    }),
+  );
 
   // Global Exception Filter
   app.useGlobalFilters(new GlobalExceptionFilter());

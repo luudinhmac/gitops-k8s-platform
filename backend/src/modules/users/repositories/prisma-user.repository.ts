@@ -11,16 +11,16 @@ const defaultInclude = {
     include: {
       Permissions: {
         include: {
-          Permission: true
-        }
-      }
-    }
+          Permission: true,
+        },
+      },
+    },
   },
   Permissions: {
     include: {
-      Permission: true
-    }
-  }
+      Permission: true,
+    },
+  },
 };
 
 @Injectable()
@@ -33,10 +33,10 @@ export class PrismaUserRepository implements IUsersRepository {
       include: {
         ...params?.include,
         ...defaultInclude,
-      }
+      },
     };
     const users = await this.prisma.user.findMany(queryParams);
-    return users.map(user => UserMapper.toDomain(user) as UserEntity);
+    return users.map((user) => UserMapper.toDomain(user) as UserEntity);
   }
 
   async findById(id: number): Promise<UserEntity | null> {
@@ -64,11 +64,22 @@ export class PrismaUserRepository implements IUsersRepository {
   }
 
   async create(data: CreateUserDto): Promise<UserEntity> {
-    const { fullname, avatar, profession, phone, birthday, address, role, ...userData } = data as any;
+    const {
+      fullname,
+      avatar,
+      profession,
+      phone,
+      birthday,
+      address,
+      role,
+      ...userData
+    } = data as any;
 
     let role_id: number | undefined;
     if (role) {
-      const foundRole = await this.prisma.role.findUnique({ where: { name: role as string } });
+      const foundRole = await this.prisma.role.findUnique({
+        where: { name: role as string },
+      });
       if (foundRole) {
         role_id = foundRole.id;
       }
@@ -86,8 +97,8 @@ export class PrismaUserRepository implements IUsersRepository {
             phone,
             birthday: birthday ? new Date(birthday) : undefined,
             address,
-          }
-        }
+          },
+        },
       },
       include: defaultInclude,
     });
@@ -96,15 +107,28 @@ export class PrismaUserRepository implements IUsersRepository {
 
   async update(id: number, data: UpdateUserDto): Promise<UserEntity> {
     const {
-      fullname, avatar, profession, phone, birthday, address, role,
-      can_manage_categories, can_manage_series, can_manage_comments, can_manage_settings, can_manage_users,
-      can_comment, can_post,
+      fullname,
+      avatar,
+      profession,
+      phone,
+      birthday,
+      address,
+      role,
+      can_manage_categories,
+      can_manage_series,
+      can_manage_comments,
+      can_manage_settings,
+      can_manage_users,
+      can_comment,
+      can_post,
       ...userData
     } = data as any;
 
     let role_id: number | undefined;
     if (role) {
-      const foundRole = await this.prisma.role.findUnique({ where: { name: role as string } });
+      const foundRole = await this.prisma.role.findUnique({
+        where: { name: role as string },
+      });
       if (foundRole) {
         role_id = foundRole.id;
       }
@@ -115,7 +139,8 @@ export class PrismaUserRepository implements IUsersRepository {
     if (avatar !== undefined) profileData.avatar = avatar;
     if (profession !== undefined) profileData.profession = profession;
     if (phone !== undefined) profileData.phone = phone;
-    if (birthday !== undefined) profileData.birthday = birthday ? new Date(birthday) : null;
+    if (birthday !== undefined)
+      profileData.birthday = birthday ? new Date(birthday) : null;
     if (address !== undefined) profileData.address = address;
 
     const updatePayload: any = {
@@ -128,7 +153,7 @@ export class PrismaUserRepository implements IUsersRepository {
         upsert: {
           create: profileData,
           update: profileData,
-        }
+        },
       };
     }
 
@@ -145,19 +170,39 @@ export class PrismaUserRepository implements IUsersRepository {
 
     for (const item of permissionUpdates) {
       if (item.value !== undefined) {
-        const permission = await this.prisma.permission.findUnique({ where: { key: item.key } });
+        const permission = await this.prisma.permission.findUnique({
+          where: { key: item.key },
+        });
         if (permission) {
           if (item.value === true) {
             await this.prisma.userPermission.upsert({
-              where: { user_id_permission_id: { user_id: id, permission_id: permission.id } },
+              where: {
+                user_id_permission_id: {
+                  user_id: id,
+                  permission_id: permission.id,
+                },
+              },
               update: { value: 'ALLOW' },
-              create: { user_id: id, permission_id: permission.id, value: 'ALLOW' }
+              create: {
+                user_id: id,
+                permission_id: permission.id,
+                value: 'ALLOW',
+              },
             });
           } else {
             await this.prisma.userPermission.upsert({
-              where: { user_id_permission_id: { user_id: id, permission_id: permission.id } },
+              where: {
+                user_id_permission_id: {
+                  user_id: id,
+                  permission_id: permission.id,
+                },
+              },
               update: { value: 'DENY' },
-              create: { user_id: id, permission_id: permission.id, value: 'DENY' }
+              create: {
+                user_id: id,
+                permission_id: permission.id,
+                value: 'DENY',
+              },
             });
           }
         }

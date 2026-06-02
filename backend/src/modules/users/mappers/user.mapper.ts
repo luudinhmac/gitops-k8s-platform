@@ -1,6 +1,10 @@
 import { UserEntity } from '../domain/user.entity';
 
-function hasPermission(raw: any, permissionKey: string, defaultValue: boolean): boolean {
+function hasPermission(
+  raw: any,
+  permissionKey: string,
+  defaultValue: boolean,
+): boolean {
   if (!raw) return defaultValue;
 
   const roleName = raw.Role?.name || raw.role;
@@ -8,14 +12,18 @@ function hasPermission(raw: any, permissionKey: string, defaultValue: boolean): 
 
   // 1. Check custom UserPermission overrides
   const overrides = raw.Permissions || [];
-  const override = overrides.find((p: any) => p.Permission?.key === permissionKey);
+  const override = overrides.find(
+    (p: any) => p.Permission?.key === permissionKey,
+  );
   if (override) {
     return override.value === 'ALLOW';
   }
 
   // 2. Fallback to Role default permissions
   const rolePermissions = raw.Role?.Permissions || [];
-  const hasRolePerm = rolePermissions.some((rp: any) => rp.Permission?.key === permissionKey);
+  const hasRolePerm = rolePermissions.some(
+    (rp: any) => rp.Permission?.key === permissionKey,
+  );
   if (hasRolePerm) return true;
 
   return defaultValue;
@@ -39,7 +47,8 @@ export class UserMapper {
       role: raw.Role?.name ?? raw.role ?? 'user',
       role_id: raw.role_id,
       phone: raw.Profile?.phone ?? raw.phone ?? null,
-      birthday: finalBirthday && !isNaN(finalBirthday.getTime()) ? finalBirthday : null,
+      birthday:
+        finalBirthday && !isNaN(finalBirthday.getTime()) ? finalBirthday : null,
       address: raw.Profile?.address ?? raw.address ?? null,
       bio: raw.Profile?.bio ?? raw.bio ?? null,
       is_active: raw.is_active,

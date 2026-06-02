@@ -1,14 +1,14 @@
-# 📖 HƯỚNG DẪN VẬN HÀNH TIÊU CHUẨN (STANDARD DEPLOYMENT PLAYBOOK)
+# HƯỚNG DẪN VẬN HÀNH TIÊU CHUẨN (STANDARD DEPLOYMENT PLAYBOOK)
 *Tài liệu hướng dẫn triển khai từ đầu (From Scratch) cho cụm Kubernetes Staging & Production*
 
 ---
 
-## 🎯 MỤC TIÊU (OBJECTIVE)
+## MỤC TIÊU (OBJECTIVE)
 Cung cấp một **quy trình chuẩn hóa, khép kín từ A-Z** giúp bạn dễ dàng dựng mới, cấu hình và vận hành hệ thống Portfolio & Blog trên bất kỳ cụm máy chủ VPS mới nào mà không gặp phải bất kỳ lỗi liên kết, phân quyền hay cơ sở dữ liệu nào.
 
 ---
 
-## 🗺️ BẢN ĐỒ TIẾN TRÌNH TRIỂN KHAI (DEPLOYMENT WORKFLOW)
+## BẢN ĐỒ TIẾN TRÌNH TRIỂN KHAI (DEPLOYMENT WORKFLOW)
 
 ```mermaid
 graph TD
@@ -23,6 +23,24 @@ graph TD
 ## 🔌 GIAI ĐOẠN 1: KIỂM TRA KẾT NỐI HẠ TẦNG (PRE-CHECKS & CONNECTIVITY)
 
 Trước khi thực hiện bất kỳ lệnh deploy nào, hãy đảm bảo máy tính cá nhân của bạn kết nối được tới VPS và cụm Kubernetes đang hoạt động khỏe mạnh.
+
+### Bước 1.0: Kết nối từ xa qua SSH Tunnel (Bắt buộc)
+Do K8s API Server chỉ lắng nghe ở địa chỉ nội bộ để bảo mật, bạn cần thiết lập một SSH Tunnel ngầm từ máy cá nhân trước khi sử dụng `kubectl`:
+
+1. **Khởi chạy tiến trình SSH Tunnel ngầm (chạy trên PowerShell local):**
+   ```powershell
+   # Mở tunnel ngầm chuyển tiếp cổng 6443 về máy chủ
+   Start-Process ssh -ArgumentList "-L 6443:10.200.0.1:6443 -N k8s-prod" -WindowStyle Hidden
+   ```
+
+2. **Cập nhật file cấu hình Kubeconfig (`C:\Users\Mac\.kube\config`):**
+   Đảm bảo cấu hình cụm trỏ về localhost và sử dụng `tls-server-name` để khớp với SANs trong chứng chỉ của máy chủ:
+   ```yaml
+   clusters:
+   - cluster:
+       server: https://127.0.0.1:6443
+       tls-server-name: 10.200.0.1
+   ```
 
 ### Lệnh 1.1: Kiểm tra kết nối tới cụm Kubernetes (K8s API)
 ```bash
@@ -48,7 +66,7 @@ kubectl get pvc -n production
 
 ---
 
-## 🔑 GIAI ĐOẠN 2: THIẾT LẬP BIẾN MÔI TRƯỜNG & CREDENTIALS TRÊN GITLAB (GITLAB CI/CD SETUP)
+## GIAI ĐOẠN 2: THIẾT LẬP BIẾN MÔI TRƯỜNG & CREDENTIALS TRÊN GITLAB (GITLAB CI/CD SETUP)
 
 Tất cả các Pipeline build và deploy của cả **Frontend** và **Backend** đều cần các biến môi trường để xác thực. Bạn cần truy cập vào giao diện web GitLab của từng dự án: **Settings > CI/CD > Variables** để nạp cấu hình:
 
@@ -60,13 +78,13 @@ Tất cả các Pipeline build và deploy của cả **Frontend** và **Backend*
 | **`CI_REGISTRY_PASSWORD`**| Token hoặc Mật khẩu đăng nhập Docker Hub | `dckr_pat_xxxx...` | `Protect: OFF`, **`Mask: ON`** |
 | **`GITLAB_API_TOKEN`** | Token có quyền ghi vào Repo `portfolio-infratructure` | `glpat-xxxx...` | `Protect: OFF`, **`Mask: ON`** |
 
-### ⚠️ Quy tắc Vàng khi cài đặt Biến trên GitLab (CRITICAL):
+### Quy tắc Vàng khi cài đặt Biến trên GitLab (CRITICAL):
 1.  **`Protect Variable` = OFF**: Bạn **bắt buộc phải bỏ tích** chọn mục này. Nếu tích chọn `Protect Variable`, biến đó sẽ CHỈ được truyền vào các pipeline chạy trên nhánh được bảo vệ (`main`). Khi bạn chạy thử trên nhánh phát triển (`dev`), biến này sẽ bị rỗng -> Gây ra lỗi `Access denied` hoặc không thể Login Docker Registry.
 2.  **`Mask Variable` = ON**: Tích chọn mục này để tự động ẩn các chuỗi bảo mật (Token, Password) trong log của GitLab Runner, tránh lộ thông tin.
 
 ---
 
-## 🔐 GIAI ĐOẠN 3: NẠP KHÓA BẢO MẬT TRỰC TIẾP TRÊN KUBERNETES (K8S SECRETS)
+## GIAI ĐOẠN 3: NẠP KHÓA BẢO MẬT TRỰC TIẾP TRÊN KUBERNETES (K8S SECRETS)
 
 Các khóa bảo mật của ứng dụng không được phép đưa lên Git dưới bất kỳ hình thức nào. Chúng ta sẽ nạp trực tiếp vào cụm K8s.
 
@@ -84,7 +102,7 @@ kubectl create secret generic portfolio-secrets -n portfolio \
   --from-literal=JWT_SECRET="5Ttv+p4uNMkFFnM2N/1jY86/XpsjZv8v8EZKaU120BA="
 ```
 
-### 💡 Lưu ý đặc biệt về cấu hình Database URL:
+### Lưu ý đặc biệt về cấu hình Database URL:
 *   **Mã hóa ký tự đặc biệt:** Nếu mật khẩu database của bạn chứa ký tự `@` (ví dụ: `macld@2026`), bạn **bắt buộc phải mã hóa URL (URL Encoding)** ký tự `@` thành **`%40`** (ví dụ: `macld%402026`). Nếu không, Prisma sẽ phân tích cú pháp sai và báo lỗi không thể kết nối Database!
 *   **JWT_SECRET:** Hãy sinh chuỗi Base64 mạnh mẽ 32 ký tự bằng lệnh:
     ```bash
@@ -116,12 +134,12 @@ PORT=3001
 NODE_ENV="production"
 
 # API Endpoint trỏ về Reverse Proxy của Next.js
-INTERNAL_API_URL="http://localhost:3002/api/v1"
+INTERNAL_API_URL="http://localhost:3001/api/v1"
 ```
 
 ---
 
-## 🚢 GIAI ĐOẠN 5: QUY TRÌNH DEPLOY CHUẨN (DEPLOY PROCESS)
+## GIAI ĐOẠN 5: QUY TRÌNH DEPLOY CHUẨN (DEPLOY PROCESS)
 
 Quy trình deploy được chia thành hai nhánh tự động hóa hoàn toàn bằng GitOps qua GitLab và ArgoCD:
 
@@ -147,7 +165,7 @@ Quy trình deploy được chia thành hai nhánh tự động hóa hoàn toàn 
 
 ---
 
-## 🔍 GIAI ĐOẠN 6: KIỂM TRA SỨC KHỎE HỆ THỐNG & DIAGNOSTICS (POST-DEPLOY & HEALTH CHECKS)
+## GIAI ĐOẠN 6: KIỂM TRA SỨC KHỎE HỆ THỐNG & DIAGNOSTICS (POST-DEPLOY & HEALTH CHECKS)
 
 Sau khi deploy hoàn tất, hãy chạy các lệnh kiểm tra sau để đảm bảo hệ thống vận hành hoàn hảo không lỗi:
 
@@ -180,7 +198,7 @@ kubectl logs deployment/portfolio-backend-production -n production -c backend --
 
 ---
 
-## ⚡ GIAI ĐOẠN 7: BẢN VÁ KHI DATABASE BỊ KẸT MIGRATIONS GIẢ (FALSE-POSITIVE MIGRATIONS FIX)
+## GIAI ĐOẠN 7: BẢN VÁ KHI DATABASE BỊ KẸT MIGRATIONS GIẢ (FALSE-POSITIVE MIGRATIONS FIX)
 
 Nếu vô tình chạy Migration bị lỗi (như lỗi ký tự BOM `\ufeff` trước đây) khiến Prisma bị "kẹt" metadata giả và không chịu tạo bảng ở các lần deploy tiếp theo, hãy chạy đúng chuỗi lệnh cứu hộ sau:
 
@@ -199,3 +217,28 @@ kubectl scale deployment/portfolio-backend-production -n production --replicas=1
 kubectl logs deployment/portfolio-backend-production -n production -c prisma-migrate
 ```
 *(Bạn làm tương tự cho namespace `portfolio` nếu Staging bị kẹt).*
+
+---
+
+## GIAI ĐOẠN 8: TỰ ĐỘNG MỞ RỘNG QUY MÔ POD (HORIZONTAL POD AUTOSCALER - HPA)
+
+Để tự động điều chỉnh số lượng Pod dựa trên lưu lượng truy cập thực tế (CPU utilization), hệ thống đã tích hợp sẵn Kubernetes HPA:
+
+### 8.1. Cấu hình mặc định trong Helm Chart
+*   **Staging:** Tắt mặc định (để tiết kiệm tài nguyên trên cụm đơn node).
+*   **Production:** Bật mặc định với các thông số:
+    *   `minReplicas`: 2 (Đảm bảo tính sẵn sàng cao)
+    *   `maxReplicas`: 5
+    *   `targetCPUUtilizationPercentage`: 80% (Tự động scale up khi CPU trung bình vượt quá 80%)
+
+### 8.2. Lệnh kiểm tra trạng thái HPA trên Production
+```bash
+# Kiểm tra HPA của Frontend và Backend trong namespace production
+kubectl get hpa -n production
+```
+*Kết quả mong đợi:*
+```text
+NAME                           REFERENCE                                 TARGETS         MINPODS   MAXPODS   REPLICAS   AGE
+portfolio-backend-production   Deployment/portfolio-backend-production   0%/80%          2         5         2          1d
+portfolio-frontend-production  Deployment/portfolio-frontend-production  0%/80%          2         5         2          1d
+```

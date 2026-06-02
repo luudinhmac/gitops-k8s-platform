@@ -38,10 +38,12 @@ export class PostEntity {
 
   constructor(props: Partial<PostEntity>) {
     Object.assign(this, props);
-    
+
     // Convert string dates to Date objects if necessary
-    if (typeof this.created_at === 'string') this.created_at = new Date(this.created_at);
-    if (typeof this.updated_at === 'string') this.updated_at = new Date(this.updated_at);
+    if (typeof this.created_at === 'string')
+      this.created_at = new Date(this.created_at);
+    if (typeof this.updated_at === 'string')
+      this.updated_at = new Date(this.updated_at);
   }
 
   public isVisibleTo(userId?: number): boolean {

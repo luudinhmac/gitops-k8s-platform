@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import {
   Settings, Globe, Server, Shield, TrendingUp, Save, Image as ImageIcon,
   Trash2, AlertCircle, Check, Link as LinkIcon, Database, HardDrive, ShieldCheck, Lock, ShieldAlert, Key, Send,
-  Eye, EyeOff
+  Eye, EyeOff, Calendar, User, Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import AdminPageHeader from '@/features/admin/components/AdminPageHeader';
@@ -16,7 +16,7 @@ import { useAuth } from '@/context/AuthContext';
 import MessageDialog from '@/shared/components/ui/MessageDialog';
 
 export default function SettingsAdminPage() {
-  const [activeTab, setActiveTab] = useState<'general' | 'system' | 'security' | 'marketing' | 'maintenance' | 'alerts'>('general');
+  const [activeTab, setActiveTab] = useState<'general' | 'display' | 'system' | 'security' | 'marketing' | 'maintenance' | 'alerts'>('general');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -43,6 +43,13 @@ export default function SettingsAdminPage() {
     timezone: 'Asia/Ho_Chi_Minh',
     comments_enabled: 'true',
     footer_copyright: '© 2026 Lưu Đình Mác. All rights reserved.',
+  });
+
+  const [displayForm, setDisplayForm] = useState<Record<string, string>>({
+    post_show_created_at: 'true',
+    post_show_author: 'true',
+    post_show_views: 'true',
+    post_show_read_time: 'true',
   });
 
   const [marketingForm, setMarketingForm] = useState<Record<string, string>>({
@@ -78,14 +85,16 @@ export default function SettingsAdminPage() {
 
   const [originalForms, setOriginalForms] = useState<Record<string, any>>({
     general: {},
+    display: {},
     marketing: {},
     maintenance: {},
     alerts: {},
   });
 
-  const isDirty = (group: 'general' | 'marketing' | 'maintenance' | 'alerts') => {
+  const isDirty = (group: 'general' | 'display' | 'marketing' | 'maintenance' | 'alerts') => {
     let currentForm: any;
     if (group === 'general') currentForm = generalForm;
+    else if (group === 'display') currentForm = displayForm;
     else if (group === 'marketing') currentForm = marketingForm;
     else if (group === 'alerts') currentForm = alertsForm;
     else currentForm = maintenanceForm;
@@ -105,6 +114,7 @@ export default function SettingsAdminPage() {
 
       const dbConfig = data.dbConfig || {};
       const general = { ...generalForm, ...dbConfig.general };
+      const display = { ...displayForm, ...dbConfig.display };
       const marketing = { ...marketingForm, ...dbConfig.marketing };
       const maintenance = { ...maintenanceForm, ...dbConfig.maintenance };
       const alertData = {
@@ -115,12 +125,14 @@ export default function SettingsAdminPage() {
       };
 
       setGeneralForm(general);
+      setDisplayForm(display);
       setMarketingForm(marketing);
       setMaintenanceForm(maintenance);
       setAlertsForm(alertData);
 
       setOriginalForms({
         general,
+        display,
         marketing,
         maintenance,
         alerts: alertData,
@@ -132,12 +144,13 @@ export default function SettingsAdminPage() {
     }
   };
 
-  const handleSaveGroup = async (group: 'general' | 'marketing' | 'maintenance' | 'alerts') => {
+  const handleSaveGroup = async (group: 'general' | 'display' | 'marketing' | 'maintenance' | 'alerts') => {
     setSaving(true);
     setStatusMsg(null);
     try {
       let targetForm: any;
       if (group === 'general') targetForm = generalForm;
+      else if (group === 'display') targetForm = displayForm;
       else if (group === 'marketing') targetForm = marketingForm;
       else if (group === 'alerts') targetForm = alertsForm;
       else targetForm = maintenanceForm;
@@ -147,10 +160,17 @@ export default function SettingsAdminPage() {
           // Only include if value is different from original
           return String(value) !== String(originalForms[group][key]);
         })
-        .map(([key, value]) => ({
-          key,
-          value: String(value)
-        }));
+        .map(([key, value]) => {
+          const item: any = {
+            key,
+            value: String(value)
+          };
+          if (group === 'display') {
+            item.group = 'display';
+            item.is_public = true;
+          }
+          return item;
+        });
 
       if (items.length === 0) {
         setSaving(false);
@@ -318,6 +338,7 @@ export default function SettingsAdminPage() {
 
   const tabs = [
     { id: 'general', label: 'Cấu hình Website', icon: Globe },
+    { id: 'display', label: 'Cấu hình Hiển thị', icon: Eye },
     { id: 'maintenance', label: 'Bảo trì hệ thống', icon: ShieldAlert },
     ...(isSuperAdmin ? [{ id: 'system', label: 'Hệ thống (System)', icon: Server }] : []),
     { id: 'security', label: 'Bảo mật & Users', icon: Shield },
@@ -434,6 +455,131 @@ export default function SettingsAdminPage() {
                 <div className="flex justify-end pt-6 border-t border-slate-100 dark:border-slate-800">
                   <Button onClick={() => handleSaveGroup('general')} isLoading={saving} disabled={!isDirty('general')} size="lg">
                     <Save size={18} className="mr-2" /> {isDirty('general') ? 'Lưu cấu hình' : 'Không có thay đổi'}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* TAB: DISPLAY */}
+            {activeTab === 'display' && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
+                    <Eye className="text-primary" />
+                    Cấu hình Hiển thị Thành phần
+                  </h2>
+                  <p className="text-sm text-slate-500 mb-6">Thiết lập ẩn/hiện các thành phần thông tin trên trang danh sách và trang chi tiết bài viết.</p>
+                </div>
+
+                <div className="space-y-6">
+                  {/* Option: Show Date */}
+                  <div className="p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 rounded-2xl bg-primary/10 text-primary">
+                          <Calendar size={24} />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-slate-900 dark:text-white">Hiển thị Ngày đăng bài</h3>
+                          <p className="text-xs text-slate-500">Hiển thị ngày tháng xuất bản trên các thẻ bài viết và trang chi tiết.</p>
+                        </div>
+                      </div>
+                      <label htmlFor="setting-display-date" className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          id="setting-display-date"
+                          name="post_show_created_at"
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={displayForm.post_show_created_at === 'true'}
+                          onChange={e => setDisplayForm({ ...displayForm, post_show_created_at: e.target.checked ? 'true' : 'false' })}
+                        />
+                        <div className="w-12 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Option: Show Author */}
+                  <div className="p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 rounded-2xl bg-primary/10 text-primary">
+                          <User size={24} />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-slate-900 dark:text-white">Hiển thị Tác giả</h3>
+                          <p className="text-xs text-slate-500">Hiển thị tên và ảnh đại diện của người viết bài.</p>
+                        </div>
+                      </div>
+                      <label htmlFor="setting-display-author" className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          id="setting-display-author"
+                          name="post_show_author"
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={displayForm.post_show_author === 'true'}
+                          onChange={e => setDisplayForm({ ...displayForm, post_show_author: e.target.checked ? 'true' : 'false' })}
+                        />
+                        <div className="w-12 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Option: Show Views */}
+                  <div className="p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 rounded-2xl bg-primary/10 text-primary">
+                          <Eye size={24} />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-slate-900 dark:text-white">Hiển thị Lượt xem (Views)</h3>
+                          <p className="text-xs text-slate-500">Hiển thị số lượt xem bài viết.</p>
+                        </div>
+                      </div>
+                      <label htmlFor="setting-display-views" className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          id="setting-display-views"
+                          name="post_show_views"
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={displayForm.post_show_views === 'true'}
+                          onChange={e => setDisplayForm({ ...displayForm, post_show_views: e.target.checked ? 'true' : 'false' })}
+                        />
+                        <div className="w-12 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Option: Show Read Time */}
+                  <div className="p-6 rounded-[2rem] border border-slate-100 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/50">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 rounded-2xl bg-primary/10 text-primary">
+                          <Clock size={24} />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-slate-900 dark:text-white">Hiển thị Thời gian đọc</h3>
+                          <p className="text-xs text-slate-500">Hiển thị thời gian đọc ước tính của bài viết.</p>
+                        </div>
+                      </div>
+                      <label htmlFor="setting-display-read-time" className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          id="setting-display-read-time"
+                          name="post_show_read_time"
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={displayForm.post_show_read_time === 'true'}
+                          onChange={e => setDisplayForm({ ...displayForm, post_show_read_time: e.target.checked ? 'true' : 'false' })}
+                        />
+                        <div className="w-12 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-6 border-t border-slate-100 dark:border-slate-800">
+                  <Button onClick={() => handleSaveGroup('display')} isLoading={saving} disabled={!isDirty('display')} size="lg" className="rounded-2xl px-12">
+                    <Save size={18} className="mr-2" /> {isDirty('display') ? 'Lưu cấu hình hiển thị' : 'Không có thay đổi'}
                   </Button>
                 </div>
               </div>

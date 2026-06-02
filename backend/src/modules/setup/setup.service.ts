@@ -20,7 +20,7 @@ export class SetupService {
       where: { key: 'system_initialized' },
     });
 
-    const isInitialized = !!superadmin || (initializedSetting?.value === 'true');
+    const isInitialized = !!superadmin || initializedSetting?.value === 'true';
 
     // Get DB info directly from .env file for real-time updates
     let dbUrl = process.env.DATABASE_URL || '';
@@ -37,7 +37,7 @@ export class SetupService {
       host: 'localhost',
       port: '5432',
       user: 'postgres',
-      dbName: 'portfolio_db'
+      dbName: 'portfolio_db',
     };
 
     if (dbUrl) {
@@ -47,7 +47,7 @@ export class SetupService {
           user: url.username,
           host: url.hostname,
           port: url.port || '5432',
-          dbName: url.pathname.substring(1).split('?')[0]
+          dbName: url.pathname.substring(1).split('?')[0],
         };
       } catch (e: any) {
         console.error('[Setup] Failed to parse DATABASE_URL:', e.message);
@@ -73,14 +73,22 @@ export class SetupService {
 
     // Verify DB name matches
     if (dbName && status.database.dbName !== dbName) {
-      throw new ForbiddenException(`Database name mismatch. System is connected to "${status.database.dbName}" but you provided "${dbName}".`);
+      throw new ForbiddenException(
+        `Database name mismatch. System is connected to "${status.database.dbName}" but you provided "${dbName}".`,
+      );
     }
 
     // Ensure superadmin role exists
-    let superadminRole = await this.prisma.role.findUnique({ where: { name: 'superadmin' } });
+    let superadminRole = await this.prisma.role.findUnique({
+      where: { name: 'superadmin' },
+    });
     if (!superadminRole) {
       superadminRole = await this.prisma.role.create({
-        data: { name: 'superadmin', description: 'Super Admin', is_system: true }
+        data: {
+          name: 'superadmin',
+          description: 'Super Admin',
+          is_system: true,
+        },
       });
     }
 
@@ -97,28 +105,82 @@ export class SetupService {
           create: {
             fullname: 'System Administrator',
             profession: 'Superadmin',
-          }
-        }
+          },
+        },
       },
     });
 
     // 2. Seed default settings
     const defaultSettings = [
-      { key: 'site_title', value: siteTitle || 'My Portfolio', group: 'general', is_public: true },
-      { key: 'system_initialized', value: 'true', group: 'system', is_public: false },
-      { key: 'maintenance_global', value: 'false', group: 'maintenance', is_public: true },
-      { key: 'maintenance_posts', value: 'false', group: 'maintenance', is_public: true },
-      { key: 'maintenance_comments', value: 'false', group: 'maintenance', is_public: true },
-      { key: 'stats_total_visits', value: '0', group: 'stats', is_public: true },
+      {
+        key: 'site_title',
+        value: siteTitle || 'My Portfolio',
+        group: 'general',
+        is_public: true,
+      },
+      {
+        key: 'system_initialized',
+        value: 'true',
+        group: 'system',
+        is_public: false,
+      },
+      {
+        key: 'maintenance_global',
+        value: 'false',
+        group: 'maintenance',
+        is_public: true,
+      },
+      {
+        key: 'maintenance_posts',
+        value: 'false',
+        group: 'maintenance',
+        is_public: true,
+      },
+      {
+        key: 'maintenance_comments',
+        value: 'false',
+        group: 'maintenance',
+        is_public: true,
+      },
+      {
+        key: 'stats_total_visits',
+        value: '0',
+        group: 'stats',
+        is_public: true,
+      },
+      {
+        key: 'post_show_created_at',
+        value: 'true',
+        group: 'display',
+        is_public: true,
+      },
+      {
+        key: 'post_show_author',
+        value: 'true',
+        group: 'display',
+        is_public: true,
+      },
+      {
+        key: 'post_show_views',
+        value: 'true',
+        group: 'display',
+        is_public: true,
+      },
+      {
+        key: 'post_show_read_time',
+        value: 'true',
+        group: 'display',
+        is_public: true,
+      },
     ];
 
     for (const setting of defaultSettings) {
       await this.prisma.setting.upsert({
         where: { key: setting.key },
-        update: { value: setting.value as any },
+        update: { value: setting.value },
         create: {
           key: setting.key,
-          value: setting.value as any,
+          value: setting.value,
           group: setting.group,
           is_public: setting.is_public,
         },
@@ -130,8 +192,10 @@ export class SetupService {
 
   async testConnection(config: any) {
     const { host, port, user, password, dbName } = config;
-    console.log(`[Setup] Testing connection to ${host}:${port}/${dbName} for user ${user}`);
-    
+    console.log(
+      `[Setup] Testing connection to ${host}:${port}/${dbName} for user ${user}`,
+    );
+
     const client = new Client({
       host,
       port: parseInt(port),
@@ -160,13 +224,13 @@ export class SetupService {
 
     const envPath = path.join(process.cwd(), '.env');
     let envContent = '';
-    
+
     if (fs.existsSync(envPath)) {
       envContent = fs.readFileSync(envPath, 'utf8');
     }
 
     const dbUrlLine = `DATABASE_URL="${url}"`;
-    
+
     if (envContent.includes('DATABASE_URL=')) {
       envContent = envContent.replace(/DATABASE_URL=.*/, dbUrlLine);
     } else {
@@ -174,7 +238,7 @@ export class SetupService {
     }
 
     fs.writeFileSync(envPath, envContent);
-    
+
     // Force Prisma to reconnect with new URL immediately
     try {
       await (this.prisma as any).reconnect(url);
@@ -182,6 +246,9 @@ export class SetupService {
       console.error('[Setup] Failed to force Prisma reconnect:', err);
     }
 
-    return { success: true, message: 'Configuration saved. System synchronized.' };
+    return {
+      success: true,
+      message: 'Configuration saved. System synchronized.',
+    };
   }
 }

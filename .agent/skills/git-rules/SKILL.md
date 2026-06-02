@@ -1,148 +1,545 @@
-# Antigravity Git Skill (Improved Spec)
+# Antigravity Git Skill — Enterprise Workflow Spec
 
 ## Context
 
-After each code change:
+After every code change, the agent MUST determine whether documentation updates are required.
 
-- If a new feature is added
-- If API changes
-- If setup or install process changes
+Documentation updates are REQUIRED when:
 
-MUST update `README.md` (or related documentation).
+- A new feature is added
+- An API contract changes
+- Environment/setup/install steps change
+- Deployment behavior changes
+- CI/CD behavior changes
+
+Possible files to update:
+
+- `README.md`
+- `API.md`
+- `CHANGELOG.md`
+- `docs/*`
 
 ---
 
-## Role
+# Role
 
-You are a Git + DevOps expert agent.
+You are an expert Git workflow and DevOps automation agent.
+
+Your goals:
+
+- Maintain clean Git history
+- Enforce safe branching strategy
+- Reduce CI/CD failures
+- Minimize human error
+- Keep documentation synchronized with code
 
 ---
 
-## Environment Detection (CRITICAL)
+# Environment Detection (CRITICAL)
 
-The agent MUST detect shell environment before generating commands.
+The agent MUST detect the active shell before generating commands.
 
-### Windows PowerShell
+## Windows PowerShell
 
-- Command separator: `;`
+Command separator:
+
+```powershell
+;
+````
+
+Example:
+
+```powershell
+git add .; git commit -m "feat(auth): add oauth login"; git push
+```
+
+---
+
+## Linux / macOS (bash/zsh)
+
+Command separator:
 
 ```bash
-git add .; git commit -m "message"; git push
-Linux / macOS (bash/zsh)
-Command separator: &&
-git add . && git commit -m "message" && git push
-Rules
-NEVER mix ; and &&
-ALWAYS use single-line commands
-Prefer chained commands
-Branch Workflow
+&&
+```
+
+Example:
+
+```bash
+git add . && git commit -m "feat(auth): add oauth login" && git push
+```
+
+---
+
+# Shell Rules
+
+* NEVER mix `;` and `&&`
+* ALWAYS generate single-line commands
+* Prefer chained commands
+* Commands MUST be copy-paste ready
+* Avoid multiline scripts unless explicitly requested
+
+---
+
+# Branch Strategy
+
+```text
 main
  ↑
 dev
  ↑
 feature/*
-Rules
-NEVER commit directly to main
-ALL changes go through dev
-Feature branches must be created from dev
-Branch Naming Convention
+```
+
+---
+
+# Branch Rules
+
+* NEVER commit directly to `main`
+* ALL development work goes through `dev`
+* Feature branches MUST originate from `dev`
+* Sync `dev` before starting new work
+
+Required sync command:
+
+## Linux/macOS
+
+```bash
+git checkout dev && git pull origin dev
+```
+
+## PowerShell
+
+```powershell
+git checkout dev; git pull origin dev
+```
+
+---
+
+# Branch Naming Convention
+
+## Format
+
+```text
 feature/<scope>-<short-name>
 fix/<scope>-<short-name>
 refactor/<scope>-<short-name>
 chore/<scope>-<short-name>
 docs/<scope>-<short-name>
-Examples
+```
+
+---
+
+# Naming Rules
+
+* MUST be lowercase
+* MUST use kebab-case
+* MUST be descriptive
+* MUST avoid generic names like:
+
+  * `feature/update`
+  * `fix/bug`
+  * `refactor/code`
+
+---
+
+# Examples
+
+```text
 feature/auth-login
+feature/blog-markdown-editor
 fix/payment-timeout
-refactor/api-response
-Rules
-MUST be lowercase
-MUST be descriptive
-Commit Convention
-Format
+refactor/api-response-format
+chore/docker-image-cleanup
+docs/openstack-installation
+```
+
+---
+
+# Commit Convention
+
+## Format
+
+```text
 type(scope): short message
-Types
-feat
-fix
-refactor
-chore
-docs
-Rules
-MUST include scope
-MUST be in English
-MUST be clear and specific
-SHOULD be ≤ 72 characters
-Breaking Change
+```
+
+---
+
+# Allowed Types
+
+* `feat`
+* `fix`
+* `refactor`
+* `chore`
+* `docs`
+
+---
+
+# Commit Rules
+
+* MUST include scope
+* MUST be written in English
+* MUST be concise and descriptive
+* SHOULD be ≤ 72 characters
+* SHOULD describe intent, not implementation detail
+
+---
+
+# Good Examples
+
+```text
+feat(auth): add oauth login flow
+fix(api): handle null response payload
+refactor(ci): simplify docker build stage
+docs(openstack): update kolla deployment guide
+```
+
+---
+
+# Bad Examples
+
+```text
+update code
+fix bug
+changes
+final
+```
+
+---
+
+# Breaking Changes
+
+## Inline notation
+
+```text
 feat(api)!: remove v1 endpoints
+```
 
-OR
+## Footer notation
 
-BREAKING CHANGE: describe change
-Merge Convention
-Format
+```text
+BREAKING CHANGE: remove deprecated v1 API routes
+```
+
+---
+
+# Merge Convention
+
+## Format
+
+```text
 type(scope): merge <source> into <target>
+```
 
+Example:
+
+```text
+feat(auth): merge feature/auth-login into dev
+```
+
+---
+
+# Merge Description Template
+
+```text
 summary
 
 - change 1
 - change 2
-Strategy
-Prefer squash merge
-Or use platform default (GitHub/GitLab)
-README / Documentation Rule (STRICT)
+- change 3
+```
 
-The agent MUST update documentation if:
+---
 
-New feature added
-API modified
-Setup or install process changed
-Allowed files
-README.md
-API.md
-CHANGELOG.md
-docs/*
-Quality Checks (if available)
+# Merge Strategy
 
-Before commit:
+Preferred order:
 
-Run tests
-Run lint
-Run build
-Ignored Files (DO NOT COMMIT)
+1. Squash merge
+2. Platform default merge strategy
+
+Avoid unnecessary merge commits for feature branches.
+
+---
+
+# Documentation Enforcement (STRICT)
+
+The agent MUST verify documentation impact before commit.
+
+## Documentation update REQUIRED if:
+
+* Feature behavior changes
+* API request/response changes
+* Environment variables change
+* Installation/setup changes
+* Deployment changes
+* CI/CD pipeline changes
+* Docker/Kubernetes behavior changes
+
+---
+
+# Quality Checks
+
+Before commit, run if available:
+
+## Node.js
+
+```bash
+npm test
+npm run lint
+npm run build
+```
+
+or
+
+```bash
+pnpm test
+pnpm lint
+pnpm build
+```
+
+---
+
+## Python
+
+```bash
+pytest
+ruff check .
+```
+
+---
+
+## Go
+
+```bash
+go test ./...
+```
+
+---
+
+# Quality Rules
+
+* NEVER commit failing builds
+* NEVER skip lint/tests silently
+* If checks fail:
+
+  * explain failure
+  * stop commit generation
+
+---
+
+# Ignored Files (DO NOT COMMIT)
+
+Common exclusions:
+
+```text
 node_modules
 dist
 build
-cache
-logs (if auto-generated)
-Safety Rules
-NEVER commit directly to main
-NEVER force push to shared branches
-If branch exists → reuse it (do not recreate)
-Always sync dev before feature work
+.cache
+coverage
+logs
+*.log
+.env
+.env.*
+```
+
+---
+
+# Safety Rules
+
+* NEVER commit directly to `main`
+* NEVER force push shared branches
+* NEVER recreate existing branches
+* ALWAYS reuse existing feature branch if appropriate
+* ALWAYS pull latest `dev` before branching
+* ALWAYS verify current branch before commit
+
+---
+
+# Standard Workflow
+
+## Step 1 — Sync dev
+
+### Linux/macOS
+
+```bash
 git checkout dev && git pull origin dev
-Task Pipeline
+```
 
-When processing changes:
+### PowerShell
 
-Detect change type:
-feat / fix / refactor / chore / docs
-Detect scope
-Detect environment:
-PowerShell or Linux/macOS
-Generate commit message
-Generate optimized git commands (single line)
-Check whether README.md or docs update is required
-Output Format
-Commit Message
-<message>
-Git Commands
-<single-line commands based on detected shell>
-README.md Update
-Required / Not required
-Reason
-Goal
-Safe Git workflow
-Clean commit history
-CI/CD friendly structure
-Minimal human error
-Automation ready
+```powershell
+git checkout dev; git pull origin dev
+```
+
+---
+
+## Step 2 — Create/Re-use branch
+
+Example:
+
+```bash
+git checkout -b feature/auth-login
+```
+
+---
+
+## Step 3 — Implement changes
+
+* Update code
+* Update tests
+* Update documentation if required
+
+---
+
+## Step 4 — Run validation
+
+Example:
+
+```bash
+pnpm lint && pnpm test && pnpm build
+```
+
+---
+
+## Step 5 — Commit
+
+Example:
+
+```bash
+git add . && git commit -m "feat(auth): add oauth login"
+```
+
+---
+
+## Step 6 — Push
+
+Example:
+
+```bash
+git push -u origin feature/auth-login
+```
+
+---
+
+# Task Processing Pipeline
+
+When processing repository changes, the agent MUST:
+
+## 1. Detect Change Type
+
+Determine:
+
+* feat
+* fix
+* refactor
+* chore
+* docs
+
+---
+
+## 2. Detect Scope
+
+Examples:
+
+* auth
+* api
+* ci
+* docker
+* kubernetes
+* monitoring
+* payment
+
+---
+
+## 3. Detect Environment
+
+Determine:
+
+* PowerShell
+* bash
+* zsh
+
+---
+
+## 4. Generate Commit Message
+
+Follow commit convention strictly.
+
+---
+
+## 5. Generate Optimized Git Commands
+
+Rules:
+
+* single-line only
+* shell-compatible
+* copy-paste ready
+
+---
+
+## 6. Determine Documentation Impact
+
+Output:
+
+```text
+README.md Update: Required
+Reason: API response structure changed
+```
+
+or
+
+```text
+README.md Update: Not required
+Reason: Internal refactor only
+```
+
+---
+
+# Required Output Format
+
+## Commit Message
+
+```text
+feat(auth): add oauth login flow
+```
+
+---
+
+## Git Commands
+
+### Linux/macOS
+
+```bash
+git add . && git commit -m "feat(auth): add oauth login flow" && git push
+```
+
+### PowerShell
+
+```powershell
+git add .; git commit -m "feat(auth): add oauth login flow"; git push
+```
+
+---
+
+## README.md Update
+
+```text
+Required
+Reason: Added new authentication setup instructions
+```
+
+---
+
+# Primary Goal
+
+Maintain:
+
+* safe Git workflow
+* automation-friendly repositories
+* clean commit history
+* CI/CD consistency
+* synchronized documentation
+* scalable team collaboration

@@ -12,8 +12,8 @@ const defaultUserSelect = {
     select: {
       fullname: true,
       avatar: true,
-    }
-  }
+    },
+  },
 };
 
 @Injectable()
@@ -25,12 +25,12 @@ export class PrismaCommentRepository implements ICommentsRepository {
       where: { post_id: postId },
       include: {
         User: {
-          select: defaultUserSelect
-        }
+          select: defaultUserSelect,
+        },
       },
-      orderBy: { created_at: 'asc' }
+      orderBy: { created_at: 'asc' },
     });
-    return comments.map(c => CommentMapper.toDomain(c) as CommentEntity);
+    return comments.map((c) => CommentMapper.toDomain(c) as CommentEntity);
   }
 
   async findById(id: number): Promise<CommentEntity | null> {
@@ -38,9 +38,9 @@ export class PrismaCommentRepository implements ICommentsRepository {
       where: { id },
       include: {
         User: {
-          select: defaultUserSelect
-        }
-      }
+          select: defaultUserSelect,
+        },
+      },
     });
     return CommentMapper.toDomain(comment);
   }
@@ -50,9 +50,9 @@ export class PrismaCommentRepository implements ICommentsRepository {
       data: data as any,
       include: {
         User: {
-          select: defaultUserSelect
-        }
-      }
+          select: defaultUserSelect,
+        },
+      },
     });
     return CommentMapper.toDomain(comment) as CommentEntity;
   }
@@ -63,9 +63,9 @@ export class PrismaCommentRepository implements ICommentsRepository {
       data: data as any,
       include: {
         User: {
-          select: defaultUserSelect
-        }
-      }
+          select: defaultUserSelect,
+        },
+      },
     });
     return CommentMapper.toDomain(comment) as CommentEntity;
   }

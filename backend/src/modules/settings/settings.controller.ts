@@ -1,4 +1,12 @@
-import { Controller, Get, Put, Body, Post, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Put,
+  Body,
+  Post,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { SettingsService } from './settings.service';
 import { AuthGuard } from '@nestjs/passport';
 import { RolesGuard } from '../auth/roles.guard';
@@ -18,7 +26,8 @@ export class SettingsController {
 
   @Post('verify-maintenance-passcode')
   async verifyMaintenancePasscode(@Body('passcode') passcode: string) {
-    const isValid = await this.settingsService.verifyMaintenancePasscode(passcode);
+    const isValid =
+      await this.settingsService.verifyMaintenancePasscode(passcode);
     return { success: isValid };
   }
 
@@ -39,12 +48,24 @@ export class SettingsController {
   @Put('admin')
   async updateSettings(
     @Req() req: any,
-    @Body() data: { items: { key: string; value: string; group?: string; is_public?: boolean }[] }
+    @Body()
+    data: {
+      items: {
+        key: string;
+        value: string;
+        group?: string;
+        is_public?: boolean;
+      }[];
+    },
   ) {
     if (!data.items || !Array.isArray(data.items)) {
       return { message: 'Invalid data format' };
     }
-    return this.settingsService.updateSettings(data.items, req.user, getClientIp(req));
+    return this.settingsService.updateSettings(
+      data.items,
+      req.user,
+      getClientIp(req),
+    );
   }
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -64,7 +85,16 @@ export class SettingsController {
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('superadmin')
   @Post('admin/test-email')
-  async testEmail(@Body() data: { host: string; port: string; user: string; pass: string; to: string }) {
+  async testEmail(
+    @Body()
+    data: {
+      host: string;
+      port: string;
+      user: string;
+      pass: string;
+      to: string;
+    },
+  ) {
     return this.settingsService.testEmail(data);
   }
 

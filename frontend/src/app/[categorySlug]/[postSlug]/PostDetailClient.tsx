@@ -54,6 +54,7 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
   const [commentError, setCommentError] = useState<string | null>(null);
   const [activeHash, setActiveHash] = useState<string>('');
   const [isMaintenanceComments, setIsMaintenanceComments] = useState(false);
+  const [displaySettings, setDisplaySettings] = useState<Record<string, string>>({});
   const [msgData, setMsgData] = useState<{ isOpen: boolean; title: string; message: string; variant: 'info' | 'success' | 'warning' | 'error' }>({
     isOpen: false, title: '', message: '', variant: 'info'
   });
@@ -61,18 +62,19 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
   const router = useRouter();
 
   useEffect(() => {
-    const checkMaintenance = async () => {
+    const fetchSettings = async () => {
       try {
         const { settingService } = await import('@/features/settings/services/settingService');
         const settings = await settingService.getPublicSettings();
+        setDisplaySettings(settings);
         if (settings.maintenance_comments === 'true' && !['admin', 'superadmin'].includes(user?.role || '')) {
           setIsMaintenanceComments(true);
         }
       } catch (err) {
-        console.error('Failed to check maintenance status:', err);
+        console.error('Failed to load public settings:', err);
       }
     };
-    checkMaintenance();
+    fetchSettings();
   }, [user]);
 
   useEffect(() => {
@@ -313,11 +315,15 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
             {/* Horizontal Metabar Row */}
             <div className="flex flex-wrap items-center justify-between gap-1 mb-1 py-1 border-y border-slate-100 dark:border-slate-800/50">
               <div className="flex flex-wrap items-center gap-3">
-                <Link href={`/author/${post.Author?.id || 1}`} className="flex items-center text-primary font-bold uppercase tracking-widest text-[9px] hover:text-primary/80 transition-all">
-                  <UserAvatar user={post.Author} size="xs" className="mr-2" />
-                  {post.Author?.fullname || post.Author?.username || 'Ẩn danh'}
-                </Link>
-                <div className="w-px h-3 bg-slate-200 dark:bg-slate-800" />
+                {displaySettings.post_show_author !== 'false' && (
+                  <>
+                    <Link href={`/author/${post.Author?.id || 1}`} className="flex items-center text-primary font-bold uppercase tracking-widest text-[9px] hover:text-primary/80 transition-all">
+                      <UserAvatar user={post.Author} size="xs" className="mr-2" />
+                      {post.Author?.fullname || post.Author?.username || 'Ẩn danh'}
+                    </Link>
+                    <div className="w-px h-3 bg-slate-200 dark:bg-slate-800" />
+                  </>
+                )}
                 {post.Category && (
                   <Link href={`/?q=${encodeURIComponent(post.Category.name)}`} className="hover:opacity-80 transition-opacity">
                     <Badge type="category" size="xs">
@@ -332,18 +338,28 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
                     </Badge>
                   </Link>
                 ))}
-                <div className="w-px h-3 bg-slate-200 dark:bg-slate-800" />
-                <div className="flex items-center gap-4 text-slate-400 text-[9px] font-bold uppercase tracking-widest">
-                  <FormattedDate date={post.created_at} showIcon iconSize={10} />
-                  <div className="flex items-center">
-                    <Clock size={10} className="mr-1.5" />
-                    {post.readTime || 1} PHÚT ĐỌC
-                  </div>
-                  <div className="flex items-center text-primary/70">
-                    <Eye size={10} className="mr-1.5" />
-                    {post.views || 0} LƯỢT XEM
-                  </div>
-                </div>
+                {(displaySettings.post_show_created_at !== 'false' || displaySettings.post_show_read_time !== 'false' || displaySettings.post_show_views !== 'false') && (
+                  <>
+                    <div className="w-px h-3 bg-slate-200 dark:bg-slate-800" />
+                    <div className="flex items-center gap-4 text-slate-400 text-[9px] font-bold uppercase tracking-widest">
+                      {displaySettings.post_show_created_at !== 'false' && (
+                        <FormattedDate date={post.created_at} showIcon iconSize={10} />
+                      )}
+                      {displaySettings.post_show_read_time !== 'false' && (
+                        <div className="flex items-center">
+                          <Clock size={10} className="mr-1.5" />
+                          {post.readTime || 1} PHÚT ĐỌC
+                        </div>
+                      )}
+                      {displaySettings.post_show_views !== 'false' && (
+                        <div className="flex items-center text-primary/70">
+                          <Eye size={10} className="mr-1.5" />
+                          {post.views || 0} LƯỢT XEM
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Social Actions - Compact Bar */}
@@ -383,15 +399,12 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
 
             <article className="w-full overflow-hidden max-w-none bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800/50">
               {post.cover_image && (
-                <div className="w-full aspect-[21/9] border-b border-slate-100/50 dark:border-slate-800/50 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none z-10" />
-                  <Image
+                <div className="w-full border-b border-slate-100/50 dark:border-slate-800/50 relative overflow-hidden bg-slate-900/5 dark:bg-slate-950/20">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none z-10" />
+                  <img
                     src={`${post.cover_image}`}
                     alt={post.title}
-                    fill
-                    priority
-                    className="object-cover transform hover:scale-105 transition-transform duration-700 relative z-0"
-                    sizes="(max-width: 768px) 100vw, 900px"
+                    className="w-full h-auto max-h-[600px] object-cover transform hover:scale-[1.01] transition-transform duration-700 relative z-0"
                   />
                 </div>
               )}

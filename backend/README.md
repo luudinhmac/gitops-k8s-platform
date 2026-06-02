@@ -17,8 +17,9 @@ Hệ thống sử dụng quy trình **Automated Infrastructure Update**:
    - ArgoCD tự động Sync lên Cluster.
 
 2. **Production (Tag `v*`):**
-   - Tương tự Staging nhưng yêu cầu kích hoạt thủ công (Manual Gate).
-   - Cập nhật vào thư mục `environments/production/`.
+   - Không chạy lại quy trình validate/test/build từ đầu. Job `fetch_image` tự động lấy (promote) Image trực tiếp từ Staging.
+   - Yêu cầu kích hoạt thủ công thông qua nút duyệt (`manual_approval`).
+   - Cập nhật tag mới vào thư mục `environments/production/` và tự động chạy `smoke_test_production` để kiểm tra độ ổn định của API.
 
 ## ⚙️ Cấu hình Biến môi trường
 Cần cấu hình các biến sau trong Kubernetes Secrets hoặc `.env` local:
@@ -39,4 +40,4 @@ Cần cấu hình các biến sau trong Kubernetes Secrets hoặc `.env` local:
 File `Dockerfile` được tối ưu hóa để chạy trong môi trường Kubernetes, hỗ trợ health-check và graceful shutdown.
 
 ---
-*Cập nhật lần cuối: 09/05/2026 bởi Antigravity Assistant.*
+*Cập nhật lần cuối: 09/05/2026
