@@ -51,7 +51,7 @@ export default function Footer() {
               Zero2Ops
             </Link>
             <p className="mt-4 text-slate-600 dark:text-slate-400 max-w-sm">
-              Đam mê xây dựng những ứng dụng web hiện đại, hiệu quả và mang lại giá trị tốt nhất cho người dùng. Chuyên về System Engineering và Fullstack Development.
+              Đam mê xây dựng những ứng dụng web hiện đại, hiệu quả và mang lại giá trị tốt nhất cho người dùng. Chuyên về System Engineering và DevSecOps.
             </p>
             <div className="mt-6 flex space-x-4">
               <a href="https://github.com/luudinhmac" target="_blank" className="p-2 glass rounded-full hover:text-primary transition-colors">
@@ -106,20 +106,20 @@ export default function Footer() {
 
         <div suppressHydrationWarning={true} className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 text-sm text-slate-500">
           <div className="flex flex-col md:flex-row items-center md:space-x-8 space-y-2 md:space-y-0">
-             <p>© {currentYear} Macld. Bản quyền đã được bảo hộ.</p>
-             {!loadingStats && stats && (
-               <div className="flex items-center space-x-4 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                    <span>{stats.onlineCount} Đang trực tuyến</span>
-                  </div>
-                  <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700" />
-                  <div className="flex items-center gap-1.5">
-                    <BarChart3 size={12} />
-                    <span>{stats.totalVisits.toLocaleString()} Lượt truy cập</span>
-                  </div>
-               </div>
-             )}
+            <p>© {currentYear} Macld. Bản quyền đã được bảo hộ.</p>
+            {!loadingStats && stats && (
+              <div className="flex items-center space-x-4 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  <span>{stats.onlineCount} Đang trực tuyến</span>
+                </div>
+                <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700" />
+                <div className="flex items-center gap-1.5">
+                  <BarChart3 size={12} />
+                  <span>{stats.totalVisits.toLocaleString()} Lượt truy cập</span>
+                </div>
+              </div>
+            )}
           </div>
           <div className="flex space-x-6">
             <Link href="/privacy" className="hover:text-primary transition-colors">Quyền riêng tư</Link>
