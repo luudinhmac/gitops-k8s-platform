@@ -21,8 +21,11 @@ import { StatsModule } from './modules/stats/stats.module';
 import { StatsMiddleware } from './modules/stats/stats.middleware';
 import { HealthController } from './health.controller';
 import { StorageModule } from './infrastructure/storage/storage.module';
-import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
 import { APP_GUARD } from '@nestjs/core';
+import { SetupModule } from './modules/setup/setup.module';
+import { SeoModule } from './modules/seo/seo.module';
 
 @Module({
   imports: [
@@ -50,16 +53,20 @@ import { APP_GUARD } from '@nestjs/core';
     AdminAlertModule,
     ScheduleModule.forRoot(),
     StatsModule,
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 60, // 60 requests per minute
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 60, // 60 requests per minute
+      },
+    ]),
+    SetupModule,
+    SeoModule,
   ],
   controllers: [HealthController],
   providers: [
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: CustomThrottlerGuard,
     },
   ],
 })

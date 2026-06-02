@@ -42,13 +42,13 @@ export default function Footer() {
   }
 
   return (
-    <footer className="bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800">
+    <footer suppressHydrationWarning={true} className="bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800">
       <div suppressHydrationWarning={true} className="max-w-7xl mx-auto px-4 py-12 md:py-16">
         <div suppressHydrationWarning={true} className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {/* Brand Section */}
           <div className="md:col-span-2">
             <Link href="/" className="text-2xl font-display font-bold text-gradient">
-              Portfolio
+              Zero2Ops
             </Link>
             <p className="mt-4 text-slate-600 dark:text-slate-400 max-w-sm">
               Đam mê xây dựng những ứng dụng web hiện đại, hiệu quả và mang lại giá trị tốt nhất cho người dùng. Chuyên về System Engineering và Fullstack Development.

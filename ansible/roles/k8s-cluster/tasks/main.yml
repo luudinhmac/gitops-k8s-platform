@@ -1,5 +1,0 @@
----
-- include_tasks: prerequisites.yml
-- include_tasks: install.yml
-- include_tasks: init.yml
-- include_tasks: dashboard.yml

@@ -9,6 +9,7 @@ import {
   UseGuards,
   Req,
   Res,
+  Header,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
@@ -30,19 +31,25 @@ export class AuthController {
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
+  @Header('Cache-Control', 'no-transform')
   @ApiOperation({ summary: 'Login user and return JWT token' })
-  async login(@Body() loginDto: LoginDto, @Res({ passthrough: true }) res: any) {
+  async login(
+    @Body() loginDto: LoginDto,
+    @Res({ passthrough: true }) res: any,
+  ) {
     const user = await this.validateUserUseCase.execute(
       loginDto.username,
       loginDto.password,
     );
 
     if (!user) {
-      throw new UnauthorizedException('Tên đăng nhập hoặc mật khẩu không đúng.');
+      throw new UnauthorizedException(
+        'Tên đăng nhập hoặc mật khẩu không đúng.',
+      );
     }
 
     const result = await this.loginUseCase.execute(user as any);
-    
+
     // Set JWT in HttpOnly cookie
     res.cookie('access_token', result.token, {
       path: '/',
@@ -57,6 +64,7 @@ export class AuthController {
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
     });
 
@@ -64,7 +72,8 @@ export class AuthController {
     res.cookie('user_role', user.role, {
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      httpOnly: false,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
     });
 
@@ -72,6 +81,7 @@ export class AuthController {
   }
 
   @Post('register')
+  @Header('Cache-Control', 'no-transform')
   @ApiOperation({ summary: 'Register new user' })
   async register(@Body() registerDto: RegisterDto) {
     return this.registerUseCase.execute(registerDto);
@@ -79,6 +89,7 @@ export class AuthController {
 
   @Get('profile')
   @UseGuards(AuthGuard('jwt'))
+  @Header('Cache-Control', 'no-transform')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get current user profile' })
   async getProfile(@Req() req: any) {
@@ -92,9 +103,25 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Logout user and clear cookies' })
   async logout(@Res({ passthrough: true }) res: any) {
-    res.clearCookie('access_token');
-    res.clearCookie('logged_in');
-    res.clearCookie('user_role');
+    const isProd = process.env.NODE_ENV === 'production';
+    res.clearCookie('access_token', {
+      path: '/',
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'lax',
+    });
+    res.clearCookie('logged_in', {
+      path: '/',
+      httpOnly: false,
+      secure: isProd,
+      sameSite: 'lax',
+    });
+    res.clearCookie('user_role', {
+      path: '/',
+      httpOnly: true,
+      secure: isProd,
+      sameSite: 'lax',
+    });
     return { success: true, message: 'Đăng xuất thành công' };
   }
 }

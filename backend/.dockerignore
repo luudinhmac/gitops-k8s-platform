@@ -1,9 +1,12 @@
-**/node_modules
-dist
-src/generated
-*.log
+node_modules
 .git
+.gitlab
+coverage
+dist
 .env
+.pnpm-store
+pnpm-store
 Dockerfile
 Dockerfile.*
 scratch
+*.log

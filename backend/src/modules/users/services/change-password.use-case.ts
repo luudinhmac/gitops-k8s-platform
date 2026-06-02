@@ -1,6 +1,14 @@
-import { Inject, Injectable, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
-import { IUsersRepository, I_USERS_REPOSITORY } from '../domain/user.repository.interface';
+import {
+  IUsersRepository,
+  I_USERS_REPOSITORY,
+} from '../domain/user.repository.interface';
 import { User, UserRole } from '@portfolio/contracts';
 import { AdminAlertService } from '../../admin-alert/admin-alert.service';
 import { UserNotFoundException } from '../domain/user.errors';
@@ -18,15 +26,26 @@ export class ChangePasswordUseCase {
     return regex.test(password);
   }
 
-  async execute(id: number, oldPassword: string, newPassword: string, currentUser: User, ip?: string) {
-    if (currentUser.id !== id) throw new ForbiddenException('Bạn chỉ có thể đổi mật khẩu của chính mình.');
-    if (!this.validatePassword(newPassword)) throw new BadRequestException('Mật khẩu mới phải tối thiểu 8 ký tự.');
-    
+  async execute(
+    id: number,
+    oldPassword: string,
+    newPassword: string,
+    currentUser: User,
+    ip?: string,
+  ) {
+    if (String(currentUser.id) !== String(id))
+      throw new ForbiddenException(
+        'Bạn chỉ có thể đổi mật khẩu của chính mình.',
+      );
+    if (!this.validatePassword(newPassword))
+      throw new BadRequestException('Mật khẩu mới phải tối thiểu 8 ký tự.');
+
     const user = await this.userRepository.findById(id);
     if (!user) throw new UserNotFoundException(id);
 
     const isValid = await bcrypt.compare(oldPassword, user.password as string);
-    if (!isValid) throw new BadRequestException('Mật khẩu hiện tại không đúng.');
+    if (!isValid)
+      throw new BadRequestException('Mật khẩu hiện tại không đúng.');
 
     const hash = await bcrypt.hash(newPassword, 10);
     await this.userRepository.update(id, { password: hash });

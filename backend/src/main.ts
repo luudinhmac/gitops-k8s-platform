@@ -1,6 +1,7 @@
 import helmet from 'helmet';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, VersioningType } from '@nestjs/common';
+// CI/CD Test Trigger: 2026-05-12-17-54 (Final Validation)
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -10,10 +11,13 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Security: Helmet
-  app.use(helmet({
-    crossOriginEmbedderPolicy: false,
-    contentSecurityPolicy: false,
-  }));
+  app.use(
+    helmet({
+      crossOriginEmbedderPolicy: false,
+      contentSecurityPolicy: false,
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
 
   // Enable Graceful Shutdown
   app.enableShutdownHooks();
@@ -32,14 +36,16 @@ async function bootstrap() {
   expressApp.set('trust proxy', 1);
 
   // Global Validation Pipe
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    transform: true,
-    forbidNonWhitelisted: true,
-    transformOptions: {
-      enableImplicitConversion: true,
-    },
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+    }),
+  );
 
   // Global Exception Filter
   app.useGlobalFilters(new GlobalExceptionFilter());
@@ -51,8 +57,6 @@ async function bootstrap() {
   const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
-    'https://192.168.157.110',
-    'http://192.168.157.110',
   ];
 
   app.enableCors({

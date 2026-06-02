@@ -1,5 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { IPostRepository, I_POST_REPOSITORY } from '../domain/post.repository.interface';
+import {
+  IPostRepository,
+  I_POST_REPOSITORY,
+} from '../domain/post.repository.interface';
 
 @Injectable()
 export class ToggleLikePostUseCase {

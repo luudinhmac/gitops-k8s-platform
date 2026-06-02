@@ -17,9 +17,11 @@ export class CommentEntity {
 
   constructor(partial: Partial<CommentEntity>) {
     Object.assign(this, partial);
-    
-    if (typeof this.created_at === 'string') this.created_at = new Date(this.created_at);
-    if (typeof this.updated_at === 'string') this.updated_at = new Date(this.updated_at);
+
+    if (typeof this.created_at === 'string')
+      this.created_at = new Date(this.created_at);
+    if (typeof this.updated_at === 'string')
+      this.updated_at = new Date(this.updated_at);
   }
 
   public getAuthorDisplayName(): string {

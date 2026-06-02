@@ -13,34 +13,36 @@ export class PrismaCategoryRepository implements ICategoriesRepository {
     const categories = await this.prisma.category.findMany({
       include: {
         _count: {
-          select: { Post: true }
-        }
+          select: { Post: true },
+        },
       },
-      orderBy: { name: 'asc' }
+      orderBy: { name: 'asc' },
     });
-    return categories.map(cat => CategoryMapper.toDomain(cat) as CategoryEntity);
+    return categories.map(
+      (cat) => CategoryMapper.toDomain(cat) as CategoryEntity,
+    );
   }
 
   async findById(id: number): Promise<CategoryEntity | null> {
-    const category = await this.prisma.category.findUnique({ 
+    const category = await this.prisma.category.findUnique({
       where: { id },
       include: {
         _count: {
-          select: { Post: true }
-        }
-      }
+          select: { Post: true },
+        },
+      },
     });
     return CategoryMapper.toDomain(category);
   }
 
   async findBySlug(slug: string): Promise<CategoryEntity | null> {
-    const category = await this.prisma.category.findUnique({ 
+    const category = await this.prisma.category.findUnique({
       where: { slug },
       include: {
         _count: {
-          select: { Post: true }
-        }
-      }
+          select: { Post: true },
+        },
+      },
     });
     return CategoryMapper.toDomain(category);
   }

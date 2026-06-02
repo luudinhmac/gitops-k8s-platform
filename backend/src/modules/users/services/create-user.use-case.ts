@@ -1,6 +1,14 @@
-import { Inject, Injectable, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
-import { IUsersRepository, I_USERS_REPOSITORY } from '../domain/user.repository.interface';
+import {
+  IUsersRepository,
+  I_USERS_REPOSITORY,
+} from '../domain/user.repository.interface';
 import { UserEntity } from '../domain/user.entity';
 import { User, UserRole, CreateUserDto } from '@portfolio/contracts';
 import { AdminAlertService } from '../../admin-alert/admin-alert.service';
@@ -27,43 +35,49 @@ export class CreateUserUseCase {
   }
 
   async execute(data: CreateUserDto, currentUser?: User) {
-    if (currentUser && !this.roleHierarchy[currentUser.role as string]) {
+    if (currentUser && !this.roleHierarchy[currentUser.role]) {
       throw new ForbiddenException('Bạn không có quyền tạo tài khoản.');
     }
-    
+
     if (currentUser && currentUser.role !== UserRole.SUPERADMIN) {
       const targetLevel = this.roleHierarchy[data.role || 'user'] || 0;
-      const currentLevel = this.roleHierarchy[currentUser.role as string] || 0;
+      const currentLevel = this.roleHierarchy[currentUser.role] || 0;
       if (targetLevel >= currentLevel) {
-        throw new ForbiddenException('Bạn không thể tạo tài khoản có quyền cao hơn hoặc bằng chính mình.');
+        throw new ForbiddenException(
+          'Bạn không thể tạo tài khoản có quyền cao hơn hoặc bằng chính mình.',
+        );
       }
     }
 
     if (data.password && !this.validatePassword(data.password)) {
-      throw new BadRequestException('Mật khẩu phải tối thiểu 8 ký tự, bao gồm cả chữ và số.');
+      throw new BadRequestException(
+        'Mật khẩu phải tối thiểu 8 ký tự, bao gồm cả chữ và số.',
+      );
     }
 
     const hash = await bcrypt.hash(data.password || 'defaultPassword123', 10);
-    
+
     const { confirmPassword, ...userData } = data as any;
-    
+
     try {
       const user = await this.userRepository.create({
         ...userData,
-        fullname: data.fullname && data.fullname.trim() ? data.fullname : data.username,
+        fullname:
+          data.fullname && data.fullname.trim() ? data.fullname : data.username,
         password: hash,
         role: data.role || UserRole.USER,
         profession: data.profession || 'Người dùng mới',
         is_active: true,
-      } as any);
+      });
 
       this.adminAlertService.sendAlert({
         subject: `🆕 Người dùng mới đăng ký: ${user.username}`,
-        text: `🆕 <b>Người dùng mới đăng ký</b>\n\n` +
-              `• <b>Username:</b> ${user.username}\n` +
-              `• <b>Họ tên:</b> ${user.fullname}\n` +
-              `• <b>Email:</b> ${user.email || 'N/A'}\n` +
-              `• <b>Ngày tham gia:</b> ${new Date().toLocaleString('vi-VN')}`,
+        text:
+          `🆕 <b>Người dùng mới đăng ký</b>\n\n` +
+          `• <b>Username:</b> ${user.username}\n` +
+          `• <b>Họ tên:</b> ${user.fullname}\n` +
+          `• <b>Email:</b> ${user.email || 'N/A'}\n` +
+          `• <b>Ngày tham gia:</b> ${new Date().toLocaleString('vi-VN')}`,
       });
 
       return user.toJSON();

@@ -25,22 +25,24 @@ export class StatsService {
     });
 
     const totalVisitsSetting = await this.prisma.setting.findUnique({
-      where: { key: 'stats_total_visits' }
+      where: { key: 'stats_total_visits' },
     });
 
     return {
       onlineCount,
-      totalVisits: parseInt(totalVisitsSetting?.value || '0', 10),
+      totalVisits: parseInt(String(totalVisitsSetting?.value || '0'), 10),
     };
   }
 
   async incrementTotalVisits() {
     try {
       const current = await this.prisma.setting.findUnique({
-        where: { key: 'stats_total_visits' }
+        where: { key: 'stats_total_visits' },
       });
 
-      const newValue = (parseInt(current?.value || '0', 10) + 1).toString();
+      const newValue = (
+        parseInt(String(current?.value || '0'), 10) + 1
+      ).toString();
 
       await this.prisma.setting.upsert({
         where: { key: 'stats_total_visits' },
@@ -49,8 +51,8 @@ export class StatsService {
           key: 'stats_total_visits',
           value: newValue,
           group: 'stats',
-          is_public: true
-        }
+          is_public: true,
+        },
       });
     } catch (error) {
       this.logger.error('Failed to increment total visits', error);

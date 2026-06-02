@@ -1,5 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { INotificationsRepository, I_NOTIFICATIONS_REPOSITORY } from '../../domain/repositories/notification.repository.interface';
+import {
+  INotificationsRepository,
+  I_NOTIFICATIONS_REPOSITORY,
+} from '../../domain/repositories/notification.repository.interface';
 
 @Injectable()
 export class DeleteAllNotificationsUseCase {

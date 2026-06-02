@@ -32,6 +32,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       const contentType = response.headers.get('content-type');
+
+      if (response.status === 401) {
+        console.log('[Auth] Phiên đăng nhập không hợp lệ hoặc đã hết hạn (401).');
+        document.cookie = 'logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=lax';
+        document.cookie = 'user_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=lax';
+        setUser(null);
+        try {
+          await fetch(`/api/v1/auth/logout`, {
+            method: 'POST',
+            credentials: 'include',
+          });
+        } catch (e) {
+          // ignore
+        }
+        return;
+      }
+
       if (!response.ok || !contentType || !contentType.includes('application/json')) {
         console.warn('[Auth] Backend trả về phản hồi không hợp lệ hoặc lỗi hệ thống.');
         if (response.status >= 500) {
@@ -50,7 +67,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(data.user);
       } else {
         console.log('[Auth] Phiên đăng nhập không hợp lệ hoặc đã hết hạn.');
+        document.cookie = 'logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=lax';
+        document.cookie = 'user_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=lax';
         setUser(null);
+        try {
+          await fetch(`/api/v1/auth/logout`, {
+            method: 'POST',
+            credentials: 'include',
+          });
+        } catch (e) {
+          // ignore
+        }
       }
     } catch (error: any) {
       console.error('[Auth] Lỗi trong quá trình checkAuth:', error.message);
@@ -90,7 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Check if global maintenance is ON to decide where to redirect
       try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:3002/api';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
         const finalUrl = apiUrl.endsWith('/v1') ? apiUrl : `${apiUrl}/v1`;
         const maintenanceRes = await fetch(`${finalUrl}/settings/public`);
         const settings = await maintenanceRes.json();

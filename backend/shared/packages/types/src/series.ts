@@ -16,6 +16,7 @@ export interface CreateSeriesDto {
   description?: string | null;
   cover_image?: string | null;
   slug?: string | null;
+  author_id?: number | null;
 }
 
 export interface UpdateSeriesDto {

@@ -234,6 +234,7 @@ function DebouncedSearchInput({
   return (
     <input 
       id={id}
+      name={id}
       type="text" 
       placeholder={placeholder}
       value={localValue}

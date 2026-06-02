@@ -43,6 +43,8 @@ export class CreateSeriesDto {
   @IsString()
   @IsOptional()
   slug?: string;
+
+  author_id?: number;
 }
 
 export class UpdateSeriesDto {

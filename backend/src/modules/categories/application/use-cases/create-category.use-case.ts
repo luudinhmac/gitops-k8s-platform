@@ -1,6 +1,9 @@
 import { Inject, Injectable } from '@nestjs/common';
 import slugify from 'slugify';
-import { ICategoriesRepository, I_CATEGORIES_REPOSITORY } from '../../domain/repositories/category.repository.interface';
+import {
+  ICategoriesRepository,
+  I_CATEGORIES_REPOSITORY,
+} from '../../domain/repositories/category.repository.interface';
 import { Category, CreateCategoryDto } from '@portfolio/types';
 import { AdminAlertService } from '../../../admin-alert/admin-alert.service';
 
@@ -13,7 +16,11 @@ export class CreateCategoryUseCase {
   ) {}
 
   async execute(data: CreateCategoryDto): Promise<Category> {
-    const slug = slugify(data.name || 'category', { lower: true, strict: true, locale: 'vi' });
+    const slug = slugify(data.name || 'category', {
+      lower: true,
+      strict: true,
+      locale: 'vi',
+    });
     let finalSlug = slug;
     let count = 0;
     while (true) {
@@ -22,14 +29,18 @@ export class CreateCategoryUseCase {
       count++;
       finalSlug = `${slug}-${count}`;
     }
-    const category = await this.categoryRepository.create({ ...data, slug: finalSlug });
+    const category = await this.categoryRepository.create({
+      ...data,
+      slug: finalSlug,
+    });
 
     this.adminAlertService.sendAlert({
       subject: `📂 Danh mục mới: ${category.name}`,
-      text: `📂 <b>Danh mục mới đã được tạo</b>\n\n` +
-            `• <b>Tên:</b> ${category.name}\n` +
-            `• <b>Slug:</b> ${category.slug}\n` +
-            `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
+      text:
+        `📂 <b>Danh mục mới đã được tạo</b>\n\n` +
+        `• <b>Tên:</b> ${category.name}\n` +
+        `• <b>Slug:</b> ${category.slug}\n` +
+        `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
     });
 
     return category;

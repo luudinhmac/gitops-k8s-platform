@@ -28,4 +28,11 @@ Thumbs.db
 
 # Prisma
 /generated
-/prisma/migrations
+
+# Uploads
+/uploads/
+/uploads.tar.gz
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -20,14 +20,24 @@ export class UserEntity {
   updated_at!: Date;
   can_comment!: boolean;
   can_post!: boolean;
+  role_id?: number | null;
+  can_manage_categories?: boolean;
+  can_manage_series?: boolean;
+  can_manage_comments?: boolean;
+  can_manage_settings?: boolean;
+  can_manage_users?: boolean;
 
   constructor(partial: Partial<UserEntity>) {
     Object.assign(this, partial);
-    
-    if (typeof this.created_at === 'string') this.created_at = new Date(this.created_at);
-    if (typeof this.updated_at === 'string') this.updated_at = new Date(this.updated_at);
-    if (typeof this.birthday === 'string') this.birthday = new Date(this.birthday);
-    if (typeof this.last_login === 'string') this.last_login = new Date(this.last_login);
+
+    if (typeof this.created_at === 'string')
+      this.created_at = new Date(this.created_at);
+    if (typeof this.updated_at === 'string')
+      this.updated_at = new Date(this.updated_at);
+    if (typeof this.birthday === 'string')
+      this.birthday = new Date(this.birthday);
+    if (typeof this.last_login === 'string')
+      this.last_login = new Date(this.last_login);
   }
 
   public isAdmin(): boolean {

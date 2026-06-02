@@ -15,7 +15,9 @@ export class PrismaNotificationRepository implements INotificationsRepository {
       orderBy: { created_at: 'desc' },
       take: 50,
     });
-    return notifications.map(n => NotificationMapper.toDomain(n) as NotificationEntity);
+    return notifications.map(
+      (n) => NotificationMapper.toDomain(n) as NotificationEntity,
+    );
   }
 
   async findById(id: number): Promise<NotificationEntity | null> {
@@ -35,15 +37,15 @@ export class PrismaNotificationRepository implements INotificationsRepository {
   async markAsRead(id: number): Promise<NotificationEntity> {
     const notification = await this.prisma.notification.update({
       where: { id },
-      data: { is_read: true },
+      data: { read_at: new Date() },
     });
     return NotificationMapper.toDomain(notification) as NotificationEntity;
   }
 
   async markAllAsRead(userId: number): Promise<void> {
     await this.prisma.notification.updateMany({
-      where: { recipient_id: userId, is_read: false },
-      data: { is_read: true },
+      where: { recipient_id: userId, read_at: null },
+      data: { read_at: new Date() },
     });
   }
 
@@ -53,13 +55,13 @@ export class PrismaNotificationRepository implements INotificationsRepository {
 
   async deleteAll(userId: number): Promise<void> {
     await this.prisma.notification.deleteMany({
-      where: { recipient_id: userId }
+      where: { recipient_id: userId },
     });
   }
 
   async countUnread(userId: number): Promise<number> {
     return this.prisma.notification.count({
-      where: { recipient_id: userId, is_read: false },
+      where: { recipient_id: userId, read_at: null },
     });
   }
 }

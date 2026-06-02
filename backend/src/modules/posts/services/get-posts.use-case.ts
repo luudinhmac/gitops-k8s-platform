@@ -1,6 +1,13 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { IPostRepository, I_POST_REPOSITORY } from '../domain/post.repository.interface';
-import { PostFilter, PaginationParams, PaginatedResult } from '../domain/post.types';
+import {
+  IPostRepository,
+  I_POST_REPOSITORY,
+} from '../domain/post.repository.interface';
+import {
+  PostFilter,
+  PaginationParams,
+  PaginatedResult,
+} from '../domain/post.types';
 import { PostEntity } from '../domain/post.entity';
 import { User, UserRole } from '@portfolio/types';
 
@@ -25,11 +32,19 @@ export class GetPostsUseCase {
   ): Promise<PaginatedResult<PostEntity>> {
     const filter: PostFilter = {
       search: query,
-      is_published: status === 'published' ? true : (status === 'draft' ? false : undefined),
-      is_blocked: status === 'blocked' ? true : (isAdmin ? undefined : false),
+      is_published:
+        status === 'published' ? true : status === 'draft' ? false : undefined,
+      is_blocked: status === 'blocked' ? true : isAdmin ? undefined : false,
       author_id: userId,
       viewer_id: user?.id,
-      sortBy: sort === 'views' ? 'views' : (sort === 'likes' ? 'likes' : (sort === 'comments' ? 'comments' : 'created_at')),
+      sortBy:
+        sort === 'views'
+          ? 'views'
+          : sort === 'likes'
+            ? 'likes'
+            : sort === 'comments'
+              ? 'comments'
+              : 'created_at',
       sortOrder: 'desc',
     };
 
@@ -42,14 +57,21 @@ export class GetPostsUseCase {
     const pagination: PaginationParams = { page, limit };
     const result = await this.postRepository.findAll(filter, pagination);
 
-    result.items = result.items.map((post: PostEntity) => this.formatPost(post));
+    result.items = result.items.map((post: PostEntity) =>
+      this.formatPost(post),
+    );
 
     return result;
   }
 
   private formatPost(post: PostEntity): PostEntity {
-    const cleanContent = post.content ? post.content.replace(/<[^>]*>/g, '') : '';
-    post.excerpt = post.excerpt || (cleanContent.substring(0, 160).trim() + (cleanContent.length > 160 ? '...' : ''));
+    const cleanContent = post.content
+      ? post.content.replace(/<[^>]*>/g, '')
+      : '';
+    post.excerpt =
+      post.excerpt ||
+      cleanContent.substring(0, 160).trim() +
+        (cleanContent.length > 160 ? '...' : '');
     post.readTime = this.calculateReadTime(post.content || '');
     // Note: comment_count and likes are now expected to be populated by the repository
     return post;
@@ -69,4 +91,3 @@ export class GetPostsUseCase {
     return readTime > 0 ? readTime : 1;
   }
 }
-

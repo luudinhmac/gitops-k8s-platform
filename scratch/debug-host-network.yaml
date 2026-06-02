@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debug-host-network
+  namespace: default
+spec:
+  hostNetwork: true
+  containers:
+  - name: network-viewer
+    image: alpine
+    command: ["sh", "-c", "ip addr; sleep 3600"]

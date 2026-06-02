@@ -4,10 +4,20 @@ import axios from 'axios';
 const getBaseUrl = () => {
   const isServer = typeof window === 'undefined';
   const defaultBase = isServer 
-    ? (process.env.NODE_ENV === 'production' ? 'http://backend:3001/api' : 'http://127.0.0.1:3001/api')
+    ? (process.env.INTERNAL_API_URL)
     : '/api';
   
-  const base = process.env.NEXT_PUBLIC_API_URL || defaultBase;
+  let base = process.env.NEXT_PUBLIC_API_URL || defaultBase;
+  if (!base) {
+    throw new Error('API URL is not defined (neither INTERNAL_API_URL nor NEXT_PUBLIC_API_URL)');
+  }
+  
+  base = base.replace(/\/$/, '');
+  
+  if (base.startsWith('http') && !base.includes('/api')) {
+    base = `${base}/api`;
+  }
+  
   return base.endsWith('/v1') ? base : `${base}/v1`;
 };
 

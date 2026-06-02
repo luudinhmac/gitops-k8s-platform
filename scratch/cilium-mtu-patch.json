@@ -1,0 +1,1 @@
+[{"op": "replace", "path": "/spec/template/spec/containers/0/args/1", "value": "--mtu=1150"}]
