@@ -1,0 +1,39 @@
+# ==============================================================================
+# COMPONENT: PostgreSQL Database
+# ROLE: Primary persistent data store
+# ORCHESTRATION: StatefulSet (ensures stable network IDs and storage mapping)
+# ==============================================================================
+
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "postgres.fullname" . }}
+  labels:
+    {{- include "postgres.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "postgres.fullname" . }} # Critical for stable DNS: <pod-name>.<service-name>
+  replicas: {{ .Values.replicaCount }} # WARNING: Higher replica counts require primary-replica logic (e.g., patroni/repmgr)
+  selector:
+    matchLabels:
+      {{- include "postgres.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "postgres.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: postgres
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          envFrom:
+            - secretRef:
+                name: {{ include "postgres.fullname" . }}-secret
+          volumeMounts:
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data # Standard path for PostgreSQL data persistence
+      volumes:
+        - name: postgres-data
+          persistentVolumeClaim:
+            claimName: {{ include "postgres.fullname" . }}-pvc # CAUTION: Manual backup recommended before PVC migration

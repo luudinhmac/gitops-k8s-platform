@@ -1,0 +1,26 @@
+# Description: Default Helm values for the PostgreSQL database.
+# Defines image, service, storage, and authentication settings.
+# Last Updated: 2026-05-12
+
+replicaCount: 1
+
+image:
+  repository: postgres
+  tag: "16.13-alpine"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 5432
+
+persistence:
+  size: 5Gi
+  path: /data/k8s/postgres-infra
+
+# Cấu hình Secret qua Helm values (hoặc dùng secret sẵn có)
+auth:
+  user: portfolio_user
+  password: macld@2026
+  database: portfolio_staging
+
+namespace: database

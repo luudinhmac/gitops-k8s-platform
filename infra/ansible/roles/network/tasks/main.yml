@@ -1,0 +1,138 @@
+---
+- name: Disable IPv6 via sysctl
+  sysctl:
+    name: "{{ item.key }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: yes
+  loop:
+    - { key: "net.ipv6.conf.all.disable_ipv6", value: "1" }
+    - { key: "net.ipv6.conf.default.disable_ipv6", value: "1" }
+    - { key: "net.ipv6.conf.lo.disable_ipv6", value: "1" }
+    - { key: "net.ipv6.conf.all.accept_ra", value: "0" }
+    - { key: "net.ipv6.conf.default.accept_ra", value: "0" }
+
+- name: Install networking tools
+  apt:
+    name: 
+      - bridge-utils
+      - net-tools
+      - iproute2
+      - netplan.io
+      - iptables-persistent
+    state: present
+    update_cache: yes
+
+- name: Disable SSH Socket (Ubuntu 24.04 compatibility)
+  shell: |
+    systemctl stop ssh.socket || true
+    systemctl disable ssh.socket || true
+    systemctl mask ssh.socket || true
+  changed_when: false
+
+- name: Configure SSH Port to {{ ansible_port }}
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: '^#?Port .*'
+    line: "Port 2222"
+  notify: Restart SSH
+
+- name: Force SSH restart immediately
+  service:
+    name: ssh
+    state: restarted
+
+- name: Ensure SSH Service is enabled and socket is masked
+  systemd:
+    name: ssh
+    enabled: yes
+    state: started
+    masked: no
+
+- name: Create Dummy interface for K8s Bridge (Legacy Command)
+  shell: |
+    ip link add {{ private_bridge_interface }} type dummy || true
+    ip addr add {{ private_bridge_ip }}/24 dev {{ private_bridge_interface }} || true
+    ip link set {{ private_bridge_interface }} up
+  register: create_bridge
+  changed_when: "'RTNETLINK answers: File exists' not in create_bridge.stderr"
+
+- name: Persist Bridge via Netplan
+  copy:
+    dest: "/etc/netplan/60-k8s-bridge.yaml"
+    content: |
+      network:
+        version: 2
+        renderer: networkd
+        ethernets:
+          {{ ansible_facts['default_ipv4']['interface'] }}:
+            mtu: 1200
+        bridges:
+          {{ private_bridge_interface }}:
+            addresses:
+              - {{ private_bridge_ip }}/24
+            interfaces: []
+            mtu: 1200
+            parameters:
+              stp: false
+  notify: Apply Netplan
+
+- name: Enable IP Forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: '1'
+    state: present
+    reload: yes
+
+- name: Configure Hardened Firewall via iptables
+  shell: |
+    # Do NOT flush everything on a K8s node! 
+    # Just ensure our specific rules exist.
+    
+    # Default policies: Block incoming by default, allow forwarding for K8s
+    iptables -P INPUT DROP
+    iptables -P FORWARD ACCEPT
+    iptables -P OUTPUT ACCEPT
+    
+    # Allow loopback
+    iptables -A INPUT -i lo -j ACCEPT
+    
+    # Allow established/related (allows responses to outgoing traffic)
+    iptables -A INPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+    
+    # Allow all internal Kubernetes traffic (Pod-to-Pod, Pod-to-Service)
+    iptables -A INPUT -s 10.0.0.0/8 -j ACCEPT
+    iptables -A INPUT -d 10.0.0.0/8 -j ACCEPT
+    iptables -A FORWARD -s 10.0.0.0/8 -j ACCEPT
+    iptables -A FORWARD -d 10.0.0.0/8 -j ACCEPT
+    
+    # Allow Tailscale Interface (Commented out since Tailscale was removed)
+    # iptables -A INPUT -i tailscale0 -j ACCEPT
+    # iptables -A FORWARD -i tailscale0 -j ACCEPT
+    
+    # Allow SSH (Port 2222) on all interfaces
+    iptables -A INPUT -p tcp --dport 2222 -j ACCEPT
+    
+    # Allow 80/443 for Traefik (Public Access)
+    iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+    iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+    
+    # Allow everything on private bridge
+    iptables -A INPUT -i {{ private_bridge_interface }} -j ACCEPT
+    iptables -A FORWARD -i {{ private_bridge_interface }} -j ACCEPT
+    
+    # Allow Tailscale Interface (Commented out since Tailscale was removed)
+    # iptables -A INPUT -i tailscale0 -j ACCEPT
+    # iptables -A FORWARD -i tailscale0 -j ACCEPT
+    
+    # NAT (Masquerade) for pods/services to reach internet
+    iptables -t nat -A POSTROUTING -s 10.200.0.0/24 -o {{ ansible_facts['default_ipv4']['interface'] }} -j MASQUERADE
+    
+    # Allow forwarding from bridge to internet
+    iptables -A FORWARD -i {{ private_bridge_interface }} -o {{ ansible_facts['default_ipv4']['interface'] }} -j ACCEPT
+    iptables -A FORWARD -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+    
+    # Save rules for persistence
+    mkdir -p /etc/iptables
+    iptables-save > /etc/iptables/rules.v4
+  changed_when: true

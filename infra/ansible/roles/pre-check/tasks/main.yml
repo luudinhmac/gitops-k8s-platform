@@ -1,0 +1,26 @@
+# Description: Main tasks for the 'pre-check' role.
+# Runs diagnostic checks (like port availability) before cluster setup.
+# Last Updated: 2026-05-12
+
+- name: Verify that ports 80 and 443 are not occupied by non-K8s processes
+  script: check_ports.sh
+  register: port_check
+  failed_when: port_check.rc != 0
+  changed_when: false
+
+- name: Check free disk space (require at least 5GB on root filesystem)
+  shell: df / --output=avail -h | tail -1 | tr -d 'G' | tr -d 'M' | awk '{print ($1 > 5)}'
+  register: disk_space
+  failed_when: disk_space.stdout != "1"
+  changed_when: false
+
+- name: Verify Sudo access without password
+  command: sudo -n true
+  changed_when: false
+  failed_when: false
+  register: sudo_check
+
+- name: Fail if Sudo requires password
+  fail:
+    msg: "User {{ ansible_user }} requires a sudo password. Please configure passwordless sudo or provide --ask-become-pass."
+  when: sudo_check.rc != 0

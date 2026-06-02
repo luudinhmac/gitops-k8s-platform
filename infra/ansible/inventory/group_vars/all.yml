@@ -1,0 +1,18 @@
+# Description: Global variables for all host groups in the Ansible inventory.
+# Defines project names, namespaces, network CIDRs, and common paths.
+# Last Updated: 2026-05-12
+
+---
+# Network Configuration
+# On Staging (Local), this is ens33 IP. On VPS, this will be eth0 IP.
+public_ip: "{{ ansible_host }}" 
+private_bridge_ip: "10.200.0.1"
+private_bridge_interface: "br0"
+
+# VPN Configuration (Tailscale)
+tailscale_auth_key: "" # To be provided by user or via environment variable
+
+# Infrastructure Configuration
+internal_subnet: 192.168.157.0/24
+pod_network_cidr: 10.0.0.0/8
+service_network_cidr: 10.96.0.0/12

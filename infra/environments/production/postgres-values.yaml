@@ -1,0 +1,19 @@
+# Description: Helm values for PostgreSQL in the production environment.
+# Configures resource limits, persistence, and service settings.
+
+postgresql:
+  persistence:
+    size: 20Gi  # Larger for production
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1024Mi
+    requests:
+      cpu: 500m
+      memory: 512Mi
+
+# Database connection settings (used by backend)
+database:
+  name: portfolio_production
+  user: portfolio_admin
+  host: postgres-production.database-production

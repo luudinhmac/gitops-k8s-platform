@@ -1,0 +1,66 @@
+apiVersion: kubeadm.k8s.io/v1beta4
+kind: InitConfiguration
+localAPIEndpoint:
+  advertiseAddress: "{{ private_bridge_ip }}"
+  bindPort: 6443
+nodeRegistration:
+  kubeletExtraArgs:
+    - name: "node-ip"
+      value: "{{ private_bridge_ip }}"
+---
+apiVersion: kubeadm.k8s.io/v1beta4
+kind: ClusterConfiguration
+kubernetesVersion: v1.31.14
+controlPlaneEndpoint: "{{ private_bridge_ip }}:6443"
+networking:
+  podSubnet: "{{ pod_network_cidr }}"
+  serviceSubnet: "{{ service_network_cidr }}"
+apiServer:
+  extraArgs:
+    - name: "bind-address"
+      value: "{{ private_bridge_ip }}"
+    - name: "advertise-address"
+      value: "{{ private_bridge_ip }}"
+    - name: "anonymous-auth"
+      value: "true"
+    - name: "enable-admission-plugins"
+      value: "NodeRestriction,PodSecurity"
+    - name: "audit-log-path"
+      value: "/var/log/kubernetes/audit.log"
+    - name: "audit-log-maxage"
+      value: "30"
+    - name: "audit-log-maxbackup"
+      value: "10"
+    - name: "audit-log-maxsize"
+      value: "100"
+controllerManager:
+  extraArgs:
+    - name: "bind-address"
+      value: "127.0.0.1"
+scheduler:
+  extraArgs:
+    - name: "bind-address"
+      value: "127.0.0.1"
+---
+apiVersion: kubelet.config.k8s.io/v1beta1
+kind: KubeletConfiguration
+address: "{{ private_bridge_ip }}"
+staticPodPath: /etc/kubernetes/manifests
+authentication:
+  anonymous:
+    enabled: false
+  webhook:
+    enabled: true
+    cacheTTL: 2m0s
+  x509:
+    clientCAFile: /etc/kubernetes/pki/ca.crt
+authorization:
+  mode: Webhook
+  webhook:
+    cacheAuthorizedTTL: 5m0s
+    cacheUnauthorizedTTL: 30s
+clusterDomain: cluster.local
+clusterDNS:
+  - 10.96.0.10
+serverTLSBootstrap: true
+failSwapOn: false

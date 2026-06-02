@@ -1,0 +1,29 @@
+# ==============================================================================
+# ENVIRONMENT: Production (Backend)
+# PURPOSE: Live traffic handling
+# SECURITY: Strict TLS enforcement with Let's Encrypt certificates
+# ==============================================================================
+
+image:
+  tag: "v0.0.12@sha256:7b389ff04aa88dc9f4d5c618aa2551fb60e1c3580772b3ea574640a9ad0bd968"
+ingress:
+  enabled: true
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod" # Triggers cert-manager to provision production certificates
+  hosts:
+    - host: api.luumac.io.vn # Production API endpoint
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: portfolio-backend-tls
+      hosts:
+        - api.luumac.io.vn
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80

@@ -1,0 +1,20 @@
+# Description: Helm template for the PostgreSQL Kubernetes Service.
+# Defines internal load balancing and port configuration for the database.
+# Last Updated: 2026-05-12
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "postgres.fullname" . }}
+  labels:
+    {{- include "postgres.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.port }}
+      protocol: TCP
+      name: postgres
+  selector:
+    {{- include "postgres.selectorLabels" . | nindent 4 }}
+  clusterIP: None

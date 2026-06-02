@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: monitoring-project
+  namespace: argocd
+spec:
+  description: Project for observability and monitoring services
+  sourceRepos:
+  - '*'
+  destinations:
+  - namespace: monitoring
+    server: https://kubernetes.default.svc
+  - namespace: database
+    server: https://kubernetes.default.svc
+  - namespace: kube-system
+    server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+  - group: '*'
+    kind: '*'

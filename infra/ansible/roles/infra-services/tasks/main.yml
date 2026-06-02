@@ -1,0 +1,148 @@
+# Description: Main tasks for the 'infra-services' role.
+# Deploys foundational Kubernetes services like ArgoCD and Traefik.
+# Last Updated: 2026-05-12
+
+---
+- name: Add Traefik Helm repo
+  become_user: "{{ ansible_operator_user }}"
+  command: helm repo add traefik https://traefik.github.io/charts
+  failed_when: false
+
+- name: Update Helm repos
+  become_user: "{{ ansible_operator_user }}"
+  command: helm repo update
+
+- name: Create Infra namespace
+  become_user: "{{ ansible_operator_user }}"
+  command: kubectl create namespace infra
+  failed_when: false
+
+- name: Deploy Traefik Ingress Controller
+  become_user: "{{ ansible_operator_user }}"
+  command: >
+    helm upgrade --install traefik traefik/traefik
+    --namespace infra
+    --set ports.web.port=80
+    --set ports.web.hostPort=80
+    --set ports.websecure.port=443
+    --set ports.websecure.hostPort=443
+    --set service.type=NodePort
+    --set deployment.kind=DaemonSet
+    --set hostNetwork=true
+    --set additionalArguments="{{ traefik_additional_arguments }}"
+    --set updateStrategy.rollingUpdate.maxUnavailable=1
+    --set updateStrategy.rollingUpdate.maxSurge=0
+    --set podSecurityContext.runAsNonRoot=false
+    --set podSecurityContext.runAsUser=0
+    --set podSecurityContext.runAsGroup=0
+    --set securityContext.privileged=true
+    --set securityContext.allowPrivilegeEscalation=true
+    --set securityContext.capabilities.drop={NONE}
+    --set securityContext.capabilities.add={NET_ADMIN,NET_BIND_SERVICE}
+    --set securityContext.readOnlyRootFilesystem=false
+
+- name: Create Traefik HTTPS Redirect Middleware
+  become_user: "{{ ansible_operator_user }}"
+  shell: |
+    cat <<EOF | kubectl apply -f -
+    apiVersion: traefik.io/v1alpha1
+    kind: Middleware
+    metadata:
+      name: redirect-https
+      namespace: infra
+    spec:
+      redirectScheme:
+        scheme: https
+        permanent: true
+    EOF
+  changed_when: true
+
+- name: Create Traefik ServersTransport for Insecure Backends
+  become_user: "{{ ansible_operator_user }}"
+  shell: |
+    cat <<EOF | kubectl apply -f -
+    apiVersion: traefik.io/v1alpha1
+    kind: ServersTransport
+    metadata:
+      name: insecure-transport
+      namespace: infra
+    spec:
+      insecureSkipVerify: true
+    EOF
+  changed_when: true
+
+- name: Create Traefik IPAllowList Middleware for Admin UI
+  become_user: "{{ ansible_operator_user }}"
+  shell: |
+    cat <<EOF | kubectl apply -f -
+    apiVersion: traefik.io/v1alpha1
+    kind: Middleware
+    metadata:
+      name: admin-allowlist
+      namespace: infra
+    spec:
+      ipAllowList:
+        sourceRange:
+          - 127.0.0.1/32
+          - 10.200.0.0/24
+          - 10.0.0.0/8
+          - 100.64.0.0/10
+          - 118.68.85.137/32
+    EOF
+  changed_when: true
+
+- name: Install Metrics Server
+  become_user: "{{ ansible_operator_user }}"
+  command: kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+- name: Patch Metrics Server for self-signed certificates
+  become_user: "{{ ansible_operator_user }}"
+  command: >
+    kubectl patch deployment metrics-server -n kube-system --type='json' 
+    -p='[{"op": "add", "path": "/spec/template/spec/containers/0/args/-", "value": "--kubelet-insecure-tls"}]'
+
+- name: Add Jetstack Helm repo (for Cert-Manager)
+  become_user: "{{ ansible_operator_user }}"
+  command: helm repo add jetstack https://charts.jetstack.io
+  failed_when: false
+
+- name: Install Cert-Manager
+  become_user: "{{ ansible_operator_user }}"
+  command: >
+    helm upgrade --install cert-manager jetstack/cert-manager
+    --namespace cert-manager
+    --create-namespace
+    --set installCRDs=true
+
+- name: Add ArgoCD Helm repo
+  become_user: "{{ ansible_operator_user }}"
+  command: helm repo add argo https://argoproj.github.io/argo-helm
+  failed_when: false
+
+- name: Update Helm repos
+  become_user: "{{ ansible_operator_user }}"
+  command: helm repo update
+
+- name: Clean up failed ArgoCD releases (if any)
+  become_user: "{{ ansible_operator_user }}"
+  command: helm uninstall argocd --namespace argocd
+  failed_when: false
+
+- name: Install ArgoCD
+  become_user: "{{ ansible_operator_user }}"
+  command: >
+    helm upgrade --install argocd argo/argo-cd
+    --namespace argocd
+    --create-namespace
+    --set server.service.type=ClusterIP
+    --set "server.extraArgs={--insecure}"
+    --wait --timeout 10m
+
+- name: Install Local Path Provisioner
+  become_user: "{{ ansible_operator_user }}"
+  shell: |
+    kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.26/deploy/local-path-storage.yaml
+    kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+  changed_when: true
+
+

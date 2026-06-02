@@ -1,0 +1,14 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: postgres-exporter-pod-monitor
+  namespace: database
+  labels:
+    release: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: postgres-exporter
+  podMetricsEndpoints:
+  - port: metrics
+    interval: 30s

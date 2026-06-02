@@ -1,0 +1,31 @@
+---
+- name: Remove ArgoCD initial admin secret
+  become_user: "{{ ansible_operator_user }}"
+  command: kubectl delete secret argocd-initial-admin-secret -n argocd
+  failed_when: false
+
+- name: Apply Default Deny NetworkPolicy in portfolio namespace
+  become_user: "{{ ansible_operator_user }}"
+  shell: |
+    cat <<EOF | kubectl apply -f -
+    apiVersion: networking.k8s.io/v1
+    kind: NetworkPolicy
+    metadata:
+      name: default-deny-ingress
+      namespace: portfolio
+    spec:
+      podSelector: {}
+      policyTypes:
+      - Ingress
+    EOF
+  failed_when: false
+
+- name: Restrict default ServiceAccount in all namespaces
+  become_user: "{{ ansible_operator_user }}"
+  shell: "kubectl patch serviceaccount default -p 'automountServiceAccountToken: false' -n {{ item }}"
+  loop:
+    - default
+    - portfolio
+    - database
+    - infra
+  failed_when: false

@@ -1,0 +1,22 @@
+---
+- name: Add Tailscale repository key
+  apt_key:
+    url: https://pkgs.tailscale.com/stable/ubuntu/jammy.noarmor.gpg
+    state: present
+
+- name: Add Tailscale repository
+  apt_repository:
+    repo: "deb https://pkgs.tailscale.com/stable/ubuntu jammy main"
+    state: present
+
+- name: Install Tailscale
+  apt:
+    name: tailscale
+    state: present
+    update_cache: yes
+
+- name: Start Tailscale
+  shell: |
+    tailscale up --authkey={{ tailscale_auth_key }} --advertise-routes={{ private_bridge_ip }}/32 || true
+  when: tailscale_auth_key != ""
+  changed_when: true

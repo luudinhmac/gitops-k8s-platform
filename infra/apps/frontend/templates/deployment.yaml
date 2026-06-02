@@ -1,0 +1,39 @@
+# ==============================================================================
+# COMPONENT: Frontend Application Deployment
+# ROLE: Web user interface (SSR/Static)
+# ORCHESTRATION: Replicated Deployment for high availability
+# ==============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "frontend.fullname" . }}
+  labels:
+    {{- include "frontend.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "frontend.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "frontend.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+      - name: {{ .Chart.Name }}
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }} # Use Always for staging to pull latest tags
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+        ports:
+        - containerPort: {{ .Values.service.port }}
+        env:
+        - name: TZ
+          value: {{ .Values.env.tz | quote }}
+        - name: NODE_ENV
+          value: {{ .Values.env.nodeEnv | quote }}
+        - name: INTERNAL_API_URL
+          value: {{ .Values.env.internalApiUrl | quote }} # IMPORTANT: Internal ClusterIP for server-side requests to backend
