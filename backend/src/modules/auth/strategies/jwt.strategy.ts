@@ -27,14 +27,16 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       ]),
       ignoreExpiration: false,
       secretOrKey:
-        configService.get<string>('JWT_SECRET') ||
-        'super_secret_jwt_key_2026',
+        configService.get<string>('JWT_SECRET') || 'super_secret_jwt_key_2026',
     });
   }
 
   async validate(payload: any) {
     try {
-      const user = await this.getUserUseCase.execute(Number(payload.id));
+      const user = await this.getUserUseCase.execute(
+        Number(payload.id),
+        payload,
+      );
       if (!user) {
         this.logger.warn(`Auth failed: User ID ${payload.id} not found`);
         throw new UnauthorizedException('Tài khoản không tồn tại.');
@@ -44,7 +46,14 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         throw new UnauthorizedException('Tài khoản đã bị khóa.');
       }
       return user;
-    } catch (error) {
+    } catch (error: any) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+      if (error.name === 'UserNotFoundException') {
+        this.logger.warn(`Auth failed: User ID ${payload.id} not found`);
+        throw new UnauthorizedException('Tài khoản không tồn tại.');
+      }
       this.logger.error(`Auth error for ID ${payload.id}: ${error.message}`);
       throw new UnauthorizedException('Phiên đăng nhập không hợp lệ.');
     }

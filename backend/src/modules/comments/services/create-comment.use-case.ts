@@ -1,6 +1,17 @@
-import { Inject, Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
-import { ICommentsRepository, I_COMMENTS_REPOSITORY } from '../domain/comment.repository.interface';
-import { I_POST_REPOSITORY, IPostRepository } from '../../posts/domain/post.repository.interface';
+import {
+  Inject,
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
+import {
+  ICommentsRepository,
+  I_COMMENTS_REPOSITORY,
+} from '../domain/comment.repository.interface';
+import {
+  I_POST_REPOSITORY,
+  IPostRepository,
+} from '../../posts/domain/post.repository.interface';
 import { User } from '@portfolio/types';
 import { CreateCommentDto, Comment } from '@portfolio/contracts';
 import { NotificationsService } from '../../notifications/notifications.service';
@@ -20,11 +31,15 @@ export class CreateCommentUseCase {
   async execute(data: CreateCommentDto, user?: User | null): Promise<Comment> {
     // Maintenance Check
     const settings = await this.settingsService.getPublicSettings();
-    const isMaintenance = (settings as any).maintenance_comments === 'true' || (settings as any).maintenance_comments === true;
+    const isMaintenance =
+      (settings as any).maintenance_comments === 'true' ||
+      (settings as any).maintenance_comments === true;
     const isAdmin = ['admin', 'superadmin'].includes(user?.role || '');
 
     if (isMaintenance && !isAdmin) {
-      throw new ForbiddenException('Tính năng bình luận hiện đang bảo trì. Vui lòng quay lại sau.');
+      throw new ForbiddenException(
+        'Tính năng bình luận hiện đang bảo trì. Vui lòng quay lại sau.',
+      );
     }
 
     const post = await this.postRepository.findById(data.post_id);
@@ -53,31 +68,34 @@ export class CreateCommentUseCase {
 
     // Notifications logic (Keep existing logic but use Entity/Contract properties)
     try {
-      const commenterName = (comment as any).User?.fullname || comment.author_name || 'Ai đó';
+      const commenterName =
+        (comment as any).User?.fullname || comment.author_name || 'Ai đó';
       if (comment.parent_id) {
-        const parentComment = await this.commentRepository.findById(comment.parent_id);
+        const parentComment = await this.commentRepository.findById(
+          comment.parent_id,
+        );
         if (parentComment?.user_id && parentComment.user_id !== userId) {
           await this.notificationsService.create({
-            recipient_id: parentComment.user_id, 
-            sender_id: userId, 
+            recipient_id: parentComment.user_id,
+            sender_id: userId,
             type: 'REPLY_TO_COMMENT',
-            title: 'Phản hồi mới', 
+            title: 'Phản hồi mới',
             content: `${commenterName} đã phản hồi bình luận của bạn`,
             link: `/posts/${post.slug}#comment-${comment.id}`,
           });
         }
       } else if (post.author_id && post.author_id !== userId) {
         await this.notificationsService.create({
-          recipient_id: post.author_id, 
-          sender_id: userId, 
+          recipient_id: post.author_id,
+          sender_id: userId,
           type: 'COMMENT_ON_POST',
-          title: 'Bình luận mới', 
+          title: 'Bình luận mới',
           content: `${commenterName} đã bình luận về bài viết "${post.title}"`,
           link: `/posts/${post.slug}#comment-${comment.id}`,
         });
       }
-    } catch (err) { 
-      console.error('Notification error:', err); 
+    } catch (err) {
+      console.error('Notification error:', err);
     }
 
     return comment as unknown as Comment;

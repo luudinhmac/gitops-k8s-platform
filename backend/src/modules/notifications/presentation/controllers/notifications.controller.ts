@@ -11,7 +11,12 @@ import {
   Query,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../../auth/guards/jwt-auth.guard';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { Notification as NotificationEntity } from '@portfolio/contracts';
 
 // Use Cases
@@ -40,7 +45,10 @@ export class NotificationsController {
   @ApiOperation({ summary: 'Get current user notifications' })
   @ApiResponse({ status: 200, type: [NotificationEntity] })
   findAll(@Req() req: any, @Query('unreadOnly') unreadOnly?: string) {
-    return this.getNotificationsUseCase.execute(req.user.id, unreadOnly === 'true');
+    return this.getNotificationsUseCase.execute(
+      req.user.id,
+      unreadOnly === 'true',
+    );
   }
 
   @Get('unread-count')

@@ -150,7 +150,7 @@ function ProfilePageContent() {
       formData.append('file', file);
 
       const uploadData = await userService.uploadAvatar(formData);
-      const avatarUrl = `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${uploadData.url}`;
+      const avatarUrl = uploadData.url;
 
       await userService.updateProfile(user.id, { avatar: avatarUrl });
       await checkAuth();
@@ -293,7 +293,7 @@ function ProfilePageContent() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {[
                       { label: 'Họ và tên', value: user?.fullname, icon: UserIcon },
-                      { label: 'Email', value: user?.email, icon: Mail },
+                      { label: 'Email', value: user?.email ? <span dangerouslySetInnerHTML={{ __html: `<!--email_off-->${user.email}<!--/email_off-->` }} /> : undefined, icon: Mail },
                       { label: 'Số điện thoại', value: user?.phone, icon: Phone },
                       { label: 'Ngành nghề', value: user?.profession, icon: Briefcase },
                       { label: 'Ngày sinh', value: <FormattedDate date={user?.birthday || ''} />, icon: Calendar },
@@ -504,7 +504,7 @@ function ProfilePageContent() {
                <div className="flex items-center justify-between mb-1">
                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">Series của tôi ({mySeries.length})</h2>
                  {user && ['admin', 'superadmin'].includes(user.role) && (
-                   <Link href="/admin/series" className="text-xs font-bold text-primary hover:underline flex items-center">
+                   <Link href="/portal-dashboard/series" className="text-xs font-bold text-primary hover:underline flex items-center">
                      <Edit size={12} className="mr-1" /> Quản lý tất cả series
                    </Link>
                  )}
@@ -560,6 +560,7 @@ function ProfilePageContent() {
               <form onSubmit={handleChangePassword} className="space-y-1">
                 {/* Hidden username field for accessibility/autofill */}
                 <input 
+                  id="hidden-username"
                   type="text" 
                   name="username" 
                   autoComplete="username" 

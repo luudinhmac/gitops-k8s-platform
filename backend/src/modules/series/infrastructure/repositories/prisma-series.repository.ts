@@ -14,12 +14,12 @@ export class PrismaSeriesRepository implements ISeriesRepository {
       ...params,
       include: {
         _count: {
-          select: { Post: true }
-        }
+          select: { Post: true },
+        },
       },
-      orderBy: { name: 'asc' }
+      orderBy: { name: 'asc' },
     });
-    return series.map(s => SeriesMapper.toDomain(s) as SeriesEntity);
+    return series.map((s) => SeriesMapper.toDomain(s) as SeriesEntity);
   }
 
   async findById(id: number): Promise<SeriesEntity | null> {
@@ -31,19 +31,20 @@ export class PrismaSeriesRepository implements ISeriesRepository {
             id: true,
             title: true,
             slug: true,
+            series_order: true,
             created_at: true,
-          }
+          },
         },
         _count: {
-          select: { Post: true }
-        }
-      }
+          select: { Post: true },
+        },
+      },
     });
     return SeriesMapper.toDomain(series);
   }
 
   async findBySlug(slug: string): Promise<SeriesEntity | null> {
-    const series = await this.prisma.series.findUnique({
+    const series = await this.prisma.series.findFirst({
       where: { slug },
       include: {
         Post: {
@@ -51,13 +52,14 @@ export class PrismaSeriesRepository implements ISeriesRepository {
             id: true,
             title: true,
             slug: true,
+            series_order: true,
             created_at: true,
-          }
+          },
         },
         _count: {
-          select: { Post: true }
-        }
-      }
+          select: { Post: true },
+        },
+      },
     });
     return SeriesMapper.toDomain(series);
   }

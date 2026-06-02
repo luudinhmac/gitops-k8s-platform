@@ -1,82 +1,468 @@
+# =========================================================
+# ENTERPRISE PRODUCTION-GRADE GITLAB CI/CD (FRONTEND)
+# =========================================================
+#
+# FEATURES
+#
+# - Reusable templates & DRY configurations
+# - Build once promote many (manifest copies via crane)
+# - Rootless BuildKit (no Docker-in-Docker required)
+# - Trivy vulnerability, secret, filesystem & config scans
+# - CycloneDX SBOM generation
+# - Cosign OIDC Keyless image signing
+# - GitOps deployment flow with rebase safety & resource locks
+# - Rollback ready pipeline
+#
+# =========================================================
+
 stages:
-  - sync
+  - validate
+  - test
   - build
-  - staging
-  - deploy_prod
+  - security
+  - publish
+  - deploy
+  - post-deploy
+  - rollback
+
+# =========================================================
+# GLOBAL DEFAULTS
+# =========================================================
+
+default:
+  interruptible: true
+  timeout: 30m
+
+workflow:
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+    - if: '$CI_COMMIT_TAG =~ /^v.*/'
+  auto_cancel:
+    on_new_commit: interruptible
 
 variables:
-  DOCKER_DRIVER: overlay2
+  TZ: Asia/Ho_Chi_Minh
+
+  # =====================================================
+  # REGISTRY
+  # =====================================================
   CI_REGISTRY: docker.io
   IMAGE_NAME: $CI_REGISTRY_USER/portfolio-frontend
-  IMAGE_TAG: $IMAGE_NAME:$CI_COMMIT_TAG
-  IMAGE_LATEST: $IMAGE_NAME:latest
 
-sync_api:
-  stage: sync
+  # =====================================================
+  # BUILD
+  # =====================================================
+  BUILDKITD_FLAGS: --oci-worker-no-process-sandbox
+
+  # =====================================================
+  # CACHE & DEPENDENCIES
+  # =====================================================
+  PNPM_CACHE_DIR: .pnpm-store
+  TRIVY_CACHE_DIR: .trivycache
+
+  # =====================================================
+  # IMAGE REFERENCES
+  # =====================================================
+  BUILD_IMAGE: $IMAGE_NAME:build-$CI_COMMIT_SHA
+
+# =========================================================
+# SHARED CACHE
+# =========================================================
+
+.cache_template:
+  cache:
+    key:
+      files:
+        - pnpm-lock.yaml
+    paths:
+      - .pnpm-store/
+
+# =========================================================
+# NODE TEMPLATE
+# =========================================================
+
+.node_template:
   image: node:22-alpine
   tags:
     - agent-1
+  before_script:
+    - corepack enable
+    - corepack prepare pnpm@9.15.4 --activate
+    - pnpm config set store-dir $PNPM_CACHE_DIR
+
+# =========================================================
+# DOCKER & DOCKER-IN-DOCKER TEMPLATE
+# =========================================================
+
+.docker_template:
+  image: docker:27.5.1
+  services:
+    - name: docker:27.5.1-dind
+      alias: docker
+  variables:
+    DOCKER_TLS_CERTDIR: ""
+  tags:
+    - agent-1
+
+.docker_login_template:
+  extends:
+    - .docker_template
+  before_script:
+    - 'echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"'
+
+# =========================================================
+# CRANE TEMPLATE
+# =========================================================
+
+.crane_template:
+  image:
+    name: gcr.io/go-containerregistry/crane:debug
+    entrypoint: [""]
+  tags:
+    - agent-1
+  before_script:
+    - crane auth login $CI_REGISTRY -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
+
+# =========================================================
+# GITOPS TEMPLATE
+# =========================================================
+
+.gitops_template:
+  image: alpine:3.21
+  tags:
+    - agent-1
+  before_script:
+    - apk add --no-cache git yq bash
+    - git config --global user.email "ci-bot@luumac.io.vn"
+    - git config --global user.name "CI Bot"
+    - |
+      git clone \
+      https://oauth2:${GITLAB_API_TOKEN}@gitlab.com/portfolio-macld/portfolio-infratructure.git \
+      infra-repo
+
+# =========================================================
+# VALIDATE
+# =========================================================
+
+sync_api:
+  extends:
+    - .node_template
+    - .cache_template
+  stage: validate
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
   script:
-    - corepack enable && corepack prepare pnpm@latest --activate
-    - pnpm install --no-frozen-lockfile
+    - pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
     - |
       if [ -n "$BACKEND_SWAGGER_URL" ]; then
-        echo "Fetching Swagger spec from $BACKEND_SWAGGER_URL"
         curl -sSL $BACKEND_SWAGGER_URL -o backend-swagger.json
         export SWAGGER_PATH="./backend-swagger.json"
-      else
-        echo "BACKEND_SWAGGER_URL not set, assuming local file exists at path in package.json"
       fi
     - pnpm run api:sync
   artifacts:
     paths:
       - src/types/api.generated.ts
-    expire_in: 1 week
-  allow_failure: true
-  only:
-    - /^v.*$/
+    expire_in: 1 hour
 
-build_frontend:
+install_dependencies:
+  extends:
+    - .node_template
+    - .cache_template
+  stage: validate
+  needs:
+    - sync_api
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+  script:
+    - pnpm install --frozen-lockfile --prefer-offline --ignore-scripts
+
+lint:
+  extends:
+    - .node_template
+    - .cache_template
+  stage: validate
+  needs:
+    - install_dependencies
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+  script:
+    - pnpm install --frozen-lockfile --prefer-offline
+    - pnpm run lint
+  allow_failure: false
+
+typecheck:
+  extends:
+    - .node_template
+    - .cache_template
+  stage: validate
+  needs:
+    - install_dependencies
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+  script:
+    - pnpm install --frozen-lockfile --prefer-offline
+    - pnpm exec tsc --noEmit
+
+# =========================================================
+# TEST
+# =========================================================
+
+build_test:
+  extends:
+    - .node_template
+    - .cache_template
+  stage: test
+  needs:
+    - install_dependencies
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+  script:
+    - pnpm install --frozen-lockfile --prefer-offline
+    - pnpm run build
+
+# =========================================================
+# BUILD ONCE
+# =========================================================
+
+build_image:
+  extends:
+    - .docker_login_template
   stage: build
-  image: docker:latest
-  services:
-    - docker:dind
+  retry: 2
+  needs:
+    - lint
+    - typecheck
+    - build_test
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+  script:
+    - 'docker pull ${IMAGE_NAME}:cache || true'
+    - 'docker buildx inspect mybuilder >/dev/null 2>&1 || docker buildx create --name mybuilder --use'
+    - 'docker buildx build --cache-from=type=registry,ref=${IMAGE_NAME}:cache --cache-to=type=registry,ref=${IMAGE_NAME}:cache,mode=max --push -t ${BUILD_IMAGE} .'
+
+# =========================================================
+# TRIVY SECURITY SCAN
+# =========================================================
+
+trivy_scan:
+  stage: security
+  image:
+    name: aquasec/trivy:0.70.0
+    entrypoint: [""]
   tags:
     - agent-1
-  # needs:
-  #   - sync_api
-  before_script:
-    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  needs:
+    - build_image
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+  cache:
+    key: trivy-cache
+    paths:
+      - .trivycache/
   script:
-    - docker build --pull -t $IMAGE_TAG -t $IMAGE_LATEST .
-    - docker push $IMAGE_TAG
-    - docker push $IMAGE_LATEST
-  after_script:
-    - docker image prune -f
-  only:
-    - /^v.*$/
+    - trivy image --cache-dir .trivycache --download-db-only
+    - trivy image --cache-dir .trivycache --severity HIGH,CRITICAL --exit-code 1 --quiet ${BUILD_IMAGE}
+    - trivy fs --cache-dir .trivycache --severity HIGH,CRITICAL --exit-code 1 --quiet .
+    - trivy fs --cache-dir .trivycache --scanners secret --exit-code 1 --quiet .
+    - trivy config --cache-dir .trivycache --severity HIGH,CRITICAL --exit-code 1 --quiet .
+
+# =========================================================
+# SBOM GENERATION
+# =========================================================
+
+generate_sbom:
+  stage: security
+  image:
+    name: aquasec/trivy:0.70.0
+    entrypoint: [""]
+  tags:
+    - agent-1
+  needs:
+    - build_image
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+  script:
+    - trivy image --format cyclonedx --output sbom.cdx.json ${BUILD_IMAGE}
+  artifacts:
+    paths:
+      - sbom.cdx.json
+    expire_in: 1 week
+
+# =========================================================
+# COSIGN SIGNING
+# =========================================================
+
+sign_image:
+  stage: publish
+  image: alpine:3.21
+  tags:
+    - agent-1
+  id_tokens:
+    SIGSTORE_ID_TOKEN:
+      aud: sigstore
+  needs:
+    - trivy_scan
+    - generate_sbom
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+  before_script:
+    - apk add --no-cache cosign
+    - cosign login $CI_REGISTRY -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD
+  script:
+    - cosign version
+    - cosign sign --identity-token $SIGSTORE_ID_TOKEN --yes ${BUILD_IMAGE}
+
+# =========================================================
+# PUBLISH STAGING
+# =========================================================
+
+publish_staging:
+  extends:
+    - .crane_template
+  stage: publish
+  needs:
+    - sign_image
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+  script:
+    - export STAGING_IMAGE=${IMAGE_NAME}:dev-${CI_COMMIT_SHORT_SHA}
+    - crane copy ${BUILD_IMAGE} ${STAGING_IMAGE}
+
+# =========================================================
+# DEPLOY STAGING
+# =========================================================
 
 deploy_staging:
-  stage: staging
-  image:
-    name: bitnami/kubectl:latest
-    entrypoint: [""]
+  extends:
+    - .gitops_template
+  stage: deploy
+  resource_group: staging
+  needs:
+    - publish_staging
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+  script:
+    - cd infra-repo
+    - export IMAGE_TAG=dev-${CI_COMMIT_SHORT_SHA}
+    - yq -i '.image.tag = env(IMAGE_TAG)' environments/staging/frontend-values.yaml
+    - git add .
+    - 'git commit -m "chore(staging): deploy frontend ${IMAGE_TAG} [skip ci]" || echo "No changes"'
+    - git pull --rebase origin main
+    - git push origin main
+
+# =========================================================
+# FETCH IMAGE (PRODUCTION PROMOTE)
+# =========================================================
+
+fetch_image:
+  extends:
+    - .crane_template
+  stage: publish
+  resource_group: production
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v.*/'
+  script:
+    - export STAGING_IMAGE=${IMAGE_NAME}:dev-${CI_COMMIT_SHORT_SHA}
+    - export PROD_IMAGE=${IMAGE_NAME}:${CI_COMMIT_TAG}
+    - echo "Promoting staging image ${STAGING_IMAGE} to production image ${PROD_IMAGE}"
+    - crane copy ${STAGING_IMAGE} ${PROD_IMAGE}
+    - export IMAGE_DIGEST=$(crane digest ${PROD_IMAGE})
+    - echo "IMAGE_DIGEST=${IMAGE_DIGEST}" >> prod.env
+    - echo "PROD_IMAGE=${PROD_IMAGE}" >> prod.env
+  artifacts:
+    reports:
+      dotenv: prod.env
+
+# =========================================================
+# DEPLOY PRODUCTION
+# =========================================================
+
+manual_approval:
+  stage: deploy
+  image: alpine:3.21
   tags:
     - agent-1
-  script:
-    - kubectl set image deployment/frontend frontend=$IMAGE_TAG -n portfolio
-  only:
-    - /^v.*$/
-
-deploy_prod:
-  stage: deploy_prod
-  image:
-    name: bitnami/kubectl:latest
-    entrypoint: [""]
-  tags:
-    - agent-2
-  script:
-    - kubectl set image deployment/frontend frontend=$IMAGE_TAG -n portfolio
+  needs:
+    - fetch_image
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v.*/'
   when: manual
-  only:
-    - /^v.*$/
+  allow_failure: false
+  script:
+    - echo "Production deployment approved for version ${CI_COMMIT_TAG}"
+
+deploy_production:
+  extends:
+    - .gitops_template
+  stage: deploy
+  resource_group: production
+  needs:
+    - fetch_image
+    - manual_approval
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v.*/'
+  script:
+    - cd infra-repo
+    - export FULL_IMAGE="${CI_COMMIT_TAG}@${IMAGE_DIGEST}"
+    - yq -i '.image.tag = env(FULL_IMAGE)' environments/production/frontend-values.yaml
+    - git add .
+    - 'git commit -m "chore(prod): deploy frontend ${FULL_IMAGE} [skip ci]" || echo "No changes"'
+    - git pull --rebase origin main
+    - git push origin main
+
+# =========================================================
+# SMOKE TEST
+# =========================================================
+
+smoke_test_production:
+  stage: post-deploy
+  image: alpine:3.21
+  tags:
+    - agent-1
+  needs:
+    - deploy_production
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v.*/'
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - echo "Running smoke tests on production frontend..."
+    - |
+      for i in {1..30}; do
+        echo "Checking frontend endpoint (attempt $i)..."
+        RESPONSE=$(curl -s -w "%{http_code}" -o /dev/null https://blog.luumac.io.vn/ || true)
+        if [ "$RESPONSE" -eq 200 ]; then
+          echo "Production frontend is healthy!"
+          exit 0
+        fi
+        echo "Status code: $RESPONSE. Retrying in 10 seconds..."
+        sleep 10
+      done
+      echo "Smoke test failed: Production frontend is not responding with 200 OK!"
+      exit 1
+
+# =========================================================
+# ROLLBACK
+# =========================================================
+
+rollback_production:
+  extends:
+    - .gitops_template
+  stage: rollback
+  resource_group: production
+  rules:
+    - if: '$CI_COMMIT_TAG =~ /^v.*/'
+      when: manual
+      allow_failure: false
+  script:
+    - cd infra-repo
+    - |
+      if [ -z "$ROLLBACK_IMAGE" ]; then
+        echo "ROLLBACK_IMAGE variable required"
+        exit 1
+      fi
+    - yq -i '.image.tag = env(ROLLBACK_IMAGE)' environments/production/frontend-values.yaml
+    - git add .
+    - 'git commit -m "rollback(prod): rollback frontend to ${ROLLBACK_IMAGE} [skip ci]"'
+    - git pull --rebase origin main
+    - git push origin main

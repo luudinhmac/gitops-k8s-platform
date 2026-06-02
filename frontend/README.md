@@ -1,46 +1,57 @@
-# Portfolio Frontend (Decoupled)
+# Portfolio Frontend (Professional GitOps Edition)
 
-Ứng dụng Frontend cho dự án Portfolio, được xây dựng bằng Next.js (App Router) và Tailwind CSS.
+Ứng dụng Frontend cho Portfolio cá nhân, được xây dựng bằng Next.js (App Router) và triển khai theo mô hình GitOps hiện đại, tách biệt hoàn toàn môi trường (Decoupled Architecture).
 
-## 🚀 Tính năng chính
-- **Standalone Repo:** Không còn phụ thuộc vào monorepo, build độc lập.
-- **Contract-First Consumption:** Tự động sinh Type từ Swagger của Backend.
-- **Modern UI:** Thiết kế Stealth UI tối giản, tối ưu cho trải nghiệm người dùng.
-- **Type Safety:** 100% TypeScript với Type được đồng bộ tự động.
+## 🚀 Tính năng & Công nghệ
+- **Next.js 15 (Standalone Mode):** Tối ưu hóa hiệu năng và dung lượng Image khi chạy trên Docker/Kubernetes.
+- **Tailwind CSS:** Giao diện Stealth UI tối giản, hiện đại và phản hồi nhanh.
+- **Courses Platform (New):** Hệ thống học tập trực tuyến (LMS) tích hợp, cho phép xem lộ trình khóa học và đăng ký waitlist.
+- **Dynamic Resume Timeline:** Trang giới thiệu tích hợp CV/Resume với hiệu ứng Timeline chuyên nghiệp.
+- **Contract-First Development:** Tự động đồng bộ hóa TypeScript Types từ Swagger của Backend.
+- **Environment-Driven Architecture:** Cấu hình linh hoạt qua biến môi trường, không Hardcode URL.
 
-## 🛠 Cấu trúc thư mục
-- `src/app/`: Next.js App Router (Pages & Layouts).
-- `src/components/`: UI Components dùng chung.
-- `src/features/`: Logic theo từng tính năng (Auth, Posts, Users...).
-- `src/types/`: Chứa `api.generated.ts` (sinh từ Swagger) và type bridge.
-- `k8s/`: Các manifest triển khai trên Kubernetes.
+## 🔄 Quy trình CI/CD & GitOps
+Dự án áp dụng mô hình **GitOps chuẩn mực** phối hợp giữa GitLab CI và ArgoCD:
 
-## 📦 Cài đặt & Chạy Local
+1. **Nhánh `dev` (Staging):**
+   - Tự động Build Image với tag `dev-[sha]`.
+   - CI tự động `git push` cập nhật tag mới vào repo **Infrastructure**.
+   - **ArgoCD** tự động đồng bộ hóa lên môi trường Staging.
 
-1. **Cài đặt dependencies:**
+2. **Git Tag `v*` (Production):**
+   - Không chạy lại quy trình build từ đầu. Job `fetch_image` tự động lấy (promote) Image từ Staging sang Production.
+   - Phê duyệt thủ công qua job `manual_approval` trong GitLab CI để tiến hành Deploy.
+   - Tự động chạy `smoke_test_production` để kiểm tra độ ổn định của Frontend sau khi triển khai.
+
+## ⚙️ Cấu hình Biến môi trường
+Mọi cấu hình được quản lý qua biến môi trường để đảm bảo tính di động của Container:
+
+| Biến | Chức năng | Ví dụ |
+| :--- | :--- | :--- |
+| `INTERNAL_API_URL` | URL gọi API từ phía Server (SSR) | `http://portfolio-backend:3001/api/v1` |
+| `NEXT_PUBLIC_API_URL` | URL gọi API từ phía trình duyệt | `https://api.luumac.io.vn/api/v1` |
+
+## 🛠 Hướng dẫn Lập trình (Local Development)
+
+1. **Cài đặt:**
    ```bash
    pnpm install
    ```
 
-2. **Đồng bộ API Type (Cần Backend đang chạy):**
+2. **Cấu hình:** Tạo file `.env` từ mẫu `.env.example`.
+
+3. **Đồng bộ API Types:**
    ```bash
    pnpm run api:sync
    ```
 
-3. **Chạy ở chế độ Development:**
+4. **Chạy Dev Server:**
    ```bash
    pnpm run dev
    ```
 
-## 📜 Quy trình Cập nhật Type
-Khi Backend có thay đổi về API Schema:
-1. Đảm bảo Backend đang chạy ở local hoặc có file `swagger-spec.json` mới nhất.
-2. Chạy lệnh:
-   ```bash
-   pnpm run api:sync
-   ```
-3. Kiểm tra các lỗi TypeScript (nếu có) và cập nhật code tương ứng.
+## 📦 Docker & Kubernetes
+Dự án được đóng gói bằng Docker multi-stage build. File manifest nằm trong repo Infrastructure để quản lý tập trung.
 
-## 🐳 Docker & CI/CD
-- **Dockerfile:** Cấu hình multi-stage build cho Next.js Standalone mode.
-- **CI/CD:** `.gitlab-ci.yml` tự động đồng bộ type và build image.
+---
+*Cập nhật lần cuối: 09/05/2026

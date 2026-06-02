@@ -197,3 +197,45 @@
 .ql-font-georgia { font-family: 'Georgia', serif !important; }
 .ql-font-times-new-roman { font-family: 'Times New Roman', serif !important; }
 .ql-font-courier-new { font-family: 'Courier New', monospace !important; }
+
+/* Premium Typography & Utilities */
+.italic--vibrant {
+  font-style: italic;
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, #60a5fa 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+  font-weight: 600;
+}
+
+.dark .italic--vibrant {
+  background: linear-gradient(135deg, #60a5fa 0%, #a5b4fc 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.8s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slide-up 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-500 { animation-delay: 500ms; }
+.delay-700 { animation-delay: 700ms; }
+.delay-1000 { animation-delay: 1000ms; }

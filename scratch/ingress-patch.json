@@ -1,0 +1,1 @@
+[{"op": "replace", "path": "/spec/tls/0/secretName", "value": "luumac-tls-staging"}]

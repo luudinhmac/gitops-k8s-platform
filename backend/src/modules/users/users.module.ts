@@ -17,11 +17,7 @@ import { ChangePasswordUseCase } from './services/change-password.use-case';
 import { DeleteUserUseCase } from './services/delete-user.use-case';
 
 @Module({
-  imports: [
-    AdminAlertModule,
-    NotificationsModule,
-    StorageModule,
-  ],
+  imports: [AdminAlertModule, NotificationsModule, StorageModule],
   controllers: [UsersController],
   providers: [
     {

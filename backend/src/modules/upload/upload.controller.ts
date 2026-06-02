@@ -65,7 +65,7 @@ export class UploadController {
         path: url,
         size: file.size,
         mime_type: 'image/webp',
-      }
+      },
     });
 
     return {

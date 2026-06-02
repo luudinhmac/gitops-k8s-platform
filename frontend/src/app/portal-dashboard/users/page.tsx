@@ -148,7 +148,7 @@ export default function UsersPage() {
     if (!newPassword || !resetModal.userId) return;
     setResetLoading(true);
     try {
-      await userService.resetPassword(resetModal.userId, { newPassword });
+      await userService.resetPassword(resetModal.userId, { password: newPassword });
       setStatusMsg({ type: 'success', text: `Đã đặt lại mật khẩu cho ${resetModal.username}` });
       setResetModal({ open: false, userId: null, username: '' });
       setNewPassword('');
@@ -219,8 +219,8 @@ export default function UsersPage() {
 
   const canModifyUser = (targetUser: AdminUser) => {
     if (!currentUser) return false;
-    if (currentUser.role === 'superadmin') return true;
     if (targetUser.id === currentUser.id) return false; // Usually handle self via profile, but here we block self-mod in table actions
+    if (currentUser.role === 'superadmin') return true;
 
     const currentLevel = ROLE_HIERARCHY[currentUser.role] || 0;
     const targetLevel = ROLE_HIERARCHY[targetUser.role] || 0;

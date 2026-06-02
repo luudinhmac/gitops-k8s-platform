@@ -35,9 +35,7 @@ export class SeriesController {
   @Get()
   @ApiOperation({ summary: 'Get all series' })
   findAll(@Query('author_id') authorId?: string) {
-    const params = authorId 
-      ? { where: { Post: { some: { author_id: +authorId } } } } 
-      : {};
+    const params = authorId ? { where: { author_id: +authorId } } : {};
     return this.getSeriesListUseCase.execute(params);
   }
 
@@ -46,16 +44,16 @@ export class SeriesController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   findMine(@Req() req: any) {
-    return this.getSeriesListUseCase.execute({ 
-      where: { Post: { some: { author_id: req.user.id } } } 
+    return this.getSeriesListUseCase.execute({
+      where: { author_id: req.user.id },
     });
   }
 
   @Get('author/:authorId')
   @ApiOperation({ summary: 'Get series by author id' })
   findByAuthor(@Param('authorId') authorId: string) {
-    return this.getSeriesListUseCase.execute({ 
-      where: { Post: { some: { author_id: +authorId } } } 
+    return this.getSeriesListUseCase.execute({
+      where: { author_id: +authorId },
     });
   }
 
@@ -69,8 +67,11 @@ export class SeriesController {
   @ApiOperation({ summary: 'Create new series' })
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  create(@Body() createSeriesDto: CreateSeriesDto) {
-    return this.createSeriesUseCase.execute(createSeriesDto);
+  create(@Body() createSeriesDto: CreateSeriesDto, @Req() req: any) {
+    return this.createSeriesUseCase.execute({
+      ...createSeriesDto,
+      author_id: req.user.id,
+    });
   }
 
   @Patch(':id')

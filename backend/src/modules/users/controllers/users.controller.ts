@@ -8,10 +8,19 @@ import {
   Delete,
   UseGuards,
   Req,
+  Header,
 } from '@nestjs/common';
 import { CreateUserDto, UpdateUserDto, User } from '@portfolio/contracts';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
+import { PermissionsGuard } from '../../auth/permissions.guard';
+import { Permissions } from '../../auth/permissions.decorator';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiResponse,
+} from '@nestjs/swagger';
+import { getClientIp } from '../../../common/utils/ip';
 
 // Use Cases
 import { GetUsersUseCase } from '../services/get-users.use-case';
@@ -38,22 +47,30 @@ export class UsersController {
   ) {}
 
   @Get()
+  @UseGuards(AuthGuard('jwt'), PermissionsGuard)
+  @Permissions('users:manage')
+  @ApiBearerAuth()
+  @Header('Cache-Control', 'no-transform')
   @ApiOperation({ summary: 'Get all users' })
   @ApiResponse({ status: 200, type: [User] })
-  findAll() {
-    return this.getUsersUseCase.execute();
+  findAll(@Req() req: any) {
+    return this.getUsersUseCase.execute(req.user);
   }
 
   @Get(':id')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @Header('Cache-Control', 'no-transform')
   @ApiOperation({ summary: 'Get user by id' })
   @ApiResponse({ status: 200, type: User })
-  findOne(@Param('id') id: string) {
-    return this.getUserUseCase.execute(+id);
+  findOne(@Param('id') id: string, @Req() req: any) {
+    return this.getUserUseCase.execute(+id, req.user);
   }
 
   @Post()
   @ApiOperation({ summary: 'Create new user' })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), PermissionsGuard)
+  @Permissions('users:manage')
   @ApiBearerAuth()
   create(@Body() createUserDto: CreateUserDto, @Req() req: any) {
     return this.createUserUseCase.execute(createUserDto, req.user);
@@ -63,6 +80,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Update user' })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
+  @Header('Cache-Control', 'no-transform')
   update(
     @Param('id') id: string,
     @Req() req: any,
@@ -73,7 +91,8 @@ export class UsersController {
 
   @Patch(':id/role')
   @ApiOperation({ summary: 'Update user role' })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), PermissionsGuard)
+  @Permissions('users:manage')
   @ApiBearerAuth()
   updateRole(
     @Param('id') id: string,
@@ -85,74 +104,80 @@ export class UsersController {
 
   @Patch(':id/status')
   @ApiOperation({ summary: 'Update user status (active/inactive)' })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), PermissionsGuard)
+  @Permissions('users:manage')
   @ApiBearerAuth()
   updateStatus(
     @Param('id') id: string,
     @Req() req: any,
     @Body('is_active') isActive: boolean,
   ) {
-    const ip = req.ip || req.headers['x-forwarded-for'] || (req.socket.remoteAddress as string);
-    return this.updateUserPermissionsUseCase.execute(+id, req.user, { is_active: isActive }, Array.isArray(ip) ? ip[0] : ip);
+    const ip = getClientIp(req);
+    return this.updateUserPermissionsUseCase.execute(
+      +id,
+      req.user,
+      { is_active: isActive },
+      ip,
+    );
   }
 
   @Patch(':id/permissions')
   @ApiOperation({ summary: 'Update user permissions and status' })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), PermissionsGuard)
+  @Permissions('users:manage')
   @ApiBearerAuth()
   updatePermissions(
     @Param('id') id: string,
     @Req() req: any,
-    @Body() data: { 
-      role?: string; 
-      is_active?: boolean; 
-      can_comment?: boolean; 
+    @Body()
+    data: {
+      role?: string;
+      is_active?: boolean;
+      can_comment?: boolean;
       can_post?: boolean;
-      reason?: string; 
+      reason?: string;
     },
   ) {
-    const ip = req.ip || req.headers['x-forwarded-for'] || (req.socket.remoteAddress as string);
-    return this.updateUserPermissionsUseCase.execute(+id, req.user, data, Array.isArray(ip) ? ip[0] : ip);
+    const ip = getClientIp(req);
+    return this.updateUserPermissionsUseCase.execute(+id, req.user, data, ip);
   }
 
   @Patch(':id/reset-password')
   @ApiOperation({ summary: 'Admin reset user password' })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), PermissionsGuard)
+  @Permissions('users:manage')
   @ApiBearerAuth()
   resetPassword(
     @Param('id') id: string,
     @Req() req: any,
     @Body('password') password: string,
   ) {
-    const ip = req.ip || req.headers['x-forwarded-for'] || (req.socket.remoteAddress as string);
-    return this.resetPasswordUseCase.execute(+id, password, req.user, Array.isArray(ip) ? ip[0] : ip);
+    const ip = getClientIp(req);
+    return this.resetPasswordUseCase.execute(+id, password, req.user, ip);
   }
 
   @Patch(':id/change-password')
   @ApiOperation({ summary: 'User self change password' })
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
-  changePassword(
-    @Param('id') id: string,
-    @Req() req: any,
-    @Body() data: any,
-  ) {
-    const ip = req.ip || req.headers['x-forwarded-for'] || (req.socket.remoteAddress as string);
+  changePassword(@Param('id') id: string, @Req() req: any, @Body() data: any) {
+    const ip = getClientIp(req);
     return this.changePasswordUseCase.execute(
       +id,
       data.oldPassword,
       data.newPassword,
       req.user,
-      Array.isArray(ip) ? ip[0] : ip
+      ip,
     );
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete user' })
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), PermissionsGuard)
+  @Permissions('users:manage')
   @ApiBearerAuth()
   remove(@Param('id') id: string, @Req() req: any) {
-    const ip = req.ip || req.headers['x-forwarded-for'] || (req.socket.remoteAddress as string);
-    return this.deleteUserUseCase.execute(+id, req.user, Array.isArray(ip) ? ip[0] : ip);
+    const ip = getClientIp(req);
+    return this.deleteUserUseCase.execute(+id, req.user, ip);
   }
 }

@@ -90,18 +90,40 @@ Hệ thống tuân thủ quy trình làm việc chuyên nghiệp:
 - `main` → `production`: Vận hành chính thức.
 
 ## Deployment
+Dự án hỗ trợ linh hoạt các phương thức triển khai tùy theo nhu cầu hạ tầng:
 
-Dự án hỗ trợ hai phương thức triển khai tự động hóa qua **Ansible Roles**:
+### 1. Triển khai trực tiếp (Bare Metal)
+Dành cho việc chạy ứng dụng trực tiếp trên server vật lý hoặc VPS (Ubuntu/Windows/CentOS) không thông qua Container.
 
-### 1. Môi trường Staging (Docker Compose)
+1.  **Cài đặt Node.js (v18+) & pnpm.**
+2.  **Cài đặt & Chạy PostgreSQL.** Tạo một Database trống (ví dụ: `portfolio_db`).
+3.  **Thiết lập Môi trường:** Tạo file `.env` trong thư mục `backend/` trỏ đến Database vừa tạo.
+4.  **Cài đặt & Build:**
+    ```bash
+    pnpm install
+    pnpm --prefix backend build
+    pnpm --prefix frontend build
+    ```
+5.  **Khởi tạo cấu trúc bảng (Migration):**
+    ```bash
+    pnpm --prefix backend prisma migrate deploy
+    ```
+6.  **Vận hành:** Sử dụng PM2 để quản lý process:
+    ```bash
+    pm2 start backend/dist/src/main.js --name portfolio-backend
+    pm2 start "pnpm --prefix frontend start" --name portfolio-frontend
+    ```
+7.  **Khởi tạo hệ thống (Setup UI):** Truy cập vào địa chỉ website, hệ thống sẽ tự động chuyển hướng đến trang `/setup` để bạn cấu hình Admin và thông tin site qua giao diện.
+
+### 2. Môi trường Staging (Docker Compose)
 Dành cho kiểm thử nhanh trên VM đơn lẻ.
 ```bash
-cd ansible
+cd infra/ansible
 # Triển khai qua Docker Compose
 ansible-playbook -i inventory.ini playbooks/staging.yml
 ```
 
-### 2. Môi trường Production (Kubernetes)
+### 3. Môi trường Production (Kubernetes)
 Kiến trúc Production-Grade trên cụm Single-node K8s.
 *   **Hạ tầng:** Kubeadm, Flannel CNI, Dashboard.
 *   **Networking:** HostNetwork Nginx (Cổng 80/443 chuẩn), tương thích Cloudflare.
@@ -115,7 +137,7 @@ ansible-playbook -i inventory.ini playbooks/k8s_setup.yml
 # 2. Deploy App (Build, Sync & Run)
 ansible-playbook -i inventory.ini playbooks/k8s_app_deploy.yml
 ```
-Quy trình K8s tự động bao gồm bridge Image từ Docker sang Containerd, cấp phát SSL, và khởi tạo Secrets động (bao gồm auto-gen JWT).
+Quy trình K8s tự động bao gồm bridge Image từ Docker sang Containerd, cấp phát SSL, và khởi tạo Secrets động. Sau khi deploy, bạn cũng thực hiện bước **Setup UI** tương tự như bản Bare Metal.
 
 ---
 

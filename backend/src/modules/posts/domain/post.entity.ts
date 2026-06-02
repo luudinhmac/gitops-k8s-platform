@@ -5,6 +5,7 @@ export class PostEntity {
   title!: string;
   slug!: string;
   excerpt?: string | null;
+  focus_keyword?: string | null;
   content?: string | null;
   series_id?: number | null;
   series_order?: number | null;
@@ -23,6 +24,7 @@ export class PostEntity {
 
   // Relations
   Author?: Partial<User> | null;
+  BlockedBy?: Partial<User> | null;
   Category?: any;
   Series?: any;
   Comment?: any[];
@@ -36,10 +38,12 @@ export class PostEntity {
 
   constructor(props: Partial<PostEntity>) {
     Object.assign(this, props);
-    
+
     // Convert string dates to Date objects if necessary
-    if (typeof this.created_at === 'string') this.created_at = new Date(this.created_at);
-    if (typeof this.updated_at === 'string') this.updated_at = new Date(this.updated_at);
+    if (typeof this.created_at === 'string')
+      this.created_at = new Date(this.created_at);
+    if (typeof this.updated_at === 'string')
+      this.updated_at = new Date(this.updated_at);
   }
 
   public isVisibleTo(userId?: number): boolean {

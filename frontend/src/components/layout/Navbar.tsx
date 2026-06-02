@@ -26,10 +26,8 @@ export default function Navbar() {
 
   const navItems = [
     { name: 'Trang chủ', href: '/' },
-    { name: 'Hồ sơ', href: '/about' },
-    { name: 'Khóa học', href: '/about#courses' },
-    { name: 'Dự án', href: '/about#projects' },
-    { name: 'Giới thiệu', href: '/about#about' },
+    { name: 'Giới thiệu', href: '/about' },
+    { name: 'Khóa học', href: '/courses' },
   ];
 
   useEffect(() => {
@@ -59,30 +57,32 @@ export default function Navbar() {
       <div suppressHydrationWarning={true} className="max-w-7xl mx-auto glass md:rounded-b-xl px-6 py-2.5 md:py-3.5 shadow-sm border-b md:border-b md:border-x border-slate-200/50 dark:border-slate-800/50 transition-colors">
         <div suppressHydrationWarning={true} className="flex items-center justify-between">
           <Link href="/" className="text-xl md:text-2xl font-display font-bold text-gradient flex-shrink-0">
-            Portfolio
+            Zero2Ops
           </Link>
 
           {/* Search Bar in Navbar */}
-          <div suppressHydrationWarning={true} className="hidden lg:flex flex-grow max-w-md mx-8 relative group">
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              router.push(`/?q=${encodeURIComponent(searchValue)}`);
+            }}
+            className="hidden lg:flex flex-grow max-w-md mx-8 relative group"
+          >
             <label htmlFor="nav-search" className="sr-only">Tìm kiếm bài viết</label>
-            <div suppressHydrationWarning={true} className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
               <Search size={16} />
             </div>
             <input
               id="nav-search"
-              name="q"
+              name="nav-search"
               type="text"
               placeholder="Tìm kiếm bài viết..."
               className="w-full pl-10 pr-4 py-2 bg-slate-100/50 dark:bg-slate-800/50 border border-transparent focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all rounded-full text-sm"
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  router.push(`/?q=${encodeURIComponent(searchValue)}`);
-                }
-              }}
+              autoComplete="off"
             />
-          </div>
+          </form>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center space-x-8">

@@ -1,5 +1,8 @@
 import { Inject, Injectable, ForbiddenException } from '@nestjs/common';
-import { IUsersRepository, I_USERS_REPOSITORY } from '../domain/user.repository.interface';
+import {
+  IUsersRepository,
+  I_USERS_REPOSITORY,
+} from '../domain/user.repository.interface';
 import { User, UserRole } from '@portfolio/contracts';
 import { NotificationsService } from '../../notifications/notifications.service';
 import { AdminAlertService } from '../../admin-alert/admin-alert.service';
@@ -26,16 +29,26 @@ export class UpdateUserPermissionsUseCase {
     if (!user) throw new UserNotFoundException(id);
 
     const targetLevel = this.roleHierarchy[user.role as string] || 0;
-    const currentLevel = this.roleHierarchy[currentUser.role as string] || 0;
+    const currentLevel = this.roleHierarchy[currentUser.role] || 0;
 
-    if (currentLevel <= targetLevel && currentUser.role !== UserRole.SUPERADMIN) {
-      throw new ForbiddenException('Bạn không có quyền thay đổi thông tin của người này.');
+    if (
+      currentLevel <= targetLevel &&
+      currentUser.role !== UserRole.SUPERADMIN
+    ) {
+      throw new ForbiddenException(
+        'Bạn không có quyền thay đổi thông tin của người này.',
+      );
     }
 
     if (data.role) {
       const newRoleLevel = this.roleHierarchy[data.role] || 0;
-      if (newRoleLevel >= currentLevel && currentUser.role !== UserRole.SUPERADMIN) {
-        throw new ForbiddenException('Bạn không thể cấp quyền cao hơn hoặc bằng chính mình.');
+      if (
+        newRoleLevel >= currentLevel &&
+        currentUser.role !== UserRole.SUPERADMIN
+      ) {
+        throw new ForbiddenException(
+          'Bạn không thể cấp quyền cao hơn hoặc bằng chính mình.',
+        );
       }
     }
 

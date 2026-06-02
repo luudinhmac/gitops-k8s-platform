@@ -1,7 +1,10 @@
 import { Injectable, Logger, Inject } from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { FileService } from './file.service';
-import { IStorageService, STORAGE_SERVICE } from '../../infrastructure/storage/storage.interface';
+import {
+  IStorageService,
+  STORAGE_SERVICE,
+} from '../../infrastructure/storage/storage.interface';
 import * as cheerio from 'cheerio';
 
 @Injectable()
@@ -22,7 +25,12 @@ export class MediaManagerService {
   /**
    * Registers or updates a media usage for a specific entity field
    */
-  async registerUsage(fileUrl: string, entityType: string, entityId: number, field: string) {
+  async registerUsage(
+    fileUrl: string,
+    entityType: string,
+    entityId: number,
+    field: string,
+  ) {
     if (!fileUrl) return;
 
     // 1. Get or create Media record
@@ -32,14 +40,14 @@ export class MediaManagerService {
     const hash = filename.split('.')[0]; // Assuming hash.webp format
 
     let media = await this.prisma.media.findUnique({ where: { hash } });
-    
+
     if (!media) {
       // If media record missing but file exists (migration case)
       media = await this.prisma.media.create({
         data: {
           hash,
           path: `/uploads/${filename}`,
-        }
+        },
       });
     }
 
@@ -51,7 +59,7 @@ export class MediaManagerService {
           entity_type: entityType,
           entity_id: entityId,
           field: field,
-        }
+        },
       },
       update: {},
       create: {
@@ -59,14 +67,19 @@ export class MediaManagerService {
         entity_type: entityType,
         entity_id: entityId,
         field: field,
-      }
+      },
     });
   }
 
   /**
    * Unregisters a media usage. If no more usages exist, clean up.
    */
-  async unregisterUsage(fileUrl: string, entityType: string, entityId: number, field: string) {
+  async unregisterUsage(
+    fileUrl: string,
+    entityType: string,
+    entityId: number,
+    field: string,
+  ) {
     if (!fileUrl) return;
 
     const filename = this.extractFilename(fileUrl);
@@ -82,7 +95,7 @@ export class MediaManagerService {
         entity_type: entityType,
         entity_id: entityId,
         field: field,
-      }
+      },
     });
 
     await this.cleanupOrphanedMedia(media.id);
@@ -93,13 +106,15 @@ export class MediaManagerService {
    */
   async unregisterAllForEntity(entityType: string, entityId: number) {
     const usages = await this.prisma.mediaUsage.findMany({
-      where: { entity_type: entityType, entity_id: entityId }
+      where: { entity_type: entityType, entity_id: entityId },
     });
 
-    const mediaIds: number[] = Array.from(new Set(usages.map((u: any) => u.media_id as number)));
+    const mediaIds: number[] = Array.from(
+      new Set(usages.map((u: any) => u.media_id as number)),
+    );
 
     await this.prisma.mediaUsage.deleteMany({
-      where: { entity_type: entityType, entity_id: entityId }
+      where: { entity_type: entityType, entity_id: entityId },
     });
 
     for (const mediaId of mediaIds) {
@@ -110,7 +125,11 @@ export class MediaManagerService {
   /**
    * Syncs media usages within HTML content
    */
-  async syncContentUsages(entityType: string, entityId: number, htmlContent: string) {
+  async syncContentUsages(
+    entityType: string,
+    entityId: number,
+    htmlContent: string,
+  ) {
     if (!htmlContent) {
       await this.unregisterUsageInField(entityType, entityId, 'content');
       return;
@@ -118,7 +137,7 @@ export class MediaManagerService {
 
     const $ = cheerio.load(htmlContent);
     const urls: string[] = [];
-    
+
     $('img').each((_, element) => {
       const src = $(element).attr('src');
       if (src && src.includes('/uploads/')) {
@@ -128,18 +147,22 @@ export class MediaManagerService {
 
     // Deduplicate URLs in content
     const uniqueUrls = [...new Set(urls)];
-    
+
     // Get current registered media for this content field
     const currentUsages = await this.prisma.mediaUsage.findMany({
       where: { entity_type: entityType, entity_id: entityId, field: 'content' },
-      include: { Media: true }
+      include: { Media: true },
     });
 
-    const currentUrls = currentUsages.map(u => u.Media.path);
+    const currentUrls = currentUsages.map((u) => u.Media.path);
 
     // Diff
-    const toAdd = uniqueUrls.filter(url => !currentUrls.includes(this.normalizeUrl(url)));
-    const toRemove = currentUrls.filter(url => !uniqueUrls.map(u => this.normalizeUrl(u)).includes(url));
+    const toAdd = uniqueUrls.filter(
+      (url) => !currentUrls.includes(this.normalizeUrl(url)),
+    );
+    const toRemove = currentUrls.filter(
+      (url) => !uniqueUrls.map((u) => this.normalizeUrl(u)).includes(url),
+    );
 
     // Remove old ones
     for (const url of toRemove) {
@@ -152,14 +175,18 @@ export class MediaManagerService {
     }
   }
 
-  private async unregisterUsageInField(entityType: string, entityId: number, field: string) {
+  private async unregisterUsageInField(
+    entityType: string,
+    entityId: number,
+    field: string,
+  ) {
     const usages = await this.prisma.mediaUsage.findMany({
-      where: { entity_type: entityType, entity_id: entityId, field }
+      where: { entity_type: entityType, entity_id: entityId, field },
     });
     const mediaIds: number[] = usages.map((u: any) => u.media_id as number);
 
     await this.prisma.mediaUsage.deleteMany({
-      where: { entity_type: entityType, entity_id: entityId, field }
+      where: { entity_type: entityType, entity_id: entityId, field },
     });
 
     for (const id of mediaIds) {
@@ -169,11 +196,13 @@ export class MediaManagerService {
 
   private async cleanupOrphanedMedia(mediaId: number) {
     const usageCount = await this.prisma.mediaUsage.count({
-      where: { media_id: mediaId }
+      where: { media_id: mediaId },
     });
 
     if (usageCount === 0) {
-      const media = await this.prisma.media.findUnique({ where: { id: mediaId } });
+      const media = await this.prisma.media.findUnique({
+        where: { id: mediaId },
+      });
       if (media) {
         this.logger.log(`Cleaning up orphaned media: ${media.path}`);
         await this.storageService.deleteFile(media.path);

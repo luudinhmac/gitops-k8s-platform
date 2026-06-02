@@ -13,12 +13,14 @@ export class CommentMapper {
       author_email: raw.author_email,
       created_at: raw.created_at,
       updated_at: raw.updated_at,
-      User: raw.User ? {
-        id: raw.User.id,
-        username: raw.User.username,
-        fullname: raw.User.fullname,
-        avatar: raw.User.avatar,
-      } : undefined,
+      User: raw.User
+        ? {
+            id: raw.User.id,
+            username: raw.User.username,
+            fullname: raw.User.Profile?.fullname ?? raw.User.fullname ?? null,
+            avatar: raw.User.Profile?.avatar ?? raw.User.avatar ?? null,
+          }
+        : undefined,
     });
   }
 }

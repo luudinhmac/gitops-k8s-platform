@@ -9,7 +9,7 @@ import { AdminAlertModule } from '../admin-alert/admin-alert.module';
 
 @Module({
   imports: [
-    PrismaModule, 
+    PrismaModule,
     forwardRef(() => AdminAlertModule),
     forwardRef(() => TelegramModule),
     forwardRef(() => MailModule),

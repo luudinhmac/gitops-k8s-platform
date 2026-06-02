@@ -10,7 +10,6 @@ import { CreateSeriesUseCase } from '../application/use-cases/create-series.use-
 import { UpdateSeriesUseCase } from '../application/use-cases/update-series.use-case';
 import { DeleteSeriesUseCase } from '../application/use-cases/delete-series.use-case';
 
-
 @Module({
   imports: [],
   controllers: [SeriesController],

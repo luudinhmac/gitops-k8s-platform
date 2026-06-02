@@ -1,10 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { IPostRepository, I_POST_REPOSITORY } from '../domain/post.repository.interface';
+import {
+  IPostRepository,
+  I_POST_REPOSITORY,
+} from '../domain/post.repository.interface';
 import { PostEntity } from '../domain/post.entity';
 import { User } from '@portfolio/types';
 import { UpdatePostDto } from '@portfolio/contracts';
 import { MediaManagerService } from '../../upload/media-manager.service';
-import { PostNotFoundException, UnauthorizedPostActionException } from '../domain/post.errors';
+import {
+  PostNotFoundException,
+  UnauthorizedPostActionException,
+} from '../domain/post.errors';
 import sanitizeHtml from 'sanitize-html';
 import slugify from 'slugify';
 
@@ -18,8 +24,27 @@ export class UpdatePostUseCase {
 
   private sanitizeOptions = {
     allowedTags: sanitizeHtml.defaults.allowedTags.concat([
-      'img', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'span', 'div', 'p', 'br',
-      'strong', 'em', 'u', 's', 'blockquote', 'pre', 'ol', 'ul', 'li', 'a',
+      'img',
+      'h1',
+      'h2',
+      'h3',
+      'h4',
+      'h5',
+      'h6',
+      'span',
+      'div',
+      'p',
+      'br',
+      'strong',
+      'em',
+      'u',
+      's',
+      'blockquote',
+      'pre',
+      'ol',
+      'ul',
+      'li',
+      'a',
     ]),
     allowedAttributes: {
       '*': ['style', 'class', 'id', 'align'],
@@ -43,19 +68,30 @@ export class UpdatePostUseCase {
     },
   };
 
-  async execute(id: number, user: User, data: UpdatePostDto): Promise<PostEntity> {
+  async execute(
+    id: number,
+    user: User,
+    data: UpdatePostDto,
+  ): Promise<PostEntity> {
     const post = await this.postRepository.findById(id);
     if (!post) throw new PostNotFoundException(id);
 
-    if (!user.can_post) throw new UnauthorizedPostActionException('update (forbidden)');
+    if (!user.can_post)
+      throw new UnauthorizedPostActionException('update (forbidden)');
     if (post.author_id !== user.id) {
       throw new UnauthorizedPostActionException('update (not owner)');
     }
 
-    const cleanContent = data.content ? (sanitizeHtml(data.content, this.sanitizeOptions) || '') : (post.content || undefined);
+    const cleanContent = data.content
+      ? sanitizeHtml(data.content, this.sanitizeOptions) || ''
+      : post.content || undefined;
     let finalSlug = post.slug;
     if (data.slug && data.slug !== post.slug) {
-      const base = slugify(data.slug, { lower: true, strict: true, locale: 'vi' });
+      const base = slugify(data.slug, {
+        lower: true,
+        strict: true,
+        locale: 'vi',
+      });
       let temp = base;
       let count = 0;
       while (true) {
@@ -75,9 +111,19 @@ export class UpdatePostUseCase {
 
     // Cover image usage registration
     if (data.cover_image && data.cover_image !== post.cover_image) {
-      await this.mediaManager.registerUsage(data.cover_image, 'POST', id, 'cover');
+      await this.mediaManager.registerUsage(
+        data.cover_image,
+        'POST',
+        id,
+        'cover',
+      );
       if (post.cover_image) {
-        await this.mediaManager.unregisterUsage(post.cover_image, 'POST', id, 'cover');
+        await this.mediaManager.unregisterUsage(
+          post.cover_image,
+          'POST',
+          id,
+          'cover',
+        );
       }
     }
 
