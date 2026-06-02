@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { postService } from '@/features/posts/services/postService';
 import { categoryService as catApi } from '@/features/categories/services/categoryService';
 import { seriesService } from '@/features/series/services/seriesService';
+import { settingService } from '@/features/settings/services/settingService';
 import Pagination from '@/shared/components/ui/Pagination';
 import { useAuth } from '@/context/AuthContext';
 import OfflineMessage from '@/shared/components/common/OfflineMessage';
@@ -47,6 +48,13 @@ export default function BlogContent() {
   const [meta, setMeta] = useState({ total: 0, limit: 12, page: 1 });
   const q = searchParams.get('q') || '';
   const [searchTerm, setSearchTerm] = useState(q);
+  const [displaySettings, setDisplaySettings] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    settingService.getPublicSettings()
+      .then(data => setDisplaySettings(data))
+      .catch(err => console.error('Failed to fetch public settings in BlogContent:', err));
+  }, []);
 
   useEffect(() => {
     setSearchTerm(q);
@@ -57,7 +65,7 @@ export default function BlogContent() {
       setLoading(false);
       return;
     }
-    
+
     setLoading(true);
     setHasError(false);
     try {
@@ -105,32 +113,32 @@ export default function BlogContent() {
       <div className="max-w-7xl mx-auto">
         <PageHeader
           title="Blog chia sẻ Kiến thức"
-          description="Hành trình từ System Engineer đến Cloud & DevOps. Chia sẻ kinh nghiệm thực chiến về hệ thống và công nghệ."
+          description="Chia sẻ kinh nghiệm thực chiến về hệ thống và công nghệ."
           centered
           breadcrumbs={[]}
         >
-           {q && (
-             <div className="mt-6 flex items-center justify-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Kết quả tìm kiếm cho:</span>
-                <span className="px-3 py-1 bg-primary text-white text-[10px] font-bold rounded-full shadow-lg shadow-primary/20">{q}</span>
-                <button
-                  onClick={() => {
-                    setSearchTerm('');
-                    router.push('/');
-                  }}
-                  className="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors ml-2 uppercase tracking-widest hover:underline"
-                >
-                  Xóa lọc
-                </button>
-             </div>
-           )}
+          {q && (
+            <div className="mt-6 flex items-center justify-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Kết quả tìm kiếm cho:</span>
+              <span className="px-3 py-1 bg-primary text-white text-[10px] font-bold rounded-full shadow-lg shadow-primary/20">{q}</span>
+              <button
+                onClick={() => {
+                  setSearchTerm('');
+                  router.push('/');
+                }}
+                className="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors ml-2 uppercase tracking-widest hover:underline"
+              >
+                Xóa lọc
+              </button>
+            </div>
+          )}
         </PageHeader>
 
         <div className="flex flex-col lg:flex-row gap-1">
           {/* Main Content (Posts) */}
           <div className="flex-grow lg:w-3/4">
             {(isBackendOffline || hasError) ? (
-               <OfflineMessage onRetry={fetchData} />
+              <OfflineMessage onRetry={fetchData} />
             ) : loading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1">
                 {[1, 2, 3, 4, 5, 6].map(i => (
@@ -140,32 +148,53 @@ export default function BlogContent() {
             ) : posts.length > 0 ? (
               <>
                 <AnimateList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-1">
-                {posts.map((post, idx) => (
-                  <PostCard key={post.id} post={post} priority={idx < 6} />
-                ))}
-              </AnimateList>
-              
-              <Pagination 
-                currentPage={meta.page} 
-                totalPages={Math.ceil(meta.total / meta.limit)} 
-                onPageChange={(p) => {
-                  const params = new URLSearchParams(searchParams.toString());
-                  params.set('page', p.toString());
-                  router.push(`/?${params.toString()}`);
-                }}
-              />
-            </>
+                  {posts.map((post, idx) => (
+                    <PostCard
+                      key={post.id}
+                      post={post}
+                      priority={idx < 6}
+                      showAuthor={displaySettings.post_show_author !== 'false'}
+                      showDate={displaySettings.post_show_created_at !== 'false'}
+                      showViews={displaySettings.post_show_views !== 'false'}
+                      showReadTime={displaySettings.post_show_read_time !== 'false'}
+                    />
+                  ))}
+                </AnimateList>
+
+                <Pagination
+                  currentPage={meta.page}
+                  totalPages={Math.ceil(meta.total / meta.limit)}
+                  onPageChange={(p) => {
+                    const params = new URLSearchParams(searchParams.toString());
+                    params.set('page', p.toString());
+                    router.push(`/?${params.toString()}`);
+                  }}
+                />
+              </>
             ) : (
-              <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm">
+              <div className="text-center py-20 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm animate-in fade-in slide-in-from-bottom-3 duration-500">
                 <div className="w-20 h-20 bg-slate-50 dark:bg-slate-950 rounded-full flex items-center justify-center mx-auto mb-6 text-slate-300">
                   <Search size={40} />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Không tìm thấy bài viết</h3>
-                <p className="text-slate-500 dark:text-slate-400 text-sm max-w-md mx-auto">Chúng tôi không tìm thấy nội dung nào phù hợp với từ khóa <b className="text-primary">"{q}"</b>. Hãy thử tìm kiếm với từ khóa khác hoặc khám phá qua danh mục.</p>
-                <Button variant="outline" className="mt-8" onClick={() => {
-                  setSearchTerm('');
-                  router.push('/');
-                }}>Xem tất cả bài viết</Button>
+                {q ? (
+                  <>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Không tìm thấy bài viết</h3>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm max-w-md mx-auto px-4">
+                      Chúng tôi không tìm thấy nội dung nào phù hợp với từ khóa <b className="text-primary">"{q}"</b>. Hãy thử tìm kiếm với từ khóa khác hoặc khám phá qua danh mục.
+                    </p>
+                    <Button variant="outline" className="mt-8" onClick={() => {
+                      setSearchTerm('');
+                      router.push('/');
+                    }}>Xem tất cả bài viết</Button>
+                  </>
+                ) : (
+                  <>
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Chưa có bài viết nào</h3>
+                    <p className="text-slate-500 dark:text-slate-400 text-sm max-w-md mx-auto px-4">
+                      Hiện tại chưa có bài viết nào được xuất bản trên blog. Vui lòng quay lại sau!
+                    </p>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -204,16 +233,16 @@ export default function BlogContent() {
                     onClick={() => router.push(`/?q=${encodeURIComponent(cat.name)}`)}
                     className={cn(
                       "w-full flex items-center justify-between px-4 py-3 rounded-xl text-[13px] font-bold transition-all group border border-transparent hover:border-primary/20",
-                      q.toLowerCase() === cat.name.toLowerCase() 
-                        ? "bg-primary text-white shadow-lg shadow-primary/20 hover:bg-primary" 
+                      q.toLowerCase() === cat.name.toLowerCase()
+                        ? "bg-primary text-white shadow-lg shadow-primary/20 hover:bg-primary"
                         : "text-slate-600 dark:text-slate-400 hover:bg-primary/5 hover:text-primary"
                     )}
                   >
                     <span>{cat.name}</span>
                     <span className={cn(
                       "px-2 py-0.5 rounded-lg text-[10px] font-bold transition-colors",
-                      q.toLowerCase() === cat.name.toLowerCase() 
-                        ? "bg-white/20 text-white" 
+                      q.toLowerCase() === cat.name.toLowerCase()
+                        ? "bg-white/20 text-white"
                         : "bg-slate-100 dark:bg-slate-800 group-hover:bg-primary/20"
                     )}>
                       {cat._count?.Post || 0}
@@ -225,9 +254,9 @@ export default function BlogContent() {
 
             {/* Recent Series */}
             <div className="bg-white dark:bg-slate-900 p-6 rounded-3xl border border-slate-100 dark:border-slate-800/50 shadow-sm overflow-hidden relative">
-               <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none text-primary transform translate-x-4 -translate-y-4">
-                  <Bookmark size={80} />
-               </div>
+              <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none text-primary transform translate-x-4 -translate-y-4">
+                <Bookmark size={80} />
+              </div>
               <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-6 flex items-center">
                 <Bookmark size={14} className="mr-2.5 text-primary" /> Series bài viết
               </h4>

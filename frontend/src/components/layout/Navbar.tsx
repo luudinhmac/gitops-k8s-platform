@@ -27,8 +27,6 @@ export default function Navbar() {
   const navItems = [
     { name: 'Trang chủ', href: '/' },
     { name: 'Giới thiệu', href: '/about' },
-    { name: 'Hồ sơ', href: '/about#resume' },
-    { name: 'Dự án', href: '/about#projects' },
     { name: 'Khóa học', href: '/courses' },
   ];
 
@@ -59,7 +57,7 @@ export default function Navbar() {
       <div suppressHydrationWarning={true} className="max-w-7xl mx-auto glass md:rounded-b-xl px-6 py-2.5 md:py-3.5 shadow-sm border-b md:border-b md:border-x border-slate-200/50 dark:border-slate-800/50 transition-colors">
         <div suppressHydrationWarning={true} className="flex items-center justify-between">
           <Link href="/" className="text-xl md:text-2xl font-display font-bold text-gradient flex-shrink-0">
-            Portfolio
+            Zero2Ops
           </Link>
 
           {/* Search Bar in Navbar */}

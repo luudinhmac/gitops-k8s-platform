@@ -224,7 +224,7 @@ export default function PostEditorPage({ postId }: PostEditorPageProps) {
           />
         }
       >
-        <AdminCard>
+        <AdminCard overflowVisible>
           <div className="space-y-6">
             <div className="space-y-2">
               <label htmlFor="pe-title" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tiêu đề bài viết</label>

@@ -1,5 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { IPostRepository, I_POST_REPOSITORY } from '../domain/post.repository.interface';
+import {
+  IPostRepository,
+  I_POST_REPOSITORY,
+} from '../domain/post.repository.interface';
 import { PostEntity } from '../domain/post.entity';
 import { PostNotFoundException } from '../domain/post.errors';
 
@@ -10,14 +13,17 @@ export class GetPostUseCase {
     private readonly postRepository: IPostRepository,
   ) {}
 
-  async execute(idOrSlug: string | number, incrementView: boolean = false): Promise<PostEntity> {
+  async execute(
+    idOrSlug: string | number,
+    incrementView: boolean = false,
+  ): Promise<PostEntity> {
     const isId = !isNaN(Number(idOrSlug));
-    const post = isId 
+    const post = isId
       ? await this.postRepository.findById(Number(idOrSlug))
       : await this.postRepository.findBySlug(String(idOrSlug));
 
     if (!post) throw new PostNotFoundException(idOrSlug);
-// ...
+    // ...
 
     if (incrementView) {
       await this.postRepository.incrementView(post.id).catch(() => {});
@@ -27,7 +33,10 @@ export class GetPostUseCase {
     const formattedPost = this.formatPost(post);
 
     if (post.series_id) {
-      const neighbors = await this.postRepository.findNeighborsInSeries(post.series_id, post.series_order || 0);
+      const neighbors = await this.postRepository.findNeighborsInSeries(
+        post.series_id,
+        post.series_order || 0,
+      );
       if (neighbors.prev) {
         const prev = this.formatPost(neighbors.prev);
         prev.prevPost = null; // Prevent deep nesting/circularity
@@ -36,7 +45,7 @@ export class GetPostUseCase {
       } else {
         formattedPost.prevPost = null;
       }
-      
+
       if (neighbors.next) {
         const next = this.formatPost(neighbors.next);
         next.prevPost = null; // Prevent deep nesting/circularity
@@ -51,8 +60,13 @@ export class GetPostUseCase {
   }
 
   private formatPost(post: PostEntity): PostEntity {
-    const cleanContent = post.content ? post.content.replace(/<[^>]*>/g, '') : '';
-    post.excerpt = post.excerpt || (cleanContent.substring(0, 160).trim() + (cleanContent.length > 160 ? '...' : ''));
+    const cleanContent = post.content
+      ? post.content.replace(/<[^>]*>/g, '')
+      : '';
+    post.excerpt =
+      post.excerpt ||
+      cleanContent.substring(0, 160).trim() +
+        (cleanContent.length > 160 ? '...' : '');
     post.readTime = this.calculateReadTime(post.content || '');
     // Note: comment_count and likes are now expected to be populated by the repository
     return post;

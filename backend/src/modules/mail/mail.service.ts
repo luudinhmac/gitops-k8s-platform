@@ -17,7 +17,8 @@ export class MailService {
       const port = await this.settingsService.getSettingByKey('mail_port');
       const user = await this.settingsService.getSettingByKey('mail_user');
       const pass = await this.settingsService.getSettingByKey('mail_pass');
-      const from = (await this.settingsService.getSettingByKey('mail_from')) || user;
+      const from =
+        (await this.settingsService.getSettingByKey('mail_from')) || user;
 
       if (!host || !port || !user || !pass) {
         this.logger.warn('Mail configuration is incomplete');

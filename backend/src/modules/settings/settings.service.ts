@@ -1,4 +1,10 @@
-import { Injectable, InternalServerErrorException, Inject, forwardRef, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  Inject,
+  forwardRef,
+  Logger,
+} from '@nestjs/common';
 import { PrismaService } from '../../prisma/prisma.service';
 import { TelegramService } from '../telegram/telegram.service';
 import { TeamsService } from '../teams/teams.service';
@@ -13,7 +19,7 @@ const SENSITIVE_KEYS = [
   'teams_webhook_url',
   'mail_user',
   'mail_pass',
-  'maintenance_passcode'
+  'maintenance_passcode',
 ];
 
 const MASK_VALUE = '********';
@@ -32,7 +38,7 @@ export class SettingsService {
     private mailService: MailService,
     @Inject(forwardRef(() => AdminAlertService))
     private adminAlertService: AdminAlertService,
-  ) { }
+  ) {}
 
   private coerceToString(value: any): string {
     if (value === null || value === undefined) return '';
@@ -53,10 +59,13 @@ export class SettingsService {
       where: { is_public: true },
     });
 
-    return settings.reduce((acc, current) => {
-      acc[current.key] = this.coerceToString(current.value);
-      return acc;
-    }, {} as Record<string, string>);
+    return settings.reduce(
+      (acc, current) => {
+        acc[current.key] = this.coerceToString(current.value);
+        return acc;
+      },
+      {} as Record<string, string>,
+    );
   }
 
   async getSettingByKey(key: string): Promise<string | null> {
@@ -77,7 +86,10 @@ export class SettingsService {
   async requestMaintenanceCode(ip: string = 'unknown') {
     const isMaintenance = await this.getSettingByKey('maintenance_global');
     if (isMaintenance !== 'true') {
-      return { success: false, error: 'Chế độ bảo trì hiện đang TẮT. Không cần mã truy cập.' };
+      return {
+        success: false,
+        error: 'Chế độ bảo trì hiện đang TẮT. Không cần mã truy cập.',
+      };
     }
 
     const code = Math.floor(100000 + Math.random() * 900000).toString();
@@ -88,24 +100,22 @@ export class SettingsService {
       const prisma = this.prisma as any;
       await prisma.maintenanceCode.deleteMany({
         where: {
-          OR: [
-            { expires_at: { lt: new Date() } },
-            { is_used: true }
-          ]
-        }
+          OR: [{ expires_at: { lt: new Date() } }, { is_used: true }],
+        },
       });
 
       await prisma.maintenanceCode.create({
         data: {
           code,
           expires_at: expiry,
-          is_used: false
-        }
+          is_used: false,
+        },
       });
 
       this.adminAlertService.sendAlert({
         subject: `🔐 MÃ TRUY CẬP BẢO TRÌ (Maintenance Code)`,
-        text: `🔐 <b>YÊU CẦU TRUY CẬP HỆ THỐNG</b>\n\n` +
+        text:
+          `🔐 <b>YÊU CẦU TRUY CẬP HỆ THỐNG</b>\n\n` +
           `Hệ thống đang trong trạng thái bảo trì. Một yêu cầu truy cập đã được thực hiện:\n\n` +
           `• <b>Mã xác thực:</b> <code>${code}</code>\n` +
           `• <b>Hiệu lực:</b> 10 phút (đến ${expiry.toLocaleTimeString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })})\n` +
@@ -113,10 +123,16 @@ export class SettingsService {
           `<i>Vui lòng không chia sẻ mã này với bất kỳ ai.</i>`,
       });
 
-      return { success: true, message: 'Mã truy cập đã được gửi qua các hệ thống thông báo.' };
+      return {
+        success: true,
+        message: 'Mã truy cập đã được gửi qua các hệ thống thông báo.',
+      };
     } catch (error) {
       this.logger.error('Failed to generate maintenance code', error);
-      return { success: false, error: 'Không thể tạo mã xác thực vào lúc này.' };
+      return {
+        success: false,
+        error: 'Không thể tạo mã xác thực vào lúc này.',
+      };
     }
   }
 
@@ -126,15 +142,15 @@ export class SettingsService {
       where: {
         code: passcode,
         is_used: false,
-        expires_at: { gt: new Date() }
+        expires_at: { gt: new Date() },
       },
-      orderBy: { created_at: 'desc' }
+      orderBy: { created_at: 'desc' },
     });
 
     if (record) {
       await prisma.maintenanceCode.update({
         where: { id: record.id },
-        data: { is_used: true }
+        data: { is_used: true },
       });
       return true;
     }
@@ -147,16 +163,19 @@ export class SettingsService {
   async getAllSettings(user?: any) {
     const settings = await this.prisma.setting.findMany();
 
-    const dbSettings = settings.reduce((acc, current) => {
-      if (!acc[current.group]) acc[current.group] = {};
-      const valStr = this.coerceToString(current.value);
-      let value = valStr;
-      if (SENSITIVE_KEYS.includes(current.key)) {
-        value = MASK_VALUE;
-      }
-      acc[current.group][current.key] = value;
-      return acc;
-    }, {} as Record<string, any>);
+    const dbSettings = settings.reduce(
+      (acc, current) => {
+        if (!acc[current.group]) acc[current.group] = {};
+        const valStr = this.coerceToString(current.value);
+        let value = valStr;
+        if (SENSITIVE_KEYS.includes(current.key)) {
+          value = MASK_VALUE;
+        }
+        acc[current.group][current.key] = value;
+        return acc;
+      },
+      {} as Record<string, any>,
+    );
 
     if (user?.role !== 'superadmin') {
       return {
@@ -169,7 +188,8 @@ export class SettingsService {
       DATABASE_URL: process.env.DATABASE_URL ? '********' : 'Not setup',
       JWT_SECRET: process.env.JWT_SECRET ? '********' : 'Not setup',
       PORT: process.env.PORT || '3002',
-      NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
+      NEXT_PUBLIC_API_URL:
+        process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000',
     };
 
     const systemInfo = {
@@ -188,35 +208,53 @@ export class SettingsService {
     };
   }
 
-  async updateSettings(items: { key: string; value: string; group?: string; is_public?: boolean }[], user?: any, ip?: string) {
+  async updateSettings(
+    items: {
+      key: string;
+      value: string;
+      group?: string;
+      is_public?: boolean;
+    }[],
+    user?: any,
+    ip?: string,
+  ) {
     const sensitiveGroups = ['telegram', 'teams', 'mail'];
-    const isUpdatingSensitive = items.some(item => item.group && sensitiveGroups.includes(item.group));
+    const isUpdatingSensitive = items.some(
+      (item) => item.group && sensitiveGroups.includes(item.group),
+    );
 
     if (isUpdatingSensitive && user?.role !== 'superadmin') {
       const { ForbiddenException } = require('@nestjs/common');
-      throw new ForbiddenException('Chỉ Superadmin mới có quyền thay đổi cấu hình Cảnh báo Quận trị.');
+      throw new ForbiddenException(
+        'Chỉ Superadmin mới có quyền thay đổi cấu hình Cảnh báo Quận trị.',
+      );
     }
 
     try {
       // 1. Fetch current values to detect changes
       const currentSettings = await this.prisma.setting.findMany({
-        where: { key: { in: items.map(i => i.key) } }
+        where: { key: { in: items.map((i) => i.key) } },
       });
-      const currentMap = currentSettings.reduce((acc, s) => {
-        acc[s.key] = this.coerceToString(s.value);
-        return acc;
-      }, {} as Record<string, string>);
+      const currentMap = currentSettings.reduce(
+        (acc, s) => {
+          acc[s.key] = this.coerceToString(s.value);
+          return acc;
+        },
+        {} as Record<string, string>,
+      );
 
       // 2. Identify actual changes
-      const changedItems = items.filter(item => {
+      const changedItems = items.filter((item) => {
         if (item.value === MASK_VALUE) return false;
 
         const currentValue = currentMap[item.key];
-        let newValue = item.value;
+        const newValue = item.value;
 
         // If sensitive, we need to compare with decrypted value
         if (SENSITIVE_KEYS.includes(item.key)) {
-          const decryptedCurrent = currentValue ? EncryptionUtil.decrypt(currentValue) : null;
+          const decryptedCurrent = currentValue
+            ? EncryptionUtil.decrypt(currentValue)
+            : null;
           return newValue !== decryptedCurrent;
         }
 
@@ -227,7 +265,6 @@ export class SettingsService {
         return { message: 'No changes detected' };
       }
 
-      // 3. Prepare human-readable actions for notification
       const SETTING_NAMES: Record<string, string> = {
         site_title: 'Tên website',
         site_tagline: 'Mô tả ngắn',
@@ -249,23 +286,37 @@ export class SettingsService {
         mail_port: 'Cổng Email',
         ga_id: 'Google Analytics ID',
         fb_pixel_id: 'Facebook Pixel ID',
+        post_show_created_at: 'Hiển thị ngày đăng bài viết',
+        post_show_author: 'Hiển thị tác giả bài viết',
+        post_show_views: 'Hiển thị lượt xem bài viết',
+        post_show_read_time: 'Hiển thị thời gian đọc bài viết',
       };
 
-      const actions = changedItems.map(item => {
-        const name = SETTING_NAMES[item.key] || item.key;
-        if (SENSITIVE_KEYS.includes(item.key)) return `Cập nhật ${name} (Bảo mật)`;
+      const actions = changedItems
+        .map((item) => {
+          const name = SETTING_NAMES[item.key] || item.key;
+          if (SENSITIVE_KEYS.includes(item.key))
+            return `Cập nhật ${name} (Bảo mật)`;
 
-        if (item.value === 'true') return `<b>Bật</b> ${name}`;
-        if (item.value === 'false') return `<b>Tắt</b> ${name}`;
+          if (item.value === 'true') return `<b>Bật</b> ${name}`;
+          if (item.value === 'false') return `<b>Tắt</b> ${name}`;
 
-        // Truncate long text
-        const displayValue = item.value.length > 50 ? item.value.substring(0, 50) + '...' : item.value;
-        return `Thay đổi ${name} thành: "<i>${displayValue}</i>"`;
-      }).join('\n• ');
+          // Truncate long text
+          const displayValue =
+            item.value.length > 50
+              ? item.value.substring(0, 50) + '...'
+              : item.value;
+          return `Thay đổi ${name} thành: "<i>${displayValue}</i>"`;
+        })
+        .join('\n• ');
 
       const queries = changedItems.map((item) => {
         let finalValue = item.value;
-        if (SENSITIVE_KEYS.includes(item.key) && item.value && !EncryptionUtil.isEncrypted(item.value)) {
+        if (
+          SENSITIVE_KEYS.includes(item.key) &&
+          item.value &&
+          !EncryptionUtil.isEncrypted(item.value)
+        ) {
           let cleanValue = item.value.trim();
           if (item.key === 'telegram_bot_token') {
             if (cleanValue.toLowerCase().startsWith('bot')) {
@@ -280,8 +331,14 @@ export class SettingsService {
         if (item.key.startsWith('telegram_')) effectiveGroup = 'telegram';
         else if (item.key.startsWith('teams_')) effectiveGroup = 'teams';
         else if (item.key.startsWith('mail_')) effectiveGroup = 'mail';
-        else if (item.key.startsWith('maintenance_')) effectiveGroup = 'maintenance';
-        else if (item.key === 'ga_id' || item.key === 'fb_pixel_id' || item.key.includes('adsense') || item.key.includes('scripts')) {
+        else if (item.key.startsWith('maintenance_'))
+          effectiveGroup = 'maintenance';
+        else if (
+          item.key === 'ga_id' ||
+          item.key === 'fb_pixel_id' ||
+          item.key.includes('adsense') ||
+          item.key.includes('scripts')
+        ) {
           effectiveGroup = 'marketing';
         }
 
@@ -290,7 +347,7 @@ export class SettingsService {
           update: {
             value: finalValue,
             group: effectiveGroup,
-            ...(item.is_public !== undefined && { is_public: item.is_public })
+            ...(item.is_public !== undefined && { is_public: item.is_public }),
           },
           create: {
             key: item.key,
@@ -308,14 +365,18 @@ export class SettingsService {
 
       this.adminAlertService.sendAlert({
         subject: `⚙️ Cài đặt hệ thống đã đổi: ${username}`,
-        text: `⚙️ <b>CÀI ĐẶT HỆ THỐNG ĐÃ CẬP NHẬT</b>\n\n` +
+        text:
+          `⚙️ <b>CÀI ĐẶT HỆ THỐNG ĐÃ CẬP NHẬT</b>\n\n` +
           `• ${actions}\n\n` +
           `• <b>IP:</b> <code>${userIp}</code>\n` +
           `• <b>User:</b> ${username}\n` +
           `• <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`,
       });
 
-      return { message: 'Settings updated successfully', updatedCount: changedItems.length };
+      return {
+        message: 'Settings updated successfully',
+        updatedCount: changedItems.length,
+      };
     } catch (error) {
       throw new InternalServerErrorException('Failed to update settings');
     }
@@ -335,7 +396,10 @@ export class SettingsService {
       }
 
       if (!token || !chatId) {
-        return { success: false, error: 'Thiếu cấu hình Telegram (Token hoặc Chat ID).' };
+        return {
+          success: false,
+          error: 'Thiếu cấu hình Telegram (Token hoặc Chat ID).',
+        };
       }
 
       const message = `🔔 <b>Test Thông báo Hệ thống</b>\n\nNội dung này xác nhận rằng Bot Telegram của bạn đã được cấu hình thành công trên Website.\n\n📅 <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`;
@@ -352,7 +416,10 @@ export class SettingsService {
       }
 
       if (!webhookUrl) {
-        return { success: false, error: 'Thiếu cấu hình Webhook URL của MS Teams.' };
+        return {
+          success: false,
+          error: 'Thiếu cấu hình Webhook URL của MS Teams.',
+        };
       }
 
       const msg = `🔔 <b>Thông báo MS Teams</b>\n\nCấu hình kết nối Webhook thành công! Đã có thể nhận cảnh báo từ ứng dụng.\n\n📅 <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}`;
@@ -362,7 +429,13 @@ export class SettingsService {
     }
   }
 
-  async testEmail(config: { host: string; port: string; user: string; pass: string; to: string }) {
+  async testEmail(config: {
+    host: string;
+    port: string;
+    user: string;
+    pass: string;
+    to: string;
+  }) {
     const subject = '🔔 Thông báo Email';
     const text = 'Hệ thống đã kết nối thành công với máy chủ Email của bạn.';
     const html = `<h3>Thành công!</h3><p>${text}</p><p>📅 <b>Thời gian:</b> ${new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}</p>`;
@@ -375,7 +448,10 @@ export class SettingsService {
     }
 
     if (!config.user || !config.pass) {
-      return { success: false, error: 'Thiếu cấu hình tài khoản Email (User hoặc Pass).' };
+      return {
+        success: false,
+        error: 'Thiếu cấu hình tài khoản Email (User hoặc Pass).',
+      };
     }
 
     const nodemailer = require('nodemailer');
@@ -392,7 +468,7 @@ export class SettingsService {
         subject,
         text,
         html,
-        ... (config.to && { to: config.to })
+        ...(config.to && { to: config.to }),
       });
       return { success: true };
     } catch (error: any) {

@@ -48,7 +48,7 @@ export default function Footer() {
           {/* Brand Section */}
           <div className="md:col-span-2">
             <Link href="/" className="text-2xl font-display font-bold text-gradient">
-              Portfolio
+              Zero2Ops
             </Link>
             <p className="mt-4 text-slate-600 dark:text-slate-400 max-w-sm">
               Đam mê xây dựng những ứng dụng web hiện đại, hiệu quả và mang lại giá trị tốt nhất cho người dùng. Chuyên về System Engineering và Fullstack Development.

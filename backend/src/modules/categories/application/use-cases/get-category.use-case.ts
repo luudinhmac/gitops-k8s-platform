@@ -1,5 +1,8 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { ICategoriesRepository, I_CATEGORIES_REPOSITORY } from '../../domain/repositories/category.repository.interface';
+import {
+  ICategoriesRepository,
+  I_CATEGORIES_REPOSITORY,
+} from '../../domain/repositories/category.repository.interface';
 import { Category } from '@portfolio/types';
 
 @Injectable()

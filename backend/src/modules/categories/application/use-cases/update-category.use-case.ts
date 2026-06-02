@@ -1,6 +1,9 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import slugify from 'slugify';
-import { ICategoriesRepository, I_CATEGORIES_REPOSITORY } from '../../domain/repositories/category.repository.interface';
+import {
+  ICategoriesRepository,
+  I_CATEGORIES_REPOSITORY,
+} from '../../domain/repositories/category.repository.interface';
 import { Category, UpdateCategoryDto } from '@portfolio/types';
 
 @Injectable()
@@ -16,7 +19,11 @@ export class UpdateCategoryUseCase {
 
     let finalSlug = category.slug;
     if (data.name) {
-      const slug = slugify(data.name, { lower: true, strict: true, locale: 'vi' });
+      const slug = slugify(data.name, {
+        lower: true,
+        strict: true,
+        locale: 'vi',
+      });
       finalSlug = slug;
       let count = 0;
       while (true) {

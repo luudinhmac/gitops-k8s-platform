@@ -15,7 +15,11 @@ import { AuthGuard } from '@nestjs/passport';
 import { PermissionsGuard } from '../../auth/permissions.guard';
 import { Permissions } from '../../auth/permissions.decorator';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { CreatePostDto, UpdatePostDto, Post as PostEntity } from '@portfolio/contracts';
+import {
+  CreatePostDto,
+  UpdatePostDto,
+  Post as PostEntity,
+} from '@portfolio/contracts';
 import { getClientIp } from '../../../common/utils/ip';
 import { GetPostsUseCase } from '../services/get-posts.use-case';
 import { GetPostUseCase } from '../services/get-post.use-case';
@@ -55,7 +59,16 @@ export class PostsController {
     const userIdNum = userId ? parseInt(userId) : undefined;
     const pageNum = page ? parseInt(page) : 1;
     const limitNum = limit ? parseInt(limit) : 10;
-    return this.getPostsUseCase.execute(undefined, false, query, 'published', sort, userIdNum, pageNum, limitNum);
+    return this.getPostsUseCase.execute(
+      undefined,
+      false,
+      query,
+      'published',
+      sort,
+      userIdNum,
+      pageNum,
+      limitNum,
+    );
   }
 
   @Get('admin')
@@ -72,7 +85,16 @@ export class PostsController {
   ) {
     const pageNum = page ? parseInt(page) : 1;
     const limitNum = limit ? parseInt(limit) : 10;
-    return this.getPostsUseCase.execute(req.user, true, query, status, sort, undefined, pageNum, limitNum);
+    return this.getPostsUseCase.execute(
+      req.user,
+      true,
+      query,
+      status,
+      sort,
+      undefined,
+      pageNum,
+      limitNum,
+    );
   }
 
   @Get('my-posts')
@@ -88,7 +110,16 @@ export class PostsController {
   ) {
     const pageNum = page ? parseInt(page) : 1;
     const limitNum = limit ? parseInt(limit) : 10;
-    return this.getPostsUseCase.execute(req.user, true, query, status, sort, req.user.id, pageNum, limitNum);
+    return this.getPostsUseCase.execute(
+      req.user,
+      true,
+      query,
+      status,
+      sort,
+      req.user.id,
+      pageNum,
+      limitNum,
+    );
   }
 
   @Get(':idOrSlug')
@@ -106,10 +137,7 @@ export class PostsController {
   @ApiOperation({ summary: 'Create new post' })
   @UseGuards(AuthGuard('jwt'), PermissionsGuard)
   @Permissions('posts:create')
-  create(
-    @Req() req: any,
-    @Body() data: CreatePostDto,
-  ) {
+  create(@Req() req: any, @Body() data: CreatePostDto) {
     return this.createPostUseCase.execute(req.user, data);
   }
 
@@ -129,10 +157,7 @@ export class PostsController {
   @ApiOperation({ summary: 'Delete post' })
   @UseGuards(AuthGuard('jwt'), PermissionsGuard)
   @Permissions('posts:create')
-  remove(
-    @Param('id', ParseIntPipe) id: number,
-    @Req() req: any,
-  ) {
+  remove(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
     return this.deletePostUseCase.execute(id, req.user, getClientIp(req));
   }
 
@@ -140,10 +165,7 @@ export class PostsController {
   @ApiOperation({ summary: 'Toggle pin post' })
   @UseGuards(AuthGuard('jwt'), PermissionsGuard)
   @Permissions('posts:create')
-  togglePin(
-    @Param('id', ParseIntPipe) id: number,
-    @Req() req: any,
-  ) {
+  togglePin(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
     return this.togglePinPostUseCase.execute(id, req.user);
   }
 
@@ -162,20 +184,14 @@ export class PostsController {
   @Get(':id/like-status')
   @ApiOperation({ summary: 'Get like status for current user' })
   @UseGuards(AuthGuard('jwt'))
-  getLikeStatus(
-    @Param('id', ParseIntPipe) id: number,
-    @Req() req: any,
-  ) {
+  getLikeStatus(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
     return this.getLikeStatusUseCase.execute(id, req.user.id);
   }
 
   @Post(':id/like')
   @ApiOperation({ summary: 'Toggle like post' })
   @UseGuards(AuthGuard('jwt'))
-  toggleLike(
-    @Param('id', ParseIntPipe) id: number,
-    @Req() req: any,
-  ) {
+  toggleLike(@Param('id', ParseIntPipe) id: number, @Req() req: any) {
     return this.toggleLikePostUseCase.execute(id, req.user.id);
   }
 }

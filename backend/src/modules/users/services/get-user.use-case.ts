@@ -1,5 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { IUsersRepository, I_USERS_REPOSITORY } from '../domain/user.repository.interface';
+import {
+  IUsersRepository,
+  I_USERS_REPOSITORY,
+} from '../domain/user.repository.interface';
 import { User } from '@portfolio/contracts';
 import { UserNotFoundException } from '../domain/user.errors';
 
@@ -17,8 +20,10 @@ export class GetUserUseCase {
     const userData = user.toJSON() as unknown as User;
 
     // Nếu không phải Admin và không phải chính chủ, lọc bỏ thông tin nhạy cảm
-    const isAdmin = currentUser?.role === 'superadmin' || currentUser?.role === 'admin';
-    const isOwner = currentUser?.id !== undefined && String(currentUser.id) === String(id);
+    const isAdmin =
+      currentUser?.role === 'superadmin' || currentUser?.role === 'admin';
+    const isOwner =
+      currentUser?.id !== undefined && String(currentUser.id) === String(id);
 
     if (!isAdmin && !isOwner) {
       return {

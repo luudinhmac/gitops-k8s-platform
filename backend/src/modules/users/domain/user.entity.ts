@@ -29,11 +29,15 @@ export class UserEntity {
 
   constructor(partial: Partial<UserEntity>) {
     Object.assign(this, partial);
-    
-    if (typeof this.created_at === 'string') this.created_at = new Date(this.created_at);
-    if (typeof this.updated_at === 'string') this.updated_at = new Date(this.updated_at);
-    if (typeof this.birthday === 'string') this.birthday = new Date(this.birthday);
-    if (typeof this.last_login === 'string') this.last_login = new Date(this.last_login);
+
+    if (typeof this.created_at === 'string')
+      this.created_at = new Date(this.created_at);
+    if (typeof this.updated_at === 'string')
+      this.updated_at = new Date(this.updated_at);
+    if (typeof this.birthday === 'string')
+      this.birthday = new Date(this.birthday);
+    if (typeof this.last_login === 'string')
+      this.last_login = new Date(this.last_login);
   }
 
   public isAdmin(): boolean {

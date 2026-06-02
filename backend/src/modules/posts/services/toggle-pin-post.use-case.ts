@@ -1,8 +1,14 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { IPostRepository, I_POST_REPOSITORY } from '../domain/post.repository.interface';
+import {
+  IPostRepository,
+  I_POST_REPOSITORY,
+} from '../domain/post.repository.interface';
 import { User, UserRole } from '@portfolio/types';
 import { PostEntity } from '../domain/post.entity';
-import { PostNotFoundException, UnauthorizedPostActionException } from '../domain/post.errors';
+import {
+  PostNotFoundException,
+  UnauthorizedPostActionException,
+} from '../domain/post.errors';
 
 @Injectable()
 export class TogglePinPostUseCase {
@@ -17,7 +23,7 @@ export class TogglePinPostUseCase {
     }
     const post = await this.postRepository.findById(id);
     if (!post) throw new PostNotFoundException(id);
-    
+
     return this.postRepository.togglePin(id);
   }
 }

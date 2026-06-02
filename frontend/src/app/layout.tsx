@@ -25,7 +25,13 @@ export async function generateMetadata(): Promise<Metadata> {
   
   try {
     const apiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL || '/api';
-    const finalApiUrl = apiUrl.endsWith('/v1') ? apiUrl : `${apiUrl}/v1`;
+    let finalApiUrl = apiUrl;
+    if (finalApiUrl.startsWith('http') && !finalApiUrl.includes('/api')) {
+      finalApiUrl = finalApiUrl.replace(/\/$/, '') + '/api';
+    }
+    if (!finalApiUrl.includes('/v1')) {
+      finalApiUrl = finalApiUrl.replace(/\/$/, '') + '/v1';
+    }
     
     // Only fetch if we have an absolute URL (needed for SSR/Build time)
     if (finalApiUrl.startsWith('http')) {
@@ -43,27 +49,6 @@ export async function generateMetadata(): Promise<Metadata> {
     console.error('Failed to fetch settings for metadata:', err instanceof Error ? err.message : String(err));
   }
 
-  // Check if system is initialized
-  try {
-    const apiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL;
-    if (!apiUrl) throw new Error('INTERNAL_API_URL or NEXT_PUBLIC_API_URL is not defined');
-    const finalApiUrl = apiUrl.endsWith('/v1') ? apiUrl : `${apiUrl}/v1`;
-    
-    // This runs on every page load (server-side)
-    const setupRes = await fetch(`${finalApiUrl}/setup/status`, { 
-      next: { revalidate: 60 }, // Cache for 1 minute
-      signal: AbortSignal.timeout(3000)
-    });
-    
-    if (setupRes.ok) {
-      const setupData = await setupRes.json();
-      // We can't redirect directly from here in a Server Component without 'next/navigation'
-      // But we can pass this info to a client component if needed.
-      // Actually, for better UX, we'll do the redirect in a small client component inside the body.
-    }
-  } catch (err) {
-    console.error('Failed to check setup status:', err);
-  }
 
   return {
     metadataBase: new URL(baseUrl),
@@ -122,36 +107,13 @@ export default async function RootLayout({
 }) {
   const headerList = await headers();
   const pathname = headerList.get('x-invoke-path') || ''; // Note: this might not work in all environments
-  
-  // Alternative: check in a client component or just do it here if possible
-  // In Next.js 15+, we can use headers to get the URL
-  
-  try {
-    const apiUrl = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL;
-    if (!apiUrl) throw new Error('INTERNAL_API_URL or NEXT_PUBLIC_API_URL is not defined');
-    const finalApiUrl = apiUrl.endsWith('/v1') ? apiUrl : `${apiUrl}/v1`;
-    
-    const setupRes = await fetch(`${finalApiUrl}/setup/status`, { 
-      next: { revalidate: 60 },
-      signal: AbortSignal.timeout(2000)
-    });
-    
-    if (setupRes.ok) {
-      const setupData = await setupRes.json();
-      if (!setupData.isInitialized) {
-        // We need to check if we are already on /setup to avoid infinite loop
-        // Since we don't have easy access to pathname in Layout, we'll use a Client Component for the redirect
-        // OR we can try to get it from headers if middleware is configured.
-      }
-    }
-  } catch (err) {
-    // Fail silently to avoid breaking the site if API is down
-  }
+  const nonce = headerList.get('x-nonce') || '';
 
   return (
     <html lang="vi" className="h-full scroll-smooth" data-scroll-behavior="smooth" suppressHydrationWarning>
       <head>
         <script
+          nonce={nonce}
           suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `
@@ -190,7 +152,7 @@ export default async function RootLayout({
         />
       </head>
       <body suppressHydrationWarning className={`${inter.variable} ${outfit.variable} font-sans antialiased min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-300`}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem enableColorScheme>
+        <ThemeProvider nonce={nonce} attribute="class" defaultTheme="system" enableSystem enableColorScheme>
           <AuthProvider>
             <SetupRedirectCheck />
             <ConditionalLayout>

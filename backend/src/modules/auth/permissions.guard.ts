@@ -46,7 +46,7 @@ export class PermissionsGuard implements CanActivate {
       'comments:create': 'can_comment',
     };
 
-    const hasAll = requiredPermissions.every(permKey => {
+    const hasAll = requiredPermissions.every((permKey) => {
       const userProp = permissionMap[permKey];
       if (userProp) {
         return !!user[userProp];

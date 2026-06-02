@@ -1,11 +1,15 @@
 import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { CreateNotificationDto } from '@portfolio/types';
-import { INotificationsRepository, I_NOTIFICATIONS_REPOSITORY } from './domain/repositories/notification.repository.interface';
+import {
+  INotificationsRepository,
+  I_NOTIFICATIONS_REPOSITORY,
+} from './domain/repositories/notification.repository.interface';
 
 @Injectable()
 export class NotificationsService {
   constructor(
-    @Inject(I_NOTIFICATIONS_REPOSITORY) private repository: INotificationsRepository,
+    @Inject(I_NOTIFICATIONS_REPOSITORY)
+    private repository: INotificationsRepository,
   ) {}
 
   async create(data: CreateNotificationDto) {
@@ -14,7 +18,7 @@ export class NotificationsService {
 
   async findAll(userId: number, unreadOnly: boolean = false) {
     const notifications = await this.repository.findAll(userId);
-    return unreadOnly ? notifications.filter(n => !n.is_read) : notifications;
+    return unreadOnly ? notifications.filter((n) => !n.is_read) : notifications;
   }
 
   async getUnreadCount(userId: number) {

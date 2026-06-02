@@ -28,18 +28,25 @@ export class PostMapper {
       blocked_reason: raw.blocked_reason,
       category_id: raw.category_id,
       author_id: raw.author_id,
-      Author: raw.Author ? {
-        id: raw.Author.id,
-        username: raw.Author.username,
-        fullname: raw.Author.Profile?.fullname ?? raw.Author.fullname ?? null,
-        avatar: raw.Author.Profile?.avatar ?? raw.Author.avatar ?? null,
-      } : undefined,
-      BlockedBy: raw.BlockedBy ? {
-        id: raw.BlockedBy.id,
-        username: raw.BlockedBy.username,
-        fullname: raw.BlockedBy.Profile?.fullname ?? raw.BlockedBy.fullname ?? null,
-        avatar: raw.BlockedBy.Profile?.avatar ?? raw.BlockedBy.avatar ?? null,
-      } : undefined,
+      Author: raw.Author
+        ? {
+            id: raw.Author.id,
+            username: raw.Author.username,
+            fullname:
+              raw.Author.Profile?.fullname ?? raw.Author.fullname ?? null,
+            avatar: raw.Author.Profile?.avatar ?? raw.Author.avatar ?? null,
+          }
+        : undefined,
+      BlockedBy: raw.BlockedBy
+        ? {
+            id: raw.BlockedBy.id,
+            username: raw.BlockedBy.username,
+            fullname:
+              raw.BlockedBy.Profile?.fullname ?? raw.BlockedBy.fullname ?? null,
+            avatar:
+              raw.BlockedBy.Profile?.avatar ?? raw.BlockedBy.avatar ?? null,
+          }
+        : undefined,
       Category: raw.Category,
       Series: raw.Series,
       Comment: raw.Comment,
@@ -70,7 +77,11 @@ export class PostMapper {
       series_order: entity.series_order,
       cover_image: entity.cover_image,
       is_pinned: entity.is_pinned,
-      status: entity.is_blocked ? 'BLOCKED' : (entity.is_published ? 'PUBLISHED' : 'DRAFT'),
+      status: entity.is_blocked
+        ? 'BLOCKED'
+        : entity.is_published
+          ? 'PUBLISHED'
+          : 'DRAFT',
       category_id: entity.category_id,
       author_id: entity.author_id,
       blocked_by_id: entity.blocked_by_id,

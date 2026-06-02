@@ -53,10 +53,12 @@ import { SeoModule } from './modules/seo/seo.module';
     AdminAlertModule,
     ScheduleModule.forRoot(),
     StatsModule,
-    ThrottlerModule.forRoot([{
-      ttl: 60000,
-      limit: 60, // 60 requests per minute
-    }]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 60, // 60 requests per minute
+      },
+    ]),
     SetupModule,
     SeoModule,
   ],

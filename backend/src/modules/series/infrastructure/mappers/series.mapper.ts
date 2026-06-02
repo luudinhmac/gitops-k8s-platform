@@ -9,13 +9,15 @@ export class SeriesMapper {
       slug: raw.slug,
       description: raw.description,
       _count: raw._count,
-      Post: raw.Post ? raw.Post.map((p: any) => ({
-        id: p.id,
-        title: p.title,
-        slug: p.slug,
-        series_order: p.series_order,
-        created_at: p.created_at,
-      })) : undefined,
+      Post: raw.Post
+        ? raw.Post.map((p: any) => ({
+            id: p.id,
+            title: p.title,
+            slug: p.slug,
+            series_order: p.series_order,
+            created_at: p.created_at,
+          }))
+        : undefined,
     });
   }
 }

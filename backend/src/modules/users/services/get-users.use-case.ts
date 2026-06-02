@@ -1,5 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { IUsersRepository, I_USERS_REPOSITORY } from '../domain/user.repository.interface';
+import {
+  IUsersRepository,
+  I_USERS_REPOSITORY,
+} from '../domain/user.repository.interface';
 import { User } from '@portfolio/contracts';
 
 @Injectable()
@@ -11,15 +14,16 @@ export class GetUsersUseCase {
 
   async execute(currentUser?: any): Promise<User[]> {
     const users = await this.userRepository.findAll({
-      orderBy: { created_at: 'desc' }
+      orderBy: { created_at: 'desc' },
     });
-    
-    return users.map(user => {
+
+    return users.map((user) => {
       const userData = user.toJSON() as unknown as User;
-      
+
       // Nếu không phải Admin/SuperAdmin, lọc bỏ các thông tin nhạy cảm
-      const isAdmin = currentUser?.role === 'superadmin' || currentUser?.role === 'admin';
-      
+      const isAdmin =
+        currentUser?.role === 'superadmin' || currentUser?.role === 'admin';
+
       if (!isAdmin) {
         return {
           id: userData.id,
@@ -38,7 +42,7 @@ export class GetUsersUseCase {
           role: userData.role, // Vẫn giữ role để hiển thị cấp bậc nếu cần, hoặc ẩn đi
         } as unknown as User;
       }
-      
+
       return userData;
     });
   }

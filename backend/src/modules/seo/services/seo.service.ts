@@ -7,7 +7,7 @@ export class SeoService {
     return {
       score: 0,
       suggestions: [],
-      keywords: []
+      keywords: [],
     };
   }
 

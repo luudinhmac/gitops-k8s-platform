@@ -11,7 +11,6 @@ import { CreateCategoryUseCase } from '../application/use-cases/create-category.
 import { UpdateCategoryUseCase } from '../application/use-cases/update-category.use-case';
 import { DeleteCategoryUseCase } from '../application/use-cases/delete-category.use-case';
 
-
 @Module({
   imports: [AdminAlertModule],
   controllers: [CategoriesController],
