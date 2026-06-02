@@ -1,0 +1,3 @@
+[submodule "infra"]
+	path = infra
+	url = git@gitlab.com:portfolio-macld/portfolio-infratructure.git
