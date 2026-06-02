@@ -25,6 +25,7 @@ ansible/group_vars/all/vault.yml
 backend/.env
 frontend/.env
 infra/certs
+infra/certs.zip
 infra/.git
 
 # Misc
