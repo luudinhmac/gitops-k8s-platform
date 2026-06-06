@@ -32,6 +32,8 @@ stages:
 default:
   interruptible: true
   timeout: 30m
+  after_script:
+    - sh .gitlab-ci/notify.sh $CI_JOB_STATUS $CI_JOB_STAGE
 
 workflow:
   rules:

@@ -11,6 +11,23 @@ JOB_NAME=${CI_JOB_NAME:-"Job"}
 PIPELINE_URL=${CI_PIPELINE_URL}
 COMMIT_MSG=${CI_COMMIT_MESSAGE:-"No message"}
 
+# If successful, only send notification for deployment, post-deployment, or rollback stages
+if [ "$STATUS" = "success" ] || [ "$STATUS" = "successful" ]; then
+    if [ "$TYPE" != "deploy" ] && [ "$TYPE" != "post-deploy" ] && [ "$TYPE" != "rollback" ]; then
+        echo "Job succeeded in stage '$TYPE'. Skipping notification."
+        exit 0
+    fi
+fi
+
+# Fetch job log if failed/canceled and no log file provided or exists
+if { [ "$STATUS" = "failed" ] || [ "$STATUS" = "canceled" ]; } && ( [ -z "$LOG_FILE" ] || [ ! -f "$LOG_FILE" ] ); then
+    if [ ! -z "$CI_JOB_TOKEN" ] && [ ! -z "$CI_JOB_ID" ]; then
+        echo "Job failed/canceled. Fetching job log from GitLab API..."
+        curl -s --header "JOB-TOKEN: ${CI_JOB_TOKEN}" "${CI_API_V4_URL:-https://gitlab.com/api/v4}/projects/${CI_PROJECT_ID}/jobs/${CI_JOB_ID}/trace" -o job.log
+        LOG_FILE="job.log"
+    fi
+fi
+
 # Auto-install curl if missing
 if ! command -v curl >/dev/null 2>&1; then
     echo "Installing curl..."
@@ -33,16 +50,19 @@ ESC_USER_NAME=$(echo "$USER_NAME" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g')
 
 ICON="✅"
 STATUS_TEXT="THÀNH CÔNG"
-if [ "$STATUS" == "failed" ]; then
+if [ "$STATUS" = "failed" ]; then
     ICON="❌"
     STATUS_TEXT="THẤT BẠI"
+elif [ "$STATUS" = "canceled" ]; then
+    ICON="⚠️"
+    STATUS_TEXT="BỊ HỦY"
 fi
 
 # Telegram Notification
 TELEGRAM_MSG="<b>${ICON} CI/CD PIPELINE ${STATUS_TEXT}</b>%0A%0A👤 <b>Người thực hiện:</b> ${ESC_USER_NAME}%0A📁 <b>Dự án:</b> ${PROJECT_NAME}%0A🛠 <b>Tiến trình:</b> ${TYPE} (${JOB_NAME})%0A📝 <b>Commit:</b> ${ESC_COMMIT_MSG}%0A🔗 <b>Chi tiết:</b> <a href='${PIPELINE_URL}'>Xem Pipeline</a>"
 
-if [ "$STATUS" == "failed" ] && [ -f "$LOG_FILE" ]; then
-    LOG_TAIL=$(tail -n 10 "$LOG_FILE" | sed 's/<[^>]*>//g' | sed 's/&/\&amp;/g' | sed 's/</\&lt;/g' | sed 's/>/\&gt;/g')
+if { [ "$STATUS" = "failed" ] || [ "$STATUS" = "canceled" ]; } && [ -f "$LOG_FILE" ]; then
+    LOG_TAIL=$(tail -n 15 "$LOG_FILE" | sed "s/$(printf '\033')\[[0-9;]*[a-zA-Z]//g" | sed 's/<[^>]*>//g' | sed 's/&/\&amp;/g' | sed 's/</\&lt;/g' | sed 's/>/\&gt;/g')
     TELEGRAM_MSG="${TELEGRAM_MSG}%0A%0A📑 <b>Log lỗi:</b>%0A<code>${LOG_TAIL}</code>"
 fi
 
@@ -60,8 +80,8 @@ if [ ! -z "$TEAMS_WEBHOOK_URL" ]; then
     echo "Sending to MS Teams (Adaptive Card)..."
     
     LOG_CONTENT=""
-    if [ "$STATUS" == "failed" ] && [ -f "$LOG_FILE" ]; then
-        LOG_TAIL=$(tail -n 10 "$LOG_FILE" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | tr -d '\n' | tr -d '\r')
+    if { [ "$STATUS" = "failed" ] || [ "$STATUS" = "canceled" ]; } && [ -f "$LOG_FILE" ]; then
+        LOG_TAIL=$(tail -n 15 "$LOG_FILE" | sed "s/$(printf '\033')\[[0-9;]*[a-zA-Z]//g" | sed 's/\\/\\\\/g' | sed 's/"/\\"/g' | tr -d '\n' | tr -d '\r')
         LOG_CONTENT="**Log lỗi:**\n\n${LOG_TAIL}"
     fi
 
