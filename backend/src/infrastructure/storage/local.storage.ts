@@ -26,7 +26,7 @@ export class LocalStorageService implements IStorageService {
     const filePath = path.join(targetDir, filename);
 
     await fs.promises.writeFile(filePath, file.buffer);
-    
+
     const relativePath = folder ? `${folder}/${filename}` : filename;
     return `/uploads/${relativePath}`;
   }
@@ -35,10 +35,10 @@ export class LocalStorageService implements IStorageService {
     if (!fileKey) return;
 
     // Handle both /uploads/filename and just filename
-    const filename = fileKey.startsWith('/uploads/') 
-      ? fileKey.replace('/uploads/', '') 
+    const filename = fileKey.startsWith('/uploads/')
+      ? fileKey.replace('/uploads/', '')
       : fileKey;
-      
+
     const filePath = path.join(this.uploadDir, filename);
 
     try {

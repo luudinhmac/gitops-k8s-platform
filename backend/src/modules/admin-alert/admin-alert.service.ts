@@ -16,39 +16,51 @@ export class AdminAlertService {
     private settingsService: SettingsService,
   ) {}
 
-  async sendAlert(options: { 
-    subject: string; 
-    text: string; 
-    html?: string; 
-  }) {
+  async sendAlert(options: { subject: string; text: string; html?: string }) {
     const { subject, text, html } = options;
     const results: any = {};
 
     try {
-      results.telegram = await this.telegramService.sendSystemNotification(text);
-      
+      results.telegram =
+        await this.telegramService.sendSystemNotification(text);
+
       // Convert HTML-like tags (used for Telegram) to Markdown (used for Teams)
       // Note: Teams needs double newlines for actual line breaks in some Markdown versions
       const teamsText = text
-        .replace(/<b>/g, '**').replace(/<\/b>/g, '**')
-        .replace(/<i>/g, '_').replace(/<\/i>/g, '_')
-        .replace(/<code>/g, '`').replace(/<\/code>/g, '`')
+        .replace(/<b>/g, '**')
+        .replace(/<\/b>/g, '**')
+        .replace(/<i>/g, '_')
+        .replace(/<\/i>/g, '_')
+        .replace(/<code>/g, '`')
+        .replace(/<\/code>/g, '`')
         .replace(/\n+/g, '\n\n');
-        
+
       results.teams = await this.teamsService.sendMessage(teamsText);
 
-      const mailEnabled = await this.settingsService.getSettingByKey('mail_enabled');
+      const mailEnabled =
+        await this.settingsService.getSettingByKey('mail_enabled');
       if (mailEnabled === 'true') {
-        const adminRecipient = await this.settingsService.getSettingByKey('mail_admin_recipient');
+        const adminRecipient = await this.settingsService.getSettingByKey(
+          'mail_admin_recipient',
+        );
         if (adminRecipient) {
-          results.email = await this.mailService.sendMail(adminRecipient, subject, text, html || text);
+          results.email = await this.mailService.sendMail(
+            adminRecipient,
+            subject,
+            text,
+            html || text,
+          );
         } else {
-          this.logger.warn('Email alerts enabled but mail_admin_recipient is missing');
+          this.logger.warn(
+            'Email alerts enabled but mail_admin_recipient is missing',
+          );
         }
       }
       return results;
     } catch (error: any) {
-      this.logger.error(`Error in AdminAlertService dispatcher: ${error.message}`);
+      this.logger.error(
+        `Error in AdminAlertService dispatcher: ${error.message}`,
+      );
       return { error: error.message };
     }
   }

@@ -6,7 +6,10 @@ import { ShieldAlert, Rocket, Github, Twitter, Mail, Lock, CheckCircle2, AlertCi
 import Button from '@/shared/components/ui/Button';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { settingService } from '@/features/settings/services/settingService';
+import { authService } from '@/features/auth/services/authService';
+import { useAuth } from '@/context/AuthContext';
 import { cn } from '@/lib/utils';
+import { Eye, EyeOff, User as UserIcon } from 'lucide-react';
 
 function MaintenanceContent() {
   const [clickCount, setClickCount] = useState(0);
@@ -16,9 +19,13 @@ function MaintenanceContent() {
   const [checkingStatus, setCheckingStatus] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  
+  const [step, setStep] = useState<'passcode' | 'login'>('passcode');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginData, setLoginData] = useState({ username: '', password: '' });
+
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { login } = useAuth();
   const from = searchParams.get('from') || '/';
 
   const handleIconClick = () => {
@@ -33,7 +40,7 @@ function MaintenanceContent() {
     try {
       const data = await settingService.getPublicSettings();
       const isGlobalMaintenance = data.maintenance_global === 'true' || data.maintenance_global === true;
-      
+
       // If maintenance mode is OFF, redirect back to home or the previous page
       if (!isGlobalMaintenance) {
         router.push(from);
@@ -74,18 +81,42 @@ function MaintenanceContent() {
     try {
       const data = await settingService.verifyMaintenancePasscode(passcode);
       if (data.success) {
-        setSuccess(true);
-        // Set bypass cookie for session (closes when browser closes) or short time
-        // User requested: "sau khi admin logout ra thì phải quay về web bảo trì"
+        // Set bypass cookie
         document.cookie = `MAINTENANCE_BYPASS=${passcode}; path=/; samesite=lax`;
-        setTimeout(() => {
-          router.push('/admin');
-        }, 1500);
+        setStep('login');
+        setError(null);
       } else {
         setError('Mã xác thực không đúng hoặc đã hết hạn.');
       }
     } catch (err) {
       setError('Đã xảy ra lỗi khi xác thực. Vui lòng thử lại sau.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await authService.login(loginData);
+      if (data.success) {
+        const isAdmin = ['admin', 'superadmin'].includes(data.user.role);
+        if (isAdmin) {
+          setSuccess(true);
+          login(data.user);
+          setTimeout(() => {
+            router.push(from === '/maintenance' ? '/portal-dashboard' : from);
+          }, 1500);
+        } else {
+          setError('Tài khoản của bạn không có quyền truy cập vào lúc này.');
+        }
+      } else {
+        setError(data.message || 'Đăng nhập thất bại.');
+      }
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Lỗi hệ thống khi đăng nhập.');
     } finally {
       setLoading(false);
     }
@@ -99,7 +130,7 @@ function MaintenanceContent() {
 
       <div className="max-w-2xl w-full text-center relative z-10">
         {/* Animated Icon */}
-        <motion.div 
+        <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 100 }}
@@ -114,15 +145,15 @@ function MaintenanceContent() {
 
         {/* Content */}
         <motion.div
-           initial={{ opacity: 0, y: 20 }}
-           animate={{ opacity: 1, y: 0 }}
-           transition={{ delay: 0.2 }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
         >
           <h1 className="text-4xl md:text-6xl font-black text-white mb-6 tracking-tighter">
             Website đang <span className="text-primary italic">Bảo Trì</span>
           </h1>
           <p className="text-slate-400 text-lg md:text-xl font-medium mb-12 max-w-lg mx-auto leading-relaxed">
-            Chúng tôi đang nâng cấp hệ thống để mang lại trải nghiệm tốt nhất cho bạn. Vui lòng quay lại sau ít phút nhé! 
+            Chúng tôi đang nâng cấp hệ thống để mang lại trải nghiệm tốt nhất cho bạn. Vui lòng quay lại sau ít phút nhé!
           </p>
 
           {/* Social Links */}
@@ -139,11 +170,11 @@ function MaintenanceContent() {
           </div>
 
           <div className="h-1 w-24 bg-primary/20 mx-auto rounded-full overflow-hidden relative">
-             <motion.div 
-               animate={{ x: [-100, 100] }}
-               transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-               className="absolute inset-0 bg-primary w-1/2 rounded-full"
-             />
+            <motion.div
+              animate={{ x: [-100, 100] }}
+              transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+              className="absolute inset-0 bg-primary w-1/2 rounded-full"
+            />
           </div>
         </motion.div>
       </div>
@@ -152,7 +183,7 @@ function MaintenanceContent() {
       <AnimatePresence>
         {showBypass && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-6 backdrop-blur-xl bg-slate-950/60">
-            <motion.div 
+            <motion.div
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -170,63 +201,137 @@ function MaintenanceContent() {
                   <div className="p-2 bg-primary/10 rounded-xl">
                     <Lock size={20} className="text-primary" />
                   </div>
-                  <h3 className="font-bold text-white text-lg tracking-tight">Admin Bypass</h3>
+                  <h3 className="font-bold text-white text-lg tracking-tight">
+                    {step === 'passcode' ? 'Admin Bypass' : 'Admin Login'}
+                  </h3>
                 </div>
-                <button 
-                  onClick={() => setShowBypass(false)}
+                <button
+                  onClick={() => {
+                    setShowBypass(false);
+                    setStep('passcode');
+                  }}
                   className="text-slate-500 hover:text-white transition-colors"
                 >
                   <Rocket size={20} />
                 </button>
               </div>
 
-              <form onSubmit={handleVerify} className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black tracking-widest text-slate-500 ml-1">Nhập mã truy cập</label>
-                  <input 
-                    type="password" 
-                    autoFocus
-                    value={passcode}
-                    onChange={(e) => setPasscode(e.target.value)}
-                    placeholder="••••••"
-                    className="w-full bg-slate-950 border border-white/10 rounded-2xl px-5 py-4 text-white text-center text-2xl tracking-[0.5em] focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-slate-800"
-                  />
-                </div>
-
-                {error && (
-                  <div className={cn(
-                    "p-3 border rounded-xl flex items-center gap-3 text-xs font-bold animate-in fade-in slide-in-from-top-2",
-                    error.includes('Mã đã được gửi') 
-                      ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500" 
-                      : "bg-red-500/10 border-red-500/20 text-red-500"
-                  )}>
-                    <AlertCircle size={14} />
-                    {error}
+              {step === 'passcode' ? (
+                <form onSubmit={handleVerify} className="space-y-6">
+                  <div className="space-y-2">
+                    <label htmlFor="bypass-passcode" className="text-[10px] uppercase font-black tracking-widest text-slate-500 ml-1">Nhập mã truy cập</label>
+                    <input
+                      id="bypass-passcode"
+                      name="passcode"
+                      type="password"
+                      autoFocus
+                      value={passcode}
+                      onChange={(e) => setPasscode(e.target.value)}
+                      placeholder="••••••"
+                      className="w-full bg-slate-950 border border-white/10 rounded-2xl px-5 py-4 text-white text-center text-2xl tracking-[0.5em] focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all placeholder:text-slate-800"
+                    />
                   </div>
-                )}
 
-                <div className="grid grid-cols-2 gap-4">
-                  <Button 
-                    type="button"
-                    variant="outline"
-                  onClick={handleRequestCode}
-                  className="py-6 rounded-2xl font-black uppercase tracking-widest text-[10px]"
-                  isLoading={loading}
-                >
-                  Yêu cầu mã
-                </Button>
-                <Button 
-                   type="submit" 
-                   className="py-6 rounded-2xl font-black uppercase tracking-widest text-[10px]"
-                   isLoading={loading}
-                >
-                  Xác nhận
-                </Button>
-                </div>
-              </form>
+                  {error && (
+                    <div className={cn(
+                      "p-3 border rounded-xl flex items-center gap-3 text-xs font-bold animate-in fade-in slide-in-from-top-2",
+                      error.includes('Mã đã được gửi')
+                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-500"
+                        : "bg-red-500/10 border-red-500/20 text-red-500"
+                    )}>
+                      <AlertCircle size={14} />
+                      {error}
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={handleRequestCode}
+                      className="py-6 rounded-2xl font-black uppercase tracking-widest text-[10px]"
+                      isLoading={loading}
+                    >
+                      Yêu cầu mã
+                    </Button>
+                    <Button
+                      type="submit"
+                      className="py-6 rounded-2xl font-black uppercase tracking-widest text-[10px]"
+                      isLoading={loading}
+                    >
+                      Xác nhận
+                    </Button>
+                  </div>
+                </form>
+              ) : (
+                <form onSubmit={handleLoginSubmit} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] uppercase font-black tracking-widest text-slate-500 ml-1">Username</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500">
+                        <UserIcon size={16} />
+                      </div>
+                      <input
+                        id="admin-username"
+                        name="username"
+                        type="text"
+                        required
+                        autoFocus
+                        value={loginData.username}
+                        onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
+                        className="w-full bg-slate-950 border border-white/10 rounded-2xl pl-12 pr-5 py-4 text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                        placeholder="Admin username"
+                        autoComplete="username"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] uppercase font-black tracking-widest text-slate-500 ml-1">Mật khẩu</label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500">
+                        <Lock size={16} />
+                      </div>
+                      <input
+                        id="admin-password"
+                        name="password"
+                        type={showPassword ? 'text' : 'password'}
+                        required
+                        value={loginData.password}
+                        onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                        className="w-full bg-slate-950 border border-white/10 rounded-2xl pl-12 pr-12 py-4 text-white text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                        placeholder="••••••••"
+                        autoComplete="current-password"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-white transition-colors"
+                      >
+                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {error && (
+                    <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3 text-[10px] font-bold text-red-500">
+                      <AlertCircle size={14} />
+                      {error}
+                    </div>
+                  )}
+
+                  <Button
+                    type="submit"
+                    className="w-full py-6 rounded-2xl font-black uppercase tracking-widest text-[10px] mt-2"
+                    isLoading={loading}
+                  >
+                    Đăng nhập Hệ thống
+                  </Button>
+                </form>
+              )}
 
               <p className="mt-8 text-center text-[10px] text-slate-600 font-bold uppercase tracking-wider">
-                Truy cập chỉ dành cho quản trị viên tối cao
+                {step === 'passcode' ? 'Truy cập chỉ dành cho quản trị viên tối cao' : 'Xác thực định danh quản trị viên'}
               </p>
             </motion.div>
           </div>

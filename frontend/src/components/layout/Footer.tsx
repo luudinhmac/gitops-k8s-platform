@@ -5,18 +5,21 @@ import { Github, Linkedin, Mail, Users, BarChart3 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
+import { useAuth } from '@/context/AuthContext';
+
 export default function Footer() {
   const currentYear = new Date().getFullYear();
   const pathname = usePathname();
+  const { user, isAuthenticated } = useAuth();
   const [stats, setStats] = useState<{ onlineCount: number; totalVisits: number } | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
-    if (pathname.startsWith('/admin') || pathname === '/maintenance') return;
+    if (pathname.startsWith('/portal-dashboard') || pathname === '/maintenance') return;
 
     const fetchStats = async () => {
       try {
-        const res = await fetch(`/api/stats/counters`);
+        const res = await fetch(`/api/v1/stats/counters`);
         if (res.ok) {
           const data = await res.json();
           setStats(data);
@@ -34,21 +37,21 @@ export default function Footer() {
     return () => clearInterval(interval);
   }, [pathname]);
 
-  if (pathname.startsWith('/admin') || pathname === '/maintenance') {
+  if (pathname.startsWith('/portal-dashboard') || pathname === '/maintenance') {
     return null;
   }
 
   return (
-    <footer className="bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800">
+    <footer suppressHydrationWarning={true} className="bg-slate-50 dark:bg-slate-900/50 border-t border-slate-200 dark:border-slate-800">
       <div suppressHydrationWarning={true} className="max-w-7xl mx-auto px-4 py-12 md:py-16">
         <div suppressHydrationWarning={true} className="grid grid-cols-1 md:grid-cols-4 gap-6">
           {/* Brand Section */}
           <div className="md:col-span-2">
             <Link href="/" className="text-2xl font-display font-bold text-gradient">
-              Portfolio
+              Zero2Ops
             </Link>
             <p className="mt-4 text-slate-600 dark:text-slate-400 max-w-sm">
-              Đam mê xây dựng những ứng dụng web hiện đại, hiệu quả và mang lại giá trị tốt nhất cho người dùng. Chuyên về System Engineering và Fullstack Development.
+              Đam mê xây dựng những ứng dụng web hiện đại, hiệu quả và mang lại giá trị tốt nhất cho người dùng. Chuyên về System Engineering và DevSecOps.
             </p>
             <div className="mt-6 flex space-x-4">
               <a href="https://github.com/luudinhmac" target="_blank" className="p-2 glass rounded-full hover:text-primary transition-colors">
@@ -87,32 +90,36 @@ export default function Footer() {
               Quản trị
             </h3>
             <ul className="mt-4 space-y-2">
-              <li>
-                <Link href="/admin" className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Dashboard</Link>
-              </li>
-              <li>
-                <Link href="/login" className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Đăng nhập</Link>
-              </li>
+              {isAuthenticated && user && ['admin', 'superadmin'].includes(user.role) && (
+                <li>
+                  <Link href="/portal-dashboard" className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Dashboard</Link>
+                </li>
+              )}
+              {!isAuthenticated && (
+                <li>
+                  <Link href="/login" className="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors">Đăng nhập</Link>
+                </li>
+              )}
             </ul>
           </div>
         </div>
 
         <div suppressHydrationWarning={true} className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 text-sm text-slate-500">
           <div className="flex flex-col md:flex-row items-center md:space-x-8 space-y-2 md:space-y-0">
-             <p>© {currentYear} Macld. Bản quyền đã được bảo hộ.</p>
-             {!loadingStats && stats && (
-               <div className="flex items-center space-x-4 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                    <span>{stats.onlineCount} Đang trực tuyến</span>
-                  </div>
-                  <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700" />
-                  <div className="flex items-center gap-1.5">
-                    <BarChart3 size={12} />
-                    <span>{stats.totalVisits.toLocaleString()} Lượt truy cập</span>
-                  </div>
-               </div>
-             )}
+            <p>© {currentYear} Macld. Bản quyền đã được bảo hộ.</p>
+            {!loadingStats && stats && (
+              <div className="flex items-center space-x-4 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+                  <span>{stats.onlineCount} Đang trực tuyến</span>
+                </div>
+                <div className="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700" />
+                <div className="flex items-center gap-1.5">
+                  <BarChart3 size={12} />
+                  <span>{stats.totalVisits.toLocaleString()} Lượt truy cập</span>
+                </div>
+              </div>
+            )}
           </div>
           <div className="flex space-x-6">
             <Link href="/privacy" className="hover:text-primary transition-colors">Quyền riêng tư</Link>

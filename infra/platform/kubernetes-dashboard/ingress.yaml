@@ -1,0 +1,34 @@
+# Description: Ingress configuration to expose Kubernetes Dashboard externally.
+# Uses Traefik as the ingress controller and provides TLS via Cert-Manager or wildcard secret.
+# Last Updated: 2026-05-12
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: kubernetes-dashboard-ingress
+  namespace: kubernetes-dashboard
+  annotations:
+    # Important: Dashboard service uses HTTPS internally
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.middlewares: infra-admin-allowlist@kubernetescrd,infra-infra-compress@kubernetescrd
+    traefik.ingress.kubernetes.io/service.serversscheme: https
+    traefik.ingress.kubernetes.io/service.serverstransport: infra-insecure-transport@kubernetescrd
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - k8s.luumac.io.vn
+      secretName: luumac-wildcard-tls
+  rules:
+    - host: k8s.luumac.io.vn
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: kubernetes-dashboard
+                port:
+                  number: 443

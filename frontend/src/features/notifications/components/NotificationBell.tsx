@@ -4,13 +4,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Bell, Check, Trash2, MessageCircle, Reply, ShieldAlert, UserCheck, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { notificationService } from '@/features/notifications/services/notificationService';
-import { Notification } from '@portfolio/contracts';
+import { Notification } from '@/types';
+import { useAuth } from '@/context/AuthContext';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import UserAvatar from '@/features/users/components/UserAvatar';
 import ConfirmationDialog from '@/shared/components/ui/ConfirmationDialog';
 
 const NotificationBell = () => {
+  const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -21,6 +23,7 @@ const NotificationBell = () => {
   const router = useRouter();
 
   const fetchNotifications = async () => {
+    if (!user) return;
     try {
       const data = await notificationService.getAll();
       setNotifications(data);
@@ -32,11 +35,16 @@ const NotificationBell = () => {
   };
 
   useEffect(() => {
-    fetchNotifications();
-    // Simple polling every 60 seconds
-    const interval = setInterval(fetchNotifications, 60000);
-    return () => clearInterval(interval);
-  }, []);
+    if (user) {
+      fetchNotifications();
+      // Simple polling every 60 seconds
+      const interval = setInterval(fetchNotifications, 60000);
+      return () => clearInterval(interval);
+    } else {
+      setNotifications([]);
+      setUnreadCount(0);
+    }
+  }, [user]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

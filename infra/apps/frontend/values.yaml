@@ -1,0 +1,39 @@
+# Description: Default Helm values for the frontend service.
+# Defines image, service, and ingress settings for the web application.
+# Last Updated: 2026-05-12
+
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+
+image:
+  repository: luudinhmac/portfolio-frontend
+  pullPolicy: Always
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 3000
+
+env:
+  tz: "Asia/Ho_Chi_Minh"
+  nodeEnv: "production"
+  internalApiUrl: "http://portfolio-backend:3001"
+
+ingress:
+  host: "staging.luumac.io.vn"
+  secretName: "luumac-tls-staging"
+
+namespace: portfolio

@@ -1,0 +1,10 @@
+# Description: Ansible playbook to configure server security settings.
+# Primarily applies the security role to ensure host hardening.
+# Last Updated: 2026-05-12
+
+---
+- name: Configure Server Security
+  hosts: k8s_server
+  become: yes
+  roles:
+    - security

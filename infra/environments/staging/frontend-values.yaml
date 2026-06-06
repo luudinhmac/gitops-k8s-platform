@@ -1,0 +1,27 @@
+# ==============================================================================
+# ENVIRONMENT: Staging (Frontend)
+# PURPOSE: Integration testing and preview
+# UPDATE POLICY: Automated CI/CD image tag updates
+# ==============================================================================
+
+image:
+  tag: "dev-5e6c9cba"
+ingress:
+  enabled: true
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.middlewares: infra-infra-compress@kubernetescrd
+  host: staging.luumac.io.vn
+  secretName: luumac-wildcard-tls
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+env:
+  tz: "Asia/Ho_Chi_Minh"
+  nodeEnv: "production"
+  internalApiUrl: "http://portfolio-backend-staging:3001/api/v1"

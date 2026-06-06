@@ -6,10 +6,6 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ROLES_KEY } from './roles.decorator';
-<<<<<<< HEAD
-import { AuthenticatedRequest } from '../users/interfaces/user.interface';
-=======
->>>>>>> feature/arch-refactor
 
 @Injectable()
 export class RolesGuard implements CanActivate {

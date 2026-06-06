@@ -1,5 +1,7 @@
+import helmet from 'helmet';
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, VersioningType } from '@nestjs/common';
+// CI/CD Test Trigger: 2026-05-12-17-54 (Final Validation)
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
@@ -8,25 +10,42 @@ import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Security: Helmet
+  app.use(
+    helmet({
+      crossOriginEmbedderPolicy: false,
+      contentSecurityPolicy: false,
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
+
   // Enable Graceful Shutdown
   app.enableShutdownHooks();
 
   // Set Global Prefix
   app.setGlobalPrefix('api');
 
-  // Trust proxy for accurate IP capture
+  // Enable Versioning
+  app.enableVersioning({
+    type: VersioningType.URI,
+    defaultVersion: '1',
+  });
+
+  // Trust proxy for accurate IP capture (Essential for rate limiting)
   const expressApp = app.getHttpAdapter().getInstance();
-  expressApp.set('trust proxy', true);
+  expressApp.set('trust proxy', 1);
 
   // Global Validation Pipe
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,
-    transform: true,
-    forbidNonWhitelisted: true,
-    transformOptions: {
-      enableImplicitConversion: true,
-    },
-  }));
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+      forbidNonWhitelisted: true,
+      transformOptions: {
+        enableImplicitConversion: true,
+      },
+    }),
+  );
 
   // Global Exception Filter
   app.useGlobalFilters(new GlobalExceptionFilter());
@@ -37,9 +56,7 @@ async function bootstrap() {
   // Enable CORS
   const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
     'http://localhost:3000',
-    'http://localhost:3001',
     'http://127.0.0.1:3000',
-    'http://127.0.0.1:3001',
   ];
 
   app.enableCors({
@@ -48,7 +65,7 @@ async function bootstrap() {
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
   });
 
-  // Swagger Documentation - Only enabled in non-production or when explicitly enabled
+  // Swagger Documentation
   const isProduction = process.env.NODE_ENV === 'production';
   const isSwaggerEnabled = process.env.ENABLE_SWAGGER === 'true';
 
@@ -65,7 +82,7 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3001;
   await app.listen(port);
-  console.log(`Backend is running at http://localhost:${port}/api`);
+  console.log(`Backend is running at http://localhost:${port}/api/v1`);
 }
 bootstrap().catch((err) => {
   console.error('Error during bootstrap:', err);

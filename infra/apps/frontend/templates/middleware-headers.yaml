@@ -1,0 +1,15 @@
+# Description: Traefik Middleware to strip internal Next.js routing headers from HTTP responses.
+# Resolves vulnerability by ensuring internal network paths are not exposed to the client.
+# Last Updated: 2026-05-30
+
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "frontend.fullname" . }}-strip-headers
+  namespace: {{ .Values.namespace }}
+spec:
+  headers:
+    customResponseHeaders:
+      X-Middleware-Rewrite: ""
+      X-Middleware-Next: ""
+      X-Middleware-Subrequest: ""

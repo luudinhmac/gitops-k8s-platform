@@ -6,28 +6,26 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
 import { PostsModule } from './modules/posts/posts.module';
-import { NotificationsModule } from './modules/notifications/notifications.module';
-import { CategoriesModule } from './modules/categories/categories.module';
+import { NotificationsModule } from './modules/notifications/presentation/notifications.module';
+import { CategoriesModule } from './modules/categories/presentation/categories.module';
 import { CommentsModule } from './modules/comments/comments.module';
 import { UploadModule } from './modules/upload/upload.module';
-import { SeriesModule } from './modules/series/series.module';
+import { SeriesModule } from './modules/series/presentation/series.module';
 import { SettingsModule } from './modules/settings/settings.module';
-<<<<<<< HEAD
-import { TelegramModule } from './telegram/telegram.module';
-import { MailModule } from './mail/mail.module';
-import { TeamsModule } from './teams/teams.module';
-import { AdminAlertModule } from './admin-alert/admin-alert.module';
-=======
 import { TelegramModule } from './modules/telegram/telegram.module';
 import { MailModule } from './modules/mail/mail.module';
 import { TeamsModule } from './modules/teams/teams.module';
 import { AdminAlertModule } from './modules/admin-alert/admin-alert.module';
->>>>>>> feature/arch-refactor
 import { ScheduleModule } from '@nestjs/schedule';
 import { StatsModule } from './modules/stats/stats.module';
 import { StatsMiddleware } from './modules/stats/stats.middleware';
 import { HealthController } from './health.controller';
 import { StorageModule } from './infrastructure/storage/storage.module';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
+import { APP_GUARD } from '@nestjs/core';
+import { SetupModule } from './modules/setup/setup.module';
+import { SeoModule } from './modules/seo/seo.module';
 
 @Module({
   imports: [
@@ -55,11 +53,27 @@ import { StorageModule } from './infrastructure/storage/storage.module';
     AdminAlertModule,
     ScheduleModule.forRoot(),
     StatsModule,
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000,
+        limit: 60, // 60 requests per minute
+      },
+    ]),
+    SetupModule,
+    SeoModule,
   ],
   controllers: [HealthController],
-  providers: [],
+  providers: [
+    {
+      provide: APP_GUARD,
+      useClass: CustomThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {
+  constructor() {
+    console.log('--- BACKEND STARTING: CACHE TOTALLY DISABLED (v3.0) ---');
+  }
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(StatsMiddleware)

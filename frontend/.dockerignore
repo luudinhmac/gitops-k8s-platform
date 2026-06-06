@@ -1,0 +1,13 @@
+node_modules
+.next
+.git
+.gitlab
+coverage
+dist
+.env
+.pnpm-store
+pnpm-store
+Dockerfile
+Dockerfile.*
+scratch
+*.log

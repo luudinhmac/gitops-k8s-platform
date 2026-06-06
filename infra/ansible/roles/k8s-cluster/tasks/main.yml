@@ -1,0 +1,10 @@
+# Description: Main tasks for the 'k8s-cluster' role.
+# Orchestrates the installation, initialization, and configuration of the K8s cluster.
+# Last Updated: 2026-05-12
+
+---
+- include_tasks: prerequisites.yml
+- include_tasks: install.yml
+- include_tasks: init.yml
+- include_tasks: dashboard.yml
+- include_tasks: hardening.yml

@@ -1,0 +1,29 @@
+# Description: Ingress manifest for ArgoCD Server in the production environment.
+# Provides secure access via HTTPS with admin allowlist protection.
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: platform-argocd-ingress-production
+  namespace: argocd
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.middlewares: infra-admin-allowlist@kubernetescrd
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  rules:
+  - host: argocd-prod.luumac.io.vn
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: argocd-server
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - argocd-prod.luumac.io.vn
+    secretName: argocd-prod-tls

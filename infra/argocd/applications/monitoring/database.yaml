@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring-database
+  namespace: argocd
+spec:
+  project: monitoring-project
+  source:
+    repoURL: https://gitlab.com/portfolio-macld/portfolio-infratructure.git
+    targetRevision: main
+    path: monitoring
+    directory:
+      recurse: true
+      include: '{exporters/postgres-exporter.yaml,servicemonitors/postgres.yaml}'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: database
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

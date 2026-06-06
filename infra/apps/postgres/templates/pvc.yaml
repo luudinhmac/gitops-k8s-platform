@@ -1,0 +1,32 @@
+# ==============================================================================
+# COMPONENT: PostgreSQL Storage
+# ROLE: High-integrity storage for database files
+# STORAGE: hostPath with 'Retain' policy; ensures data survival after pod death
+# ==============================================================================
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "postgres.fullname" . }}-pv
+spec:
+  capacity:
+    storage: {{ .Values.persistence.size }}
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain # IMPORTANT: Critical for DB data; prevents accidental deletion on PVC removal
+  hostPath:
+    path: {{ .Values.persistence.path }}
+  storageClassName: manual # Explicit binding to local hostPath PV
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "postgres.fullname" . }}-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.persistence.size }}
+  storageClassName: manual # Must match the PV storageClassName for successful binding
+  volumeName: {{ include "postgres.fullname" . }}-pv

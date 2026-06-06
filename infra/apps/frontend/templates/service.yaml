@@ -1,0 +1,19 @@
+# Description: Helm template for the frontend Kubernetes Service.
+# Defines internal load balancing and port configuration for the web frontend.
+# Last Updated: 2026-05-12
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "frontend.fullname" . }}
+  labels:
+    {{- include "frontend.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.port }}
+      protocol: TCP
+      name: http
+  selector:
+    {{- include "frontend.selectorLabels" . | nindent 4 }}

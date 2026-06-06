@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Portfolio Frontend (Professional GitOps Edition)
 
-## Getting Started
+Ứng dụng Frontend cho Portfolio cá nhân, được xây dựng bằng Next.js (App Router) và triển khai theo mô hình GitOps hiện đại, tách biệt hoàn toàn môi trường (Decoupled Architecture).
 
-First, run the development server:
+## 🚀 Tính năng & Công nghệ
+- **Next.js 15 (Standalone Mode):** Tối ưu hóa hiệu năng và dung lượng Image khi chạy trên Docker/Kubernetes.
+- **Tailwind CSS:** Giao diện Stealth UI tối giản, hiện đại và phản hồi nhanh.
+- **Courses Platform (New):** Hệ thống học tập trực tuyến (LMS) tích hợp, cho phép xem lộ trình khóa học và đăng ký waitlist.
+- **Dynamic Resume Timeline:** Trang giới thiệu tích hợp CV/Resume với hiệu ứng Timeline chuyên nghiệp.
+- **Contract-First Development:** Tự động đồng bộ hóa TypeScript Types từ Swagger của Backend.
+- **Environment-Driven Architecture:** Cấu hình linh hoạt qua biến môi trường, không Hardcode URL.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🔄 Quy trình CI/CD & GitOps
+Dự án áp dụng mô hình **GitOps chuẩn mực** phối hợp giữa GitLab CI và ArgoCD:
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. **Nhánh `dev` (Staging):**
+   - Tự động Build Image với tag `dev-[sha]`.
+   - CI tự động `git push` cập nhật tag mới vào repo **Infrastructure**.
+   - **ArgoCD** tự động đồng bộ hóa lên môi trường Staging.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+2. **Git Tag `v*` (Production):**
+   - Không chạy lại quy trình build từ đầu. Job `fetch_image` tự động lấy (promote) Image từ Staging sang Production.
+   - Phê duyệt thủ công qua job `manual_approval` trong GitLab CI để tiến hành Deploy.
+   - Tự động chạy `smoke_test_production` để kiểm tra độ ổn định của Frontend sau khi triển khai.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## ⚙️ Cấu hình Biến môi trường
+Mọi cấu hình được quản lý qua biến môi trường để đảm bảo tính di động của Container:
 
-## Learn More
+| Biến | Chức năng | Ví dụ |
+| :--- | :--- | :--- |
+| `INTERNAL_API_URL` | URL gọi API từ phía Server (SSR) | `http://portfolio-backend:3001/api/v1` |
+| `NEXT_PUBLIC_API_URL` | URL gọi API từ phía trình duyệt | `https://api.luumac.io.vn/api/v1` |
 
-To learn more about Next.js, take a look at the following resources:
+## 🛠 Hướng dẫn Lập trình (Local Development)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. **Cài đặt:**
+   ```bash
+   pnpm install
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+2. **Cấu hình:** Tạo file `.env` từ mẫu `.env.example`.
 
-## Deploy on Vercel
+3. **Đồng bộ API Types:**
+   ```bash
+   pnpm run api:sync
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+4. **Chạy Dev Server:**
+   ```bash
+   pnpm run dev
+   ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📦 Docker & Kubernetes
+Dự án được đóng gói bằng Docker multi-stage build. File manifest nằm trong repo Infrastructure để quản lý tập trung.
+
+---
+*Cập nhật lần cuối: 09/05/2026

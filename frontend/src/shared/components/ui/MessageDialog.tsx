@@ -20,7 +20,7 @@ export default function MessageDialog({
   onClose,
   title,
   message,
-  buttonLabel = "Đã hiểu",
+  buttonLabel = "OK",
   variant = "info",
 }: MessageDialogProps) {
   const [mounted, setMounted] = useState(false);
@@ -88,7 +88,7 @@ export default function MessageDialog({
               <div className={`p-5 rounded-3xl ${getBgColor()}`}>
                 {getIcon()}
               </div>
-              
+
               <div className="space-y-2">
                 <h3 className="text-2xl font-display font-bold text-slate-900 dark:text-white leading-tight">{title}</h3>
                 <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed px-4">{message}</p>
@@ -96,9 +96,9 @@ export default function MessageDialog({
             </div>
 
             <div className="mt-10">
-              <Button 
-                variant={variant === 'error' ? 'danger' : variant === 'info' ? 'primary' : variant as any} 
-                onClick={onClose} 
+              <Button
+                variant={variant === 'error' ? 'danger' : variant === 'info' ? 'primary' : variant as any}
+                onClick={onClose}
                 className="w-full py-4 rounded-2xl shadow-xl"
               >
                 {buttonLabel}

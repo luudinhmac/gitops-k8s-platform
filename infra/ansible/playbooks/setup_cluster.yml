@@ -1,0 +1,25 @@
+# Description: Ansible playbook to set up a single-node Kubernetes cluster.
+# Orchestrates pre-check, common, docker, k8s-cluster, security, and infra-services roles.
+# Last Updated: 2026-05-15
+
+---
+- name: Setup Kubernetes Cluster on Single Node
+  hosts: k8s_server
+  become: yes
+  roles:
+    - role: pre-check
+      tags: [pre-check, diagnostic]
+    - role: common
+      tags: [common, base]
+    - role: network
+      tags: [network]
+#    - role: vpn
+#      tags: [vpn, tailscale]
+    - role: docker
+      tags: [docker, runtime]
+    - role: k8s-cluster
+      tags: [k8s, cluster]
+    - role: security
+      tags: [security, hardening]
+    - role: infra-services
+      tags: [infra, apps]

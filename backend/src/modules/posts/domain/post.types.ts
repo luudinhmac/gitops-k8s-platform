@@ -1,28 +1,14 @@
-export enum PostStatus {
-  ALL = 'all',
-  PUBLISHED = 'published',
-  DRAFT = 'draft',
-  BLOCKED = 'blocked',
-}
-
-export enum PostSort {
-  LATEST = 'latest',
-  VIEWS = 'views',
-  LIKES = 'likes',
-  COMMENTS = 'comments',
-}
-
 export interface PostFilter {
-  is_published?: boolean;
+  search?: string;
   category_id?: number;
   author_id?: number;
-  series_id?: number;
-  is_pinned?: boolean;
+  is_published?: boolean;
   is_blocked?: boolean;
-  viewer_id?: number;
-  search?: string;
+  is_pinned?: boolean;
+  series_id?: number;
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
+  viewer_id?: number;
 }
 
 export interface PaginationParams {

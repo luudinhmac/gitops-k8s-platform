@@ -1,6 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
-  output   = "../generated/prisma-client"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
@@ -9,20 +9,30 @@ datasource db {
 }
 
 model Category {
-  id         Int      @id @default(autoincrement())
-  name       String   @unique
-  slug       String   @unique @default("")
-  created_at DateTime @default(now())
-  Post       Post[]
+  id               Int       @id @default(autoincrement())
+  name             String    @unique
+  slug             String?   @unique
+  description      String?
+  meta_title       String?
+  meta_description String?
+  deleted_at       DateTime?
+  created_at       DateTime  @default(now())
+  Post             Post[]
 }
 
 model Series {
-  id          Int      @id @default(autoincrement())
-  name        String   @unique
-  slug        String   @unique
+  id          Int       @id @default(autoincrement())
+  name        String
+  slug        String
   description String?
-  created_at  DateTime @default(now())
+  deleted_at  DateTime?
+  created_at  DateTime  @default(now())
+  author_id   Int?
+  Author      User?     @relation("SeriesAuthor", fields: [author_id], references: [id], onDelete: SetNull)
   Post        Post[]
+
+  @@unique([author_id, slug])
+  @@unique([author_id, name])
 }
 
 model Comment {
@@ -30,7 +40,11 @@ model Comment {
   post_id      Int?
   author_name  String?
   author_email String?
-  content      String?
+  content      String
+  is_approved  Boolean   @default(true)
+  is_spam      Boolean   @default(false)
+  ip_address   String?
+  deleted_at   DateTime?
   created_at   DateTime  @default(now())
   user_id      Int?
   parent_id    Int?
@@ -43,37 +57,54 @@ model Comment {
   @@index([user_id])
 }
 
-model Post {
-  id           Int        @id @default(autoincrement())
-  title        String
-  slug         String     @unique @default("")
-  content      String?
-  series_id    Int?
-  series_order Int?       @default(0)
-  cover_image  String?    @db.VarChar(500)
-  is_pinned    Boolean    @default(false)
-  is_published Boolean    @default(true)
-  views        Int        @default(0)
-  likes        Int        @default(0)
-  created_at   DateTime   @default(now())
-  updated_at   DateTime   @default(now())
-  category_id  Int?
-  author_id    Int?
-  is_blocked   Boolean    @default(false)
-  blocked_by_id Int?
-  blocked_reason String?
-  Comment      Comment[]
-  Author       User?      @relation("PostAuthor", fields: [author_id], references: [id])
-  BlockedBy    User?      @relation("PostBlocker", fields: [blocked_by_id], references: [id])
-  Category     Category?  @relation(fields: [category_id], references: [id])
-  Series       Series?    @relation(fields: [series_id], references: [id])
-  PostLike     PostLike[]
-  Tag          Tag[]      @relation("PostTags")
+enum PostStatus {
+  DRAFT
+  REVIEW
+  PUBLISHED
+  BLOCKED
+  ARCHIVED
+}
 
+model Post {
+  id               Int          @id @default(autoincrement())
+  title            String
+  slug             String       @unique
+  content          String?
+  series_id        Int?
+  series_order     Int?         @default(0)
+  cover_image      String?      @db.VarChar(500)
+  is_pinned        Boolean      @default(false)
+  views            Int          @default(0)
+  likes            Int          @default(0)
+  status           PostStatus   @default(DRAFT)
+  meta_title       String?
+  meta_description String?
+  canonical_url    String?
+  og_image         String?
+  noindex          Boolean      @default(false)
+  published_at     DateTime?
+  deleted_at       DateTime?
+  created_at       DateTime     @default(now())
+  updated_at       DateTime     @default(now()) @updatedAt
+  category_id      Int?
+  author_id        Int?
+  excerpt          String?
+  focus_keyword    String?
+  blocked_by_id    Int?
+  blocked_reason   String?
+  Comment          Comment[]
+  Author           User?        @relation("PostAuthor", fields: [author_id], references: [id])
+  BlockedBy        User?        @relation("PostBlocker", fields: [blocked_by_id], references: [id])
+  Category         Category?    @relation(fields: [category_id], references: [id])
+  Series           Series?      @relation(fields: [series_id], references: [id], onDelete: SetNull)
+  PostLike         PostLike[]
+  Tag              Tag[]        @relation("PostTags")
+
+  @@unique([series_id, series_order])
   @@index([author_id])
   @@index([category_id])
   @@index([series_id])
-  @@index([is_published, is_pinned, created_at])
+  @@index([status, published_at])
 }
 
 model PostLike {
@@ -89,70 +120,226 @@ model PostLike {
 }
 
 model Tag {
-  id         Int      @id @default(autoincrement())
-  name       String   @unique @db.VarChar(50)
-  created_at DateTime @default(now())
-  Post       Post[]   @relation("PostTags")
+  id         Int       @id @default(autoincrement())
+  name       String    @unique @db.VarChar(50)
+  slug       String?   @unique
+  deleted_at DateTime?
+  created_at DateTime  @default(now())
+  Post       Post[]    @relation("PostTags")
 }
 
 model User {
-  id                 Int            @id @default(autoincrement())
-  username           String         @unique
-  email              String?        @unique
-  fullname           String?
-  avatar             String?        @db.VarChar(500)
-  profession         String?        @default("Người dùng mới")
-  password           String
-  role               String?        @default("editor")
-  phone              String?        @db.VarChar(20)
-  birthday           String?        @db.VarChar(50)
-  address            String?
-  google_id          String?        @unique
-  facebook_id        String?        @unique
-  apple_id           String?        @unique
-  reset_token        String?
-  reset_token_expiry DateTime?
-  is_active          Boolean        @default(true)
-  created_at         DateTime       @default(now())
-  can_comment        Boolean        @default(true)
-  can_post           Boolean        @default(true)
-  Comment            Comment[]
-  Notification       Notification[] @relation("Recipient")
-  Posts              Post[]         @relation("PostAuthor")
-  BlockedPosts       Post[]         @relation("PostBlocker")
-  SentNotification   Notification[] @relation("Sender")
-  PostLike           PostLike[]
+  id                     Int              @id @default(autoincrement())
+  username               String           @unique
+  email                  String           @unique
+  password               String?
+  email_verified         Boolean          @default(false)
+  failed_login_attempts  Int              @default(0)
+  locked_until           DateTime?
+  last_login_at          DateTime?
+  is_active              Boolean          @default(true)
+  created_at             DateTime         @default(now())
+  updated_at             DateTime         @default(now()) @updatedAt
+  deleted_at             DateTime?
+  role_id                Int?
+  Role                   Role?            @relation(fields: [role_id], references: [id], onDelete: SetNull)
+  Comment                Comment[]
+  NotificationRec        Notification[]   @relation("Recipient")
+  NotificationSent       Notification[]   @relation("Sender")
+  Posts                  Post[]           @relation("PostAuthor")
+  BlockedPosts           Post[]           @relation("PostBlocker")
+  PostLike               PostLike[]
+  Series                 Series[]         @relation("SeriesAuthor")
+  Profile                UserProfile?
+  Providers              UserProvider[]
+  Permissions            UserPermission[]
+  Sessions               Session[]
+  AuthTokens             AuthToken[]
+  AuditLogs              AuditLog[]
+}
+
+enum OverrideType {
+  ALLOW
+  DENY
+}
+
+model UserProfile {
+  id         Int       @id @default(autoincrement())
+  user_id    Int       @unique
+  fullname   String?
+  avatar     String?   @db.VarChar(500)
+  profession String?   @default("Người dùng mới")
+  phone      String?   @db.VarChar(20)
+  birthday   DateTime?
+  address    String?
+  bio        String?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @default(now()) @updatedAt
+  User       User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+}
+
+model UserProvider {
+  id               Int      @id @default(autoincrement())
+  user_id          Int
+  provider         String   // "google", "facebook", "apple"
+  provider_user_id String
+  created_at       DateTime @default(now())
+  User             User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@unique([provider, provider_user_id])
+  @@index([user_id])
+}
+
+model Role {
+  id          Int              @id @default(autoincrement())
+  name        String           @unique // "superadmin", "admin", "editor", "user"
+  description String?
+  is_system   Boolean          @default(false)
+  deleted_at  DateTime?
+  created_at  DateTime         @default(now())
+  updated_at  DateTime         @default(now()) @updatedAt
+  Users       User[]
+  Permissions RolePermission[]
+}
+
+model Permission {
+  id          Int              @id @default(autoincrement())
+  key         String           @unique // e.g. "post.create", "categories.manage"
+  name        String
+  description String?
+  is_system   Boolean          @default(false)
+  created_at  DateTime         @default(now())
+  updated_at  DateTime         @default(now()) @updatedAt
+  Roles       RolePermission[]
+  Users       UserPermission[]
+}
+
+model RolePermission {
+  role_id       Int
+  permission_id Int
+  created_at    DateTime   @default(now())
+  Role          Role       @relation(fields: [role_id], references: [id], onDelete: Cascade)
+  Permission    Permission @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+
+  @@id([role_id, permission_id])
+}
+
+model UserPermission {
+  user_id       Int
+  permission_id Int
+  value         OverrideType
+  created_at    DateTime     @default(now())
+  updated_at    DateTime     @default(now()) @updatedAt
+  User          User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  Permission    Permission   @relation(fields: [permission_id], references: [id], onDelete: Cascade)
+
+  @@id([user_id, permission_id])
+  @@index([permission_id])
+}
+
+model Session {
+  id                 Int      @id @default(autoincrement())
+  user_id            Int
+  refresh_token_hash String   @unique
+  ip_address         String?
+  user_agent         String?
+  expires_at         DateTime
+  created_at         DateTime @default(now())
+  User               User     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([expires_at])
+}
+
+enum AuthTokenType {
+  RESET_PASSWORD
+  VERIFY_EMAIL
+  MAGIC_LINK
+}
+
+model AuthToken {
+  id         Int           @id @default(autoincrement())
+  user_id    Int
+  token_hash String        @unique
+  type       AuthTokenType
+  expires_at DateTime
+  created_at DateTime      @default(now())
+  User       User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id])
+  @@index([expires_at])
 }
 
 model Notification {
-  id           Int      @id @default(autoincrement())
+  id           Int       @id @default(autoincrement())
   recipient_id Int
   sender_id    Int?
-  type         String
+  type         String    // "COMMENT", "LIKE", "SYSTEM", "WARNING" (Enforced via application-level enum)
   title        String
   content      String
   link         String?
-  is_read      Boolean  @default(false)
-  created_at   DateTime @default(now())
-  Recipient    User     @relation("Recipient", fields: [recipient_id], references: [id], onDelete: Cascade)
-  Sender       User?    @relation("Sender", fields: [sender_id], references: [id])
+  read_at      DateTime?
+  created_at   DateTime  @default(now())
+  Recipient    User      @relation("Recipient", fields: [recipient_id], references: [id], onDelete: Cascade)
+  Sender       User?     @relation("Sender", fields: [sender_id], references: [id])
 
   @@index([recipient_id])
-  @@index([is_read])
+  @@index([read_at])
 }
 
 model Setting {
   key        String   @id
-  value      String?
+  value      Json?
   group      String   @default("general")
   is_public  Boolean  @default(true)
   updated_at DateTime @default(now()) @updatedAt
 }
 
+model Media {
+  id         Int          @id @default(autoincrement())
+  hash       String       @unique
+  path       String       @unique // e.g., "123456.webp"
+  mime_type  String?
+  size       Int?
+  created_at DateTime     @default(now())
+  Usage      MediaUsage[]
+
+  @@index([hash])
+}
+
+model MediaUsage {
+  id          Int      @id @default(autoincrement())
+  media_id    Int
+  entity_type String   // "USER", "POST", "SETTING" (Enforced via application-level enum)
+  entity_id   Int
+  field       String   // "AVATAR", "COVER", "CONTENT" (Enforced via application-level enum)
+  Media       Media    @relation(fields: [media_id], references: [id], onDelete: Cascade)
+
+  @@unique([media_id, entity_type, entity_id, field])
+  @@index([entity_type, entity_id])
+}
+
 model MaintenanceCode {
   id         Int      @id @default(autoincrement())
-  code       String
+  code       String   @unique
   is_used    Boolean  @default(false)
   expires_at DateTime
   created_at DateTime @default(now())
+}
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  user_id     Int?
+  action      String
+  description String
+  entity_type String?
+  entity_id   Int?
+  metadata    Json?
+  ip_address  String?
+  user_agent  String?
+  created_at  DateTime @default(now())
+  User        User?    @relation(fields: [user_id], references: [id], onDelete: SetNull)
+
+  @@index([user_id])
+  @@index([created_at])
 }

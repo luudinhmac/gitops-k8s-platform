@@ -1,6 +1,11 @@
 import api from '@/lib/axios';
 
 export const commentService = {
+  getByPost: async (postId: number) => {
+    const response = await api.get(`/comments?post_id=${postId}`);
+    return response.data;
+  },
+
   create: async (data: { 
     content: string; 
     post_id: number; 

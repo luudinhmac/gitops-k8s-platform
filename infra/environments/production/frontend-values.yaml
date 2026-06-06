@@ -1,0 +1,22 @@
+# Description: Helm values for the frontend production environment.
+# Overrides default values with production-specific settings.
+# Last Updated: 2026-05-12
+
+image:
+  tag: "v0.0.15@sha256:c33facc6ee5389db85226adc254d5495250d7ec52d42b017325d0f8015d7048d"
+ingress:
+  enabled: true
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  host: blog.luumac.io.vn
+  secretName: portfolio-frontend-tls
+  issuer: letsencrypt-prod
+env:
+  internalApiUrl: "http://portfolio-backend-production:3001/api/v1"
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80

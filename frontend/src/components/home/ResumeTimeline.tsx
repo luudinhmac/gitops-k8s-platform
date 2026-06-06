@@ -1,6 +1,6 @@
 'use client';
 
-import { Calendar, Briefcase, GraduationCap, Award, ExternalLink, Download, Rocket } from 'lucide-react';
+import { Calendar, Briefcase, GraduationCap, Award, Download, Rocket, Server, Cpu, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface TimelineItem {
@@ -10,75 +10,103 @@ interface TimelineItem {
   description: string | string[];
   status?: 'PRESENT' | 'COMPLETED' | 'IN_PROGRESS' | 'PLANNED';
   type: 'WORK' | 'EDUCATION' | 'CERTIFICATION';
+  tags?: string[];
 }
 
 const timelineData: TimelineItem[] = [
   {
-    title: 'Chuyên viên Dịch vụ IT',
-    subtitle: 'Công ty Cổ phần Công nghệ Giải pháp Thi Thiên',
-    period: '11/2023 - Hiện tại',
+    title: 'IT Services Specialist',
+    subtitle: 'Thi Thien Solutions Technology Corporation',
+    period: 'Tháng 11/2023 - Hiện tại',
     description: [
-      'Triển khai hệ thống: Thiết lập SQL Server Failover Cluster Instance (FCI) trên Windows Server 2022.',
-      'Quản lý lưu trữ: Quản lý HPE MSA 2060, cấu hình iSCSI Direct Attach, MPIO và Storage Tiering để tối ưu hiệu suất.',
-      'Xử lý sự cố khẩn cấp: Phục hồi quyền truy cập root ESXi 8 cho Bệnh viện Đa khoa Bưu điện trong 2 giờ sau 10 ngày gián đoạn; Khôi phục mật khẩu ESXi 7 cho Vietsovpetro Resort Hồ Tràm với thời gian downtime dưới 1 giờ; Xử lý lỗi đồng bộ HA trên cụm HPE SimpliVity cho Báo Sài Gòn Giải Phóng.',
-      'Hạ tầng AI/ML: Cài đặt CUDA drivers và cấu hình TensorFlow, PyTorch với hỗ trợ GPU.'
+      'Cấu hình SQL Server Failover Cluster Instance (FCI) trên Windows Server 2022 (2-node).',
+      'Triển khai iSCSI Direct Attach, MPIO và Storage Tiering (SSD/HDD) cho HPE MSA 2060.',
+      'Khôi phục dịch vụ cơ sở dữ liệu quan trọng bằng cách cấu hình lại SAN volumes và Cluster nodes.',
+      'Xử lý sự cố khẩn cấp: Khôi phục root ESXi 8 cho BV Bưu điện (trong 2h), Reset pass ESXi 7 cho Vietsovpetro Resort Hồ Tràm.',
+      'Chẩn đoán và xử lý lỗi phần cứng/phần mềm phức tạp cho hệ thống lưu trữ SAN (Dell, IBM, 3PAR, MSA).',
+      'Cấu hình CUDA drivers, TensorFlow, PyTorch, Jupyter Notebook với GPU support cho AI/ML.'
     ],
     status: 'PRESENT',
-    type: 'WORK'
+    type: 'WORK',
+    tags: ['SQL Cluster', 'HPE MSA', 'SAN Storage', 'AI Infrastructure']
   },
   {
-    title: 'Kỹ sư Hệ thống Freelance',
-    subtitle: 'Dự án OpenStack & Kubernetes',
-    period: 'T04/2025 & T10/2025',
+    title: 'Freelance System Engineer',
+    subtitle: 'Kubernetes & OpenStack Deployment Support',
+    period: 'Tháng 04/2025 & Tháng 10/2025',
     description: [
-      'Hỗ trợ triển khai OpenStack và xử lý các lỗi dịch vụ bằng Kolla-Ansible.',
-      'Xử lý sự cố cụm Kubernetes, giúp các worker node gia nhập cụm và khôi phục workload.'
+      'Xử lý sự cố cụm Kubernetes ngăn worker nodes gia nhập cụm và khôi phục production workloads.',
+      'Triển khai lại các manifest và cấu hình Kubernetes hiện có để khôi phục dịch vụ.',
+      'Điều tra lỗi khởi động dịch vụ và dependency issues trong OpenStack cài đặt bằng Kolla-Ansible.',
+      'Hỗ trợ cấu hình lại OpenStack để đưa các dịch vụ online thành công.'
     ],
     status: 'COMPLETED',
-    type: 'WORK'
+    type: 'WORK',
+    tags: ['Kubernetes', 'OpenStack', 'Kolla-Ansible']
   },
   {
-    title: 'Chuyên viên Hệ thống IT',
-    subtitle: 'Công ty Cổ phần Kỹ thuật Delta (DEC)',
-    period: '09/2020 - 04/2022',
+    title: 'IT Systems Specialist',
+    subtitle: 'Delta Engineering Corporation (Nay là DEC Engineering JSC)',
+    period: 'Tháng 09/2020 - Tháng 04/2022',
     description: [
-      'Triển khai và vận hành hệ thống OpenStack, cụm Proxmox và lưu trữ phân tán CEPH.',
-      'Xây dựng Private Cloud với Nextcloud tích hợp SSO qua ADFS.',
-      'Tự động hóa các tác vụ quản trị hệ thống bằng Bash và Python, giúp giảm 80% công việc thủ công.',
-      'Thiết lập giải pháp VDI và hệ thống giám sát với Zabbix, Grafana.'
+      'Triển khai, nâng cấp và cấu hình thiết bị mạng (WiFi, camera, switch, router, NAS, server).',
+      'Thiết lập hệ thống giám sát toàn diện hạ tầng mạng bằng Zabbix và Grafana.',
+      'Triển khai hệ thống lưu trữ phân tán CEPH để sử dụng với OpenStack và Proxmox cluster.',
+      'Xây dựng và vận hành Private Cloud với Nextcloud tích hợp SSO (ADFS) cho Microsoft Office 365.',
+      'Triển khai giải pháp VDI sử dụng Windows Server cho quản lý lưu trữ tập trung với thin client.',
+      'Tự động hóa các tác vụ quản trị hệ thống bằng Bash và Python, giảm 80% công sức thủ công.'
     ],
     status: 'COMPLETED',
-    type: 'WORK'
+    type: 'WORK',
+    tags: ['Zabbix', 'CEPH', 'Nextcloud', 'VDI Automation']
   },
   {
-    title: 'Vận hành Hệ thống',
-    subtitle: 'Công ty CP Đầu tư Công nghệ Berjaya Gia Thịnh',
-    period: '01/2019 - 12/2019',
+    title: 'System Operation',
+    subtitle: 'Berjaya Gia Thinh Investment Technology JSC',
+    period: 'Tháng 01/2019 - Tháng 12/2019',
     description: [
-      'Vận hành hệ thống cho Vietlott, thực hiện sao lưu dữ liệu hàng ngày/tuần vào băng từ.',
-      'Vận hành Online Sell Server (OSS) trên hệ điều hành OpenVMS.'
+      'Vận hành hệ thống Vietlott: Giám sát máy chủ, thực hiện sao lưu hàng ngày/tuần ra băng tải (tape).',
+      'Di chuyển băng tải dữ liệu đến PDC và DRC đảm bảo an toàn lưu trữ.',
+      'Quản lý hệ thống khởi động/đóng và vận hành OSS (Online Sell Server) trên OpenVMS.',
+      'Cài đặt mail server trên CentOS 6 và hỗ trợ kỹ thuật trong thời gian quay số mở thưởng.'
     ],
     status: 'COMPLETED',
-    type: 'WORK'
+    type: 'WORK',
+    tags: ['Backup Tape', 'OpenVMS', 'System Ops']
+  },
+  {
+    title: 'Operator (NOC) Trainee',
+    subtitle: 'Online Mobile Services JSC (MoMo)',
+    period: 'Tháng 01/2018 - Tháng 08/2018',
+    description: [
+      'Giám sát máy chủ và dịch vụ (Nagios, Grafana, Web) đảm bảo hệ thống vận hành ổn định.',
+      'Ghi nhận lỗi và xử lý các vấn đề kỹ thuật do người dùng báo cáo hoặc hệ thống ghi nhận.',
+      'Hỗ trợ các bộ phận Chăm sóc khách hàng, Phát triển sản phẩm và Hệ thống phân phối.'
+    ],
+    status: 'COMPLETED',
+    type: 'WORK',
+    tags: ['NOC', 'Monitoring', 'Nagios']
   },
   {
     title: 'Đại học Sư phạm Kỹ thuật TP.HCM',
-    subtitle: 'Kỹ sư Công nghệ Thông tin',
+    subtitle: 'Kỹ Sư Công nghệ Thông tin',
     period: '2014 - 2019',
     description: [
-      'Tốt nghiệp chương trình đào tạo Kỹ sư Công nghệ Thông tin chuyên ngành CNHP và mạng máy tính.'
+      'Chuyên ngành: Mạng máy tính và truyền thông.',
+      'Đồ án: Xây dựng hệ thống cân bằng tải với tính sẵn sàng cao (High Availability).',
+      'Đồ án: Giải pháp ngăn chặn xâm nhập cho Website (Modsecurity, SQLi, XSS, DOS).'
     ],
     status: 'COMPLETED',
     type: 'EDUCATION'
   },
   {
-    title: 'Chứng chỉ nghề nghiệp',
-    subtitle: 'DevOps & System Administration',
+    title: 'Chứng chỉ Chuyên môn',
+    subtitle: 'Đào tạo bởi DevOpsEdu.vn & VNPRO',
     period: '2017 - 2025',
     description: [
-      'DevOps on AWS, DevOps for Business (2025).',
-      'DevOps & DevSecOps, Practical Kubernetes (2024).',
-      'CCNA - VNPRO (2017).'
+      '2025: DevOps on AWS (EC2, IAM, VPC, S3) & DevOps for Business.',
+      '2024: DevOps & DevSecOps, Practical Kubernetes Certification.',
+      '2017: CCNA (VNPRO).'
     ],
     status: 'IN_PROGRESS',
     type: 'CERTIFICATION'
@@ -87,11 +115,11 @@ const timelineData: TimelineItem[] = [
 
 const StatusBadge = ({ status }: { status?: string }) => {
   if (!status) return null;
-  
+
   const styles = {
-    PRESENT: 'bg-green-500/10 text-green-500 border-green-500/20',
+    PRESENT: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
     COMPLETED: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
-    IN_PROGRESS: 'bg-sky-500/10 text-sky-500 border-sky-500/20',
+    IN_PROGRESS: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
     PLANNED: 'bg-slate-500/10 text-slate-500 border-slate-500/20',
   };
 
@@ -104,7 +132,7 @@ const StatusBadge = ({ status }: { status?: string }) => {
 
   return (
     <span className={cn(
-      "px-2 py-0.5 rounded text-[9px] font-bold border tracking-wider",
+      "px-2 py-0.5 rounded-full text-[9px] font-bold border tracking-wider",
       styles[status as keyof typeof styles] || styles.PLANNED
     )}>
       {labels[status as keyof typeof labels] || status}
@@ -114,59 +142,93 @@ const StatusBadge = ({ status }: { status?: string }) => {
 
 export default function ResumeTimeline() {
   const experiences = timelineData.filter(i => i.type === 'WORK');
-  const education = timelineData.filter(i => i.type !== 'WORK');
+  const others = timelineData.filter(i => i.type !== 'WORK');
 
   return (
-    <section className="py-24 px-4 bg-slate-50 dark:bg-slate-950/50">
+    <section className="py-20 px-4 bg-slate-50/50 dark:bg-slate-950/50 relative overflow-hidden">
+      {/* Background decoration */}
+      <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-primary/5 blur-[100px] rounded-full -z-10" />
+      <div className="absolute bottom-0 left-0 w-1/4 h-1/4 bg-blue-500/5 blur-[80px] rounded-full -z-10" />
+
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-display font-bold text-slate-900 dark:text-white mb-4">
-            Lộ trình Phát triển <span className="text-primary italic">& Kinh nghiệm</span>
+          <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold mb-4 uppercase tracking-[0.2em]">
+            <Calendar size={12} />
+            <span>Hành trình sự nghiệp</span>
+          </div>
+          <h2 className="text-3xl md:text-5xl font-display font-bold text-slate-900 dark:text-white mb-5 tracking-tight">
+            Kinh nghiệm <span className="text-primary">&</span> Học vấn
           </h2>
-          <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto text-sm md:text-base">
-            Quá trình hình thành kỹ năng và kinh nghiệm thực chiến trong lĩnh vực System Engineering & DevOps qua các giai đoạn.
+          <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto text-base md:text-lg leading-relaxed font-medium">
+            Tóm tắt quá trình hình thành kỹ năng và kinh nghiệm thực chiến qua các giai đoạn nghề nghiệp.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
           {/* Work Experience Column */}
-          <div className="space-y-8">
-            <div className="flex items-center space-x-3 mb-8">
-              <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 shadow-sm border border-blue-500/10">
+          <div className="lg:col-span-7 space-y-10">
+            <div className="flex items-center space-x-3 mb-2">
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
                 <Briefcase size={22} />
               </div>
-              <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">Kinh nghiệm chuyên môn</h3>
+              <div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-wide">Kinh nghiệm thực chiến</h3>
+                <p className="text-xs text-slate-500">Các vị trí chuyên môn đã đảm nhận</p>
+              </div>
             </div>
 
-            <div className="relative pl-8 space-y-12 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-200 dark:before:bg-slate-800">
+            <div className="relative pl-6 md:pl-10 space-y-12 before:absolute before:left-[11px] md:before:left-[19px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gradient-to-b before:from-primary before:via-primary/30 before:to-transparent">
               {experiences.map((item, idx) => (
-                <div key={idx} className="relative animate-fade-in">
-                  {/* Point */}
+                <div key={idx} className="relative animate-fade-in group">
+                  {/* Glowing Point */}
                   <div className={cn(
-                    "absolute -left-[30px] top-1.5 w-4 h-4 rounded-full border-4 border-slate-50 dark:border-slate-950 z-10",
-                    item.status === 'PRESENT' ? "bg-primary shadow-[0_0_12px_rgba(37,99,235,0.6)]" : "bg-slate-300 dark:bg-slate-700 hover:bg-primary transition-colors duration-300"
+                    "absolute -left-[28px] md:-left-[38px] top-1.5 w-5 h-5 rounded-full border-[3px] border-white dark:border-slate-950 z-10 transition-all duration-500",
+                    item.status === 'PRESENT'
+                      ? "bg-primary shadow-[0_0_12px_rgba(37,99,235,0.8)] scale-110"
+                      : "bg-slate-300 dark:bg-slate-700 group-hover:bg-primary"
                   )} />
-                  
-                  <div className="glass p-6 md:p-8 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-primary/40 transition-all duration-300 group hover:shadow-lg hover:shadow-primary/5">
-                    <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                      <div className="flex items-center space-x-2 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
-                        <Calendar size={14} className="text-primary/70" />
+
+                  <div className="glass p-6 md:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 hover:border-primary/30 transition-all duration-500 relative overflow-hidden group-hover:shadow-xl group-hover:shadow-primary/5">
+                    <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 -mr-12 -mt-12 rounded-full blur-2xl" />
+
+                    <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+                      <div className="flex items-center space-x-2 text-primary font-bold text-xs uppercase tracking-widest">
+                        <Calendar size={14} />
                         <span>{item.period}</span>
                       </div>
                       <StatusBadge status={item.status} />
                     </div>
-                    <h4 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white mb-1 group-hover:text-primary transition-colors">{item.title}</h4>
-                    <p className="text-sm font-bold text-primary/80 mb-4">{item.subtitle}</p>
-                    {Array.isArray(item.description) ? (
-                      <ul className="space-y-1.5 list-disc list-outside ml-4 mt-2">
-                        {item.description.map((desc, i) => (
-                          <li key={i} className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-                            {desc}
-                          </li>
+
+                    <h4 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white mb-1 tracking-tight">
+                      {item.title}
+                    </h4>
+                    <p className="text-sm font-bold text-blue-500/80 mb-5">
+                      {item.subtitle}
+                    </p>
+
+                    <div className="space-y-2.5 mb-6">
+                      {Array.isArray(item.description) ? (
+                        <ul className="space-y-2.5">
+                          {item.description.map((desc, i) => (
+                            <li key={i} className="text-xs md:text-sm text-slate-600 dark:text-slate-400 leading-relaxed flex items-start">
+                              <span className="w-1.5 h-1.5 rounded-full bg-primary/40 mt-1.5 mr-2.5 flex-shrink-0" />
+                              {desc}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-xs md:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{item.description}</p>
+                      )}
+                    </div>
+
+                    {item.tags && (
+                      <div className="flex flex-wrap gap-2">
+                        {item.tags.map(tag => (
+                          <span key={tag} className="px-2 py-0.5 bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 text-[8px] font-bold rounded-md border border-slate-200 dark:border-slate-800 uppercase tracking-tighter">
+                            {tag}
+                          </span>
                         ))}
-                      </ul>
-                    ) : (
-                      <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{item.description}</p>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -174,69 +236,76 @@ export default function ResumeTimeline() {
             </div>
           </div>
 
-          {/* Education & Learning Column */}
-          <div className="space-y-8">
-            <div className="flex items-center space-x-3 mb-8">
-              <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 shadow-sm border border-blue-500/10">
+          {/* Education & Certificates Column */}
+          <div className="lg:col-span-5 space-y-10">
+            <div className="flex items-center space-x-3 mb-2">
+              <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-500 border border-amber-500/20">
                 <GraduationCap size={22} />
               </div>
-              <h3 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white uppercase tracking-tight">Lộ trình học tập</h3>
+              <div>
+                <h3 className="text-xl font-bold text-slate-900 dark:text-white uppercase tracking-wide">Học vấn & Chứng chỉ</h3>
+                <p className="text-xs text-slate-500">Nền tảng tri thức chuyên môn</p>
+              </div>
             </div>
 
-            <div className="relative pl-8 space-y-12 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-slate-200 dark:before:bg-slate-800">
-              {education.map((item, idx) => (
+            <div className="relative pl-6 space-y-10 before:absolute before:left-[11px] before:top-2 before:bottom-2 before:w-[2px] before:bg-gradient-to-b before:from-amber-500 before:via-amber-500/20 before:to-transparent">
+              {others.map((item, idx) => (
                 <div key={idx} className="relative animate-fade-in group/item">
-                  {/* Point */}
                   <div className={cn(
-                    "absolute -left-[30px] top-1.5 w-4 h-4 rounded-full border-4 border-slate-50 dark:border-slate-950 z-10",
-                    item.status === 'IN_PROGRESS' ? "bg-sky-500 shadow-[0_0_12px_rgba(14,165,233,0.6)] animate-pulse" : "bg-slate-300 dark:bg-slate-700 group-hover/item:bg-sky-500 transition-colors duration-300"
+                    "absolute -left-[28px] top-1.5 w-5 h-5 rounded-full border-[3px] border-white dark:border-slate-950 z-10 transition-all duration-500",
+                    item.status === 'IN_PROGRESS'
+                      ? "bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.6)] animate-pulse"
+                      : "bg-slate-300 dark:bg-slate-700 group-hover/item:bg-amber-500"
                   )} />
-                  
-                  <div className="glass p-6 md:p-8 rounded-2xl border border-slate-200 dark:border-slate-800 hover:border-sky-500/40 transition-all duration-300 group hover:shadow-lg hover:shadow-sky-500/5">
+
+                  <div className="glass p-6 md:p-7 rounded-3xl border border-slate-200 dark:border-slate-800 hover:border-amber-500/30 transition-all duration-500">
                     <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-                      <div className="flex items-center space-x-2 text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
-                        {item.type === 'EDUCATION' ? <GraduationCap size={14} className="text-blue-500/70" /> : <Award size={14} className="text-blue-500/70" />}
+                      <div className="flex items-center space-x-2 text-amber-600 font-bold text-[10px] uppercase tracking-widest">
+                        {item.type === 'EDUCATION' ? <GraduationCap size={14} /> : <Award size={14} />}
                         <span>{item.period}</span>
                       </div>
                       <StatusBadge status={item.status} />
                     </div>
-                    <h4 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white mb-1 group-hover:text-blue-500 transition-colors">{item.title}</h4>
-                    <p className="text-sm font-bold text-blue-500/80 mb-4">{item.subtitle}</p>
-                    {Array.isArray(item.description) ? (
-                      <ul className="space-y-1.5 list-disc list-outside ml-4 mt-2">
-                        {item.description.map((desc, i) => (
-                          <li key={i} className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">
-                            {desc}
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed font-medium">{item.description}</p>
-                    )}
+                    <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-1 tracking-tight">
+                      {item.title}
+                    </h4>
+                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-4 italic">
+                      {item.subtitle}
+                    </p>
+                    <ul className="space-y-2">
+                      {Array.isArray(item.description) ? item.description.map((desc, i) => (
+                        <li key={i} className="text-xs text-slate-600 dark:text-slate-400 flex items-start">
+                          <CheckCircle2 size={12} className="text-amber-500/50 mr-2 mt-0.5 flex-shrink-0" />
+                          {desc}
+                        </li>
+                      )) : (
+                        <li className="text-xs text-slate-600 dark:text-slate-400">{item.description}</li>
+                      )}
+                    </ul>
                   </div>
                 </div>
               ))}
 
-              {/* Call to action card in education column */}
-              <div className="mt-12 p-8 rounded-3xl bg-gradient-to-br from-blue-600 to-sky-500 text-white shadow-2xl shadow-primary/20 relative overflow-hidden group/cta ring-1 ring-white/20">
-                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover/cta:scale-125 group-hover/cta:rotate-12 transition-all duration-700">
-                   <Rocket size={120} />
+              {/* Enhanced Call to Action Card */}
+              <div className="mt-10 p-8 rounded-[2rem] bg-gradient-to-br from-primary via-blue-600 to-indigo-700 text-white shadow-xl shadow-primary/20 relative overflow-hidden group/cta">
+                <div className="absolute top-0 right-0 p-6 opacity-10 group-hover/cta:scale-110 transition-transform duration-700">
+                  <Rocket size={80} />
                 </div>
-                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
-                
-                <h4 className="text-xl font-bold mb-3 relative z-10 tracking-tight leading-tight italic font-display underline underline-offset-4 decoration-white/30">Kết nối học tập cùng Mác</h4>
-                <p className="text-sm text-white/90 mb-8 relative z-10 leading-relaxed font-medium">
-                  Tôi luôn cởi mở để chia sẻ kiến thức và thảo luận về các giải pháp Cloud Native & DevOps hiện đại.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4 relative z-10">
-                  <a href="/CV-Eng.md" target="_blank" className="flex-1 px-6 py-3.5 bg-white text-blue-600 rounded-2xl text-sm font-display font-bold flex items-center justify-center hover:bg-slate-50 transition-all hover:scale-[1.02] shadow-sm">
-                    Gửi yêu cầu
-                    <ExternalLink size={16} className="ml-2" />
-                  </a>
-                  <a href="/Luu_Dinh_Mac_CV_VN.pdf" target="_blank" download className="flex-1 px-6 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/30 rounded-2xl text-sm font-display font-bold flex items-center justify-center transition-all backdrop-blur-md">
-                    Tải CV (PDF)
-                    <Download size={16} className="ml-2" />
-                  </a>
+                <div className="relative z-10">
+                  <h4 className="text-xl font-bold mb-3 italic tracking-tight">Hồ sơ năng lực</h4>
+                  <p className="text-white/80 text-xs mb-8 leading-relaxed">
+                    Tải bản CV đầy đủ (PDF) để xem chi tiết hơn về các dự án và kỹ năng của tôi.
+                  </p>
+                  <div className="flex flex-col gap-3">
+                    <a href="/Luu_Dinh_Mac_CV_EN.pdf" download className="w-full px-5 py-3.5 bg-white text-primary rounded-xl text-xs font-bold flex items-center justify-center hover:bg-slate-50 transition-all active:scale-95 shadow-lg">
+                      Download English CV
+                      <Download size={16} className="ml-2" />
+                    </a>
+                    <a href="/Luu_Dinh_Mac_CV_VN.pdf" download className="w-full px-5 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl text-xs font-bold flex items-center justify-center transition-all backdrop-blur-md active:scale-95">
+                      Tải CV Tiếng Việt
+                      <Download size={16} className="ml-2" />
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
