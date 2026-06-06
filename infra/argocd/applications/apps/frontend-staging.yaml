@@ -1,0 +1,29 @@
+# ==============================================================================
+# COMPONENT: ArgoCD Application (Frontend Staging)
+# ROLE: GitOps continuous delivery for web frontend
+# STRATEGY: Automated synchronization with Kubernetes cluster
+# ==============================================================================
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: portfolio-frontend-staging
+  namespace: argocd
+spec:
+  project: apps-project
+  source:
+    repoURL: https://gitlab.com/portfolio-macld/portfolio-infratructure.git
+    targetRevision: main # Tracks the 'main' branch for continuous delivery to staging
+    path: apps/frontend
+    helm:
+      valueFiles:
+        - /environments/staging/frontend-values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: portfolio
+  syncPolicy:
+    automated:
+      prune: true # Ensure resources deleted in Git are also removed from the cluster
+      selfHeal: true # Automatically correct configuration drift
+    syncOptions:
+      - CreateNamespace=true

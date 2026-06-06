@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, use, useCallback } from 'react';
+import { useState, useEffect, use, useCallback, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Calendar, User as UserIcon, Clock, Share2,
   MessageSquare, Heart, Eye,
@@ -29,7 +30,7 @@ import { commentService } from '@/features/comments/services/commentService';
 import { categoryService as catApi } from '@/features/categories/services/categoryService';
 import { seriesService } from '@/features/series/services/seriesService';
 
-import { Post, Comment as CommentType } from '@portfolio/contracts';
+import { Post, Comment as CommentType } from '@/types';
 
 
 
@@ -53,24 +54,27 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
   const [commentError, setCommentError] = useState<string | null>(null);
   const [activeHash, setActiveHash] = useState<string>('');
   const [isMaintenanceComments, setIsMaintenanceComments] = useState(false);
-  const [msgData, setMsgData] = useState<{ isOpen: boolean; title: string; message: string; variant: 'info' | 'success' | 'warning' | 'error' }>({ 
-    isOpen: false, title: '', message: '', variant: 'info' 
+  const [displaySettings, setDisplaySettings] = useState<Record<string, string>>({});
+  const [msgData, setMsgData] = useState<{ isOpen: boolean; title: string; message: string; variant: 'info' | 'success' | 'warning' | 'error' }>({
+    isOpen: false, title: '', message: '', variant: 'info'
   });
+  const viewIncremented = useRef(false);
   const router = useRouter();
 
   useEffect(() => {
-    const checkMaintenance = async () => {
+    const fetchSettings = async () => {
       try {
         const { settingService } = await import('@/features/settings/services/settingService');
         const settings = await settingService.getPublicSettings();
+        setDisplaySettings(settings);
         if (settings.maintenance_comments === 'true' && !['admin', 'superadmin'].includes(user?.role || '')) {
           setIsMaintenanceComments(true);
         }
       } catch (err) {
-        console.error('Failed to check maintenance status:', err);
+        console.error('Failed to load public settings:', err);
       }
     };
-    checkMaintenance();
+    fetchSettings();
   }, [user]);
 
   useEffect(() => {
@@ -98,22 +102,43 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
       const data = await postService.getBySlug(postSlug);
 
       // Safety check for category
-      if (data.Category?.slug !== categorySlug && categorySlug !== 'uncategorized') {
-        console.warn('Category slug mismatch');
+      const decodedCategorySlug = decodeURIComponent(categorySlug);
+      const dbCategorySlug = data.Category?.slug || 'uncategorized';
+      if (data.Category && dbCategorySlug !== decodedCategorySlug && decodedCategorySlug !== 'uncategorized') {
+        console.warn(`Category slug mismatch: URL=${decodedCategorySlug}, DB=${dbCategorySlug}`);
       }
 
       setPost(data);
 
+      // Fetch comments separately (Clean Architecture)
+      try {
+        const comments = await commentService.getByPost(data.id);
+        setPost(prev => prev ? { ...prev, Comment: comments } : null);
+      } catch (err) {
+        console.error('Error fetching comments:', err);
+      }
+
       // Check like status if authenticated
       if (isAuthenticated) {
-        const status = await postService.getLikeStatus(data.id);
-        setLiked(status.liked);
+        try {
+          const status = await postService.getLikeStatus(data.id);
+          setLiked(status.liked);
+        } catch (err) {
+          console.error('Error fetching like status:', err);
+        }
       }
 
       // Background view increment
       setTimeout(() => {
-        postService.incrementView(data.id);
-      }, 60000);
+        if (viewIncremented.current) return;
+        viewIncremented.current = true;
+        
+        postService.incrementView(data.id).then(updated => {
+          if (updated && typeof updated.views === 'number') {
+            setPost(prev => prev ? { ...prev, views: updated.views } : updated);
+          }
+        }).catch(err => console.error('Failed to increment view:', err));
+      }, 5000);
 
     } catch (error) {
       console.error('Error fetching post:', error);
@@ -176,18 +201,6 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
         parent_id: replyingTo,
       });
 
-<<<<<<< HEAD
-      // Update local state by adding the new comment to the tree
-      if (replyingTo) {
-        setPost({
-          ...post,
-          Comment: (post.Comment || []).map(c => {
-            if (c.id === replyingTo) {
-              return { ...c, Replies: [formattedComment, ...(c.Replies || [])] };
-            }
-            return c;
-          })
-=======
       // Update local state by adding the new comment to the tree recursively
       if (replyingTo) {
         const updateComments = (comments: CommentType[]): CommentType[] => {
@@ -204,7 +217,6 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
         setPost({
           ...post,
           Comment: updateComments(post.Comment || [])
->>>>>>> feature/arch-refactor
         });
       } else {
         setPost({ ...post, Comment: [formattedComment, ...(post.Comment || [])] });
@@ -290,9 +302,9 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
           <div className="lg:w-9/12 w-full min-w-0">
             {/* Breadcrumbs Inline */}
             <nav className="flex items-center space-x-2 mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-               <Link href="/" className="hover:text-primary transition-colors flex items-center">Kiến thức</Link>
-               < ChevronRight size={10} className="text-slate-300" />
-               <span className="text-slate-500 truncate">{post.Category?.name || 'Chưa phân loại'}</span>
+              <Link href="/" className="hover:text-primary transition-colors flex items-center">Kiến thức</Link>
+              < ChevronRight size={10} className="text-slate-300" />
+              <span className="text-slate-500 truncate">{post.Category?.name || 'Chưa phân loại'}</span>
             </nav>
 
             {/* Title */}
@@ -303,11 +315,15 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
             {/* Horizontal Metabar Row */}
             <div className="flex flex-wrap items-center justify-between gap-1 mb-1 py-1 border-y border-slate-100 dark:border-slate-800/50">
               <div className="flex flex-wrap items-center gap-3">
-                <Link href={`/author/${post.Author?.id || 1}`} className="flex items-center text-primary font-bold uppercase tracking-widest text-[9px] hover:text-primary/80 transition-all">
-                  <UserAvatar user={post.Author} size="xs" className="mr-2" />
-                  {post.Author?.fullname || post.Author?.username || 'Ẩn danh'}
-                </Link>
-                <div className="w-px h-3 bg-slate-200 dark:bg-slate-800" />
+                {displaySettings.post_show_author !== 'false' && (
+                  <>
+                    <Link href={`/author/${post.Author?.id || 1}`} className="flex items-center text-primary font-bold uppercase tracking-widest text-[9px] hover:text-primary/80 transition-all">
+                      <UserAvatar user={post.Author} size="xs" className="mr-2" />
+                      {post.Author?.fullname || post.Author?.username || 'Ẩn danh'}
+                    </Link>
+                    <div className="w-px h-3 bg-slate-200 dark:bg-slate-800" />
+                  </>
+                )}
                 {post.Category && (
                   <Link href={`/?q=${encodeURIComponent(post.Category.name)}`} className="hover:opacity-80 transition-opacity">
                     <Badge type="category" size="xs">
@@ -322,18 +338,28 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
                     </Badge>
                   </Link>
                 ))}
-                <div className="w-px h-3 bg-slate-200 dark:bg-slate-800" />
-                <div className="flex items-center gap-4 text-slate-400 text-[9px] font-bold uppercase tracking-widest">
-                  <FormattedDate date={post.created_at} showIcon iconSize={10} />
-                  <div className="flex items-center">
-                    <Clock size={10} className="mr-1.5" />
-                    {post.readTime || 1} PHÚT ĐỌC
-                  </div>
-                  <div className="flex items-center text-primary/70">
-                    <Eye size={10} className="mr-1.5" />
-                    {post.views || 0} LƯỢT XEM
-                  </div>
-                </div>
+                {(displaySettings.post_show_created_at !== 'false' || displaySettings.post_show_read_time !== 'false' || displaySettings.post_show_views !== 'false') && (
+                  <>
+                    <div className="w-px h-3 bg-slate-200 dark:bg-slate-800" />
+                    <div className="flex items-center gap-4 text-slate-400 text-[9px] font-bold uppercase tracking-widest">
+                      {displaySettings.post_show_created_at !== 'false' && (
+                        <FormattedDate date={post.created_at} showIcon iconSize={10} />
+                      )}
+                      {displaySettings.post_show_read_time !== 'false' && (
+                        <div className="flex items-center">
+                          <Clock size={10} className="mr-1.5" />
+                          {post.readTime || 1} PHÚT ĐỌC
+                        </div>
+                      )}
+                      {displaySettings.post_show_views !== 'false' && (
+                        <div className="flex items-center text-primary/70">
+                          <Eye size={10} className="mr-1.5" />
+                          {post.views || 0} LƯỢT XEM
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Social Actions - Compact Bar */}
@@ -352,19 +378,19 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
                   </button>
                   {showShareMenu && (
                     <div className="absolute right-0 top-full mt-2 w-48 bg-white dark:bg-slate-800 rounded-xl shadow-lg border border-slate-100 dark:border-slate-700 py-2 z-50 animate-in fade-in slide-in-from-top-2">
-                       <button onClick={() => { window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`); setShowShareMenu(false); }} className="w-full flex items-center px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                         <Facebook size={14} className="mr-3 text-blue-600" /> Facebook
-                       </button>
-                       <button onClick={() => { window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}&text=${encodeURIComponent(post.title)}`); setShowShareMenu(false); }} className="w-full flex items-center px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                         <Twitter size={14} className="mr-3 text-sky-500" /> Twitter
-                       </button>
-                       <button onClick={() => { window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`); setShowShareMenu(false); }} className="w-full flex items-center px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                         <Linkedin size={14} className="mr-3 text-blue-700" /> LinkedIn
-                       </button>
-                       <div className="h-px bg-slate-100 dark:bg-slate-700 my-1 mx-2" />
-                       <button onClick={() => { navigator.clipboard.writeText(typeof window !== 'undefined' ? window.location.href : ''); setMsgData({ isOpen: true, title: 'Thành công', message: 'Liên kết bài viết đã được chép vào bộ nhớ đệm!', variant: 'success' }); setShowShareMenu(false); }} className="w-full flex items-center px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50">
-                         <Link2 size={14} className="mr-3 text-slate-500" /> Copy Link
-                       </button>
+                      <button onClick={() => { window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`); setShowShareMenu(false); }} className="w-full flex items-center px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                        <Facebook size={14} className="mr-3 text-blue-600" /> Facebook
+                      </button>
+                      <button onClick={() => { window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}&text=${encodeURIComponent(post.title)}`); setShowShareMenu(false); }} className="w-full flex items-center px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                        <Twitter size={14} className="mr-3 text-sky-500" /> Twitter
+                      </button>
+                      <button onClick={() => { window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(typeof window !== 'undefined' ? window.location.href : '')}`); setShowShareMenu(false); }} className="w-full flex items-center px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                        <Linkedin size={14} className="mr-3 text-blue-700" /> LinkedIn
+                      </button>
+                      <div className="h-px bg-slate-100 dark:bg-slate-700 my-1 mx-2" />
+                      <button onClick={() => { navigator.clipboard.writeText(typeof window !== 'undefined' ? window.location.href : ''); setMsgData({ isOpen: true, title: 'Thành công', message: 'Liên kết bài viết đã được chép vào bộ nhớ đệm!', variant: 'success' }); setShowShareMenu(false); }} className="w-full flex items-center px-4 py-2 text-sm text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50">
+                        <Link2 size={14} className="mr-3 text-slate-500" /> Copy Link
+                      </button>
                     </div>
                   )}
                 </div>
@@ -373,12 +399,12 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
 
             <article className="w-full overflow-hidden max-w-none bg-white dark:bg-slate-900 rounded-[2rem] shadow-sm border border-slate-100 dark:border-slate-800/50">
               {post.cover_image && (
-                <div className="w-full aspect-[21/9] border-b border-slate-100/50 dark:border-slate-800/50 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none z-10" />
+                <div className="w-full border-b border-slate-100/50 dark:border-slate-800/50 relative overflow-hidden bg-slate-900/5 dark:bg-slate-950/20">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent pointer-events-none z-10" />
                   <img
                     src={`${post.cover_image}`}
                     alt={post.title}
-                    className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-700 relative z-0"
+                    className="w-full h-auto max-h-[600px] object-cover transform hover:scale-[1.01] transition-transform duration-700 relative z-0"
                   />
                 </div>
               )}
@@ -466,7 +492,10 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
               ) : replyingTo === null && (
                 <form onSubmit={handleComment} className="mb-10 relative bg-slate-50/50 dark:bg-slate-950/50 p-5 rounded-3xl border border-slate-100 dark:border-slate-800">
                   <div className="relative mb-4">
+                    <label htmlFor="main-comment-textarea" className="sr-only">Nội dung bình luận</label>
                     <textarea
+                      id="main-comment-textarea"
+                      name="content"
                       placeholder="Hãy chia sẻ ý kiến của bạn tại đây..."
                       className="w-full px-5 py-4 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all min-h-[100px] text-sm resize-none shadow-sm"
                       value={commentText}
@@ -492,90 +521,103 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
                     const renderComments = (commentsList: CommentType[], isReply = false): React.ReactNode => {
                       return commentsList.map(comment => {
                         const isTarget = activeHash === `#comment-${comment.id}`;
-                        
+
                         return (
-                          <div 
-                            key={comment.id} 
+                          <div
+                            key={comment.id}
                             id={`comment-${comment.id}`}
                             className={cn(
-                              "group/comment relative transition-all duration-700", 
-                              isReply ? "ml-6 md:ml-10 mt-3 md:mt-4 before:content-[''] before:absolute before:-left-4 md:before:-left-6 before:top-4 before:w-3 md:before:w-4 before:h-px before:bg-slate-200 dark:before:bg-slate-700 before:z-0 after:content-[''] after:absolute after:-left-4 md:after:-left-6 after:-top-6 after:h-10 after:w-px after:bg-slate-200 dark:after:bg-slate-700 after:z-0" : "mb-6",
-                              isTarget && "ring-2 ring-primary/40 ring-offset-8 rounded-3xl bg-primary/5 p-4 -m-4 shadow-xl shadow-primary/5 z-20"
+                              "group/comment relative transition-all duration-700",
+                              isReply ? "ml-6 md:ml-10 mt-3 md:mt-4 before:content-[''] before:absolute before:-left-4 md:before:-left-6 before:top-4 before:w-3 md:before:w-4 before:h-px before:bg-slate-200 dark:before:bg-slate-700 before:z-0 after:content-[''] after:absolute after:-left-4 md:after:-left-6 after:-top-6 after:h-10 after:w-px after:bg-slate-200 dark:after:bg-slate-700 after:z-0" : "mb-6"
                             )}
                           >
-                           <div className="flex space-x-3 relative z-10">
+                            <div className="flex space-x-3 relative z-10">
                               <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 font-bold text-xs uppercase overflow-hidden flex-shrink-0 border border-slate-200 dark:border-slate-700">
-                                  {comment.User?.avatar ? (
-                                    <img src={comment.User.avatar} alt={comment.author_name} className="w-full h-full object-cover" />
-                                  ) : (comment.author_name || 'K')[0]}
+                                {comment.User?.avatar ? (
+                                  <img
+                                    src={comment.User.avatar}
+                                    alt={comment.User?.fullname || comment.User?.username || comment.author_name || 'User'}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      const target = e.currentTarget;
+                                      target.style.display = 'none';
+                                      if (target.parentElement) {
+                                        target.parentElement.textContent = (comment.User?.fullname || comment.User?.username || comment.author_name || 'K')[0];
+                                      }
+                                    }}
+                                  />
+                                ) : (comment.User?.fullname || comment.User?.username || comment.author_name || 'K')[0]}
                               </div>
                               <div className="flex-grow min-w-0">
-                                 <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-2xl rounded-tl-sm border border-slate-100 dark:border-slate-800 transition-all">
-                                    <div className="flex items-center justify-between mb-1.5">
-                                       <span className="font-bold text-slate-900 dark:text-white text-[13px]">{comment.author_name}</span>
-                                       <span className="text-[10px] text-slate-400 font-medium">
-                                          {new Date(comment.created_at).toLocaleDateString('vi-VN')}
-                                       </span>
+                                <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-2xl rounded-tl-sm border border-slate-100 dark:border-slate-800 transition-all">
+                                  <div className="flex items-center justify-between mb-1.5">
+                                    <span className="font-bold text-slate-900 dark:text-white text-[13px]">{comment.User?.fullname || comment.User?.username || comment.author_name || 'Khách'}</span>
+                                    <span className="text-[10px] text-slate-400 font-medium">
+                                      {new Date(comment.created_at).toLocaleDateString('vi-VN')}
+                                    </span>
+                                  </div>
+                                  {editingCommentId === comment.id ? (
+                                    <div className="mt-2 space-y-3">
+                                      <textarea
+                                        className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary min-h-[80px]"
+                                        value={editingText}
+                                        onChange={(e) => setEditingText(e.target.value)}
+                                      />
+                                      <div className="flex justify-end space-x-2">
+                                        <Button variant="outline" size="sm" onClick={() => setEditingCommentId(null)}>Hủy</Button>
+                                        <Button size="sm" onClick={() => handleUpdateComment(comment.id)}>Lưu</Button>
+                                      </div>
                                     </div>
-                                    {editingCommentId === comment.id ? (
-                                       <div className="mt-2 space-y-3">
-                                          <textarea
-                                            className="w-full p-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary min-h-[80px]"
-                                            value={editingText}
-                                            onChange={(e) => setEditingText(e.target.value)}
-                                          />
-                                          <div className="flex justify-end space-x-2">
-                                            <Button variant="outline" size="sm" onClick={() => setEditingCommentId(null)}>Hủy</Button>
-                                            <Button size="sm" onClick={() => handleUpdateComment(comment.id)}>Lưu</Button>
-                                          </div>
-                                       </div>
-                                    ) : (
-                                       <p className="text-slate-700 dark:text-slate-300 text-[13.5px] leading-relaxed break-words whitespace-pre-wrap">
-                                          {comment.content}
-                                       </p>
-                                    )}
-                                 </div>
+                                  ) : (
+                                    <p className="text-slate-700 dark:text-slate-300 text-[13.5px] leading-relaxed break-words whitespace-pre-wrap">
+                                      {comment.content}
+                                    </p>
+                                  )}
+                                </div>
 
-                                 <div className="flex items-center space-x-4 mt-1.5 ml-2 opacity-80 hover:opacity-100 transition-opacity">
-                                   <button onClick={() => { setReplyingTo(replyingTo === comment.id ? null : comment.id); setCommentText(''); }} className="text-[11px] font-bold text-slate-500 hover:text-primary transition-colors">
-                                     Phản hồi
-                                   </button>
-                                   {isAuthenticated && (user?.id === comment.user_id || ['admin', 'superadmin'].includes(user?.role || '')) && (
-                                      <>
-                                        {user?.id === comment.user_id && <button onClick={() => { setEditingCommentId(comment.id); setEditingText(comment.content || ''); }} className="text-[11px] font-bold text-slate-500 hover:text-primary transition-colors">Sửa</button>}
-                                        {deleteConfirmId === comment.id ? (
-                                          <div className="flex items-center space-x-2 text-[10px] bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded border border-red-100 dark:border-red-900/30">
-                                            <span className="text-red-500 font-bold">Xóa?</span>
-                                            <button onClick={() => handleDeleteComment(comment.id)} className="text-red-600 hover:text-red-700 font-bold">Có</button>
-                                            <button onClick={() => setDeleteConfirmId(null)} className="text-slate-500 hover:text-slate-700">Không</button>
-                                          </div>
-                                        ) : (
-                                          <button onClick={() => setDeleteConfirmId(comment.id)} className="text-[11px] font-bold text-slate-500 hover:text-red-500 transition-colors">Xóa</button>
-                                        )}
-                                      </>
-                                   )}
-                                 </div>
-                                 
-                                 {replyingTo === comment.id && (
-                                   <div className="mt-3 mb-2 animate-in fade-in slide-in-from-top-2">
-                                      <form onSubmit={handleComment} className="flex flex-col space-y-2 p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl relative shadow-sm">
-                                         <input type="text" autoFocus value={commentText} onChange={(e) => { setCommentText(e.target.value); setCommentError(null); }} onKeyDown={(e) => { if (e.key === 'Escape') setReplyingTo(null); }} placeholder={`Trả lời ${comment.author_name}...`} className="w-full bg-transparent text-[13px] outline-none px-2 py-1 placeholder:text-slate-400" />
-                                         <div className="flex justify-between items-center px-1">
-                                           <span className="text-[10px] text-slate-400 ml-1">Nhấn Esc để hủy</span>
-                                           <Button type="submit" size="sm" isLoading={isSubmitting} disabled={!commentText.trim()} className="h-7 text-[11px] px-3">Gửi</Button>
-                                         </div>
-                                      </form>
-                                       {commentError && <div className="mt-2 px-2 py-1.5 bg-red-50 text-red-600 rounded-lg text-[11px] font-bold border border-red-100 flex items-center"><AlertCircle size={12} className="inline mr-1" />{commentError}</div>}
-                                   </div>
-                                 )}
+                                <div className="flex items-center space-x-4 mt-1.5 ml-2 opacity-80 hover:opacity-100 transition-opacity">
+                                  {!isMaintenanceComments && (
+                                    <button onClick={() => { setReplyingTo(replyingTo === comment.id ? null : comment.id); setCommentText(''); }} className="text-[11px] font-bold text-slate-500 hover:text-primary transition-colors">
+                                      Phản hồi
+                                    </button>
+                                  )}
+                                  {isAuthenticated && (user?.id === comment.user_id || ['admin', 'superadmin'].includes(user?.role || '')) && (
+                                    <>
+                                      {user?.id === comment.user_id && !isMaintenanceComments && <button onClick={() => { setEditingCommentId(comment.id); setEditingText(comment.content || ''); }} className="text-[11px] font-bold text-slate-500 hover:text-primary transition-colors">Sửa</button>}
+                                      {deleteConfirmId === comment.id ? (
+                                        <div className="flex items-center space-x-2 text-[10px] bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded border border-red-100 dark:border-red-900/30">
+                                          <span className="text-red-500 font-bold">Xóa?</span>
+                                          <button onClick={() => handleDeleteComment(comment.id)} className="text-red-600 hover:text-red-700 font-bold">Có</button>
+                                          <button onClick={() => setDeleteConfirmId(null)} className="text-slate-500 hover:text-slate-700">Không</button>
+                                        </div>
+                                      ) : (
+                                        <button onClick={() => setDeleteConfirmId(comment.id)} className="text-[11px] font-bold text-slate-500 hover:text-red-500 transition-colors" disabled={isMaintenanceComments}>Xóa</button>
+                                      )}
+                                    </>
+                                  )}
+                                </div>
+
+                                {replyingTo === comment.id && !isMaintenanceComments && (
+                                  <div className="mt-3 mb-2 animate-in fade-in slide-in-from-top-2">
+                                    <form onSubmit={handleComment} className="flex flex-col space-y-2 p-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl relative shadow-sm">
+                                      <label htmlFor={`reply-input-${comment.id}`} className="sr-only">Nội dung phản hồi</label>
+                                      <input id={`reply-input-${comment.id}`} name="content" type="text" autoFocus value={commentText} onChange={(e) => { setCommentText(e.target.value); setCommentError(null); }} onKeyDown={(e) => { if (e.key === 'Escape') setReplyingTo(null); }} placeholder={`Trả lời ${comment.User?.fullname || comment.User?.username || comment.author_name || 'người dùng'}...`} className="w-full bg-transparent text-[13px] outline-none px-2 py-1 placeholder:text-slate-400" />
+                                      <div className="flex justify-between items-center px-1">
+                                        <span className="text-[10px] text-slate-400 ml-1">Nhấn Esc để hủy</span>
+                                        <Button type="submit" size="sm" isLoading={isSubmitting} disabled={!commentText.trim()} className="h-7 text-[11px] px-3">Gửi</Button>
+                                      </div>
+                                    </form>
+                                    {commentError && <div className="mt-2 px-2 py-1.5 bg-red-50 text-red-600 rounded-lg text-[11px] font-bold border border-red-100 flex items-center"><AlertCircle size={12} className="inline mr-1" />{commentError}</div>}
+                                  </div>
+                                )}
                               </div>
-                           </div>
-                           {comment.Replies && comment.Replies.length > 0 && (
+                            </div>
+                            {comment.Replies && comment.Replies.length > 0 && (
                               <div className="mt-1 relative">
-                                 {renderComments(comment.Replies, true)}
+                                {renderComments(comment.Replies, true)}
                               </div>
-                           )}
-                        </div>
+                            )}
+                          </div>
                         );
                       });
                     };
@@ -592,113 +634,116 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
             </section>
           </div>
 
-      {/* Sidebar */}
-      <aside className="lg:w-3/12 w-full flex-shrink-0 space-y-1 lg:sticky lg:top-24 h-fit">
-        {/* Search Box */}
-        <div className="relative group">
-          <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-all">
-            <Search size={18} />
-          </div>
-          <input
-            type="text"
-            placeholder="Tìm nội dung hấp dẫn..."
-            className="w-full pl-12 pr-12 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm group-hover:shadow-md"
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && router.push(`/?q=${searchValue}`)}
-          />
-          <button
-            onClick={() => router.push(`/?q=${searchValue}`)}
-            className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors p-1"
-            aria-label="Search"
-          >
-            <ChevronRight size={18} />
-          </button>
-        </div>
-
-        {/* Same Series Posts */}
-        {post.series_id && seriesPosts.length > 0 && (
-          <div className="p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800/50 shadow-sm overflow-hidden relative">
-            <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none text-primary">
-              <Layers size={60} />
+          {/* Sidebar */}
+          <aside className="lg:w-3/12 w-full flex-shrink-0 space-y-1 lg:sticky lg:top-24 h-fit">
+            {/* Search Box */}
+            <div className="relative group">
+              <label htmlFor="sidebar-search" className="sr-only">Tìm kiếm bài viết</label>
+              <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-all">
+                <Search size={18} />
+              </div>
+              <input
+                id="sidebar-search"
+                name="q"
+                type="text"
+                placeholder="Tìm nội dung hấp dẫn..."
+                className="w-full pl-12 pr-12 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-xs focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm group-hover:shadow-md"
+                value={searchValue}
+                onChange={(e) => setSearchValue(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && router.push(`/?q=${searchValue}`)}
+              />
+              <button
+                onClick={() => router.push(`/?q=${searchValue}`)}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors p-1"
+                aria-label="Search"
+              >
+                <ChevronRight size={18} />
+              </button>
             </div>
-            <h3 className="text-[11px] font-bold text-primary uppercase tracking-widest mb-6 flex items-center">
-              <Layers size={14} className="mr-2" />
-              Cùng Series này
-            </h3>
-            <div className="space-y-4">
-              {seriesPosts.map((p, idx) => (
-                <Link key={p.id} href={`/${p.Category?.slug || 'uncategorized'}/${p.slug}`} className="flex group">
-                  <div className={cn(
-                    "flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-[10px] font-bold mr-4 transition-all shadow-sm",
-                    p.slug === post.slug ? "bg-primary text-white scale-110 shadow-primary/20" : "bg-slate-50 dark:bg-slate-800 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary"
-                  )}>
-                    {idx + 1}
-                  </div>
-                  <div className="flex-grow pt-1">
-                    <p className={cn(
-                      "text-[13px] font-bold leading-snug group-hover:text-primary transition-colors line-clamp-2",
-                      p.slug === post.slug ? "text-primary" : "text-slate-900 dark:text-white"
-                    )}>
-                      {p.title}
-                    </p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
 
-        {/* Categories */}
-        <div className="p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800/50 shadow-sm">
-          <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-6">Khám phá danh mục</h3>
-          <div className="space-y-3">
-            {categories.map((cat) => (
-              <Link key={cat.id} href={`/?q=${cat.name}`}
-                className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl hover:shadow-lg hover:-translate-y-1 transition-all group border border-transparent hover:border-primary/20">
-                <span className="text-[14px] font-bold text-slate-600 dark:text-slate-300 group-hover:text-primary">{cat.name}</span>
-                <span className="bg-white dark:bg-slate-900 px-2 py-1 rounded-lg text-[10px] font-bold text-slate-400 shadow-inner group-hover:text-primary">{cat._count?.Post || 0}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* Related Posts */}
-        <div className="p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800/50 shadow-sm">
-          <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-6">Bài viết liên quan</h3>
-          <div className="space-y-8">
-            {relatedPosts.filter(p => p.id !== post.id).slice(0, 3).map(p => (
-              <Link key={p.id} href={`/${p.Category?.slug || 'uncategorized'}/${p.slug}`} className="block group">
-                <div className="flex flex-col">
-                  <div className="flex items-center mb-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-primary mr-2" />
-                    <span className="text-[10px] font-bold text-primary uppercase tracking-widest">{p.Category?.name}</span>
-                  </div>
-                  <h4 className="text-[14px] font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors line-clamp-2 leading-snug mb-2">
-                    {p.title}
-                  </h4>
-                  <div className="flex items-center text-slate-400 text-[10px] space-x-3 font-medium uppercase tracking-tighter">
-                    <span>{new Date(p.created_at).toLocaleDateString('vi-VN')}</span>
-                    <span>•</span>
-                    <span className="flex items-center"><Eye size={10} className="mr-1" /> {p.views || 0}</span>
-                  </div>
+            {/* Same Series Posts */}
+            {post.series_id && seriesPosts.length > 0 && (
+              <div className="p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800/50 shadow-sm overflow-hidden relative">
+                <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none text-primary">
+                  <Layers size={60} />
                 </div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </aside>
-    </div>
-  </div>
+                <h3 className="text-[11px] font-bold text-primary uppercase tracking-widest mb-6 flex items-center">
+                  <Layers size={14} className="mr-2" />
+                  Cùng Series này
+                </h3>
+                <div className="space-y-4">
+                  {seriesPosts.map((p, idx) => (
+                    <Link key={p.id} href={`/${p.Category?.slug || 'uncategorized'}/${p.slug}`} className="flex group">
+                      <div className={cn(
+                        "flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center text-[10px] font-bold mr-4 transition-all shadow-sm",
+                        p.slug === post.slug ? "bg-primary text-white scale-110 shadow-primary/20" : "bg-slate-50 dark:bg-slate-800 text-slate-400 group-hover:bg-primary/10 group-hover:text-primary"
+                      )}>
+                        {idx + 1}
+                      </div>
+                      <div className="flex-grow pt-1">
+                        <p className={cn(
+                          "text-[13px] font-bold leading-snug group-hover:text-primary transition-colors line-clamp-2",
+                          p.slug === post.slug ? "text-primary" : "text-slate-900 dark:text-white"
+                        )}>
+                          {p.title}
+                        </p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
 
-  <MessageDialog 
-    isOpen={msgData.isOpen}
-    onClose={() => setMsgData({ ...msgData, isOpen: false })}
-    title={msgData.title}
-    message={msgData.message}
-    variant={msgData.variant}
-  />
-</div>
+            {/* Categories */}
+            <div className="p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800/50 shadow-sm">
+              <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-6">Khám phá danh mục</h3>
+              <div className="space-y-3">
+                {categories.map((cat) => (
+                  <Link key={cat.id} href={`/?q=${cat.name}`}
+                    className="flex items-center justify-between p-3.5 bg-slate-50 dark:bg-slate-800/50 rounded-xl hover:shadow-lg hover:-translate-y-1 transition-all group border border-transparent hover:border-primary/20">
+                    <span className="text-[14px] font-bold text-slate-600 dark:text-slate-300 group-hover:text-primary">{cat.name}</span>
+                    <span className="bg-white dark:bg-slate-900 px-2 py-1 rounded-lg text-[10px] font-bold text-slate-400 shadow-inner group-hover:text-primary">{cat._count?.Post || 0}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+
+            {/* Related Posts */}
+            <div className="p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800/50 shadow-sm">
+              <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-6">Bài viết liên quan</h3>
+              <div className="space-y-8">
+                {relatedPosts.filter(p => p.id !== post.id).slice(0, 3).map(p => (
+                  <Link key={p.id} href={`/${p.Category?.slug || 'uncategorized'}/${p.slug}`} className="block group">
+                    <div className="flex flex-col">
+                      <div className="flex items-center mb-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary mr-2" />
+                        <span className="text-[10px] font-bold text-primary uppercase tracking-widest">{p.Category?.name}</span>
+                      </div>
+                      <h4 className="text-[14px] font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors line-clamp-2 leading-snug mb-2">
+                        {p.title}
+                      </h4>
+                      <div className="flex items-center text-slate-400 text-[10px] space-x-3 font-medium uppercase tracking-tighter">
+                        <span>{new Date(p.created_at).toLocaleDateString('vi-VN')}</span>
+                        <span>•</span>
+                        <span className="flex items-center"><Eye size={10} className="mr-1" /> {p.views || 0}</span>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </aside>
+        </div>
+      </div>
+
+      <MessageDialog
+        isOpen={msgData.isOpen}
+        onClose={() => setMsgData({ ...msgData, isOpen: false })}
+        title={msgData.title}
+        message={msgData.message}
+        variant={msgData.variant}
+      />
+    </div>
 
   );
 }

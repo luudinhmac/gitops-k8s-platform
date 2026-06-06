@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: apps-project
+  namespace: argocd
+spec:
+  description: Project for business applications (Frontend, Backend, Database)
+  sourceRepos:
+  - '*'
+  destinations:
+  - namespace: database
+    server: https://kubernetes.default.svc
+  - namespace: database-production
+    server: https://kubernetes.default.svc
+  - namespace: staging
+    server: https://kubernetes.default.svc
+  - namespace: production
+    server: https://kubernetes.default.svc
+  - namespace: portfolio
+    server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+  - group: '*'
+    kind: '*'

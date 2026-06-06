@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 const projects = [
   {
     title: 'Hệ thống SQL Server Failover Cluster (FCI)',
-    description: 'Thiết lập cụm băm lỗi (Failover Cluster) cho SQL Server trên Windows Server 2022, đảm bảo tính sẵn sàng cao cho cơ sở dữ liệu doanh nghiệp.',
+    description: 'Thiết lập lại Failover Cluster cho SQL Server trên Windows Server 2022, đảm bảo tính sẵn sàng cao cho cơ sở dữ liệu doanh nghiệp.',
     tech: ['Windows Server', 'SQL Server', 'Failover Cluster', 'Active Directory'],
     category: 'High Availability',
     link: '#',
@@ -70,7 +70,7 @@ const projects = [
   },
   {
     title: 'Bảo trì & Xử lý sự cố SAN & Server Hardware',
-    description: 'Thiết lập RAID cho các dòng SAN IBM (v3700, v7000, v9000), thay thế controller (3PAR, MSA), linh kiện máy chủ (HPE, DELL, IBM, Lenovo, Fujitsu) và chuẩn đoán lỗi, thay thế phần cứng HPE Tape Autoloader.',
+    description: 'Kiểm tra chẩn đoán lỗi, thay thế linh kiện và xử lý lỗi hệ thống SAN IBM(v3700, v7000, v9000), SAN HPE, DELL, thay thế controller (3PAR, MSA), linh kiện máy chủ (HPE, DELL, IBM, Lenovo, Fujitsu), HPE Tape Autoloader.',
     tech: ['RAID Configuration', 'HPE Tape Autoloader', 'SAN Maintenance', 'Hardware Troubleshooting'],
     category: 'Infrastructure',
     link: '#',
@@ -90,7 +90,7 @@ const projects = [
 
 export default function ProjectsSection() {
   const [activeFilter, setActiveFilter] = useState('All');
-  
+
   const filters = [
     { label: 'Tất cả', value: 'All' },
     { label: 'High Availability', value: 'High Availability' },
@@ -100,8 +100,8 @@ export default function ProjectsSection() {
     { label: 'Infrastructure', value: 'Infrastructure' }
   ];
 
-  const filteredProjects = activeFilter === 'All' 
-    ? projects 
+  const filteredProjects = activeFilter === 'All'
+    ? projects
     : projects.filter(p => p.category === activeFilter);
 
   return (
@@ -124,8 +124,8 @@ export default function ProjectsSection() {
               onClick={() => setActiveFilter(filter.value)}
               className={cn(
                 "px-5 py-2 md:px-6 md:py-2.5 rounded-full text-xs md:text-sm font-medium transition-all shadow-sm border border-transparent",
-                activeFilter === filter.value 
-                  ? "bg-primary text-white shadow-lg shadow-primary/20" 
+                activeFilter === filter.value
+                  ? "bg-primary text-white shadow-lg shadow-primary/20"
                   : "bg-white dark:bg-slate-900 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 border-slate-100 dark:border-slate-800"
               )}
             >
@@ -137,7 +137,7 @@ export default function ProjectsSection() {
         {/* Projects Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-1">
           {filteredProjects.map((project, i) => (
-            <div 
+            <div
               key={i} className="glass p-2 rounded-xl flex flex-col hover-lift group border border-slate-100 dark:border-slate-800 hover:border-primary/20 transition-all"
             >
               <div className="mb-2 flex items-start justify-between">

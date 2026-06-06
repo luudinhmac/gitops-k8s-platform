@@ -17,23 +17,39 @@ Dự án Portfolio + Blog chuyên nghiệp dành cho Kỹ sư Hệ thống (Syst
 ## Features
 - **Blog-First Architecture:** Hệ thống được cấu trúc với Blog là trang chủ (`/`) để tối ưu việc chia sẻ kiến thức, trong khi các phần Portfolio, Giới thiệu, Dự án được quy hoạch gọn gàng trong mục `/about`.
 - **Legal Compliance:** Đã tích hợp trang **Quyền riêng tư** và **Điều khoản sử dụng** theo Nghị định 13/2023/NĐ-CP của Chính phủ Việt Nam.
-- **Settings Module:** Bảng điều khiển quản lý toàn bộ thiết lập hệ thống động trên Dashboard, chia thành cấu hình Giao diện, SEO, cũng như giám sát an toàn Môi trường Hệ thống.
-- **Advanced Search:** Tính năng tìm kiếm Real-time (debounced), tìm kiếm chéo tag, category, series không phân biệt chữ hoa chữ thường.
-- **Blue/Sky UI Identity:** Giao diện được tối ưu hóa đồng nhất bằng tông màu Xanh chuyên nghiệp, với bảng thiết kế tinh gọn cho trải nghiệm Dev/Tech content.
+- **Settings Module:** Bảng điều khiển quản lý toàn bộ thiết lập hệ thống động trên Dashboard, chia thành cấu hình Giao diện, SEO, cũng như giám sát an toàn Môi trường Hệ thống. Tích hợp hệ thống thông báo chủ động (**MessageDialog**) đảm bảo phản hồi quan trọng luôn được xác nhận trực quan.
+- **Advanced Search:** Tính năng tìm kiếm Real-time với cơ chế **Debounce (500ms)** tối ưu hiệu suất, cho phép tìm kiếm chéo tag, category, series mượt mà và không gây gián đoạn nhập liệu.
+- **Blue/Sky UI Identity:** Giao diện được tối ưu hóa đồng nhất bằng tông màu Xanh chuyên nghiệp, với bảng thiết kế tinh gọn cho trải nghiệm Dev/Tech content. Toàn bộ các nút thao tác và layout quản trị được chuẩn hóa kích thước (min-w-140px) và căn lề chuyên nghiệp.
 - **Authentication:** Quy trình xác thực JWT bền vững với HttpOnly Cookies, tự động khôi phục phiên bản hồ sơ người dùng đầy đủ.
+- **Administrative Security:** Triển khai **Stealth Administrative Path** (thay đổi đường dẫn mặc định) và hệ thống **Middleware Proxy** bảo mật để che giấu kiến trúc hạ tầng thực tế, ngăn chặn các cuộc tấn công dò tìm (brute-force) vào vùng quản trị.
 - **Advanced User Management:** Quản trị viên (Admin & Superadmin) có thể kiểm soát chi tiết quyền hạn của từng người dùng thông qua Settings Box: cấm đăng nhập (Khóa tài khoản), cấm bình luận, cấm đăng bài, và thay đổi vai trò trực quan. Tài khoản **Superadmin** có quyền hạn tối cao, quản lý được cả các tài khoản Admin khác.
 - **Maintenance Mode:** Hệ thống bảo trì phân mảnh (Global, Posts, Comments) cho phép khóa toàn bộ website hoặc từng chức năng cụ thể. Tích hợp "Cửa bí mật" (Hidden Door) với Passcode xác thực dành riêng cho Quản trị viên để truy cập quản trị trong lúc bảo trì.
 - **Notification System:** Hệ thống thông báo thời hạn thực với huy hiệu (badges) thông minh trên Navbar. Thông báo cho người dùng về các tương tác (bình luận, trả lời) và các sự kiện hệ thống quan trọng.
 - **Series Navigation:** Tự động hiển thị bài viết trước và bài viết sau trong cùng một series, hỗ trợ điều hướng thông minh theo thứ tự (series_order) ngay trong trang chi tiết bài viết.
 - **Security-First API:** Tài liệu Swagger được bảo vệ theo môi trường và giới hạn IP. Các thông tin nhạy cảm (pass hash) được lọc bỏ hoàn toàn khỏi các phản hồi API.
 
+## Architecture Principles
+Dự án được xây dựng dựa trên các nguyên tắc thiết kế hiện đại nhằm đảm bảo khả năng mở rộng và bảo trì lâu dài:
+- **Backend (Clean Architecture):** Tách biệt hoàn toàn logic nghiệp vụ khỏi các yếu tố hạ tầng (Database, Framework). Sử dụng mô hình lớp: `Domain` -> `Application` -> `Infrastructure` -> `Presentation`.
+- **Frontend (Feature-based):** Phân tách ứng dụng theo tính năng (Features). Mỗi tính năng tự quản lý giao diện, logic và API riêng biệt, giúp giảm thiểu phụ thuộc chéo.
+- **Unified Types:** Hệ thống Type-safe đồng nhất giữa Frontend và Backend thông qua Shared Packages.
+
 ## Project Structure
 ```text
-frontend/      # Next.js Application (Feature-based structure)
-backend/       # NestJS API (Modular architecture)
-packages/      # Shared packages (e.g., @portfolio/contracts)
-ansible/       # Ansible Roles & Automation
-docs/          # Technical Documentation & Deployment Reports
+frontend/
+  src/features/    # Logic theo tính năng (Auth, Posts, Users, ...)
+  src/shared/      # Components và hooks dùng chung
+backend/
+  src/modules/     # Modules theo Clean Architecture
+    domain/        # Entities & Repository Interfaces
+    application/   # Use Cases (Business Logic)
+    infrastructure/# Prisma Repositories & Mappers
+    presentation/  # Controllers & Swagger
+packages/
+  types/           # Shared Type Definitions (@portfolio/types)
+ansible/           # Automation Playbooks & Roles
+k8s/               # Kubernetes Manifests (Production)
+docs/              # System Audit Reports & Documentation
 ```
 
 ## Local Development
@@ -74,18 +90,40 @@ Hệ thống tuân thủ quy trình làm việc chuyên nghiệp:
 - `main` → `production`: Vận hành chính thức.
 
 ## Deployment
+Dự án hỗ trợ linh hoạt các phương thức triển khai tùy theo nhu cầu hạ tầng:
 
-Dự án hỗ trợ hai phương thức triển khai tự động hóa qua **Ansible Roles**:
+### 1. Triển khai trực tiếp (Bare Metal)
+Dành cho việc chạy ứng dụng trực tiếp trên server vật lý hoặc VPS (Ubuntu/Windows/CentOS) không thông qua Container.
 
-### 1. Môi trường Staging (Docker Compose)
+1.  **Cài đặt Node.js (v18+) & pnpm.**
+2.  **Cài đặt & Chạy PostgreSQL.** Tạo một Database trống (ví dụ: `portfolio_db`).
+3.  **Thiết lập Môi trường:** Tạo file `.env` trong thư mục `backend/` trỏ đến Database vừa tạo.
+4.  **Cài đặt & Build:**
+    ```bash
+    pnpm install
+    pnpm --prefix backend build
+    pnpm --prefix frontend build
+    ```
+5.  **Khởi tạo cấu trúc bảng (Migration):**
+    ```bash
+    pnpm --prefix backend prisma migrate deploy
+    ```
+6.  **Vận hành:** Sử dụng PM2 để quản lý process:
+    ```bash
+    pm2 start backend/dist/src/main.js --name portfolio-backend
+    pm2 start "pnpm --prefix frontend start" --name portfolio-frontend
+    ```
+7.  **Khởi tạo hệ thống (Setup UI):** Truy cập vào địa chỉ website, hệ thống sẽ tự động chuyển hướng đến trang `/setup` để bạn cấu hình Admin và thông tin site qua giao diện.
+
+### 2. Môi trường Staging (Docker Compose)
 Dành cho kiểm thử nhanh trên VM đơn lẻ.
 ```bash
-cd ansible
+cd infra/ansible
 # Triển khai qua Docker Compose
 ansible-playbook -i inventory.ini playbooks/staging.yml
 ```
 
-### 2. Môi trường Production (Kubernetes)
+### 3. Môi trường Production (Kubernetes)
 Kiến trúc Production-Grade trên cụm Single-node K8s.
 *   **Hạ tầng:** Kubeadm, Flannel CNI, Dashboard.
 *   **Networking:** HostNetwork Nginx (Cổng 80/443 chuẩn), tương thích Cloudflare.
@@ -99,7 +137,7 @@ ansible-playbook -i inventory.ini playbooks/k8s_setup.yml
 # 2. Deploy App (Build, Sync & Run)
 ansible-playbook -i inventory.ini playbooks/k8s_app_deploy.yml
 ```
-Quy trình K8s tự động bao gồm bridge Image từ Docker sang Containerd, cấp phát SSL, và khởi tạo Secrets động (bao gồm auto-gen JWT).
+Quy trình K8s tự động bao gồm bridge Image từ Docker sang Containerd, cấp phát SSL, và khởi tạo Secrets động. Sau khi deploy, bạn cũng thực hiện bước **Setup UI** tương tự như bản Bare Metal.
 
 ---
 

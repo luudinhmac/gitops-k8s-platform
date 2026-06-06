@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: portfolio-backend-production
+  namespace: argocd
+spec:
+  project: apps-project
+  source:
+    repoURL: https://gitlab.com/portfolio-macld/portfolio-infratructure.git
+    targetRevision: main
+    path: apps/backend
+    helm:
+      valueFiles:
+        - /environments/production/backend-values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: production
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -1,0 +1,10 @@
+network:
+  version: 2
+  renderer: networkd
+  bridges:
+    br0:
+      addresses:
+        - 10.200.0.1/24
+      interfaces: []
+      parameters:
+        stp: false

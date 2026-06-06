@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: portfolio-root-app-staging
+  namespace: argocd
+spec:
+  project: portfolio-staging
+  source:
+    repoURL: https://gitlab.com/portfolio-macld/portfolio-infratructure.git
+    targetRevision: main
+    path: argocd
+    directory:
+      recurse: true
+      exclude: 'root/*'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

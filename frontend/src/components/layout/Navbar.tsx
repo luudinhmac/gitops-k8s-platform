@@ -26,10 +26,8 @@ export default function Navbar() {
 
   const navItems = [
     { name: 'Trang chủ', href: '/' },
-    { name: 'Hồ sơ', href: '/about' },
-    { name: 'Khóa học', href: '/about#courses' },
-    { name: 'Dự án', href: '/about#projects' },
-    { name: 'Giới thiệu', href: '/about#about' },
+    { name: 'Giới thiệu', href: '/about' },
+    { name: 'Khóa học', href: '/courses' },
   ];
 
   useEffect(() => {
@@ -52,34 +50,39 @@ export default function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  if (pathname.startsWith('/admin') || pathname === '/maintenance') return null;
+  if (pathname.startsWith('/portal-dashboard') || pathname === '/maintenance') return null;
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50">
       <div suppressHydrationWarning={true} className="max-w-7xl mx-auto glass md:rounded-b-xl px-6 py-2.5 md:py-3.5 shadow-sm border-b md:border-b md:border-x border-slate-200/50 dark:border-slate-800/50 transition-colors">
         <div suppressHydrationWarning={true} className="flex items-center justify-between">
           <Link href="/" className="text-xl md:text-2xl font-display font-bold text-gradient flex-shrink-0">
-            Portfolio
+            Zero2Ops
           </Link>
 
           {/* Search Bar in Navbar */}
-          <div suppressHydrationWarning={true} className="hidden lg:flex flex-grow max-w-md mx-8 relative group">
-            <div suppressHydrationWarning={true} className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
+          <form 
+            onSubmit={(e) => {
+              e.preventDefault();
+              router.push(`/?q=${encodeURIComponent(searchValue)}`);
+            }}
+            className="hidden lg:flex flex-grow max-w-md mx-8 relative group"
+          >
+            <label htmlFor="nav-search" className="sr-only">Tìm kiếm bài viết</label>
+            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-primary transition-colors">
               <Search size={16} />
             </div>
             <input
+              id="nav-search"
+              name="nav-search"
               type="text"
               placeholder="Tìm kiếm bài viết..."
               className="w-full pl-10 pr-4 py-2 bg-slate-100/50 dark:bg-slate-800/50 border border-transparent focus:bg-white dark:focus:bg-slate-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all rounded-full text-sm"
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  router.push(`/?q=${encodeURIComponent(searchValue)}`);
-                }
-              }}
+              autoComplete="off"
             />
-          </div>
+          </form>
 
           {/* Desktop Nav */}
           <div className="hidden md:flex items-center space-x-8">
@@ -142,7 +145,7 @@ export default function Navbar() {
                       </Link>
 
                       {['admin', 'superadmin'].includes(user.role) && (
-                        <Link href="/admin" onClick={() => setDropdownOpen(false)}
+                        <Link href="/portal-dashboard" onClick={() => setDropdownOpen(false)}
                           className="flex items-center px-3 py-2.5 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-primary hover:bg-primary/5 rounded-xl transition-all">
                           <LayoutDashboard size={16} className="mr-2.5" /> Trang quản trị
                         </Link>
@@ -222,8 +225,8 @@ export default function Navbar() {
                   className="flex items-center w-full py-3 px-4 rounded-xl bg-primary/10 text-primary font-medium">
                   <PenSquare size={18} className="mr-3" /> Viết bài mới
                 </Link>
-                {user.role === 'admin' && (
-                  <Link href="/admin" onClick={() => setIsOpen(false)}
+                {['admin', 'superadmin'].includes(user.role) && (
+                  <Link href="/portal-dashboard" onClick={() => setIsOpen(false)}
                     className="flex items-center w-full py-3 px-4 rounded-xl bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 font-medium">
                     <LayoutDashboard size={18} className="mr-3" /> Trang quản trị
                   </Link>

@@ -12,6 +12,7 @@ interface AdminCardProps {
   className?: string;
   headerAction?: ReactNode;
   padding?: string;
+  overflowVisible?: boolean;
 }
 
 export default function AdminCard({
@@ -21,11 +22,13 @@ export default function AdminCard({
   description,
   className,
   headerAction,
-  padding = "p-1"
+  padding = "p-1",
+  overflowVisible = false
 }: AdminCardProps) {
   return (
     <div className={cn(
-      "bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden transition-all",
+      "bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all",
+      overflowVisible ? "overflow-visible" : "overflow-hidden",
       className
     )}>
       {(title || Icon || headerAction) && (

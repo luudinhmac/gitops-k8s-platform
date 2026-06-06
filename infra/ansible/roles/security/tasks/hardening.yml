@@ -1,0 +1,40 @@
+# Description: Hardening tasks for SSH and Fail2ban.
+# Part of the 'security' role.
+# Note: These tasks are skipped for production hosts.
+
+- name: Install Fail2ban
+  apt:
+    name: fail2ban
+    state: present
+
+- name: Ensure Fail2ban is running
+  service:
+    name: fail2ban
+    state: started
+    enabled: yes
+
+- name: Harden SSH Configuration
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: present
+  loop:
+    - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin no' }
+    - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' }
+    - { regexp: '^#?MaxAuthTries', line: 'MaxAuthTries 3' }
+    - { regexp: '^#?X11Forwarding', line: 'X11Forwarding no' }
+  notify: Restart SSH
+
+- name: Create Fail2ban local config for SSH
+  copy:
+    dest: /etc/fail2ban/jail.local
+    content: |
+      [sshd]
+      enabled = true
+      port = 22
+      filter = sshd
+      logpath = /var/log/auth.log
+      maxretry = 3
+      bantime = 1h
+  notify: Restart Fail2ban

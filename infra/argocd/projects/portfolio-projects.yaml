@@ -1,0 +1,44 @@
+# Description: ArgoCD AppProject for the Staging environment.
+# Provides a security boundary for staging applications with limited resource access.
+# Last Updated: 2026-05-12
+
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: portfolio-staging
+  namespace: argocd
+spec:
+  description: Project for Portfolio Staging environment
+  # Allow applications to be created from this repo only
+  sourceRepos:
+    - https://gitlab.com/portfolio-macld/portfolio-infratructure.git
+  # Limit deployments to the staging namespaces
+  destinations:
+    - namespace: portfolio
+      server: https://kubernetes.default.svc
+    - namespace: database
+      server: https://kubernetes.default.svc
+  # Permit all resource types within the staging namespace
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+---
+# Description: ArgoCD AppProject for the Production environment.
+# Enforces strict isolation and resource control for the live production system.
+# Last Updated: 2026-05-12
+
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: portfolio-production
+  namespace: argocd
+spec:
+  description: Project for Portfolio Production environment
+  sourceRepos:
+    - https://gitlab.com/portfolio-macld/portfolio-infratructure.git
+  destinations:
+    - namespace: portfolio-prod
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'

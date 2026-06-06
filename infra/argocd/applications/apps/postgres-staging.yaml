@@ -1,0 +1,27 @@
+# Description: ArgoCD Application manifest for the PostgreSQL staging database.
+# Defines the source repository, path, and destination cluster/namespace.
+# Last Updated: 2026-05-12
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: postgres-staging
+  namespace: argocd
+spec:
+  project: apps-project
+  source:
+    repoURL: https://gitlab.com/portfolio-macld/portfolio-infratructure.git
+    targetRevision: main
+    path: apps/postgres
+    helm:
+      valueFiles:
+        - /environments/staging/postgres-values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: database
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

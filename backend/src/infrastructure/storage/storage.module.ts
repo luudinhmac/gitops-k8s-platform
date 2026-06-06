@@ -10,10 +10,18 @@ import { InfrastructureConfigService } from '../config/config.service';
     InfrastructureConfigService,
     {
       provide: STORAGE_SERVICE,
-      useFactory: (config: InfrastructureConfigService, local: LocalStorageService, minio: MinioStorageService) => {
+      useFactory: (
+        config: InfrastructureConfigService,
+        local: LocalStorageService,
+        minio: MinioStorageService,
+      ) => {
         return config.storageType === 'minio' ? minio : local;
       },
-      inject: [InfrastructureConfigService, LocalStorageService, MinioStorageService],
+      inject: [
+        InfrastructureConfigService,
+        LocalStorageService,
+        MinioStorageService,
+      ],
     },
     LocalStorageService,
     MinioStorageService,

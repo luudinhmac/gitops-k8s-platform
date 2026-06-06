@@ -1,5 +1,5 @@
 import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
-import { SettingsService } from '../modules/settings/settings.service';
+import { SettingsService } from '../settings/settings.service';
 import * as nodemailer from 'nodemailer';
 
 @Injectable()
@@ -17,7 +17,8 @@ export class MailService {
       const port = await this.settingsService.getSettingByKey('mail_port');
       const user = await this.settingsService.getSettingByKey('mail_user');
       const pass = await this.settingsService.getSettingByKey('mail_pass');
-      const from = await this.settingsService.getSettingByKey('mail_from') || user;
+      const from =
+        (await this.settingsService.getSettingByKey('mail_from')) || user;
 
       if (!host || !port || !user || !pass) {
         this.logger.warn('Mail configuration is incomplete');
@@ -26,10 +27,10 @@ export class MailService {
 
       const transporter = nodemailer.createTransport({
         host,
-        port: parseInt(port),
-        secure: parseInt(port) === 465,
+        port: parseInt(port, 10),
+        secure: parseInt(port, 10) === 465,
         auth: { user, pass },
-      });
+      } as any);
 
       const info = await transporter.sendMail({
         from: `"Hệ thống Thông báo" <${from}>`,

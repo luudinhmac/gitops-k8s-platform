@@ -1,0 +1,69 @@
+# Description: Firewall configuration tasks using UFW.
+# Part of the 'security' role.
+
+- name: Install UFW
+  apt:
+    name: ufw
+    state: present
+    update_cache: yes
+
+- name: Reset UFW rules
+  ufw:
+    state: reset
+
+- name: Set default UFW policies
+  ufw:
+    default: deny
+    direction: incoming
+
+- name: Allow loopback traffic
+  ufw:
+    rule: allow
+    interface: lo
+    direction: in
+
+- name: Allow SSH (Port 2222)
+  ufw:
+    rule: allow
+    port: 2222
+    proto: tcp
+  when: inventory_hostname not in groups['production']
+
+- name: Allow HTTP (Port 80)
+  ufw:
+    rule: allow
+    port: 80
+    proto: tcp
+
+- name: Allow HTTPS (Port 443)
+  ufw:
+    rule: allow
+    port: 443
+    proto: tcp
+
+- name: Allow all traffic from internal subnet
+  ufw:
+    rule: allow
+    src: "{{ internal_subnet }}"
+
+- name: Allow all traffic from Pod network (Service range)
+  ufw:
+    rule: allow
+    src: "{{ service_network_cidr }}"
+
+- name: Allow all traffic from Pod network (Pod range)
+  ufw:
+    rule: allow
+    src: "{{ pod_network_cidr }}"
+
+- name: Allow traffic on Flannel interface
+  shell: ufw allow in on flannel.1
+  failed_when: false
+
+- name: Allow traffic on CNI interface
+  shell: ufw allow in on cni0
+  failed_when: false
+
+- name: Enable UFW
+  ufw:
+    state: enabled

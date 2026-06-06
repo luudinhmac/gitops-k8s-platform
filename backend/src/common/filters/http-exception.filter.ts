@@ -4,46 +4,65 @@ import {
   ArgumentsHost,
   HttpException,
   HttpStatus,
-<<<<<<< HEAD
-=======
   Logger,
->>>>>>> feature/arch-refactor
 } from '@nestjs/common';
 import { Response } from 'express';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
-<<<<<<< HEAD
-  catch(exception: unknown, host: ArgumentsHost) {
-    const ctx = host.switchToHttp();
-    const response = ctx.getResponse<Response>();
-=======
   private readonly logger = new Logger(GlobalExceptionFilter.name);
 
   catch(exception: unknown, host: ArgumentsHost) {
     const ctx = host.switchToHttp();
     const response = ctx.getResponse<Response>();
     const request = ctx.getRequest<Request>();
->>>>>>> feature/arch-refactor
 
-    const status =
+    let status =
       exception instanceof HttpException
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    const message =
-      exception instanceof HttpException
-        ? exception.getResponse()
-        : 'Internal server error';
+    // Map domain errors to HTTP errors
+    if (
+      exception instanceof Error &&
+      exception.name === 'PostNotFoundException'
+    ) {
+      status = HttpStatus.NOT_FOUND;
+    }
+
+    // Extract error message and map custom error code
+    let message = 'Internal server error';
+    let errorCode = 'INTERNAL_ERROR';
+
+    if (exception instanceof HttpException) {
+      const resBody = exception.getResponse();
+      if (typeof resBody === 'string') {
+        message = resBody;
+      } else if (typeof resBody === 'object' && resBody !== null) {
+        message = (resBody as any).message || exception.message || 'Error';
+      }
+
+      // Map status codes to descriptive error codes
+      if (status === HttpStatus.UNAUTHORIZED) {
+        errorCode = 'UNAUTHORIZED';
+      } else if (status === HttpStatus.NOT_FOUND) {
+        errorCode = 'NOT_FOUND';
+      } else if (status === HttpStatus.FORBIDDEN) {
+        errorCode = 'FORBIDDEN';
+      } else if (status >= 400 && status < 500) {
+        errorCode = 'BAD_REQUEST';
+      }
+    } else if (exception instanceof Error) {
+      message = exception.message;
+      if (exception.name === 'PostNotFoundException') {
+        errorCode = 'NOT_FOUND';
+      }
+    }
 
     const errorResponse = {
-      message: typeof message === 'string' ? message : (message as any).message || 'Error',
-      code: typeof message === 'object' ? (message as any).error || 'INTERNAL_ERROR' : 'INTERNAL_ERROR',
+      message: message,
+      code: errorCode,
       status: status,
-<<<<<<< HEAD
-    };
-
-=======
       timestamp: new Date().toISOString(),
       path: (request as any).url,
     };
@@ -57,10 +76,11 @@ export class GlobalExceptionFilter implements ExceptionFilter {
         exception instanceof Error ? exception.stack : undefined,
       );
     } else {
-      this.logger.warn(`${(request as any).method} ${(request as any).url} ${status} - ${JSON.stringify(message)}`);
+      this.logger.warn(
+        `${(request as any).method} ${(request as any).url} ${status} - ${JSON.stringify(message)}`,
+      );
     }
 
->>>>>>> feature/arch-refactor
     response.status(status).json(errorResponse);
   }
 }

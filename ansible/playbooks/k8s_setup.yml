@@ -1,8 +1,0 @@
----
-- name: Setup Kubernetes Cluster on Single Node
-  hosts: k8s_server
-  become: yes
-  roles:
-    - common
-    - docker
-    - k8s-cluster

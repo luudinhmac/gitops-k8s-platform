@@ -11,6 +11,7 @@ import FormattedDate from '@/shared/components/common/FormattedDate';
 
 // Modular Services
 import { seriesService } from '@/features/series/services/seriesService';
+import { settingService } from '@/features/settings/services/settingService';
 
 interface Post {
   id: number;
@@ -36,6 +37,7 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ slug: s
   const { slug } = use(params);
   const [series, setSeries] = useState<Series | null>(null);
   const [loading, setLoading] = useState(true);
+  const [displaySettings, setDisplaySettings] = useState<Record<string, string>>({});
 
   const fetchData = useCallback(async () => {
     try {
@@ -51,6 +53,12 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ slug: s
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    settingService.getPublicSettings()
+      .then(data => setDisplaySettings(data))
+      .catch(err => console.error('Failed to fetch public settings in SeriesDetailPage:', err));
+  }, []);
 
   if (loading) {
     return (
@@ -143,11 +151,19 @@ export default function SeriesDetailPage({ params }: { params: Promise<{ slug: s
                       <h3 className="text-xl font-display font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors leading-tight">
                         {post.title}
                       </h3>
-                      <div className="flex flex-wrap items-center mt-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest gap-6">
-                         <FormattedDate date={post.created_at} showIcon iconSize={12} className="text-slate-400" />
-                         <span className="flex items-center"><Eye size={12} className="mr-2 text-primary" /> {post.views} lượt xem</span>
-                         <span className="flex items-center"><Clock size={12} className="mr-2" /> {post.readTime || 5} PHÚT ĐỌC</span>
-                      </div>
+                      {(displaySettings.post_show_created_at !== 'false' || displaySettings.post_show_views !== 'false' || displaySettings.post_show_read_time !== 'false') && (
+                        <div className="flex flex-wrap items-center mt-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest gap-6">
+                           {displaySettings.post_show_created_at !== 'false' && (
+                              <FormattedDate date={post.created_at} showIcon iconSize={12} className="text-slate-400" />
+                           )}
+                           {displaySettings.post_show_views !== 'false' && (
+                              <span className="flex items-center"><Eye size={12} className="mr-2 text-primary" /> {post.views} lượt xem</span>
+                           )}
+                           {displaySettings.post_show_read_time !== 'false' && (
+                              <span className="flex items-center"><Clock size={12} className="mr-2" /> {post.readTime || 5} PHÚT ĐỌC</span>
+                           )}
+                        </div>
+                      )}
                     </div>
                     <div className="flex-shrink-0 ml-4 p-3 bg-slate-50 dark:bg-slate-800 rounded-xl group-hover:bg-primary transition-all transform group-hover:translate-x-2">
                       <ChevronRight size={24} className="text-slate-300 group-hover:text-white transition-all" />

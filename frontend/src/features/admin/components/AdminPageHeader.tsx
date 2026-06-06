@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Search, ArrowLeft, Sun, Moon, LucideIcon, Menu } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { cn } from '@/lib/utils';
@@ -40,7 +40,7 @@ export default function AdminPageHeader({
   title,
   subtitle,
   showBack = false,
-  backHref = '/admin',
+  backHref = '/portal-dashboard',
   searchQuery,
   onSearchChange,
   searchPlaceholder = "Tìm kiếm...",
@@ -59,18 +59,18 @@ export default function AdminPageHeader({
     setMounted(true);
   }, []);
 
-  const isStandalone = !pathname.startsWith('/admin');
+  const isStandalone = !pathname.startsWith('/portal-dashboard');
   
   const headerClasses = cn(
     "z-40 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-all",
     sticky ? cn(
-      "sticky mb-1",
+      "sticky",
       isStandalone ? "top-[68px] md:top-[80px]" : "top-0"
-    ) : "mb-1"
+    ) : ""
   );
 
   const containerClasses = cn(
-    "mx-auto px-4 lg:px-6 py-1 flex items-center justify-between",
+    "mx-auto px-4 lg:px-6 py-1 grid grid-cols-[1fr_auto_1fr] items-center",
     maxWidth === "1400px" ? "max-w-[1400px]" : "max-w-full"
   );
 
@@ -78,7 +78,7 @@ export default function AdminPageHeader({
     <header className={headerClasses}>
       <div className={containerClasses}>
         {/* Left Section: Back or Menu + Title */}
-        <div className="flex items-center space-x-3 md:space-x-4 overflow-hidden">
+        <div className="flex items-center space-x-3 md:space-x-4 overflow-hidden min-w-0">
           {showBack ? (
             <Link 
               href={backHref}
@@ -96,43 +96,31 @@ export default function AdminPageHeader({
             </button>
           )}
 
-          <div className="overflow-hidden">
+          <div className="overflow-hidden shrink-0">
             <h1 className="text-base md:text-lg font-bold text-slate-900 dark:text-white leading-tight truncate">
               {title}
             </h1>
-            {subtitle && (
-              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest truncate">
-                {subtitle}
-              </p>
-            )}
           </div>
         </div>
 
-        {/* Right Section: Search, Theme, Actions */}
-        <div className="flex items-center space-x-2 md:space-x-3 ml-4 shrink-0">
+        {/* Center Section: Search (Fixed position and width) */}
+        <div className="hidden md:flex justify-center px-4">
           {onSearchChange && (
-            <div className="hidden md:relative md:block">
+            <div className="relative w-full max-w-[400px]">
+              <label htmlFor="admin-search" className="sr-only">Tìm kiếm</label>
               <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-              <input 
-                type="text" 
-                placeholder={searchPlaceholder}
-                value={searchQuery}
-                onChange={e => onSearchChange(e.target.value)}
-                className="pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-[13px] outline-none focus:ring-2 focus:ring-primary/20 w-40 lg:w-56 transition-all" 
+              <DebouncedSearchInput 
+                id="admin-search"
+                placeholder={searchPlaceholder || "Tìm kiếm..."}
+                value={searchQuery || ""}
+                onChange={onSearchChange}
               />
             </div>
           )}
+        </div>
 
-          {mounted && !isStandalone && (
-            <button
-              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-              className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 hover:text-primary transition-all shadow-sm"
-              aria-label="Toggle Theme"
-            >
-              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
-          )}
-
+        {/* Right Section: Theme, Actions */}
+        <div className="flex items-center space-x-2 md:space-x-3 shrink-0 justify-self-end">
           {secondaryAction && (
             secondaryAction.href ? (
               <Link 
@@ -174,6 +162,16 @@ export default function AdminPageHeader({
               </button>
             )
           )}
+
+          {mounted && !isStandalone && (
+            <button
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+              className="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-slate-500 hover:text-primary transition-all shadow-sm shrink-0"
+              aria-label="Toggle Theme"
+            >
+              {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+          )}
         </div>
       </div>
       
@@ -182,17 +180,68 @@ export default function AdminPageHeader({
         <div className="md:hidden px-4 pb-3">
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input 
-              type="text" 
-              placeholder={searchPlaceholder}
-              value={searchQuery}
-              onChange={e => onSearchChange(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-[13px] outline-none" 
+            <DebouncedSearchInput 
+              id="admin-search-mobile"
+              placeholder={searchPlaceholder || "Tìm kiếm..."}
+              value={searchQuery || ""}
+              onChange={onSearchChange}
             />
           </div>
         </div>
       )}
     </header>
+  );
+}
+
+// Internal Debounced Input Component
+function DebouncedSearchInput({ 
+  id, 
+  placeholder, 
+  value, 
+  onChange 
+}: { 
+  id: string; 
+  placeholder: string; 
+  value: string; 
+  onChange: (val: string) => void 
+}) {
+  const [localValue, setLocalValue] = useState(value);
+
+  // Use a ref to track the last value we notified the parent about
+  const lastNotifiedValue = useRef(value);
+
+  // Synchronize local value ONLY if external value changes significantly (e.g. cleared by parent)
+  // This prevents focus jumps or stutters while typing
+  useEffect(() => {
+    if (value !== lastNotifiedValue.current) {
+      setLocalValue(value);
+      lastNotifiedValue.current = value;
+    }
+  }, [value]);
+
+  useEffect(() => {
+    // Don't trigger if it's the same as what we already notified
+    if (localValue === lastNotifiedValue.current) return;
+
+    const handler = setTimeout(() => {
+      lastNotifiedValue.current = localValue;
+      onChange(localValue);
+    }, 500); // Match home page 500ms
+
+    return () => clearTimeout(handler);
+  }, [localValue, onChange]);
+
+  return (
+    <input 
+      id={id}
+      name={id}
+      type="text" 
+      placeholder={placeholder}
+      value={localValue}
+      onChange={e => setLocalValue(e.target.value)}
+      autoComplete="off"
+      className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-800 border-none rounded-xl text-[13px] outline-none focus:ring-2 focus:ring-primary/20 transition-all" 
+    />
   );
 }
 

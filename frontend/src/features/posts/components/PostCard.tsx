@@ -6,15 +6,27 @@ import { cn } from '@/lib/utils';
 import UserAvatar from '@/features/users/components/UserAvatar';
 import FormattedDate from '@/shared/components/common/FormattedDate';
 import Badge from '@/shared/components/common/Badge';
-import { Post } from '@portfolio/contracts';
+import { Post } from '@/types';
 
 interface PostCardProps {
   post: Post;
   className?: string;
   priority?: boolean;
+  showAuthor?: boolean;
+  showDate?: boolean;
+  showViews?: boolean;
+  showReadTime?: boolean;
 }
 
-const PostCard: React.FC<PostCardProps> = ({ post, className, priority = false }) => {
+const PostCard: React.FC<PostCardProps> = ({ 
+  post, 
+  className, 
+  priority = false,
+  showAuthor = true,
+  showDate = true,
+  showViews = true,
+  showReadTime = true
+}) => {
   const categorySlug = post.Category?.slug || 'uncategorized';
   
   return (
@@ -56,13 +68,19 @@ const PostCard: React.FC<PostCardProps> = ({ post, className, priority = false }
       {/* Content - No box, just clean typography */}
       <div className="pt-2 pb-1 px-1 flex flex-col flex-grow">
         {/* Metadata */}
-        <div className="flex items-center gap-4 text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-4">
-          <div className="flex items-center text-primary group-hover:text-primary/80 transition-colors">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary mr-2 shadow-[0_0_8px_rgba(var(--primary),0.5)]" />
-            {post.Author?.fullname || post.Author?.username || 'GHOST AUTHOR'}
+        {(showAuthor || showDate) && (
+          <div className="flex items-center gap-4 text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-4">
+            {showAuthor && (
+              <div className="flex items-center text-primary group-hover:text-primary/80 transition-colors">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary mr-2 shadow-[0_0_8px_rgba(var(--primary),0.5)]" />
+                {post.Author?.fullname || post.Author?.username || 'GHOST AUTHOR'}
+              </div>
+            )}
+            {showDate && (
+              <FormattedDate date={post.created_at} className="opacity-80" />
+            )}
           </div>
-          <FormattedDate date={post.created_at} className="opacity-80" />
-        </div>
+        )}
 
         <h3 className="text-xl font-display font-bold text-slate-900 dark:text-white mb-3 line-clamp-2 group-hover:text-primary transition-colors leading-tight decoration-primary/30 decoration-2 group-hover:underline underline-offset-4">
           {post.title}
@@ -89,14 +107,18 @@ const PostCard: React.FC<PostCardProps> = ({ post, className, priority = false }
         {/* Footer Stats */}
         <div className="mt-auto flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800/80">
           <div className="flex items-center gap-5">
-            <div className="flex items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              <Eye size={12} className="mr-1.5 text-primary" />
-              {post.views || 0}
-            </div>
-            <div className="flex items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              <Clock size={12} className="mr-1.5" />
-              {post.readTime || 1} PHÚT ĐỌC
-            </div>
+            {showViews && (
+              <div className="flex items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <Eye size={12} className="mr-1.5 text-primary" />
+                {post.views || 0}
+              </div>
+            )}
+            {showReadTime && (
+              <div className="flex items-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                <Clock size={12} className="mr-1.5" />
+                {post.readTime || 1} PHÚT ĐỌC
+              </div>
+            )}
           </div>
           <div className="w-8 h-8 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all transform group-hover:translate-x-1 shadow-sm">
             <ChevronRight size={16} />

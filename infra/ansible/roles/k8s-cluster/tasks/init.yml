@@ -1,0 +1,81 @@
+# Description: Initialization tasks for the Kubernetes cluster.
+# Runs kubeadm init and configures the control plane.
+# Last Updated: 2026-05-12
+
+---
+- name: Check if cluster is initialized
+  stat:
+    path: /etc/kubernetes/admin.conf
+  register: kube_admin_conf
+
+- name: Template kubeadm config
+  template:
+    src: kubeadm-config.yaml.j2
+    dest: /tmp/kubeadm-config.yaml
+  when: not kube_admin_conf.stat.exists
+
+- name: Initialize Kubernetes cluster
+  command: kubeadm init --config=/tmp/kubeadm-config.yaml --upload-certs
+  when: not kube_admin_conf.stat.exists
+  register: kubeadm_init
+
+- name: Create .kube directory for operator user
+  file:
+    path: "{{ user_home }}/.kube"
+    state: directory
+    mode: '0755'
+    owner: "{{ ansible_operator_user }}"
+    group: "{{ ansible_operator_user }}"
+
+- name: Copy admin.conf to operator user's .kube
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: "{{ user_home }}/.kube/config"
+    remote_src: yes
+    owner: "{{ ansible_operator_user }}"
+    group: "{{ ansible_operator_user }}"
+
+- name: Add Cilium Helm repo
+  become_user: "{{ ansible_operator_user }}"
+  command: helm repo add cilium https://helm.cilium.io/
+  failed_when: false
+
+- name: Update Helm repos
+  become_user: "{{ ansible_operator_user }}"
+  command: helm repo update
+
+- name: Install Cilium CNI
+  become_user: "{{ ansible_operator_user }}"
+  command: >
+    helm upgrade --install cilium cilium/cilium 
+    --version 1.16.1 
+    --namespace kube-system 
+    --set operator.replicas=1 
+    --set hubble.enabled=true 
+    --set hubble.relay.enabled=true 
+    --set hubble.ui.enabled=true
+    --set mtu=1150
+
+- name: Remove Taint from Master (Single Node Cluster)
+  become_user: "{{ ansible_operator_user }}"
+  command: kubectl taint nodes --all node-role.kubernetes.io/control-plane-
+  failed_when: false
+
+- name: Wait for node to be ready
+  become_user: "{{ ansible_operator_user }}"
+  command: kubectl wait --for=condition=Ready node/{{ ansible_facts['hostname'] }} --timeout=120s
+  failed_when: false
+
+- name: Get Pending CSRs
+  become_user: "{{ ansible_operator_user }}"
+  command: kubectl get csr -o json
+  register: csr_list
+  changed_when: false
+
+- name: Approve Pending Kubelet CSRs
+  become_user: "{{ ansible_operator_user }}"
+  shell: |
+    for csr in $(kubectl get csr | grep Pending | awk '{print $1}'); do
+      kubectl certificate approve $csr
+    done
+  when: "csr_list.stdout | from_json | json_query('items[?status.conditions==null]') | length > 0"

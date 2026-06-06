@@ -8,7 +8,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/AuthContext';
 import { useSidebar } from '@/context/SidebarContext';
-import { User } from '@portfolio/contracts';
+import { User } from '@/types';
 
 interface AdminSidebarProps {
   sidebarOpen: boolean;
@@ -30,16 +30,16 @@ import Badge from '@/shared/components/common/Badge';
 
 const NavContent = ({ mobile = false, setSidebarOpen, pathname, user, logout, isCollapsed = false, setIsCollapsed }: NavContentProps) => {
   const menuItems = [
-    { id: 'posts', label: 'Bài viết', icon: FileText, href: '/admin' },
+    { id: 'posts', label: 'Bài viết', icon: FileText, href: '/portal-dashboard' },
     ...( ['admin', 'superadmin', 'editor'].includes(user?.role || '') ? [
-      { id: 'categories', label: 'Danh mục', icon: Layout, href: '/admin/categories' },
-      { id: 'series', label: 'Series', icon: Layers, href: '/admin/series' }
+      { id: 'categories', label: 'Danh mục', icon: Layout, href: '/portal-dashboard/categories' },
+      { id: 'series', label: 'Series', icon: Layers, href: '/portal-dashboard/series' }
     ] : []),
-    ...( ['admin', 'superadmin'].includes(user?.role || '') ? [{ id: 'users', label: 'Người dùng', icon: Users, href: '/admin/users' }] : []),
+    ...( ['admin', 'superadmin'].includes(user?.role || '') ? [{ id: 'users', label: 'Người dùng', icon: Users, href: '/portal-dashboard/users' }] : []),
   ];
 
   const isActive = (href: string) => {
-    if (href === '/admin') return pathname === '/admin' || pathname.startsWith('/admin/posts');
+    if (href === '/portal-dashboard') return pathname === '/portal-dashboard' || pathname.startsWith('/portal-dashboard/posts');
     return pathname.startsWith(href);
   };
 
@@ -68,8 +68,8 @@ const NavContent = ({ mobile = false, setSidebarOpen, pathname, user, logout, is
             title={isCollapsed ? item.label : undefined}
             onClick={() => mobile && setSidebarOpen(false)}
             className={cn(
-              "w-full flex items-center px-3 py-2 rounded-xl text-xs font-bold transition-all",
-              isCollapsed ? "justify-center px-0" : "space-x-3",
+              "w-full flex items-center px-3 py-2.5 rounded-xl text-xs font-bold transition-all",
+              isCollapsed ? "justify-center px-0" : "space-x-2.5",
               isActive(item.href)
                 ? "bg-primary/10 text-primary"
                 : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
@@ -83,13 +83,13 @@ const NavContent = ({ mobile = false, setSidebarOpen, pathname, user, logout, is
       <div className={cn("p-3 border-t border-slate-200 dark:border-slate-800 space-y-1", mobile && "bg-slate-50 dark:bg-slate-900/50", isCollapsed && "px-2")}>
         {['admin', 'superadmin'].includes(user?.role || '') && (
           <Link
-            href="/admin/settings"
+            href="/portal-dashboard/settings"
             title={isCollapsed ? "Cài đặt" : undefined}
             onClick={() => mobile && setSidebarOpen(false)}
             className={cn(
               "w-full flex items-center px-3 py-2.5 rounded-xl text-xs font-bold transition-colors",
-              isCollapsed ? "justify-center px-0" : "space-x-3",
-              pathname === '/admin/settings'
+              isCollapsed ? "justify-center px-0" : "space-x-2.5",
+              pathname === '/portal-dashboard/settings'
                 ? "bg-primary/10 text-primary"
                 : "text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800"
             )}
@@ -104,10 +104,10 @@ const NavContent = ({ mobile = false, setSidebarOpen, pathname, user, logout, is
             if (mobile) setSidebarOpen(false);
           }}
           title={isCollapsed ? "Đăng xuất" : undefined}
-          className={cn(
-            "w-full flex items-center px-3 py-2.5 rounded-xl text-xs font-bold text-destructive hover:bg-destructive/10 transition-colors",
-            isCollapsed ? "justify-center px-0" : "space-x-3"
-          )}
+            className={cn(
+              "w-full flex items-center px-3 py-2.5 rounded-xl text-xs font-bold text-destructive hover:bg-destructive/10 transition-colors",
+              isCollapsed ? "justify-center px-0" : "space-x-2.5"
+            )}
         >
           <LogOut size={isCollapsed ? 20 : 16} />
           {!isCollapsed && <span>Đăng xuất</span>}

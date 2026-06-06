@@ -1,38 +1,30 @@
 import { Module } from '@nestjs/common';
-import { CommentsService } from './comments.service';
-import { CommentsController } from './comments.controller';
-import { PrismaModule } from '../../prisma/prisma.module';
-import { NotificationsModule } from '../notifications/notifications.module';
-<<<<<<< HEAD
-import { AdminAlertModule } from '../../admin-alert/admin-alert.module';
-
-@Module({
-  imports: [PrismaModule, NotificationsModule, AdminAlertModule],
-  controllers: [CommentsController],
-  providers: [CommentsService],
-  exports: [CommentsService],
-=======
-import { AdminAlertModule } from '../admin-alert/admin-alert.module';
-import { CommentsRepository } from './repositories/comment.repository';
-import { I_COMMENTS_REPOSITORY } from './repositories/comment.repository.interface';
+import { CommentsController } from './controllers/comments.controller';
+import { NotificationsModule } from '../notifications/presentation/notifications.module';
 import { PostsModule } from '../posts/posts.module';
+import { PrismaCommentRepository } from './repositories/prisma-comment.repository';
+import { SettingsModule } from '../settings/settings.module';
+import { I_COMMENTS_REPOSITORY } from './domain/comment.repository.interface';
+
+// Use Cases
+import { GetCommentsByPostUseCase } from './services/get-comments-by-post.use-case';
+import { CreateCommentUseCase } from './services/create-comment.use-case';
+import { UpdateCommentUseCase } from './services/update-comment.use-case';
+import { DeleteCommentUseCase } from './services/delete-comment.use-case';
 
 @Module({
-  imports: [
-    PrismaModule, 
-    NotificationsModule, 
-    AdminAlertModule,
-    PostsModule,
-  ],
+  imports: [NotificationsModule, PostsModule, SettingsModule],
   controllers: [CommentsController],
   providers: [
-    CommentsService,
     {
       provide: I_COMMENTS_REPOSITORY,
-      useClass: CommentsRepository,
+      useClass: PrismaCommentRepository,
     },
+    GetCommentsByPostUseCase,
+    CreateCommentUseCase,
+    UpdateCommentUseCase,
+    DeleteCommentUseCase,
   ],
-  exports: [CommentsService, I_COMMENTS_REPOSITORY],
->>>>>>> feature/arch-refactor
+  exports: [I_COMMENTS_REPOSITORY],
 })
 export class CommentsModule {}

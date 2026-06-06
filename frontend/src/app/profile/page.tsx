@@ -18,18 +18,15 @@ import FormattedDate from '@/shared/components/common/FormattedDate';
 // Professional Modules
 import { postService } from '@/features/posts/services/postService';
 import { userService } from '@/features/users/services/userService';
-import { usePostActions } from '@/hooks/post/usePostActions';
-<<<<<<< HEAD
-=======
+import { usePostActions } from '@/features/posts/hooks/usePostActions';
 import { seriesService } from '@/features/series/services/seriesService';
->>>>>>> feature/arch-refactor
 import Button from '@/shared/components/ui/Button';
 import IconBadge from '@/shared/components/ui/IconBadge';
 import AnimateList from '@/shared/components/ui/AnimateList';
 import ConfirmationDialog from '@/shared/components/ui/ConfirmationDialog';
 import MessageDialog from '@/shared/components/ui/MessageDialog';
-import { Post, SortOption } from '@portfolio/contracts';
-import { User as UserType } from '@portfolio/contracts';
+import { Post, SortOption } from '@/types';
+import { User as UserType } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Suspense } from 'react';
 
@@ -101,12 +98,6 @@ function ProfilePageContent() {
         status: postFilter,
         sort: sortBy
       });
-<<<<<<< HEAD
-      setMyPosts(data?.data || []);
-    } catch (err) { console.error('Failed to fetch posts:', err); }
-    finally { setPostsLoading(false); }
-  }, [user?.id, postFilter, sortBy]);
-=======
       setMyPosts(data?.items || []);
     } catch (err) { console.error('Failed to fetch posts:', err); }
     finally { setPostsLoading(false); }
@@ -121,20 +112,15 @@ function ProfilePageContent() {
     } catch (err) { console.error('Failed to fetch series:', err); }
     finally { setSeriesLoading(false); }
   }, [user?.id]);
->>>>>>> feature/arch-refactor
 
   useEffect(() => {
     if (activeTab === 'posts' && user) {
       fetchMyPosts();
     }
-<<<<<<< HEAD
-  }, [activeTab, user, fetchMyPosts, sortBy, postFilter]);
-=======
     if (activeTab === 'series' && user) {
         fetchMySeries();
     }
   }, [activeTab, user, fetchMyPosts, fetchMySeries, sortBy, postFilter]);
->>>>>>> feature/arch-refactor
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -164,7 +150,7 @@ function ProfilePageContent() {
       formData.append('file', file);
 
       const uploadData = await userService.uploadAvatar(formData);
-      const avatarUrl = `${process.env.NEXT_PUBLIC_API_URL?.replace('/api', '')}${uploadData.url}`;
+      const avatarUrl = uploadData.url;
 
       await userService.updateProfile(user.id, { avatar: avatarUrl });
       await checkAuth();
@@ -211,8 +197,6 @@ function ProfilePageContent() {
         const index = elements.indexOf(e.currentTarget as HTMLElement);
         if (index > -1 && index < elements.length - 1) {
           const nextElement = elements[index + 1];
-          // If the next element is the submit button, let the default Enter behavior (submit) happen
-          // Unless we want to explicitly focus it first. User said "nhập ô tiếp theo", implying focus.
           if (nextElement.getAttribute('type') !== 'submit') {
             e.preventDefault();
             nextElement.focus();
@@ -245,10 +229,10 @@ function ProfilePageContent() {
           <div className="flex flex-col md:flex-row items-center gap-6">
             <div className="relative group/avatar cursor-pointer">
               <UserAvatar user={user} size="xl" className="rounded-2xl border-4 border-white dark:border-slate-800 shadow-xl" />
-              <label className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover/avatar:opacity-100 rounded-2xl transition-opacity cursor-pointer">
+              <label htmlFor="avatar-upload" className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover/avatar:opacity-100 rounded-2xl transition-opacity cursor-pointer">
                 {avatarLoading ? <Loader2 size={24} className="text-white animate-spin" /> : <Edit size={24} className="text-white drop-shadow-md" />}
                 <span className="text-[10px] text-white font-bold uppercase mt-1">Đổi ảnh</span>
-                <input type="file" className="hidden" accept="image/*" onChange={handleUploadAvatar} disabled={avatarLoading} />
+                <input id="avatar-upload" name="avatar" type="file" className="hidden" accept="image/*" onChange={handleUploadAvatar} disabled={avatarLoading} />
               </label>
             </div>
             <div>
@@ -263,7 +247,7 @@ function ProfilePageContent() {
             <button
               key={tab.id}
               onClick={() => {
-                setActiveTab(tab.id as 'info' | 'posts' | 'password');
+                setActiveTab(tab.id as 'info' | 'posts' | 'series' | 'password');
                 if (tab.id !== 'info') setIsEditing(false);
               }}
               className={cn(
@@ -309,7 +293,7 @@ function ProfilePageContent() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {[
                       { label: 'Họ và tên', value: user?.fullname, icon: UserIcon },
-                      { label: 'Email', value: user?.email, icon: Mail },
+                      { label: 'Email', value: user?.email ? <span dangerouslySetInnerHTML={{ __html: `<!--email_off-->${user.email}<!--/email_off-->` }} /> : undefined, icon: Mail },
                       { label: 'Số điện thoại', value: user?.phone, icon: Phone },
                       { label: 'Ngành nghề', value: user?.profession, icon: Briefcase },
                       { label: 'Ngày sinh', value: <FormattedDate date={user?.birthday || ''} />, icon: Calendar },
@@ -342,20 +326,23 @@ function ProfilePageContent() {
                   <form onSubmit={handleSaveProfile} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {[
-                        { label: 'Họ và tên', key: 'fullname', placeholder: 'Nguyễn Văn A', icon: UserIcon },
-                        { label: 'Email', key: 'email', placeholder: 'email@example.com', icon: Mail, type: 'email' },
-                        { label: 'Số điện thoại', key: 'phone', placeholder: '0912 345 678', icon: Phone },
-                        { label: 'Ngành nghề', key: 'profession', placeholder: 'System Engineer', icon: Briefcase },
-                        { label: 'Ngày sinh', key: 'birthday', placeholder: '', icon: Calendar, type: 'date' },
-                        { label: 'Địa chỉ', key: 'address', placeholder: 'Hồ Chí Minh, Việt Nam', icon: MapPin },
+                        { label: 'Họ và tên', key: 'fullname', placeholder: 'Nguyễn Văn A', icon: UserIcon, auto: 'name' },
+                        { label: 'Email', key: 'email', placeholder: 'email@example.com', icon: Mail, type: 'email', auto: 'email' },
+                        { label: 'Số điện thoại', key: 'phone', placeholder: '0912 345 678', icon: Phone, auto: 'tel' },
+                        { label: 'Ngành nghề', key: 'profession', placeholder: 'System Engineer', icon: Briefcase, auto: 'on' },
+                        { label: 'Ngày sinh', key: 'birthday', placeholder: '', icon: Calendar, type: 'date', auto: 'bday' },
+                        { label: 'Địa chỉ', key: 'address', placeholder: 'Hồ Chí Minh, Việt Nam', icon: MapPin, auto: 'street-address' },
                       ].map(field => (
                         <div key={field.key}>
-                          <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">{field.label}</label>
+                          <label htmlFor={`profile-${field.key}`} className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">{field.label}</label>
                           <div className="relative">
                             <field.icon size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                             <input
+                              id={`profile-${field.key}`}
+                              name={field.key}
                               type={field.type || 'text'}
                               placeholder={field.placeholder}
+                              autoComplete={field.auto}
                               value={(profileForm as Record<string, string>)[field.key]}
                               onChange={e => setProfileForm({ ...profileForm, [field.key]: e.target.value })}
                               className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
@@ -516,9 +503,11 @@ function ProfilePageContent() {
             <div>
                <div className="flex items-center justify-between mb-1">
                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">Series của tôi ({mySeries.length})</h2>
-                 <Link href="/admin/series" className="text-xs font-bold text-primary hover:underline flex items-center">
-                   <Edit size={12} className="mr-1" /> Quản lý tất cả series
-                 </Link>
+                 {user && ['admin', 'superadmin'].includes(user.role) && (
+                   <Link href="/portal-dashboard/series" className="text-xs font-bold text-primary hover:underline flex items-center">
+                     <Edit size={12} className="mr-1" /> Quản lý tất cả series
+                   </Link>
+                 )}
                </div>
 
                {seriesLoading ? (
@@ -569,18 +558,31 @@ function ProfilePageContent() {
                 </div>
               )}
               <form onSubmit={handleChangePassword} className="space-y-1">
+                {/* Hidden username field for accessibility/autofill */}
+                <input 
+                  id="hidden-username"
+                  type="text" 
+                  name="username" 
+                  autoComplete="username" 
+                  value={user?.username || ''} 
+                  readOnly 
+                  className="hidden" 
+                />
                 {[
-                  { label: 'Mật khẩu hiện tại', key: 'oldPassword', show: showPass.old, toggle: () => setShowPass({ ...showPass, old: !showPass.old }) },
-                  { label: 'Mật khẩu mới', key: 'newPassword', show: showPass.new, toggle: () => setShowPass({ ...showPass, new: !showPass.new }) },
-                  { label: 'Xác nhận mật khẩu mới', key: 'confirmPassword', show: showPass.confirm, toggle: () => setShowPass({ ...showPass, confirm: !showPass.confirm }) },
+                  { label: 'Mật khẩu hiện tại', key: 'oldPassword', auto: 'current-password', show: showPass.old, toggle: () => setShowPass({ ...showPass, old: !showPass.old }) },
+                  { label: 'Mật khẩu mới', key: 'newPassword', auto: 'new-password', show: showPass.new, toggle: () => setShowPass({ ...showPass, new: !showPass.new }) },
+                  { label: 'Xác nhận mật khẩu mới', key: 'confirmPassword', auto: 'new-password', show: showPass.confirm, toggle: () => setShowPass({ ...showPass, confirm: !showPass.confirm }) },
                 ].map(field => (
                   <div key={field.key}>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">{field.label}</label>
+                    <label htmlFor={`pass-${field.key}`} className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1">{field.label}</label>
                     <div className="relative">
                       <input
+                        id={`pass-${field.key}`}
+                        name={field.key}
                         required
                         autoFocus={field.key === 'oldPassword'}
                         type={field.show ? 'text' : 'password'}
+                        autoComplete={field.auto}
                         placeholder="••••••••"
                         value={(passForm as Record<string, string>)[field.key]}
                         onChange={e => setPassForm({ ...passForm, [field.key]: e.target.value })}
@@ -640,4 +642,3 @@ export default function ProfilePage() {
     </Suspense>
   );
 }
-

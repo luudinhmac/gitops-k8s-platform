@@ -1,0 +1,33 @@
+# ==============================================================================
+# COMPONENT: Backend Persistence Layer
+# ROLE: Persistent storage for application uploads
+# STORAGE: hostPath (local node storage) - NOT suitable for multi-node clusters
+# ==============================================================================
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "backend.fullname" . }}-pv
+spec:
+  capacity:
+    storage: {{ .Values.persistence.size }}
+  accessModes:
+    - ReadWriteOnce
+  persistentVolumeReclaimPolicy: Retain # IMPORTANT: Prevent data deletion when PVC is deleted
+  hostPath:
+    path: {{ .Values.persistence.path }}
+    type: DirectoryOrCreate
+  storageClassName: "" # Bound manually to hostPath
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "backend.fullname" . }}-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.persistence.size }}
+  storageClassName: "" # Ensure binding to the matching PV defined above
+  volumeName: {{ include "backend.fullname" . }}-pv

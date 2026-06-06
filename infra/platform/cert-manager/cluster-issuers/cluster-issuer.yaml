@@ -1,0 +1,20 @@
+# ==============================================================================
+# COMPONENT: Cert-Manager ClusterIssuer
+# ROLE: Global certificate authority configuration for Let's Encrypt
+# MECHANISM: ACME protocol with HTTP-01 challenge
+# ==============================================================================
+
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory # Production ACME server (rate limits apply)
+    email: macld@luumac.io.vn
+    privateKeySecretRef:
+      name: letsencrypt-prod-account-key
+    solvers:
+    - http01: # Use HTTP-01 challenge; requires port 80 to be reachable from outside
+        ingress:
+          class: traefik

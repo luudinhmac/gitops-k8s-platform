@@ -1,5 +1,5 @@
 import { Injectable, Logger, Inject, forwardRef } from '@nestjs/common';
-import { SettingsService } from '../modules/settings/settings.service';
+import { SettingsService } from '../settings/settings.service';
 
 @Injectable()
 export class TeamsService {
@@ -12,13 +12,20 @@ export class TeamsService {
 
   async sendMessage(text: string, webhookUrlOverride?: string) {
     try {
-      const enabled = await this.settingsService.getSettingByKey('teams_enabled');
-      if (enabled !== 'true' && !webhookUrlOverride) return { success: true, skipped: true };
+      const enabled =
+        await this.settingsService.getSettingByKey('teams_enabled');
+      if (enabled !== 'true' && !webhookUrlOverride)
+        return { success: true, skipped: true };
 
-      const webhookUrl = (webhookUrlOverride || await this.settingsService.getSettingByKey('teams_webhook_url'))?.trim();
+      const webhookUrl = (
+        webhookUrlOverride ||
+        (await this.settingsService.getSettingByKey('teams_webhook_url'))
+      )?.trim();
 
       if (!webhookUrl) {
-        this.logger.warn('Teams notification enabled but webhook URL is missing');
+        this.logger.warn(
+          'Teams notification enabled but webhook URL is missing',
+        );
         return { success: false, error: 'Webhook URL missing' };
       }
 
@@ -44,7 +51,7 @@ export class TeamsService {
                     type: 'TextBlock',
                     size: 'Medium',
                     weight: 'Bolder',
-                    text: '🔔 Thông báo Thử nghiệm',
+                    text: '🔔 Thông báo',
                   },
                   {
                     type: 'TextBlock',
@@ -62,13 +69,17 @@ export class TeamsService {
 
       if (!response.ok) {
         const errorText = await response.text().catch(() => 'Unknown error');
-        this.logger.error(`Teams Webhook error (Status ${response.status}): ${errorText}`);
+        this.logger.error(
+          `Teams Webhook error (Status ${response.status}): ${errorText}`,
+        );
         return { success: false, error: errorText };
       }
 
       return { success: true };
     } catch (error: any) {
-      this.logger.error(`Failed to send MS Teams message (Connection Error): ${error.message}`);
+      this.logger.error(
+        `Failed to send MS Teams message (Connection Error): ${error.message}`,
+      );
       return { success: false, error: `Connection Error: ${error.message}` };
     }
   }

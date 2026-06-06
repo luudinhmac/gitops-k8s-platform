@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 export default function ProjectsPage() {
   const router = useRouter();
   useEffect(() => {
-    router.replace('/#projects');
+    router.replace('/about#projects');
   }, [router]);
   return null;
 }

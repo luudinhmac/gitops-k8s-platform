@@ -1,0 +1,8 @@
+# Description: Main tasks for the 'security' role.
+# Last Updated: 2026-05-15
+
+---
+- name: Configure Firewall rules
+  include_tasks: firewall.yml
+  tags: [security, firewall]
+

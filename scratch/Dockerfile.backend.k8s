@@ -1,0 +1,34 @@
+# Backend Dockerfile (Workspace Support)
+FROM node:22-alpine AS builder
+RUN apk add --no-cache libc6-compat openssl
+RUN corepack enable && corepack prepare pnpm@latest --activate
+WORKDIR /app
+
+# Copy ALL code
+COPY . .
+
+# Install all dependencies
+RUN pnpm install --no-frozen-lockfile
+
+# Build backend
+WORKDIR /app/backend
+RUN pnpm run build
+
+# Stage 2: Runner
+FROM node:22-alpine AS runner
+WORKDIR /app
+RUN apk add --no-cache openssl
+COPY --from=builder /app/backend/package.json ./
+COPY --from=builder /app/backend/dist ./dist
+COPY --from=builder /app/backend/node_modules ./node_modules
+COPY --from=builder /app/backend/prisma ./prisma
+
+# Add production user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nestjs && \
+    mkdir -p /app/uploads && \
+    chown -R nestjs:nodejs /app
+
+USER nestjs
+EXPOSE 3001
+CMD ["node", "dist/main.js"]

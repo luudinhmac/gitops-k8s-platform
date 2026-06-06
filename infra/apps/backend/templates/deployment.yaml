@@ -1,0 +1,99 @@
+# ==============================================================================
+# COMPONENT: Backend Application Deployment
+# ROLE: Core API service managing business logic and persistence
+# ORCHESTRATION: Standard Deployment with RollingUpdate for zero-downtime
+# ==============================================================================
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "backend.fullname" . }}
+  labels:
+    {{- include "backend.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  strategy:
+    type: RollingUpdate # Ensure availability by updating pods incrementally
+    rollingUpdate:
+      maxUnavailable: 0 # IMPORTANT: Prevent downtime by keeping all pods running during rollout
+      maxSurge: 1 # Allow one extra pod to be created before killing an old one
+  selector:
+    matchLabels:
+      {{- include "backend.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "backend.selectorLabels" . | nindent 8 }}
+    spec:
+      securityContext:
+        runAsUser: 1001 # Hardened: Run as non-privileged service user
+        fsGroup: 1001 # Ensure volume permissions match service user
+        runAsNonRoot: true # WARNING: Prevent container escalation to root
+      initContainers:
+      - name: fix-permissions
+        image: busybox
+        securityContext:
+          runAsUser: 0
+          runAsNonRoot: false
+        command: ["sh", "-c", "chown -R 1001:1001 /app/uploads"] # Rectify PVC ownership for non-root containers
+        volumeMounts:
+        - name: uploads-storage
+          mountPath: /app/uploads
+        - name: uploads-storage
+          mountPath: /uploads
+      - name: prisma-migrate
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        command: # Smart migration: handles fresh DB, legacy db-push DB, and already-migrated DB
+        - sh
+        - -c
+        - |
+          node node_modules/prisma/build/index.js migrate deploy 2>&1 && echo "Migrations applied successfully" || \
+          (echo ">>> Baseline resolve: marking init migration as applied..." && \
+           node node_modules/prisma/build/index.js migrate resolve --applied 20260512000000_init && \
+           node node_modules/prisma/build/index.js migrate deploy && \
+           echo ">>> Baseline resolved and migrations applied successfully")
+        envFrom:
+        - secretRef:
+            name: portfolio-secrets
+      containers:
+      - name: {{ .Chart.Name }}
+        securityContext:
+          runAsUser: 1001
+        image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        resources:
+          {{- toYaml .Values.resources | nindent 10 }}
+        ports:
+        - containerPort: {{ .Values.service.port }}
+        envFrom:
+        - secretRef:
+            name: portfolio-secrets
+        env:
+        - name: TZ
+          value: {{ .Values.env.tz | quote }}
+        - name: PORT
+          value: {{ .Values.env.port | quote }}
+        livenessProbe:
+          httpGet:
+            path: /api/v1/health
+            port: {{ .Values.service.port }}
+          initialDelaySeconds: 15 # Allow Prisma initialization and DB connection warm-up
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/v1/health
+            port: {{ .Values.service.port }}
+          initialDelaySeconds: 15 # Ensure API is ready to serve traffic before joining Service
+          periodSeconds: 5
+        volumeMounts:
+        - name: uploads-storage
+          mountPath: /app/uploads
+        - name: uploads-storage
+          mountPath: /uploads
+      volumes:
+      - name: uploads-storage
+        persistentVolumeClaim:
+          claimName: {{ include "backend.fullname" . }}-pvc # WARNING: Data loss risk if PVC is deleted

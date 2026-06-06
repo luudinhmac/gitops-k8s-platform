@@ -1,0 +1,34 @@
+# Description: Helm template for the frontend Kubernetes Ingress.
+# Configures external access and TLS settings for the web application.
+# Last Updated: 2026-05-12
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "frontend.fullname" . }}
+  labels:
+    {{- include "frontend.labels" . | nindent 4 }}
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.middlewares: {{ .Values.namespace }}-{{ include "frontend.fullname" . }}-strip-headers@kubernetescrd
+    {{ if .Values.ingress.issuer }}
+    cert-manager.io/cluster-issuer: {{ .Values.ingress.issuer | quote }}
+    {{ end }}
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - {{ .Values.ingress.host | quote }}
+      secretName: {{ .Values.ingress.secretName | default (printf "%s-tls" (include "frontend.fullname" .)) | quote }}
+  rules:
+    - host: {{ .Values.ingress.host | quote }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "frontend.fullname" . }}
+                port:
+                  number: {{ .Values.service.port }}
