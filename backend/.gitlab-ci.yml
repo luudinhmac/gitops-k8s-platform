@@ -184,6 +184,27 @@ typecheck:
   script:
     - pnpm install --frozen-lockfile --prefer-offline
     - pnpm exec tsc --noEmit
+check_migrations:
+  extends:
+    - .node_template
+    - .cache_template
+  stage: validate
+  needs:
+    - install_dependencies
+  services:
+    - name: postgres:16-alpine
+      alias: postgres-db
+  variables:
+    POSTGRES_DB: test_db
+    POSTGRES_USER: test_user
+    POSTGRES_PASSWORD: test_password
+    DATABASE_URL: "postgresql://test_user:test_password@postgres-db:5432/test_db?schema=public"
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+  script:
+    - pnpm install --frozen-lockfile --prefer-offline
+    - pnpm prisma migrate deploy
+    - pnpm prisma migrate diff --from-migrations prisma/migrations --to-schema-datamodel prisma/schema.prisma --shadow-database-url "$DATABASE_URL" --exit-code
 
 # =========================================================
 # TEST

@@ -54,7 +54,7 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
   }
 
   async uploadFile(file: StorageFile, folder: string = ''): Promise<string> {
-    const filename = `${Date.now()}-${file.originalname}`;
+    const filename = file.originalname;
     const objectName = folder ? `${folder}/${filename}` : filename;
 
     await this.minioClient.putObject(
@@ -87,6 +87,11 @@ export class MinioStorageService implements IStorageService, OnModuleInit {
 
   getFileUrl(fileKey: string): string {
     if (fileKey.startsWith('http')) return fileKey;
+
+    if (this.config.minioCdnUrl) {
+      const cdnUrl = this.config.minioCdnUrl.replace(/\/$/, '');
+      return `${cdnUrl}/${fileKey}`;
+    }
 
     const protocol = this.config.minioUseSSL ? 'https' : 'http';
     const endpoint = this.config.minioEndpoint;

@@ -1,25 +1,27 @@
 import { Global, Module } from '@nestjs/common';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { CacheModule } from '@nestjs/cache-manager';
+import { redisStore } from 'cache-manager-redis-yet';
+import { InfrastructureConfigService } from './infrastructure/config/config.service';
 
 @Global()
 @Module({
-  providers: [
-    {
-      provide: CACHE_MANAGER,
-      useValue: {
-        get: async () => null,
-        set: async () => {},
-        del: async () => {},
-        reset: async () => {},
-        wrap: async (key, fn) => fn(),
-        store: {
-          get: async () => null,
-          set: async () => {},
-          del: async () => {},
-        },
+  imports: [
+    CacheModule.registerAsync({
+      isGlobal: true,
+      useFactory: async (configService: InfrastructureConfigService) => {
+        const store = await redisStore({
+          socket: {
+            host: configService.redisHost,
+            port: configService.redisPort,
+          },
+          password: configService.redisPassword || undefined,
+          ttl: 600000, // 10 minutes (600,000 milliseconds)
+        });
+        return { store };
       },
-    },
+      inject: [InfrastructureConfigService],
+    }),
   ],
-  exports: [CACHE_MANAGER],
+  exports: [CacheModule],
 })
 export class CacheConfigModule {}
