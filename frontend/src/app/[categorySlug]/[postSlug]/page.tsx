@@ -4,6 +4,7 @@ import { postService } from '@/features/posts/services/postService';
 
 const getMediaUrl = (path?: string | null) => {
   if (!path) return '';
+  if (path.startsWith('http://') || path.startsWith('https://')) return path;
   let baseUrl = 'http://localhost:3001';
   try {
     baseUrl = new URL(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').origin;
@@ -19,7 +20,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { postSlug } = await params;
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://luudinhmac.com';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://blog.luumac.io.vn';
 
   try {
     const post = await postService.getBySlug(postSlug);
@@ -64,7 +65,7 @@ export default async function Page({ params }: Props) {
   const post = await postService.getBySlug(resolvedParams.postSlug).catch(() => null);
 
   // JSON-LD Structured Data
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://luudinhmac.com';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://blog.luumac.io.vn';
   const jsonLd = post ? {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',

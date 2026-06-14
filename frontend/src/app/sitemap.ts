@@ -3,7 +3,7 @@ import { postService } from '@/features/posts/services/postService';
 import { categoryService } from '@/features/categories/services/categoryService';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://luudinhmac.com';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://blog.luumac.io.vn';
 
   try {
     const [posts, categories] = await Promise.all([
