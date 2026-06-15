@@ -14,6 +14,7 @@ export class MonitoringService {
   // State for resource dampening
   private resourceBreachStartTime: number | null = null;
   private resourceAlertSent = false;
+  private lastCpuTimes: { active: number; total: number } | null = null;
 
   // Thresholds
   private readonly CPU_THRESHOLD = 90;
@@ -53,22 +54,45 @@ export class MonitoringService {
   }
 
   /**
-   * Helper to get CPU usage
+   * Helper to get CPU usage (Actual utilization based on CPU times)
    */
   private async getCpuUsage(): Promise<number> {
     try {
-      // Return 0 for development or Windows, otherwise use Linux loadavg
       if (
         !process.env.NODE_ENV ||
-        process.env.NODE_ENV === 'development' ||
-        os.platform() === 'win32'
+        process.env.NODE_ENV === 'development'
       )
         return 0;
 
-      const cpus = os.cpus().length;
-      const loadAvg = os.loadavg()[0]; // 1 minute load average
-      return cpus > 0 ? (loadAvg / cpus) * 100 : 0;
+      const cpus = os.cpus();
+      if (!cpus || cpus.length === 0) return 0;
+
+      let active = 0;
+      let total = 0;
+
+      for (const cpu of cpus) {
+        const { user, nice, sys, idle, irq } = cpu.times;
+        const cpuActive = user + nice + sys + irq;
+        const cpuTotal = cpuActive + idle;
+
+        active += cpuActive;
+        total += cpuTotal;
+      }
+
+      if (!this.lastCpuTimes) {
+        this.lastCpuTimes = { active, total };
+        return 0;
+      }
+
+      const activeDiff = active - this.lastCpuTimes.active;
+      const totalDiff = total - this.lastCpuTimes.total;
+
+      this.lastCpuTimes = { active, total };
+
+      if (totalDiff === 0) return 0;
+      return (activeDiff / totalDiff) * 100;
     } catch (error) {
+      this.logger.error('Error calculating CPU usage:', error);
       return 0;
     }
   }
