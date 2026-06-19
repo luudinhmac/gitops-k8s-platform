@@ -1,157 +1,97 @@
-# LƯU ĐÌNH MÁC | Fullstack Portfolio & Blog System
+# 🚀 System Engineer Portfolio & Blog Portal
 
-## Overview
-Dự án Portfolio + Blog chuyên nghiệp dành cho Kỹ sư Hệ thống (System Engineer) để trình diễn các kỹ năng hạ tầng, dự án ảo hóa và chia sẻ kiến thức chuyên môn qua các bài viết kỹ thuật.
+Chào mừng bạn đến với kho lưu trữ mã nguồn của hệ thống **Portfolio & Blog Cá nhân** của **LƯU ĐÌNH MÁC**. Đây là một dự án chuẩn doanh nghiệp (Production-Grade) được thiết kế chuyên biệt cho Kỹ sư Hệ thống (System Engineer) để chia sẻ kiến thức công nghệ và trình diễn năng lực hạ tầng.
 
-## Tech Stack
-- **Frontend:** Next.js (App Router)
-- **Backend:** NestJS
-- **Database:** PostgreSQL (Dockerized)
-- **Monorepo:** Organized with `pnpm` workspaces for shared code management
-- **DevOps:**
-  - Docker & Docker Compose (Containerization: Apps, DB, Nginx)
-  - Kubernetes (Production Orchestration: Single-node kubeadm)
-  - Ansible (Automated Roles-based Infrastructure & App Deployment)
-  - Nginx (Unified Reverse Proxy & SSL Gateway)
-
-## Features
-- **Blog-First Architecture:** Hệ thống được cấu trúc với Blog là trang chủ (`/`) để tối ưu việc chia sẻ kiến thức, trong khi các phần Portfolio, Giới thiệu, Dự án được quy hoạch gọn gàng trong mục `/about`.
-- **Legal Compliance:** Đã tích hợp trang **Quyền riêng tư** và **Điều khoản sử dụng** theo Nghị định 13/2023/NĐ-CP của Chính phủ Việt Nam.
-- **Settings Module:** Bảng điều khiển quản lý toàn bộ thiết lập hệ thống động trên Dashboard, chia thành cấu hình Giao diện, SEO, cũng như giám sát an toàn Môi trường Hệ thống. Tích hợp hệ thống thông báo chủ động (**MessageDialog**) đảm bảo phản hồi quan trọng luôn được xác nhận trực quan.
-- **Advanced Search:** Tính năng tìm kiếm Real-time với cơ chế **Debounce (500ms)** tối ưu hiệu suất, cho phép tìm kiếm chéo tag, category, series mượt mà và không gây gián đoạn nhập liệu.
-- **Blue/Sky UI Identity:** Giao diện được tối ưu hóa đồng nhất bằng tông màu Xanh chuyên nghiệp, với bảng thiết kế tinh gọn cho trải nghiệm Dev/Tech content. Toàn bộ các nút thao tác và layout quản trị được chuẩn hóa kích thước (min-w-140px) và căn lề chuyên nghiệp.
-- **Authentication:** Quy trình xác thực JWT bền vững với HttpOnly Cookies, tự động khôi phục phiên bản hồ sơ người dùng đầy đủ.
-- **Administrative Security:** Triển khai **Stealth Administrative Path** (thay đổi đường dẫn mặc định) và hệ thống **Middleware Proxy** bảo mật để che giấu kiến trúc hạ tầng thực tế, ngăn chặn các cuộc tấn công dò tìm (brute-force) vào vùng quản trị.
-- **Advanced User Management:** Quản trị viên (Admin & Superadmin) có thể kiểm soát chi tiết quyền hạn của từng người dùng thông qua Settings Box: cấm đăng nhập (Khóa tài khoản), cấm bình luận, cấm đăng bài, và thay đổi vai trò trực quan. Tài khoản **Superadmin** có quyền hạn tối cao, quản lý được cả các tài khoản Admin khác.
-- **Maintenance Mode:** Hệ thống bảo trì phân mảnh (Global, Posts, Comments) cho phép khóa toàn bộ website hoặc từng chức năng cụ thể. Tích hợp "Cửa bí mật" (Hidden Door) với Passcode xác thực dành riêng cho Quản trị viên để truy cập quản trị trong lúc bảo trì.
-- **Notification System:** Hệ thống thông báo thời hạn thực với huy hiệu (badges) thông minh trên Navbar. Thông báo cho người dùng về các tương tác (bình luận, trả lời) và các sự kiện hệ thống quan trọng.
-- **Series Navigation:** Tự động hiển thị bài viết trước và bài viết sau trong cùng một series, hỗ trợ điều hướng thông minh theo thứ tự (series_order) ngay trong trang chi tiết bài viết.
-- **Security-First API:** Tài liệu Swagger được bảo vệ theo môi trường và giới hạn IP. Các thông tin nhạy cảm (pass hash) được lọc bỏ hoàn toàn khỏi các phản hồi API.
-
-## Architecture Principles
-Dự án được xây dựng dựa trên các nguyên tắc thiết kế hiện đại nhằm đảm bảo khả năng mở rộng và bảo trì lâu dài:
-- **Backend (Clean Architecture):** Tách biệt hoàn toàn logic nghiệp vụ khỏi các yếu tố hạ tầng (Database, Framework). Sử dụng mô hình lớp: `Domain` -> `Application` -> `Infrastructure` -> `Presentation`.
-- **Frontend (Feature-based):** Phân tách ứng dụng theo tính năng (Features). Mỗi tính năng tự quản lý giao diện, logic và API riêng biệt, giúp giảm thiểu phụ thuộc chéo.
-- **Unified Types:** Hệ thống Type-safe đồng nhất giữa Frontend và Backend thông qua Shared Packages.
-
-## Project Structure
-```text
-frontend/
-  src/features/    # Logic theo tính năng (Auth, Posts, Users, ...)
-  src/shared/      # Components và hooks dùng chung
-backend/
-  src/modules/     # Modules theo Clean Architecture
-    domain/        # Entities & Repository Interfaces
-    application/   # Use Cases (Business Logic)
-    infrastructure/# Prisma Repositories & Mappers
-    presentation/  # Controllers & Swagger
-packages/
-  types/           # Shared Type Definitions (@portfolio/types)
-ansible/           # Automation Playbooks & Roles
-k8s/               # Kubernetes Manifests (Production)
-docs/              # System Audit Reports & Documentation
-```
-
-## Local Development
-**Yêu cầu:** Node.js (LTS), PostgreSQL.
-**Lưu ý:** Tuyệt đối KHÔNG sử dụng Docker cho môi trường Local theo quy tắc dự án.
-
-1. **Cài đặt:**
-   ```bash
-   pnpm install
-   ```
-2. **Khởi chạy:**
-   ```bash
-   # Terminal 1 (Frontend)
-   pnpm --prefix frontend dev
-   # Terminal 2 (Backend)
-   pnpm --prefix backend start:dev
-   ```
-3. **Truy cập:**
-   - Frontend: http://localhost:3000
-   - Backend: http://localhost:3001
-   - Swagger Docs: http://localhost:3001/api/docs (Local only)
-
-## Environment Variables
-Sử dụng các tệp `.env.example` được cung cấp trong từng thư mục làm mẫu.
-
-**Backend:**
-- `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DATABASE_URL`
-- `JWT_SECRET`, `ENABLE_SWAGGER`
-- `ALLOWED_ORIGINS`
-
-**Frontend:**
-- (Không còn yêu cầu biến môi trường lúc build nhờ kiến trúc Proxy tập trung)
-
-## Git Workflow
-Hệ thống tuân thủ quy trình làm việc chuyên nghiệp:
-- `feature/*` → `development`: Phát triển tính năng mới.
-- `dev` → `staging`: Kiểm thử trên VM Staging.
-- `main` → `production`: Vận hành chính thức.
-
-## Deployment
-Dự án hỗ trợ linh hoạt các phương thức triển khai tùy theo nhu cầu hạ tầng:
-
-### 1. Triển khai trực tiếp (Bare Metal)
-Dành cho việc chạy ứng dụng trực tiếp trên server vật lý hoặc VPS (Ubuntu/Windows/CentOS) không thông qua Container.
-
-1.  **Cài đặt Node.js (v18+) & pnpm.**
-2.  **Cài đặt & Chạy PostgreSQL.** Tạo một Database trống (ví dụ: `portfolio_db`).
-3.  **Thiết lập Môi trường:** Tạo file `.env` trong thư mục `backend/` trỏ đến Database vừa tạo.
-4.  **Cài đặt & Build:**
-    ```bash
-    pnpm install
-    pnpm --prefix backend build
-    pnpm --prefix frontend build
-    ```
-5.  **Khởi tạo cấu trúc bảng (Migration):**
-    ```bash
-    pnpm --prefix backend prisma migrate deploy
-    ```
-6.  **Vận hành:** Sử dụng PM2 để quản lý process:
-    ```bash
-    pm2 start backend/dist/src/main.js --name portfolio-backend
-    pm2 start "pnpm --prefix frontend start" --name portfolio-frontend
-    ```
-7.  **Khởi tạo hệ thống (Setup UI):** Truy cập vào địa chỉ website, hệ thống sẽ tự động chuyển hướng đến trang `/setup` để bạn cấu hình Admin và thông tin site qua giao diện.
-
-### 2. Môi trường Staging (Docker Compose)
-Dành cho kiểm thử nhanh trên VM đơn lẻ.
-```bash
-cd infra/ansible
-# Triển khai qua Docker Compose
-ansible-playbook -i inventory.ini playbooks/staging.yml
-```
-
-### 3. Môi trường Production (Kubernetes)
-Kiến trúc Production-Grade trên cụm Single-node K8s.
-*   **Hạ tầng:** Kubeadm, Flannel CNI, Dashboard.
-*   **Networking:** HostNetwork Nginx (Cổng 80/443 chuẩn), tương thích Cloudflare.
-*   **Security:** Quản lý tập trung qua K8s Secrets & ConfigMaps.
-
-**Triển khai:**
-```bash
-# 1. Setup Cluster (Cài đặt môi trường K8s)
-ansible-playbook -i inventory.ini playbooks/k8s_setup.yml
-
-# 2. Deploy App (Build, Sync & Run)
-ansible-playbook -i inventory.ini playbooks/k8s_app_deploy.yml
-```
-Quy trình K8s tự động bao gồm bridge Image từ Docker sang Containerd, cấp phát SSL, và khởi tạo Secrets động. Sau khi deploy, bạn cũng thực hiện bước **Setup UI** tương tự như bản Bare Metal.
+Hệ thống tuân thủ triết lý **Documentation-as-Code (DaC)**, tích hợp toàn bộ tài liệu kỹ thuật trực tiếp vào nhánh mã nguồn để đồng bộ phiên bản và quản trị dễ dàng.
 
 ---
 
-## DevOps Architecture
-**Quy trình:** Laptop → GitHub → Ansible Controller → VM (All Docker Containers)
+## 🏛️ Sơ Đồ Kiến Trúc Hệ Thống (System Architecture)
 
-Kiến trúc này đảm bảo tính đóng gói tuyệt đối, cho phép di chuyển ứng dụng giữa các Server một cách dễ dàng (Portability).
+Dự án áp dụng mô hình **Smart Server / Lean Client**, kết hợp hạ tầng điều phối Container tự động hóa qua Kubernetes (K8s) và quy trình GitOps hiện đại.
 
-## Security Notes
-- **API Protection:** Swagger chỉ hiển thị ở môi trường nội bộ/staging và bị chặn ở Production bởi Nginx.
-- **Data Privacy:** Các trường nhạy cảm trong Cấu hình (Settings) được che giấu tự động trước khi gửi về Client.
-- **Network Security:** Backend và DB không mở cổng ra internet, chỉ cho phép truy cập thông qua Nginx Proxy.
+```mermaid
+graph TD
+    Client[Browser/Client Next.js] -->|HTTPS SSL| Ingress[Traefik Ingress Gateway]
+    subgraph K8s Cluster
+        Ingress -->|Route /api| Backend[NestJS Backend API]
+        Ingress -->|Route /| Frontend[Next.js Standalone]
+        Backend -->|Query| DB[(PostgreSQL StatefulSet)]
+        Backend -->|Cache| Redis[(Redis Standalone)]
+        Backend -->|Uploads| R2[Cloudflare R2 Object Storage]
+        Velero[Velero Agent] -->|Cron Backup| R2
+        etcd[etcd backup Job] -->|Cron Snapshot| R2
+    end
+    subgraph GitOps CD Pipeline
+        Dev[Developer] -->|Push Code| GitLab[GitLab CI/CD]
+        GitLab -->|Build & Push Image| DockerHub[Docker Hub]
+        GitLab -->|Update Image Tag| GitInfra[Git Infrastructure Repo]
+        ArgoCD[ArgoCD Operator] -->|Sync Manifests| GitInfra
+        ArgoCD -->|Reconcile State| K8sCluster[K8s Cluster Resources]
+    end
+```
 
+---
 
+## 📖 Cổng Thư Mục Tài Liệu (Documentation Directory Portal)
 
-## Author
-**LƯU ĐÌNH MÁC** - System Engineer & Linux Expert.
+Hệ thống tài liệu kỹ thuật được phân loại theo cấu trúc phân cấp khoa học tại thư mục `docs/`. Hãy nhấp vào các liên kết dưới đây để truy cập chi tiết:
+
+### 1. 🌟 Tổng Quan & Định Hướng (Overview & Guidelines)
+*   **[Project Mission & Governance](docs/overview/project_mission.md)**: Sứ mệnh dự án, ma trận phân chia quyền sở hữu mã nguồn (Ownership Matrix) và chính sách quản lý tài liệu.
+*   **[Coding Guidelines](docs/overview/coding_guidelines.md)**: Quy tắc lập trình "Smart Server, Lean Client", kiến trúc thư mục Frontend/Backend và tiêu chuẩn kiểm thử.
+
+### 2. 🏗️ Kiến Trúc Hệ Thống (Architecture & Design)
+*   **[System Architecture Design](docs/architecture/system_architecture.md)**: Chi tiết thiết kế mạng (Networking), cấu trúc phân chia Namespace K8s, chính sách lưu trữ (StorageClass Longhorn/R2) và cơ chế co giãn HPA.
+*   **[Architecture Decision Records (ADR)](docs/adr/0001-clean-architecture-refactor.md)**: Nhật ký quyết định kiến trúc (ADR) ghi lại quá trình tái cấu trúc Clean Architecture cho database schema và Prisma Client.
+
+### 3. 🚀 Khởi Đầu & Tuyển Dụng (Onboarding & Hiring)
+*   **[Local Development Setup Guide](docs/onboarding/local_development.md)**: Hướng dẫn cài đặt môi trường dev cục bộ, cấu hình SSH Tunnel bảo mật, và quy chuẩn quản trị biến môi trường.
+*   **[Curriculum Vitae (Bilingual CV)](docs/onboarding/)**: Hồ sơ năng lực của tác giả viết bằng **[Tiếng Anh (cv_english.md)](docs/onboarding/cv/cv_english.md)** và **[Tiếng Việt (cv_vietnamese.md)](docs/onboarding/cv/cv_vietnamese.md)**.
+
+### 4. ☸️ Quy Trình Triển Khai & GitOps (Deployment & GitOps)
+*   **[Deployment Standards & Policies](docs/deployment/deployment_standards.md)**: Tiêu chuẩn đặt tên tài nguyên, quy định đóng gói Docker đa tầng (Multi-stage), chính sách chạy Container không dùng root (Non-root user).
+*   **[CI/CD & GitOps Workflow](docs/deployment/ci_cd_gitops.md)**: Sơ đồ chi tiết pipeline GitLab CI/CD, cơ chế tự động mutation tag qua `yq`, đồng bộ tự động ArgoCD và smoke test.
+*   **[Bare-Metal Kubernetes Setup](docs/deployment/k8s_setup_guide.md)**: Cẩm nang cài đặt cụm K8s từ đầu qua Ansible, thiết lập Ingress Traefik HostNetwork, và cơ chế mã hóa Secret bằng Sealed Secrets.
+
+### 5. 🚨 Runbook Vận Hành (Operational Runbooks)
+*   **[Backup & Restore Playbook](docs/runbooks/backup_restore.md)**: Quy trình sao lưu tự động Velero, chụp snapshot cơ sở dữ liệu etcd hằng ngày, và khôi phục dữ liệu PostgreSQL qua pg_dump.
+*   **[Disaster Recovery Procedures](docs/runbooks/disaster_recovery.md)**: Hướng dẫn xử lý sự cố khẩn cấp (kẹt Prisma Migration lock, IP whitelist Traefik 403 Forbidden, rebuild VPS vật lý, và khôi phục sâu etcd).
+
+### 6. 🛠️ Gỡ Lỗi & Sự Cố (Troubleshooting & Incident Reports)
+*   **[Application Debug Journal](docs/troubleshooting/debug_journal.md)**: Nhật ký xử lý các lỗi ứng dụng (mất phiên đăng nhập, runtime react hooks, Next.js hydration failed).
+*   **[Kubernetes Incident Logs](docs/troubleshooting/k8s_incidents.md)**: Phân tích nguyên nhân gốc rễ (RCA) các sự cố hạ tầng K8s thực tế (CPU spike do Velero Kopia, đóng băng standalone proxy, lỗi ký tự BOM SQL).
+
+### 7. ⚖️ Pháp Lý & Bảo Mật (Legal & Privacy)
+*   **[Privacy Policy](docs/legal/privacy_policy.md)**: Cam kết bảo mật thông tin, chính sách lưu trữ cookies, thu thập logs và tuân thủ các quy định an ninh mạng (GDPR / Nghị định 13 Việt Nam).
+
+---
+
+## ⚡ Khởi Chạy Nhanh Dự Án Cục Bộ (Quick Start)
+
+### 1. Yêu cầu hệ thống (Prerequisites)
+*   Node.js LTS (phiên bản `20.x` trở lên).
+*   pnpm (phiên bản `9.x` trở lên).
+*   PostgreSQL chạy local hoặc qua Docker container.
+
+### 2. Cài đặt & Khởi động
+```bash
+# Clone repository
+git clone https://github.com/luudinhmac/myweb-profile-blog.git
+cd myweb-profile-blog
+
+# Cài đặt toàn bộ dependencies ở thư mục gốc
+pnpm install
+
+# Setup biến môi trường cho Backend & Frontend (Xem hướng dẫn chi tiết tại docs/onboarding/local_development.md)
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+
+# Khởi chạy chế độ phát triển đồng thời (Concurrent Dev Mode)
+pnpm dev
+```
+Giao diện Web UI sẽ khả dụng tại: `http://localhost:3000`  
+API Swagger Tài liệu Backend khả dụng tại: `http://localhost:3001/api/docs`
+
+---
+*Dự án được duy trì bởi **Lưu Đình Mác** (luumac2801@gmail.com).*
