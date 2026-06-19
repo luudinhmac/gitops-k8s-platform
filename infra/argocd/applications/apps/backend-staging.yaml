@@ -20,7 +20,7 @@ spec:
         - /environments/staging/backend-values.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: portfolio
+    namespace: blog-staging
   syncPolicy:
     automated:
       prune: true # WARNING: Automatically delete resources removed from Git (use caution with PVCs)

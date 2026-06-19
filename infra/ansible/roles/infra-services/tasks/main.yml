@@ -119,6 +119,18 @@
   command: helm repo add argo https://argoproj.github.io/argo-helm
   failed_when: false
 
+- name: Add Sealed Secrets Helm repo
+  become_user: "{{ ansible_operator_user }}"
+  command: helm repo add sealed-secrets https://bitnami-labs.github.io/sealed-secrets
+  failed_when: false
+
+- name: Install Sealed Secrets Controller
+  become_user: "{{ ansible_operator_user }}"
+  command: >
+    helm upgrade --install sealed-secrets sealed-secrets/sealed-secrets
+    --namespace kube-system
+
+
 - name: Update Helm repos
   become_user: "{{ ansible_operator_user }}"
   command: helm repo update
@@ -144,5 +156,10 @@
     kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.26/deploy/local-path-storage.yaml
     kubectl patch storageclass local-path -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
   changed_when: true
+
+
+
+
+
 
 

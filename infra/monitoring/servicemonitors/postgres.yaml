@@ -2,7 +2,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: PodMonitor
 metadata:
   name: postgres-exporter-pod-monitor
-  namespace: database
+  namespace: blog-staging
   labels:
     release: monitoring
 spec:

@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-longhorn
+  namespace: argocd
+spec:
+  project: platform-project
+  source:
+    chart: longhorn
+    repoURL: https://charts.longhorn.io
+    targetRevision: 1.7.0
+    helm:
+      releaseName: longhorn
+      values: |
+        longhornManager:
+          resources:
+            limits:
+              cpu: "300m"
+              memory: "512Mi"
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+        longhornDriver:
+          resources:
+            limits:
+              cpu: "200m"
+              memory: "256Mi"
+            requests:
+              cpu: "50m"
+              memory: "128Mi"
+        defaultSettings:
+          defaultReplicaCount: 1
+          replicaAutoBalance: "disabled"
+          storageMinimalAvailablePercentage: 10
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: longhorn-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

@@ -16,6 +16,8 @@ service:
 persistence:
   size: 5Gi
   path: /data/k8s/postgres-infra
+  storageClassName: "local-path"
+
 
 # Cấu hình Secret qua Helm values (hoặc dùng secret sẵn có)
 auth:
@@ -24,3 +26,11 @@ auth:
   database: portfolio_staging
 
 namespace: database
+
+sealedSecret:
+  enabled: false
+  encryptedData:
+    POSTGRES_USER: ""
+    POSTGRES_PASSWORD: ""
+    POSTGRES_DB: ""
+

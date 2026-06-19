@@ -12,6 +12,10 @@ spec:
     server: https://kubernetes.default.svc
   - namespace: database
     server: https://kubernetes.default.svc
+  - namespace: blog-staging
+    server: https://kubernetes.default.svc
+  - namespace: blog-prod
+    server: https://kubernetes.default.svc
   - namespace: kube-system
     server: https://kubernetes.default.svc
   clusterResourceWhitelist:

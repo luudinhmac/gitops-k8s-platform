@@ -20,7 +20,7 @@ spec:
         - /environments/staging/frontend-values.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: portfolio
+    namespace: blog-staging
   syncPolicy:
     automated:
       prune: true # Ensure resources deleted in Git are also removed from the cluster
