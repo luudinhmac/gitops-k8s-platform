@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Search, LayoutGrid, Bookmark, Sparkles, ChevronRight } from 'lucide-react';
+import { Search, LayoutGrid, Bookmark, Sparkles, ChevronRight, X } from 'lucide-react';
 import PageHeader from '@/components/layout/PageHeader';
 import AnimateList from '@/shared/components/ui/AnimateList';
 import PostCard from '@/features/posts/components/PostCard';
@@ -47,6 +47,7 @@ export default function BlogContent() {
   const page = parseInt(searchParams.get('page') || '1');
   const [meta, setMeta] = useState({ total: 0, limit: 12, page: 1 });
   const q = searchParams.get('q') || '';
+  const category = searchParams.get('category') || '';
   const [searchTerm, setSearchTerm] = useState(q);
   const [displaySettings, setDisplaySettings] = useState<Record<string, string>>({});
 
@@ -70,7 +71,7 @@ export default function BlogContent() {
     setHasError(false);
     try {
       const [postsData, catsData, seriesData] = await Promise.all([
-        postService.getAll({ q, limit: 12, page }),
+        postService.getAll({ q, category, limit: 12, page }),
         catApi.getAll(),
         seriesService.getAll()
       ]);
@@ -92,7 +93,7 @@ export default function BlogContent() {
     } finally {
       setLoading(false);
     }
-  }, [q, page, isBackendOffline]);
+  }, [q, category, page, isBackendOffline]);
 
   useEffect(() => {
     fetchData();
@@ -108,31 +109,98 @@ export default function BlogContent() {
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm, q, router]);
 
+  const handleBannerClick = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('button')) {
+      return;
+    }
+    if (displaySettings.home_banner_link) {
+      if (displaySettings.home_banner_link.startsWith('http://') || displaySettings.home_banner_link.startsWith('https://')) {
+        window.open(displaySettings.home_banner_link, '_blank', 'noopener,noreferrer');
+      } else {
+        router.push(displaySettings.home_banner_link);
+      }
+    }
+  };
+
   return (
     <div className="pt-20 pb-16 px-4 min-h-screen bg-slate-50/30 dark:bg-slate-950/30">
       <div className="max-w-7xl mx-auto">
-        <PageHeader
-          title="Blog chia sẻ Kiến thức"
-          description="Chia sẻ kinh nghiệm thực chiến về hệ thống và công nghệ."
-          centered
-          breadcrumbs={[]}
-        >
-          {q && (
-            <div className="mt-6 flex items-center justify-center gap-2 animate-in fade-in slide-in-from-bottom-2 duration-500">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Kết quả tìm kiếm cho:</span>
-              <span className="px-3 py-1 bg-primary text-white text-[10px] font-bold rounded-full shadow-lg shadow-primary/20">{q}</span>
-              <button
-                onClick={() => {
-                  setSearchTerm('');
-                  router.push('/');
-                }}
-                className="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors ml-2 uppercase tracking-widest hover:underline"
-              >
-                Xóa lọc
-              </button>
+        {displaySettings.home_banner_enabled !== 'false' && (
+          displaySettings.home_banner_image ? (
+            (() => {
+              let baseUrl = 'http://localhost:3001';
+              try {
+                baseUrl = new URL(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').origin;
+              } catch {
+                baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').replace('/api/v1', '').replace('/v1', '').replace('/api', '');
+              }
+              const imageUrl = displaySettings.home_banner_image.startsWith('http://') || displaySettings.home_banner_image.startsWith('https://')
+                ? displaySettings.home_banner_image
+                : `${baseUrl}${displaySettings.home_banner_image}`;
+              return (
+                <div
+                  onClick={displaySettings.home_banner_link ? handleBannerClick : undefined}
+                  className={cn(
+                    "relative rounded-[2.5rem] overflow-hidden mb-12 shadow-xl border border-slate-200 dark:border-slate-800 bg-cover bg-center min-h-[220px] md:min-h-[280px] flex items-center justify-center text-center p-8 transition-all duration-300 animate-in fade-in duration-500",
+                    displaySettings.home_banner_link && "hover:scale-[1.01] hover:shadow-2xl active:scale-[0.99] cursor-pointer"
+                  )}
+                  style={{ backgroundImage: `url(${imageUrl})` }}
+                >
+                  <div className="absolute inset-0 bg-slate-950/60 dark:bg-slate-950/75 backdrop-blur-[1px]" />
+                  <div className="relative z-10 max-w-3xl mx-auto space-y-4">
+                    <h1 className="text-3xl md:text-5xl lg:text-6xl font-display font-bold text-white tracking-tight leading-tight">
+                      {displaySettings.home_banner_title ?? 'Blog chia sẻ Kiến thức'}
+                    </h1>
+                    <p className="text-xs md:text-sm text-slate-200 font-medium max-w-2xl mx-auto leading-relaxed">
+                      {displaySettings.home_banner_subtitle ?? 'Chia sẻ kinh nghiệm thực chiến về hệ thống và công nghệ.'}
+                    </p>
+                  </div>
+                </div>
+              );
+            })()
+          ) : (
+            <div 
+              onClick={displaySettings.home_banner_link ? handleBannerClick : undefined}
+              className={cn(
+                "relative rounded-[2.5rem] overflow-hidden mb-12 border border-slate-100 dark:border-slate-900 bg-gradient-to-r from-slate-50 via-white to-slate-50 dark:from-slate-950/40 dark:via-slate-900/40 dark:to-slate-950/40 min-h-[180px] md:min-h-[220px] flex items-center justify-center text-center p-8 transition-all duration-300 animate-in fade-in duration-500",
+                displaySettings.home_banner_link && "hover:scale-[1.01] hover:shadow-lg active:scale-[0.99] cursor-pointer"
+              )}
+            >
+              <div className="max-w-3xl mx-auto space-y-4">
+                <h1 className="text-3xl md:text-5xl lg:text-6xl font-display font-bold text-slate-900 dark:text-white tracking-tight leading-tight">
+                  {displaySettings.home_banner_title ?? 'Blog chia sẻ Kiến thức'}
+                </h1>
+                <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
+                  {displaySettings.home_banner_subtitle ?? 'Chia sẻ kinh nghiệm thực chiến về hệ thống và công nghệ.'}
+                </p>
+              </div>
             </div>
-          )}
-        </PageHeader>
+          )
+        )}
+
+        {/* Filter results display below banner */}
+        {(q || category) && (
+          <div className="mb-8 p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/50 dark:border-slate-800/80 shadow-sm flex items-center justify-between gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex items-center gap-2.5">
+              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                {category ? "Danh mục:" : "Kết quả tìm kiếm cho:"}
+              </span>
+              <span className="px-3 py-1 bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-light text-xs font-bold rounded-full border border-primary/20">
+                {category || q}
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                setSearchTerm('');
+                router.push('/');
+              }}
+              className="text-xs font-bold text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors uppercase tracking-wider flex items-center gap-1 hover:underline cursor-pointer"
+            >
+              <X size={14} />
+              Xóa lọc
+            </button>
+          </div>
+        )}
 
         <div className="flex flex-col lg:flex-row gap-1">
           {/* Main Content (Posts) */}
@@ -230,10 +298,10 @@ export default function BlogContent() {
                 {categories.map((cat) => (
                   <button
                     key={cat.id}
-                    onClick={() => router.push(`/?q=${encodeURIComponent(cat.name)}`)}
+                    onClick={() => router.push(`/?category=${encodeURIComponent(cat.name)}`)}
                     className={cn(
                       "w-full flex items-center justify-between px-4 py-3 rounded-xl text-[13px] font-bold transition-all group border border-transparent hover:border-primary/20",
-                      q.toLowerCase() === cat.name.toLowerCase()
+                      category.toLowerCase() === cat.name.toLowerCase()
                         ? "bg-primary text-white shadow-lg shadow-primary/20 hover:bg-primary"
                         : "text-slate-600 dark:text-slate-400 hover:bg-primary/5 hover:text-primary"
                     )}
@@ -241,7 +309,7 @@ export default function BlogContent() {
                     <span>{cat.name}</span>
                     <span className={cn(
                       "px-2 py-0.5 rounded-lg text-[10px] font-bold transition-colors",
-                      q.toLowerCase() === cat.name.toLowerCase()
+                      category.toLowerCase() === cat.name.toLowerCase()
                         ? "bg-white/20 text-white"
                         : "bg-slate-100 dark:bg-slate-800 group-hover:bg-primary/20"
                     )}>

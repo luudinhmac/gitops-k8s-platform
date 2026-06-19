@@ -58,6 +58,7 @@ export class PostsController {
     @Query('sort') sort?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
+    @Query('category') category?: string,
   ) {
     const userIdNum = userId ? parseInt(userId) : undefined;
     const pageNum = page ? parseInt(page) : 1;
@@ -71,6 +72,7 @@ export class PostsController {
       userIdNum,
       pageNum,
       limitNum,
+      category,
     );
   }
 

@@ -57,7 +57,9 @@ export default function CoverImagePanel({
             } catch {
               baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').replace('/api/v1', '').replace('/v1', '').replace('/api', '');
             }
-            const imageUrl = `${baseUrl}${coverImage}`;
+            const imageUrl = coverImage.startsWith('http://') || coverImage.startsWith('https://')
+              ? coverImage
+              : `${baseUrl}${coverImage}`;
             return (
               <>
                 <img

@@ -3,6 +3,9 @@ export class CategoryEntity {
   name: string;
   slug: string;
   description?: string;
+  parent_id?: number;
+  Parent?: CategoryEntity;
+  Children?: CategoryEntity[];
   created_at?: Date;
   updated_at?: Date;
   _count?: {
