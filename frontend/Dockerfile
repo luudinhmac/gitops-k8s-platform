@@ -26,7 +26,7 @@ RUN --mount=type=cache,target=/app/.next/cache \
 
 # Stage 2: Runner
 FROM node:22-alpine AS runner
-RUN apk add --no-cache libc6-compat
+RUN apk update && apk upgrade --no-cache && apk add --no-cache libc6-compat
 # Remove npm and npx to eliminate base image security vulnerabilities
 RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 WORKDIR /app
