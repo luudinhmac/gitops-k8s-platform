@@ -340,7 +340,7 @@ function MaintenanceContent() {
 
       {/* Credits */}
       <footer className="fixed bottom-10 left-0 right-0 text-center">
-        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-700">Powered by Antigravity v2.0</span>
+        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-700">Powered by </span>
       </footer>
     </main>
   );
