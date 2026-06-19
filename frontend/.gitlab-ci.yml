@@ -23,7 +23,6 @@ stages:
   - publish
   - deploy
   - post-deploy
-  - rollback
 
 # =========================================================
 # GLOBAL DEFAULTS
@@ -38,6 +37,18 @@ default:
 workflow:
   rules:
     - if: '$CI_COMMIT_BRANCH == "dev"'
+      changes:
+        - "src/**/*"
+        - "public/**/*"
+        - ".gitlab-ci/**/*"
+        - ".gitlab-ci.yml"
+        - "Dockerfile"
+        - "package.json"
+        - "pnpm-lock.yaml"
+        - "next.config.js"
+        - "tsconfig.json"
+        - "postcss.config.mjs"
+        - "eslint.config.mjs"
     - if: '$CI_COMMIT_TAG =~ /^v.*/'
   auto_cancel:
     on_new_commit: interruptible
@@ -416,6 +427,22 @@ deploy_production:
 # SMOKE TEST
 # =========================================================
 
+smoke_test_staging:
+  stage: post-deploy
+  image: alpine:3.21
+  tags:
+    - agent-1
+  needs:
+    - deploy_staging
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+  before_script:
+    - apk add --no-cache curl
+  script:
+    - echo "Waiting 150 seconds for ArgoCD to sync and roll out staging frontend pods..."
+    - sleep 150
+    - sh .gitlab-ci/smoke_test.sh https://staging.luumac.io.vn staging
+
 smoke_test_production:
   stage: post-deploy
   image: alpine:3.21
@@ -428,43 +455,6 @@ smoke_test_production:
   before_script:
     - apk add --no-cache curl
   script:
-    - echo "Running smoke tests on production frontend..."
-    - |
-      for i in {1..30}; do
-        echo "Checking frontend endpoint (attempt $i)..."
-        RESPONSE=$(curl -s -w "%{http_code}" -o /dev/null https://blog.luumac.io.vn/ || true)
-        if [ "$RESPONSE" -eq 200 ]; then
-          echo "Production frontend is healthy!"
-          exit 0
-        fi
-        echo "Status code: $RESPONSE. Retrying in 10 seconds..."
-        sleep 10
-      done
-      echo "Smoke test failed: Production frontend is not responding with 200 OK!"
-      exit 1
-
-# =========================================================
-# ROLLBACK
-# =========================================================
-
-rollback_production:
-  extends:
-    - .gitops_template
-  stage: rollback
-  resource_group: production
-  rules:
-    - if: '$CI_COMMIT_TAG =~ /^v.*/'
-      when: manual
-      allow_failure: false
-  script:
-    - cd infra-repo
-    - |
-      if [ -z "$ROLLBACK_IMAGE" ]; then
-        echo "ROLLBACK_IMAGE variable required"
-        exit 1
-      fi
-    - yq -i '.image.tag = env(ROLLBACK_IMAGE)' environments/production/frontend-values.yaml
-    - git add .
-    - 'git commit -m "rollback(prod): rollback frontend to ${ROLLBACK_IMAGE} [skip ci]"'
-    - git pull --rebase origin main
-    - git push origin main
+    - echo "Waiting 150 seconds for ArgoCD to sync and roll out production frontend pods..."
+    - sleep 180
+    - sh .gitlab-ci/smoke_test.sh https://blog.luumac.io.vn production

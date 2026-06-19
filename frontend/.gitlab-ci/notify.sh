@@ -11,6 +11,47 @@ JOB_NAME=${CI_JOB_NAME:-"Job"}
 PIPELINE_URL=${CI_PIPELINE_URL}
 COMMIT_MSG=${CI_COMMIT_MESSAGE:-"No message"}
 
+# Calculate Job and Pipeline Durations
+JOB_DURATION_TEXT="N/A"
+if [ -n "$CI_JOB_STARTED_AT" ]; then
+    START_EPOCH=$(date -d "${CI_JOB_STARTED_AT}" +%s 2>/dev/null)
+    if [ -z "$START_EPOCH" ]; then
+        CLEANED_DATE=$(echo "$CI_JOB_STARTED_AT" | sed 's/Z//' | sed 's/T/ /')
+        START_EPOCH=$(date -d "$CLEANED_DATE" +%s 2>/dev/null)
+    fi
+    if [ -n "$START_EPOCH" ]; then
+        END_EPOCH=$(date +%s)
+        DURATION_SECONDS=$((END_EPOCH - START_EPOCH))
+        if [ $DURATION_SECONDS -ge 3600 ]; then
+            JOB_DURATION_TEXT="$((DURATION_SECONDS / 3600))h $(((DURATION_SECONDS % 3600) / 60))m $((DURATION_SECONDS % 60))s"
+        elif [ $DURATION_SECONDS -ge 60 ]; then
+            JOB_DURATION_TEXT="$((DURATION_SECONDS / 60))m $((DURATION_SECONDS % 60))s"
+        else
+            JOB_DURATION_TEXT="${DURATION_SECONDS}s"
+        fi
+    fi
+fi
+
+PIPELINE_DURATION_TEXT="N/A"
+if [ -n "$CI_PIPELINE_CREATED_AT" ]; then
+    PIPE_START_EPOCH=$(date -d "${CI_PIPELINE_CREATED_AT}" +%s 2>/dev/null)
+    if [ -z "$PIPE_START_EPOCH" ]; then
+        CLEANED_DATE=$(echo "$CI_PIPELINE_CREATED_AT" | sed 's/Z//' | sed 's/T/ /')
+        PIPE_START_EPOCH=$(date -d "$CLEANED_DATE" +%s 2>/dev/null)
+    fi
+    if [ -n "$PIPE_START_EPOCH" ]; then
+        END_EPOCH=$(date +%s)
+        DURATION_SECONDS=$((END_EPOCH - PIPE_START_EPOCH))
+        if [ $DURATION_SECONDS -ge 3600 ]; then
+            PIPELINE_DURATION_TEXT="$((DURATION_SECONDS / 3600))h $(((DURATION_SECONDS % 3600) / 60))m $((DURATION_SECONDS % 60))s"
+        elif [ $DURATION_SECONDS -ge 60 ]; then
+            PIPELINE_DURATION_TEXT="$((DURATION_SECONDS / 60))m $((DURATION_SECONDS % 60))s"
+        else
+            PIPELINE_DURATION_TEXT="${DURATION_SECONDS}s"
+        fi
+    fi
+fi
+
 # If successful, only send notification for deployment, post-deployment, or rollback stages
 if [ "$STATUS" = "success" ] || [ "$STATUS" = "successful" ]; then
     if [ "$TYPE" != "deploy" ] && [ "$TYPE" != "post-deploy" ] && [ "$TYPE" != "rollback" ]; then
@@ -59,7 +100,7 @@ elif [ "$STATUS" = "canceled" ]; then
 fi
 
 # Telegram Notification
-TELEGRAM_MSG="<b>${ICON} CI/CD PIPELINE ${STATUS_TEXT}</b>%0A%0A👤 <b>Người thực hiện:</b> ${ESC_USER_NAME}%0A📁 <b>Dự án:</b> ${PROJECT_NAME}%0A🛠 <b>Tiến trình:</b> ${TYPE} (${JOB_NAME})%0A📝 <b>Commit:</b> ${ESC_COMMIT_MSG}%0A🔗 <b>Chi tiết:</b> <a href='${PIPELINE_URL}'>Xem Pipeline</a>"
+TELEGRAM_MSG="<b>${ICON} CI/CD PIPELINE ${STATUS_TEXT}</b>%0A%0A👤 <b>Người thực hiện:</b> ${ESC_USER_NAME}%0A📁 <b>Dự án:</b> ${PROJECT_NAME}%0A🛠 <b>Tiến trình:</b> ${TYPE} (${JOB_NAME})%0A⏱ <b>Thời gian Job:</b> ${JOB_DURATION_TEXT}%0A⏱ <b>Thời gian Pipeline:</b> ${PIPELINE_DURATION_TEXT}%0A📝 <b>Commit:</b> ${ESC_COMMIT_MSG}%0A🔗 <b>Chi tiết:</b> <a href='${PIPELINE_URL}'>Xem Pipeline</a>"
 
 if { [ "$STATUS" = "failed" ] || [ "$STATUS" = "canceled" ]; } && [ -f "$LOG_FILE" ]; then
     LOG_TAIL=$(tail -n 15 "$LOG_FILE" | sed "s/$(printf '\033')\[[0-9;]*[a-zA-Z]//g" | sed 's/<[^>]*>//g' | sed 's/&/\&amp;/g' | sed 's/</\&lt;/g' | sed 's/>/\&gt;/g')
@@ -106,6 +147,8 @@ if [ ! -z "$TEAMS_WEBHOOK_URL" ]; then
                             { "title": "Người thực hiện:", "value": "${ESC_USER_NAME}" },
                             { "title": "Dự án:", "value": "${PROJECT_NAME}" },
                             { "title": "Tiến trình:", "value": "${TYPE} (${JOB_NAME})" },
+                            { "title": "Thời gian Job:", "value": "${JOB_DURATION_TEXT}" },
+                            { "title": "Thời gian Pipeline:", "value": "${PIPELINE_DURATION_TEXT}" },
                             { "title": "Commit:", "value": "${ESC_COMMIT_MSG}" }
                         ]
                     },
