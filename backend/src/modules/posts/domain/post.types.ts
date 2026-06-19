@@ -1,5 +1,6 @@
 export interface PostFilter {
   search?: string;
+  category?: string;
   category_id?: number;
   author_id?: number;
   is_published?: boolean;

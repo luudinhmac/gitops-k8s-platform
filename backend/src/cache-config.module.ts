@@ -9,15 +9,32 @@ import { InfrastructureConfigService } from './infrastructure/config/config.serv
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async (configService: InfrastructureConfigService) => {
-        const store = await redisStore({
-          socket: {
-            host: configService.redisHost,
-            port: configService.redisPort,
-          },
-          password: configService.redisPassword || undefined,
-          ttl: 600000, // 10 minutes (600,000 milliseconds)
-        });
-        return { store };
+        try {
+          const store = await redisStore({
+            socket: {
+              host: configService.redisHost,
+              port: configService.redisPort,
+              connectTimeout: 3000,
+            },
+            password: configService.redisPassword || undefined,
+            ttl: 600000, // 10 minutes (600,000 milliseconds)
+          });
+
+          // Register error event listener on client to prevent runtime crashes
+          const client = store.client;
+          if (client) {
+            client.on('error', (err: any) => {
+              console.error('Redis client error:', err.message || err);
+            });
+          }
+
+          return { store };
+        } catch (error: any) {
+          console.warn('Could not initialize Redis cache store. Falling back to in-memory cache.', error.message || error);
+          return {
+            ttl: 600,
+          };
+        }
       },
       inject: [InfrastructureConfigService],
     }),

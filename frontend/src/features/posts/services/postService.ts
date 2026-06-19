@@ -3,7 +3,7 @@ import { Post, PaginatedResponse } from '@/types';
 
 export const postService = {
   // Get all posts (public)
-  async getAll(options: { q?: string; limit?: number; page?: number; userId?: number; sort?: string } = {}) {
+  async getAll(options: { q?: string; limit?: number; page?: number; userId?: number; sort?: string; category?: string } = {}) {
     const response = await api.get<{ items: Post[]; total: number; page: number; limit: number; totalPages: number }>('/posts', { params: options });
     return response.data;
   },

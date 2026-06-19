@@ -3,9 +3,10 @@
 import { Tag, Link as LinkIcon, Layers, Bookmark } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { seriesService } from '@/features/series/services/seriesService';
+import { Category } from '@/types';
 
 interface SettingsPanelProps {
-  categories: { id: number; name: string }[];
+  categories: Category[];
   seriesList: { id: number; name: string }[];
   formData: any;
   setFormData: (data: any) => void;
@@ -52,6 +53,37 @@ export default function SettingsPanel({
       });
     }
   };
+
+  // Group and indent categories for hierarchical representation
+  const formattedCategories = (() => {
+    const parents = categories.filter(c => !c.parent_id);
+    const result: { id: number; displayName: string }[] = [];
+
+    parents.forEach(parent => {
+      result.push({ id: parent.id, displayName: parent.name });
+      const children = categories.filter(c => c.parent_id === parent.id);
+      children.forEach(child => {
+        result.push({ id: child.id, displayName: `— ${child.name}` });
+      });
+    });
+
+    // Fallback for subcategories whose parent isn't in the parents list
+    categories.forEach(c => {
+      if (c.parent_id && !result.some(r => r.id === c.id)) {
+        result.push({ id: c.id, displayName: `— ${c.name}` });
+      }
+    });
+
+    // Fallback for any category missed
+    categories.forEach(c => {
+      if (!result.some(r => r.id === c.id)) {
+        result.push({ id: c.id, displayName: c.name });
+      }
+    });
+
+    return result;
+  })();
+
   return (
     <div className="space-y-6">
       {/* Category */}
@@ -63,11 +95,11 @@ export default function SettingsPanel({
             name="pe-category" 
             value={formData.category_id} 
             onChange={(e) => setFormData({ ...formData, category_id: e.target.value })}
-            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs appearance-none outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 rounded-2xl text-xs text-slate-900 dark:text-slate-100 appearance-none outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             autoComplete="off"
           >
-             <option value="">Chọn danh mục</option>
-             {categories.map(cat => ( <option key={cat.id} value={cat.id}>{cat.name}</option> ))}
+             <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Chọn danh mục</option>
+             {formattedCategories.map(cat => ( <option key={cat.id} value={cat.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">{cat.displayName}</option> ))}
           </select>
           <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
             <Layers size={14} />

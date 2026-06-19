@@ -1,4 +1,4 @@
-import { IsString, IsOptional, IsNotEmpty } from 'class-validator';
+import { IsString, IsOptional, IsNotEmpty, IsInt } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CategoryCount {
@@ -19,6 +19,15 @@ export class Category {
   @ApiProperty({ required: false })
   description?: string;
 
+  @ApiProperty({ required: false })
+  parent_id?: number;
+
+  @ApiProperty({ required: false, type: () => Category })
+  Parent?: Category;
+
+  @ApiProperty({ required: false, type: () => [Category] })
+  Children?: Category[];
+
   @ApiProperty({ required: false, type: () => CategoryCount })
   _count?: CategoryCount;
 }
@@ -38,6 +47,11 @@ export class CreateCategoryDto {
   @IsString()
   @IsOptional()
   slug?: string;
+
+  @ApiProperty({ required: false })
+  @IsInt()
+  @IsOptional()
+  parent_id?: number;
 }
 
 export class UpdateCategoryDto {
@@ -55,4 +69,9 @@ export class UpdateCategoryDto {
   @IsString()
   @IsOptional()
   slug?: string;
+
+  @ApiProperty({ required: false })
+  @IsInt()
+  @IsOptional()
+  parent_id?: number;
 }

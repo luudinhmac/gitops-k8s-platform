@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         images: [{ url: image }],
         publishedTime: post.created_at as string,
         authors: ['Lưu Đình Mác'],
-        tags: post.Tag?.map(t => t.name) || [],
+        tags: post.Tag?.map((t: any) => t.name) || [],
       },
       twitter: {
         card: 'summary_large_image',

@@ -10,9 +10,30 @@ export type UserRole = User['role'];
 export type CreateUserDto = components['schemas']['CreateUserDto'];
 export type UpdateUserDto = components['schemas']['UpdateUserDto'];
 
-export type Category = components['schemas']['Category'];
-export type CreateCategoryDto = components['schemas']['CreateCategoryDto'];
-export type UpdateCategoryDto = components['schemas']['UpdateCategoryDto'];
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
+  parent_id?: number | null;
+  Parent?: Category | null;
+  Children?: Category[] | null;
+  _count?: {
+    Post: number;
+  };
+}
+export interface CreateCategoryDto {
+  name: string;
+  description?: string;
+  slug?: string;
+  parent_id?: number;
+}
+export interface UpdateCategoryDto {
+  name?: string;
+  description?: string;
+  slug?: string;
+  parent_id?: number;
+}
 
 export type Series = components['schemas']['Series'];
 export type CreateSeriesDto = components['schemas']['CreateSeriesDto'];

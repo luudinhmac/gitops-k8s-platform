@@ -15,6 +15,14 @@ export class PrismaCategoryRepository implements ICategoriesRepository {
         _count: {
           select: { Post: true },
         },
+        Parent: true,
+        Children: {
+          include: {
+            _count: {
+              select: { Post: true },
+            },
+          },
+        },
       },
       orderBy: { name: 'asc' },
     });
@@ -30,6 +38,14 @@ export class PrismaCategoryRepository implements ICategoriesRepository {
         _count: {
           select: { Post: true },
         },
+        Parent: true,
+        Children: {
+          include: {
+            _count: {
+              select: { Post: true },
+            },
+          },
+        },
       },
     });
     return CategoryMapper.toDomain(category);
@@ -42,20 +58,50 @@ export class PrismaCategoryRepository implements ICategoriesRepository {
         _count: {
           select: { Post: true },
         },
+        Parent: true,
+        Children: {
+          include: {
+            _count: {
+              select: { Post: true },
+            },
+          },
+        },
       },
     });
     return CategoryMapper.toDomain(category);
   }
 
   async create(data: CreateCategoryDto): Promise<CategoryEntity> {
-    const category = await this.prisma.category.create({ data: data as any });
+    const category = await this.prisma.category.create({
+      data: {
+        name: data.name,
+        description: data.description,
+        slug: data.slug,
+        parent_id: data.parent_id || null,
+      },
+      include: {
+        _count: {
+          select: { Post: true },
+        },
+      },
+    });
     return CategoryMapper.toDomain(category) as CategoryEntity;
   }
 
   async update(id: number, data: UpdateCategoryDto): Promise<CategoryEntity> {
     const category = await this.prisma.category.update({
       where: { id },
-      data: data as any,
+      data: {
+        name: data.name ?? undefined,
+        description: data.description,
+        slug: data.slug ?? undefined,
+        parent_id: data.parent_id !== undefined ? data.parent_id : undefined,
+      },
+      include: {
+        _count: {
+          select: { Post: true },
+        },
+      },
     });
     return CategoryMapper.toDomain(category) as CategoryEntity;
   }
