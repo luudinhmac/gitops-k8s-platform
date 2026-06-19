@@ -11,7 +11,7 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
-    traefik.ingress.kubernetes.io/router.middlewares: {{ .Values.namespace }}-{{ include "frontend.fullname" . }}-strip-headers@kubernetescrd
+    traefik.ingress.kubernetes.io/router.middlewares: {{ .Release.Namespace }}-{{ include "frontend.fullname" . }}-strip-headers@kubernetescrd
     {{ if .Values.ingress.issuer }}
     cert-manager.io/cluster-issuer: {{ .Values.ingress.issuer | quote }}
     {{ end }}

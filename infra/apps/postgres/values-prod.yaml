@@ -23,3 +23,7 @@ auth:
   database: portfolio_production
 
 namespace: infra-prod
+
+podSecurityContext:
+  fsGroup: 70
+

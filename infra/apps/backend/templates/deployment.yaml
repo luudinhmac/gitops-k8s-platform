@@ -76,6 +76,17 @@ spec:
           value: {{ .Values.env.tz | quote }}
         - name: PORT
           value: {{ .Values.env.port | quote }}
+        {{- if .Values.redis.enabled }}
+        - name: REDIS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: redis-credentials
+              key: redis-password
+        - name: REDIS_HOST
+          value: "redis-master.{{ .Release.Namespace }}.svc.cluster.local"
+        - name: REDIS_PORT
+          value: "6379"
+        {{- end }}
         livenessProbe:
           httpGet:
             path: /api/v1/health

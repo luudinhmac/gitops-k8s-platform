@@ -14,7 +14,7 @@ spec:
         - /environments/production/backend-values.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: production
+    namespace: blog-prod
   syncPolicy:
     automated:
       prune: true

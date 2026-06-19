@@ -1,0 +1,12 @@
+{{- if and .Values.ingress.enabled (and .Values.ingress.rateLimit .Values.ingress.rateLimit.enabled) }}
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: {{ include "backend.fullname" . }}-rate-limit
+  labels:
+    {{- include "backend.labels" . | nindent 4 }}
+spec:
+  rateLimit:
+    average: {{ .Values.ingress.rateLimit.average | default 100 }}
+    burst: {{ .Values.ingress.rateLimit.burst | default 50 }}
+{{- end }}

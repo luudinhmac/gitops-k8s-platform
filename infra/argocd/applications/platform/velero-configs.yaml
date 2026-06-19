@@ -1,23 +1,18 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: portfolio-frontend-production
+  name: platform-velero-configs
   namespace: argocd
 spec:
-  project: apps-project
+  project: platform-project
   source:
     repoURL: https://gitlab.com/portfolio-macld/portfolio-infratructure.git
     targetRevision: main
-    path: apps/frontend
-    helm:
-      valueFiles:
-        - /environments/production/frontend-values.yaml
+    path: platform/velero
   destination:
     server: https://kubernetes.default.svc
-    namespace: blog-prod
+    namespace: velero
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    syncOptions:
-      - CreateNamespace=true

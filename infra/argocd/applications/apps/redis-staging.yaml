@@ -1,0 +1,42 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: redis-staging
+  namespace: argocd
+spec:
+  project: apps-project
+  source:
+    chart: redis
+    repoURL: https://charts.bitnami.com/bitnami
+    targetRevision: 19.1.3
+    helm:
+      releaseName: redis
+      values: |
+        architecture: standalone
+        image:
+          tag: latest
+        auth:
+          enabled: true
+          existingSecret: redis-credentials
+          existingSecretPasswordKey: redis-password
+        master:
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+          persistence:
+            enabled: true
+            storageClass: longhorn
+            size: 1Gi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: blog-staging
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

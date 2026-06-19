@@ -27,12 +27,20 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - containerPort: {{ .Values.service.port }}
+          env:
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
           envFrom:
             - secretRef:
                 name: {{ include "postgres.fullname" . }}-secret
           volumeMounts:
             - name: postgres-data
               mountPath: /var/lib/postgresql/data # Standard path for PostgreSQL data persistence
+          {{- if .Values.resources }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- end }}
+
       volumes:
         - name: postgres-data
           persistentVolumeClaim:

@@ -6,6 +6,8 @@
 - name: Setup Kubernetes Cluster on Single Node
   hosts: k8s_server
   become: yes
+  vars_files:
+    - "../vars/secrets.yml"
   roles:
     - role: pre-check
       tags: [pre-check, diagnostic]

@@ -7,6 +7,7 @@ Choose your preferred language for the deployment guide:
 
 - 🇬🇧 **[English - Full Deployment Guide (A-Z)](docs/README.md)**
 - 🇻🇳 **[Tiếng Việt - Hướng dẫn Vận hành & Troubleshooting](docs/readme2.md)**
+- 🇻🇳 **[Tiếng Việt - Hướng dẫn Backup & Restore với Velero](docs/velero-backup.md)**
 
 ## 🚀 Quick Start
 1. **Bootstrap Infrastructure**: Use Ansible in `ansible/`.
