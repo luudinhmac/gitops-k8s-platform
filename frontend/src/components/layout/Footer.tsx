@@ -51,7 +51,7 @@ export default function Footer() {
               Zero2Ops
             </Link>
             <p className="mt-4 text-slate-600 dark:text-slate-400 max-w-sm">
-              Đam mê xây dựng những ứng dụng web hiện đại, hiệu quả và mang lại giá trị tốt nhất cho người dùng. Chuyên về System Engineering và DevSecOps.
+              System Engineer thích Linux, DevOps và tự động hóa. Xây dựng hạ tầng ổn định và tối ưu quy trình CI/CD.
             </p>
             <div className="mt-6 flex space-x-4">
               <a href="https://github.com/luudinhmac" target="_blank" className="p-2 glass rounded-full hover:text-primary transition-colors">

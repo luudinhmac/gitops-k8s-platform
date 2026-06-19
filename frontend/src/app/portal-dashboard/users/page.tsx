@@ -134,7 +134,7 @@ export default function UsersPage() {
 
       setUsers(users.map(u => u.id === userId ? { ...u, ...fields } as AdminUser : u));
       if (settingsUser?.id === userId) {
-        setSettingsUser(prev => prev ? ({ ...prev, ...fields } as any) : null);
+        setSettingsUser((prev: any) => prev ? ({ ...prev, ...fields } as any) : null);
       }
       setStatusMsg({ type: 'success', text: 'Đã cập nhật quyền hạn thành công' });
       setPromptData({ ...promptData, isOpen: false });
