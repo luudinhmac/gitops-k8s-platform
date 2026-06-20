@@ -41,3 +41,4 @@ Thumbs.db
 /coverage
 /reports
 
+.gitlab-ci/__pycache__/
