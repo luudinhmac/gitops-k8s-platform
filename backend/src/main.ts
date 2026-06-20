@@ -9,6 +9,12 @@ import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
   const isProduction = process.env.NODE_ENV === 'production';
+
+  if (isProduction) {
+    console.log = () => {};
+    console.info = () => {};
+  }
+
   const loggerLevels: LogLevel[] = isProduction
     ? ['error', 'warn']
     : ['log', 'error', 'warn', 'debug', 'verbose'];
