@@ -16,6 +16,10 @@ spec:
     server: https://kubernetes.default.svc
   - namespace: infra
     server: https://kubernetes.default.svc
+  - namespace: velero
+    server: https://kubernetes.default.svc
+  - namespace: longhorn-system
+    server: https://kubernetes.default.svc
   clusterResourceWhitelist:
   - group: '*'
     kind: '*'

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import {
   Settings, Globe, Server, Shield, TrendingUp, Save, Image as ImageIcon,
   Trash2, AlertCircle, Check, Link as LinkIcon, Database, HardDrive, ShieldCheck, Lock, ShieldAlert, Key, Send,
-  Eye, EyeOff, Calendar, User, Clock
+  Eye, EyeOff, Calendar, User, Clock, Loader2
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import AdminPageHeader from '@/features/admin/components/AdminPageHeader';
@@ -14,6 +14,7 @@ import { settingService, SettingsConfig } from '@/features/settings/services/set
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import MessageDialog from '@/shared/components/ui/MessageDialog';
+import { uploadService } from '@/shared/services/uploadService';
 
 export default function SettingsAdminPage() {
   const [activeTab, setActiveTab] = useState<'general' | 'display' | 'system' | 'security' | 'marketing' | 'maintenance' | 'alerts'>('general');
@@ -21,8 +22,8 @@ export default function SettingsAdminPage() {
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
-  const [msgData, setMsgData] = useState<{ isOpen: boolean; title: string; message: string; variant: 'info' | 'success' | 'warning' | 'error' }>({ 
-    isOpen: false, title: '', message: '', variant: 'success' 
+  const [msgData, setMsgData] = useState<{ isOpen: boolean; title: string; message: string; variant: 'info' | 'success' | 'warning' | 'error' }>({
+    isOpen: false, title: '', message: '', variant: 'success'
   });
   const [showSecrets, setShowSecrets] = useState<Record<string, boolean>>({});
   const { user } = useAuth();
@@ -43,7 +44,34 @@ export default function SettingsAdminPage() {
     timezone: 'Asia/Ho_Chi_Minh',
     comments_enabled: 'true',
     footer_copyright: '© 2026 Lưu Đình Mác. All rights reserved.',
+    home_banner_enabled: 'true',
+    home_banner_title: '',
+    home_banner_subtitle: '',
+    home_banner_image: '',
+    home_banner_link: '',
   });
+
+  const [bannerUploading, setBannerUploading] = useState(false);
+
+  const handleBannerUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setBannerUploading(true);
+    try {
+      const data = await uploadService.uploadImage(file, 'post');
+      setGeneralForm(prev => ({ ...prev, home_banner_image: data.url }));
+    } catch (err: any) {
+      setMsgData({
+        isOpen: true,
+        title: 'Lỗi tải ảnh',
+        message: err.response?.data?.message || 'Không thể tải ảnh lên vào lúc này.',
+        variant: 'error'
+      });
+    } finally {
+      setBannerUploading(false);
+    }
+  };
 
   const [displayForm, setDisplayForm] = useState<Record<string, string>>({
     post_show_created_at: 'true',
@@ -423,17 +451,17 @@ export default function SettingsAdminPage() {
                   <div className="space-y-2">
                     <label htmlFor="setting-default-lang" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Ngôn ngữ mặc định</label>
                     <select id="setting-default-lang" name="default_lang" value={generalForm.default_lang || 'vi'} onChange={e => setGeneralForm({ ...generalForm, default_lang: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all">
-                      <option value="vi">Tiếng Việt</option>
-                      <option value="en">English</option>
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary outline-none transition-all">
+                      <option value="vi" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Tiếng Việt</option>
+                      <option value="en" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">English</option>
                     </select>
                   </div>
                   <div className="space-y-2">
                     <label htmlFor="setting-timezone" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Múi giờ (Timezone)</label>
                     <select id="setting-timezone" name="timezone" value={generalForm.timezone || 'Asia/Ho_Chi_Minh'} onChange={e => setGeneralForm({ ...generalForm, timezone: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all">
-                      <option value="Asia/Ho_Chi_Minh">Asia/Ho_Chi_Minh (GMT+7)</option>
-                      <option value="UTC">UTC</option>
+                      className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary outline-none transition-all">
+                      <option value="Asia/Ho_Chi_Minh" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Asia/Ho_Chi_Minh (GMT+7)</option>
+                      <option value="UTC" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">UTC</option>
                     </select>
                   </div>
                   <div className="space-y-2 col-span-1 border-t border-slate-100 dark:border-slate-800 pt-6">
@@ -449,6 +477,140 @@ export default function SettingsAdminPage() {
                     <label htmlFor="setting-footer-copyright" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Bản quyền Footer (Copyright)</label>
                     <input id="setting-footer-copyright" name="footer_copyright" type="text" value={generalForm.footer_copyright || ''} onChange={e => setGeneralForm({ ...generalForm, footer_copyright: e.target.value })} placeholder="© 2026 Lưu Đình Mác..."
                       className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all" />
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-100 dark:border-slate-800 pt-8 mt-8 space-y-6">
+                  <div>
+                    <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Cấu hình Banner Trang chủ</h3>
+                    <p className="text-xs text-slate-500">Thiết lập hiển thị banner, thông điệp giới thiệu và tải ảnh nền banner.</p>
+                  </div>
+
+                  <div className="space-y-6">
+                    {/* Enable/Disable Banner */}
+                    <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950/50 rounded-2xl border border-slate-100 dark:border-slate-800">
+                      <div>
+                        <p className="text-sm font-bold text-slate-900 dark:text-white">Hiển thị Banner trên trang chủ</p>
+                        <p className="text-[10px] text-slate-400">Ẩn hoặc hiện toàn bộ phần banner tiêu đề đầu trang</p>
+                      </div>
+                      <label htmlFor="setting-banner-enabled" className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          id="setting-banner-enabled"
+                          name="home_banner_enabled"
+                          type="checkbox"
+                          className="sr-only peer"
+                          checked={generalForm.home_banner_enabled === 'true'}
+                          onChange={e => setGeneralForm({ ...generalForm, home_banner_enabled: e.target.checked ? 'true' : 'false' })}
+                        />
+                        <div className="w-12 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+                      </label>
+                    </div>
+
+                    {generalForm.home_banner_enabled === 'true' && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in slide-in-from-top-2 duration-300">
+                        <div className="space-y-2 col-span-1 md:col-span-2">
+                          <label htmlFor="setting-banner-title" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Tiêu đề Banner</label>
+                          <input
+                            id="setting-banner-title"
+                            name="home_banner_title"
+                            type="text"
+                            value={generalForm.home_banner_title || ''}
+                            onChange={e => setGeneralForm({ ...generalForm, home_banner_title: e.target.value })}
+                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
+                          />
+                        </div>
+                        <div className="space-y-2 col-span-1 md:col-span-2">
+                          <label htmlFor="setting-banner-subtitle" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Mô tả / Thông điệp</label>
+                          <textarea
+                            id="setting-banner-subtitle"
+                            name="home_banner_subtitle"
+                            value={generalForm.home_banner_subtitle || ''}
+                            onChange={e => setGeneralForm({ ...generalForm, home_banner_subtitle: e.target.value })}
+                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all min-h-[80px]"
+                          />
+                        </div>
+                        <div className="space-y-2 col-span-1 md:col-span-2">
+                          <label htmlFor="setting-banner-link" className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Đường dẫn Banner (Redirect Link)</label>
+                          <input
+                            id="setting-banner-link"
+                            name="home_banner_link"
+                            type="text"
+                            value={generalForm.home_banner_link || ''}
+                            onChange={e => setGeneralForm({ ...generalForm, home_banner_link: e.target.value })}
+                            placeholder="Ví dụ: /courses hoặc https://example.com (Mặc định bỏ trống)"
+                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
+                          />
+                        </div>
+
+                        {/* Banner Background Image Upload */}
+                        <div className="space-y-4 col-span-1 md:col-span-2">
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Ảnh nền Banner (Tùy chọn)</label>
+                          <div className={cn(
+                            "relative aspect-[21/9] md:aspect-[3/1] bg-slate-50 dark:bg-slate-800 rounded-3xl border-2 border-dashed transition-all overflow-hidden group max-w-2xl",
+                            generalForm.home_banner_image ? "border-transparent shadow-lg" : "border-slate-200 dark:border-slate-700 hover:border-primary/50"
+                          )}>
+                            {generalForm.home_banner_image ? (
+                              (() => {
+                                let baseUrl = 'http://localhost:3001';
+                                try {
+                                  baseUrl = new URL(process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').origin;
+                                } catch {
+                                  baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').replace('/api/v1', '').replace('/v1', '').replace('/api', '');
+                                }
+                                const imageUrl = generalForm.home_banner_image.startsWith('http://') || generalForm.home_banner_image.startsWith('https://')
+                                  ? generalForm.home_banner_image
+                                  : `${baseUrl}${generalForm.home_banner_image}`;
+                                return (
+                                  <>
+                                    <img
+                                      src={imageUrl}
+                                      alt="Banner Background Preview"
+                                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                    />
+                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                      <label htmlFor="pe-banner-upload-settings" className="px-4 py-2 bg-white/20 backdrop-blur-md border border-white/30 rounded-xl text-[10px] font-bold text-white uppercase tracking-wider cursor-pointer hover:bg-white/30 transition-all">
+                                        Thay đổi ảnh
+                                      </label>
+                                      <button
+                                        type="button"
+                                        onClick={() => setGeneralForm({ ...generalForm, home_banner_image: '' })}
+                                        className="p-2 bg-red-500/20 backdrop-blur-md border border-red-500/30 rounded-xl text-red-100 hover:bg-red-500/40 transition-all"
+                                      >
+                                        <Trash2 size={16} />
+                                      </button>
+                                    </div>
+                                  </>
+                                );
+                              })()
+                            ) : (
+                              <div className="absolute inset-0 flex flex-col items-center justify-center text-slate-400 p-4">
+                                {bannerUploading ? (
+                                  <Loader2 size={24} className="animate-spin text-primary" />
+                                ) : (
+                                  <>
+                                    <div className="w-12 h-12 bg-slate-100 dark:bg-slate-900 rounded-2xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                                      <ImageIcon size={24} className="text-slate-400 group-hover:text-primary transition-colors" />
+                                    </div>
+                                    <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-300">Tải ảnh lên</span>
+                                    <p className="text-[9px] text-slate-400 mt-2 text-center">Định dạng JPG, PNG, WebP<br />Kích thước tối ưu 1920x600</p>
+                                  </>
+                                )}
+                              </div>
+                            )}
+
+                            <input
+                              id="pe-banner-upload-settings"
+                              name="banner_image_file"
+                              type="file"
+                              accept="image/*"
+                              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed"
+                              onChange={handleBannerUpload}
+                              disabled={bannerUploading}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -1069,7 +1231,7 @@ export default function SettingsAdminPage() {
           </div>
         </div>
       </div>
-      <MessageDialog 
+      <MessageDialog
         isOpen={msgData.isOpen}
         onClose={() => setMsgData({ ...msgData, isOpen: false })}
         title={msgData.title}

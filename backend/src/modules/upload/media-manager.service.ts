@@ -137,11 +137,15 @@ export class MediaManagerService {
 
     const $ = cheerio.load(htmlContent);
     const urls: string[] = [];
+    const cdnBase = this.storageService.getFileUrl('');
+    const hasCdn = cdnBase && cdnBase.length > 0 && cdnBase !== '/uploads/';
 
     $('img').each((_, element) => {
       const src = $(element).attr('src');
-      if (src && src.includes('/uploads/')) {
-        urls.push(src);
+      if (src) {
+        if (src.includes('/uploads/') || (hasCdn && src.includes(cdnBase))) {
+          urls.push(src);
+        }
       }
     });
 

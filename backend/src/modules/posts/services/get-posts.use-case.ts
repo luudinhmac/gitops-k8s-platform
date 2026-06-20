@@ -29,9 +29,11 @@ export class GetPostsUseCase {
     userId?: number,
     page: number = 1,
     limit: number = 10,
+    category?: string,
   ): Promise<PaginatedResult<PostEntity>> {
     const filter: PostFilter = {
       search: query,
+      category: category,
       is_published:
         status === 'published' ? true : status === 'draft' ? false : undefined,
       is_blocked: status === 'blocked' ? true : isAdmin ? undefined : false,

@@ -1,0 +1,104 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: etcd-backup
+  namespace: infra
+  labels:
+    app: etcd-backup
+spec:
+  schedule: "0 1 * * *" # 1:00 AM daily (GMT+7)
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: etcd-backup
+        spec:
+          serviceAccountName: etcd-backup-sa
+          hostNetwork: true
+          restartPolicy: OnFailure
+          nodeSelector:
+            kubernetes.io/hostname: k8s-prod
+          tolerations:
+          - key: node-role.kubernetes.io/control-plane
+            operator: Exists
+            effect: NoSchedule
+          - key: node-role.kubernetes.io/master
+            operator: Exists
+            effect: NoSchedule
+          containers:
+          - name: backup
+            image: alpine:3.18
+            command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Installing required packages..."
+              apk add --no-cache curl jq
+              
+              echo "Downloading etcdctl..."
+              wget -qO- https://github.com/etcd-io/etcd/releases/download/v3.5.24/etcd-v3.5.24-linux-amd64.tar.gz | tar -xzO etcd-v3.5.24-linux-amd64/etcdctl > /usr/local/bin/etcdctl
+              chmod +x /usr/local/bin/etcdctl
+              
+              echo "Creating etcd snapshot..."
+              export ETCDCTL_API=3
+              BACKUP_FILE="/backup/etcd-snapshot-$(date +%F_%H-%M-%S).db"
+              etcdctl --endpoints=https://127.0.0.1:2379 \
+                --cacert=/etc/kubernetes/pki/etcd/ca.crt \
+                --cert=/etc/kubernetes/pki/etcd/server.crt \
+                --key=/etc/kubernetes/pki/etcd/server.key \
+                snapshot save "$BACKUP_FILE"
+              
+              echo "Snapshot status:"
+              etcdctl --write-out=table snapshot status "$BACKUP_FILE" || true
+              
+              echo "Fetching R2 credentials from Velero..."
+              TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+              SECRET_JSON=$(curl -s -k -H "Authorization: Bearer $TOKEN" \
+                https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}/api/v1/namespaces/velero/secrets/cloud-credentials)
+              
+              AWS_CREDENTIALS_B64=$(echo "$SECRET_JSON" | jq -r '.data.cloud // empty')
+              if [ -n "$AWS_CREDENTIALS_B64" ]; then
+                AWS_CREDENTIALS=$(echo "$AWS_CREDENTIALS_B64" | base64 -d)
+                ACCESS_KEY=$(echo "$AWS_CREDENTIALS" | grep aws_access_key_id | cut -d'"' -f2)
+                SECRET_KEY=$(echo "$AWS_CREDENTIALS" | grep aws_secret_access_key | cut -d'"' -f2)
+                
+                if [ -n "$ACCESS_KEY" ] && [ -n "$SECRET_KEY" ]; then
+                  echo "Downloading MinIO Client (mc)..."
+                  wget -qO /usr/local/bin/mc https://dl.min.io/client/mc/release/linux-amd64/mc
+                  chmod +x /usr/local/bin/mc
+                  
+                  echo "Configuring MinIO Client alias..."
+                  mc alias set r2 https://a8823974263cfbb734616640f1b9dd55.r2.cloudflarestorage.com "$ACCESS_KEY" "$SECRET_KEY"
+                  
+                  echo "Uploading snapshot to Cloudflare R2..."
+                  mc cp "$BACKUP_FILE" r2/velero-k8s-prod/etcd-backups/
+                else
+                  echo "Error: Access Key or Secret Key not found in decrypted credentials!"
+                fi
+              else
+                echo "Error: Failed to fetch/parse R2 credentials from Velero secret!"
+              fi
+              
+              echo "Cleaning up local backups older than 7 days..."
+              find /backup -name "etcd-snapshot-*.db" -mtime +7 -exec rm -f {} \;
+              
+              echo "Backup process finished."
+            volumeMounts:
+            - name: etcd-certs
+              mountPath: /etc/kubernetes/pki/etcd
+              readOnly: true
+            - name: backup-dir
+              mountPath: /backup
+          volumes:
+          - name: etcd-certs
+            hostPath:
+              path: /etc/kubernetes/pki/etcd
+              type: Directory
+          - name: backup-dir
+            hostPath:
+              path: /data/k8s/backups
+              type: DirectoryOrCreate

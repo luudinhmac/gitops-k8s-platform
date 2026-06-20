@@ -1,0 +1,62 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-velero
+  namespace: argocd
+spec:
+  project: platform-project
+  source:
+    chart: velero
+    repoURL: https://vmware-tanzu.github.io/helm-charts
+    targetRevision: 7.1.3
+    helm:
+      releaseName: velero
+      values: |
+        configuration:
+          backupStorageLocation:
+            - name: default
+              provider: aws
+              bucket: velero-k8s-prod
+              config:
+                region: auto
+                s3ForcePathStyle: true
+                s3Url: https://a8823974263cfbb734616640f1b9dd55.r2.cloudflarestorage.com
+          # Default to using File System Backup (restic/kopia) for all PVs
+          defaultVolumesToFsBackup: true
+          defaultRepoMaintainFrequency: "24h"
+          extraArgs:
+            - --maintenance-job-cpu-limit=500m
+            - --maintenance-job-cpu-request=100m
+            - --maintenance-job-mem-limit=512Mi
+            - --maintenance-job-mem-request=128Mi
+          extraEnvVars:
+            AWS_EC2_METADATA_DISABLED: "true"
+        
+        # Disable volume snapshot locations since we do not use cloud-level volume snapshots
+        snapshotsEnabled: false
+
+        # Deploy Node Agent (daemonset) to perform filesystem backup on PVs
+        deployNodeAgent: true
+        
+        # Disable CRD upgrade job to avoid image and dynamic link library compatibility issues
+        upgradeCRDs: false
+
+        # Use existing secret managed by Ansible
+        credentials:
+          existingSecret: cloud-credentials
+          secretKeys:
+            cloud: cloud
+
+        initContainers:
+          - name: velero-plugin-for-aws
+            image: velero/velero-plugin-for-aws:v1.10.1
+            imagePullPolicy: IfNotPresent
+            volumeMounts:
+              - mountPath: /target
+                name: plugins
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: velero
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true

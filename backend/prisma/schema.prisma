@@ -17,6 +17,9 @@ model Category {
   meta_description String?
   deleted_at       DateTime?
   created_at       DateTime  @default(now())
+  parent_id        Int?
+  Parent           Category?   @relation("SubCategories", fields: [parent_id], references: [id], onDelete: SetNull)
+  Children         Category[]  @relation("SubCategories")
   Post             Post[]
 }
 

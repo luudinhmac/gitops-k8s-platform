@@ -18,6 +18,10 @@ spec:
     server: https://kubernetes.default.svc
   - namespace: portfolio
     server: https://kubernetes.default.svc
+  - namespace: blog-staging
+    server: https://kubernetes.default.svc
+  - namespace: blog-prod
+    server: https://kubernetes.default.svc
   clusterResourceWhitelist:
   - group: '*'
     kind: '*'

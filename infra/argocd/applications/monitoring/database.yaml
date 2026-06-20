@@ -14,7 +14,7 @@ spec:
       include: '{exporters/postgres-exporter.yaml,servicemonitors/postgres.yaml}'
   destination:
     server: https://kubernetes.default.svc
-    namespace: database
+    namespace: blog-prod
   syncPolicy:
     automated:
       prune: true

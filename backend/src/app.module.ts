@@ -26,6 +26,7 @@ import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
 import { APP_GUARD } from '@nestjs/core';
 import { SetupModule } from './modules/setup/setup.module';
 import { SeoModule } from './modules/seo/seo.module';
+import { CacheConfigModule } from './cache-config.module';
 
 @Module({
   imports: [
@@ -61,6 +62,7 @@ import { SeoModule } from './modules/seo/seo.module';
     ]),
     SetupModule,
     SeoModule,
+    CacheConfigModule,
   ],
   controllers: [HealthController],
   providers: [

@@ -11,9 +11,12 @@ metadata:
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
-    {{ if .Values.ingress.issuer }}
+    {{- if .Values.ingress.issuer }}
     cert-manager.io/cluster-issuer: {{ .Values.ingress.issuer | quote }}
-    {{ end }}
+    {{- end }}
+    {{- with .Values.ingress.annotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   ingressClassName: traefik
   tls:

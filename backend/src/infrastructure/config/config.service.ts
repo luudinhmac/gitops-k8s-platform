@@ -33,4 +33,20 @@ export class InfrastructureConfigService {
   get minioUseSSL(): boolean {
     return process.env.MINIO_USE_SSL === 'true';
   }
+
+  get minioCdnUrl(): string {
+    return process.env.MINIO_CDN_URL || '';
+  }
+
+  get redisHost(): string {
+    return process.env.REDIS_HOST || 'redis-master.production.svc.cluster.local';
+  }
+
+  get redisPort(): number {
+    return parseInt(process.env.REDIS_PORT || '6379', 10);
+  }
+
+  get redisPassword(): string {
+    return process.env.REDIS_PASSWORD || '';
+  }
 }

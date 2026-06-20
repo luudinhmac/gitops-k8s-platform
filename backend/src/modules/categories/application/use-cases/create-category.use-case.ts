@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import slugify from 'slugify';
 import {
   ICategoriesRepository,
@@ -16,6 +16,18 @@ export class CreateCategoryUseCase {
   ) {}
 
   async execute(data: CreateCategoryDto): Promise<Category> {
+    if (data.parent_id) {
+      const parent = await this.categoryRepository.findById(data.parent_id);
+      if (!parent) {
+        throw new NotFoundException('Danh mục cha không tồn tại');
+      }
+      if (parent.parent_id) {
+        throw new BadRequestException(
+          'Danh mục cha không thể là danh mục con của danh mục khác (Chỉ hỗ trợ tối đa 2 cấp danh mục)',
+        );
+      }
+    }
+
     const slug = slugify(data.name || 'category', {
       lower: true,
       strict: true,

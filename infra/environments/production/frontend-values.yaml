@@ -3,7 +3,7 @@
 # Last Updated: 2026-05-12
 
 image:
-  tag: "v0.0.15@sha256:c33facc6ee5389db85226adc254d5495250d7ec52d42b017325d0f8015d7048d"
+  tag: "v0.0.19@sha256:bc350a7fe58816215552110d57d4dc2c9830e63688a8d8a3f32c2a149012c818"
 ingress:
   enabled: true
   annotations:

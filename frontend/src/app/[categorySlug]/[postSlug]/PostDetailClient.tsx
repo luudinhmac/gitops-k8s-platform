@@ -113,7 +113,7 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
       // Fetch comments separately (Clean Architecture)
       try {
         const comments = await commentService.getByPost(data.id);
-        setPost(prev => prev ? { ...prev, Comment: comments } : null);
+        setPost((prev: any) => prev ? { ...prev, Comment: comments } : null);
       } catch (err) {
         console.error('Error fetching comments:', err);
       }
@@ -135,7 +135,7 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
         
         postService.incrementView(data.id).then(updated => {
           if (updated && typeof updated.views === 'number') {
-            setPost(prev => prev ? { ...prev, views: updated.views } : updated);
+            setPost((prev: any) => prev ? { ...prev, views: updated.views } : updated);
           }
         }).catch(err => console.error('Failed to increment view:', err));
       }, 5000);
@@ -237,7 +237,7 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
       if (post) {
         setPost({
           ...post,
-          Comment: (post.Comment || []).filter(c => c.id !== id)
+          Comment: (post.Comment || []).filter((c: any) => c.id !== id)
         });
       }
       setDeleteConfirmId(null);
@@ -252,7 +252,7 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
       await commentService.update(id, editingText);
       setPost({
         ...post,
-        Comment: (post.Comment || []).map(c => c.id === id ? { ...c, content: editingText } : c)
+        Comment: (post.Comment || []).map((c: any) => c.id === id ? { ...c, content: editingText } : c)
       });
       setEditingCommentId(null);
       setEditingText('');
@@ -331,7 +331,7 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
                     </Badge>
                   </Link>
                 )}
-                {post.Tag && post.Tag.slice(0, 2).map((tag, i) => (
+                {post.Tag && post.Tag.slice(0, 2).map((tag: any, i: number) => (
                   <Link key={i} href={`/?q=${encodeURIComponent(tag.name)}`} className="hover:opacity-80 transition-opacity">
                     <Badge type="tag" size="xs">
                       {tag.name}
@@ -460,7 +460,7 @@ export default function PostDetailClient({ params }: { params: { categorySlug: s
                   <div className="mt-1 pt-1 border-t border-slate-100 dark:border-slate-800">
                     <div className="flex flex-wrap items-center gap-3">
                       <IconBadge icon={TagIcon} color="blue" size="sm" className="mr-2" />
-                      {post.Tag.map((tag, i) => (
+                      {post.Tag.map((tag: any, i: number) => (
                         <Link key={i} href={`/?q=${tag.name}`} className="px-4 py-1.5 bg-slate-50 dark:bg-slate-800 hover:bg-primary/10 hover:text-primary text-slate-500 rounded-xl text-[11px] font-bold transition-all border border-slate-100 dark:border-slate-700">
                           #{tag.name}
                         </Link>

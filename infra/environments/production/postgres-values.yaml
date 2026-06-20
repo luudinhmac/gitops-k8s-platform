@@ -1,19 +1,30 @@
 # Description: Helm values for PostgreSQL in the production environment.
 # Configures resource limits, persistence, and service settings.
+replicaCount: 1
 
-postgresql:
-  persistence:
-    size: 20Gi  # Larger for production
-  resources:
-    limits:
-      cpu: 1000m
-      memory: 1024Mi
-    requests:
-      cpu: 500m
-      memory: 512Mi
+persistence:
+  size: 20Gi  # Larger for production
+  storageClassName: "longhorn"
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1024Mi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
 
 # Database connection settings (used by backend)
 database:
   name: portfolio_production
   user: portfolio_admin
   host: postgres-production.database-production
+
+sealedSecret:
+  enabled: true
+  encryptedData:
+    POSTGRES_USER: "AgAd7hBvDtpA+pjVi9Yzin4d7nwuTmptjWFgKa54BIS91lfDOUqSwHgKZtSE8qqYOY5aDc1KXS9ndYxldApOE2RJsBOplLdzoa4i1iv29jOou0xSfZmzxkEKYL0t1Uv12gyZ4xmLJPbwel8kc1bgpo2/aNJFFlj7xjIpzO4KuNQi/I6yyLdT+dSHprbRrBQu4E4e7NwDb8ezRpHG6E/Y08XgOhINwTx/TghmkOOBFdbka6LNpCBmMor3OkFIFEUqOnSd7E/7tDOhTgaArgcUUmJXuW1JiAFd9gJ550kW2dbk0yveWYIXVYAc3CWA7oboIQdPD1x01hrnqfSHK1cWTGgWVgbGI+iEMxR/CEK0l+9xC7P5UzfczROBgrsvIIv3huEzLvj+OCDjQvqKLrq/EXH35c2OOO7TqjjDD5hCLjsiIV1yoy16b/2t9fLG8D0M8QLUKZ8skcjwA+N09D/ihVyC5ZNLPvJrhYzKcLYEbqa+gqIG/Ezp9r1rkhQIHFBWehxaLgOlhp+XSMamJSUFD+D/vTFTNzwBdrEClOAU1VC9bMr+cAzCQu7JoyOT0/pfWrD+9hSDkWP37vpr0McSmxcQFkxLKnvkumOP6s+kDNej30uv1Xd9TOOxAHfmXGv48obc1yaCR4bkI2gBh6Z9LTrvtQcK9iKRA786NNhJhmlm59s4KnB4BNvZXog6VRieoaucNJ19oMMo9jt02kgohA=="
+    POSTGRES_PASSWORD: "AgDb22JRFK8jA6G7BM2/Osub6/it8FX7WhH6z+WUPTWL9aSB9sCJrU3bkQjRW1ZzBzqCe4HYbI4hp6qyb4VxKbTXiaxmud2WJv1t/Z6tj9EojajYIRrTbBi8B+EFqexvLlhFN5+1YfLGAH4llwZa9gUobSNYEjgsZ+tFrdDz/h8bCFKZZKOWbqV2pQtW0UBGayzmgKAEDaPnpobxR35DASae5rB0jPHps5mZgAdlV3NtLpihRK/oHCqT+lOvK3ceSQiYClUGdgTT3Bo1H5ntX9Pi3SfbwaoFAskZnpSEHfb/ONnzQTOTWLk9P18MJQiyMGDyubb/EbuUyYeuBPfXWBugsZq30FsDWfId1uWEsThrBiFeE3O434qBxImZlRTp16bDdnIOp400rHtshug4Vi86BEfCp1CKsE/7raKf6vRHwdGFp4uAFNSRyMnImqCUvqzwBUfFJfF8T3BhO1tShd+Q0ReoDmhgImpyNk+xZ/T/20QDs5imV8WjDwIACDFQQb4VSTlZdo0FISnbEbLRE3BCmVfZy0UJ20vO1NqUOtL/xhMdywG7htOnfnCSaok2EVCdfgZJQmAP83rB0pq2SIGhmmPjxaqNoLVXyok9oZh230WgCwGRDDlK7wlz/+EkdKsd18n9gqrulVPM/OoZOShijduHS8EwUL6LEbvQNyt2cs3APzovhb6zEy7cHeufmjAr36J6KNbqMUH0"
+    POSTGRES_DB: "AgADFU/uPQNosYlgvfTcXtdejW7TLj3jr4zVzKOcZu7rogYcVlkSq+6jrrO3wrZttAwSeT/PQxTay4nxNPm4HYrL42so1pevxsti9qcYxAcQa2mwn1wsAvvYqxp7bvb3cyyzx9VIl3L0sARvRUS3uZ/qXu4q0xWWswB13hsoa/p54fyCvt04G4KtdYuwrxiaEu8xD9rmmkBE7+MEUuTN0Epuzf4H7zLZ6aQoPGGNrJX8gnvwNvHxxFNs3Sj9+odKIhF3SYGnKZkd9HfwwKoR2jFel8IB5Uk3qTMVS9tLd0kwv/7GbjBHNOSLSNtaP75OG4PIJC2p4u+lN5qF9VRqtrDyl9gS3ousTOZqZVnYqpVxpkSIYQw8UYfL06BUP+Ov4FxGzgi6fWpABIZaoFWIs0oD0MnoCrPCRGeOopx6I8S207KvhOZFbduuLhF8TclvZ2biy9Xj629sNfmyfRef3LhREz77LqHFhncgmJozjjtHZA4dypVGo3E4SvFpsb5Q9mEns46RgptlM5kCWet7wWzNcN79RLo8QB4fiUEVnIKApn8bfTApkI/Rhv6+x3tEygdUqzv0SKmbStWWswIgZQU04ksmIib7W4ZbDQGlnnMMAtD4L2KBodZ2l/vNZVhgk864NTpgh/2nOtqiL02ZHYFsig2FCLSJJ8EHnCIJQm6eGzX4zwa0Bo6nFH9AQ1Tas0kdmNMIUiicF9RpiObWlFoAVLVgxQ=="
+
