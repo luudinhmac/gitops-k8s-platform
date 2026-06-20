@@ -5,7 +5,7 @@
 # ==============================================================================
 
 image:
-  tag: "dev-dc59f390"
+  tag: "dev-c1c3e4a8"
 ingress:
   enabled: true
   issuer: letsencrypt-prod
