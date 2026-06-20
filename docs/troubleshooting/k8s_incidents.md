@@ -132,3 +132,31 @@ kubectl create secret generic portfolio-secrets -n portfolio \
   --from-literal=DATABASE_URL="postgresql://portfolio_user:macld%402026@postgres-staging.database:5432/portfolio_staging" \
   --from-literal=JWT_SECRET="5Ttv+p4uNMkFFnM2N/1jY86/XpsjZv8v8EZKaU120BA="
 ```
+
+---
+
+## Sự Cố 5: Tài Nguyên Longhorn Platform OutOfSync Trên ArgoCD Do Kích Thước CRD
+
+### 1. Hiện tượng (Symptom)
+* Ứng dụng `platform-longhorn` trên ArgoCD hiển thị trạng thái đồng bộ là `OutOfSync` cho toàn bộ các CustomResourceDefinition (CRD) của Longhorn (như `volumes.longhorn.io`, `nodes.longhorn.io`, `engines.longhorn.io`...) mặc dù trạng thái sức khỏe (Health Status) vẫn là `Healthy`.
+* Quá trình Auto-Sync liên tục chạy nhưng không thể chuyển trạng thái ứng dụng sang `Synced`.
+
+### 2. Nguyên nhân gốc rễ (Root Cause Analysis)
+1. **Giới hạn kích thước annotation metadata**: Khi đồng bộ tài nguyên qua ArgoCD bằng phương thức mặc định (Client-Side Apply), Kubernetes ghi đè cấu hình cũ vào annotation `kubectl.kubernetes.io/last-applied-configuration`. Do các file CRD của Longhorn quá lớn và chứa nhiều phiên bản API (`v1beta1`, `v1beta2`), kích thước của annotation này đã vượt quá giới hạn tối đa cho phép là **262KB**.
+2. **Sự tự động chuẩn hóa của API Server**: Kubernetes API Server và Longhorn Controller tự động sinh/bổ sung một số trường mặc định (chẳng hạn như `preserveUnknownFields` hoặc cấu hình `status` subresource) trực tiếp trên cụm, dẫn đến sự khác biệt (drift) nhỏ so với manifest tĩnh Helm sinh ra từ Git, gây kích hoạt trạng thái `OutOfSync` trên ArgoCD.
+
+### 3. Giải pháp khắc phục (Remediation)
+Kích hoạt cơ chế **Server-Side Apply** cho ứng dụng `platform-longhorn` trên ArgoCD. Cơ chế này không ghi đè vào annotation `last-applied-configuration` trên metadata của đối tượng mà sử dụng cơ chế so khớp schema trực tiếp từ API Server, giúp giải quyết các CRD có kích thước cực lớn.
+
+Cấu hình được thêm trực tiếp vào file `argocd/applications/platform/longhorn.yaml`:
+```yaml
+spec:
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true # Giải pháp xử lý lỗi CRD OutOfSync
+```
+
