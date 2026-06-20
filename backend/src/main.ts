@@ -1,6 +1,6 @@
 import helmet from 'helmet';
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, VersioningType } from '@nestjs/common';
+import { LogLevel, ValidationPipe, VersioningType } from '@nestjs/common';
 // CI/CD Test Trigger: 2026-05-12-17-54 (Final Validation)
 import { AppModule } from './app.module';
 import cookieParser from 'cookie-parser';
@@ -8,7 +8,14 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const isProduction = process.env.NODE_ENV === 'production';
+  const loggerLevels: LogLevel[] = isProduction
+    ? ['error', 'warn']
+    : ['log', 'error', 'warn', 'debug', 'verbose'];
+
+  const app = await NestFactory.create(AppModule, {
+    logger: loggerLevels,
+  });
 
   // Security: Helmet
   app.use(
@@ -66,7 +73,6 @@ async function bootstrap() {
   });
 
   // Swagger Documentation
-  const isProduction = process.env.NODE_ENV === 'production';
   const isSwaggerEnabled = process.env.ENABLE_SWAGGER === 'true';
 
   if (!isProduction || isSwaggerEnabled) {
