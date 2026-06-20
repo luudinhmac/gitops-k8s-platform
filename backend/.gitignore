@@ -36,3 +36,9 @@ Thumbs.db
 # OS files
 .DS_Store
 Thumbs.db
+
+# Coverage and reports
+/coverage
+/reports
+
+.gitlab-ci/__pycache__/
