@@ -32,6 +32,11 @@ spec:
           defaultReplicaCount: 1
           replicaAutoBalance: "disabled"
           storageMinimalAvailablePercentage: 10
+  ignoreDifferences:
+    - group: apiextensions.k8s.io
+      kind: CustomResourceDefinition
+      jsonPointers:
+        - /spec/preserveUnknownFields
   destination:
     server: https://kubernetes.default.svc
     namespace: longhorn-system
@@ -41,3 +46,4 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
