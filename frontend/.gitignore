@@ -40,9 +40,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
-# other
-/scratch
-
 # gitlab-ci
 .gitlab-ci/__pycache__/
+#other
+/scratch
