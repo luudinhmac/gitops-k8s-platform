@@ -1,5 +1,5 @@
 #!/bin/sh
-export TZ='Asia/Ho_Chi_Minh'
+export TZ='ICT-7'
 
 STATUS=$1 
 TYPE=$2 
