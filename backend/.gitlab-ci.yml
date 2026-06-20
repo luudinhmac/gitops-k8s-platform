@@ -229,9 +229,24 @@ unit_test:
     - install_dependencies
   rules:
     - if: '$CI_COMMIT_BRANCH == "dev"'
+  variables:
+    DATABASE_URL: "postgresql://ci_dummy:ci_dummy@localhost:5432/ci_dummy"
+    NODE_ENV: test
   script:
     - pnpm install --frozen-lockfile --prefer-offline
-    - pnpm run test --passWithNoTests
+    - pnpm exec jest --coverage --maxWorkers=2 --passWithNoTests
+  coverage: '/All files[^|]*\|[^|]*\|[^|]*\|[^|]*\| *(\d+\.\d*)/'
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - coverage/
+      - reports/
+    reports:
+      junit: reports/junit.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
 
 build_test:
   extends:
