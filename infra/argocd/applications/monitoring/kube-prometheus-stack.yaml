@@ -21,11 +21,11 @@ spec:
             enabled: false
           resources:
             requests:
-              cpu: 20m
-              memory: 100Mi
-            limits:
-              cpu: 150m
+              cpu: 50m
               memory: 256Mi
+            limits:
+              cpu: 300m
+              memory: 512Mi
 
         prometheus:
           prometheusSpec:
