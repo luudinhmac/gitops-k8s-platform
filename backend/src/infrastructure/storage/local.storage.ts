@@ -22,7 +22,7 @@ export class LocalStorageService implements IStorageService {
       fs.mkdirSync(targetDir, { recursive: true });
     }
 
-    const filename = `${Date.now()}-${file.originalname}`;
+    const filename = file.originalname;
     const filePath = path.join(targetDir, filename);
 
     await fs.promises.writeFile(filePath, file.buffer);

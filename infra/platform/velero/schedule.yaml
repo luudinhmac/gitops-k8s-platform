@@ -1,0 +1,23 @@
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: daily-backup
+  namespace: velero
+spec:
+  # Chạy vào lúc 2h sáng hàng ngày giờ Việt Nam (tức 19:00 giờ UTC)
+  schedule: "0 19 * * *"
+  template:
+    # Thời gian lưu trữ bản backup (7 ngày)
+    ttl: 168h0m0s
+    # Backup tất cả các namespace
+    includedNamespaces:
+      - '*'
+    # Loại trừ các namespace hệ thống không cần thiết
+    excludedNamespaces:
+      - kube-system
+      - kube-public
+      - kube-node-lease
+      - velero
+    storageLocation: default
+    # Tự động backup mọi persistent volume (DB) bằng Node Agent
+    defaultVolumesToFsBackup: true

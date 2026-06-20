@@ -61,7 +61,7 @@ Cụm Kubernetes được tổ chức thành các Namespace chuyên biệt nhằ
 
 ## 💾 Kiến Trúc Lưu Trữ (Storage Architecture)
 
-Hệ thống lưu trữ trên cụm đơn node được cấu hình sử dụng Local Path Provisioner để ghi trực tiếp lên đĩa cứng vật lý của VPS:
+Hệ thống lưu trữ trên cụm đơn node được cấu hình sử dụng Local Path Provisioner để ghi trực tiếp lên đĩa cứng vật lý của VPS hoặc lưu trữ phân tán Longhorn cho dữ liệu production:
 
 ```mermaid
 graph LR
@@ -69,13 +69,18 @@ graph LR
     PV -->|Local Directory Mapping| HostDisk[/data/k8s/storage/... trên VPS Host]
 ```
 
-*   **Đường dẫn lưu trữ Backend Prod:** `/data/k8s/storage/backend-uploads-prod` (Lưu trữ ảnh bìa bài viết, file đính kèm, avatar).
-*   **Đường dẫn Database Prod:** `/data/k8s/storage/postgres-production-pvc` (Lưu trữ data PostgreSQL).
+### Chi tiết các tệp lưu trữ chính:
+* **StorageClass `local-path`:** Tự động cấp phát hostPath trên Node VPS cho các nhu cầu môi trường Staging.
+* **StorageClass `longhorn`:** Sử dụng giải pháp lưu trữ khối phân tán Longhorn (phiên bản v1.7.0) làm hạ tầng lưu trữ chính cho Production (Postgres, Backend Uploads, Redis persistence).
+* **Đường dẫn lưu trữ vật lý trên VPS Host:**
+  * Backend Production Uploads: `/data/k8s/storage/backend-uploads-prod` (lưu trữ ảnh bìa bài viết, avatar, file đính kèm).
+  * Database Production: `/data/k8s/storage/postgres-production-pvc`.
+  * Database Staging: `/data/k8s/storage/postgres-staging-pvc`.
 
 ---
 
 ## ⚙️ Cơ Chế Tự Động Co Giãn (Autoscaling - HPA)
 
 Trên môi trường **Production**, cả Frontend và Backend đều được liên kết với một Horizontal Pod Autoscaler (HPA) theo dõi mức sử dụng tài nguyên:
-*   **Tải bình thường:** Hệ thống duy trì tối thiểu **2 Pods** trên mỗi dịch vụ để đảm bảo khả năng High Availability (HA) và Zero-Downtime khi cập nhật.
-*   **Tải cao:** Nếu mức sử dụng CPU trung bình vượt ngưỡng **80%**, HPA sẽ tự động kích hoạt tạo thêm Pods lên tối đa **5 Pods**.
+* **Tải bình thường:** Hệ thống duy trì tối thiểu **2 Pods** trên mỗi dịch vụ để đảm bảo khả năng High Availability (HA) và Zero-Downtime khi cập nhật.
+* **Tải cao:** Nếu mức sử dụng CPU trung bình vượt ngưỡng **80%**, HPA sẽ tự động kích hoạt tạo thêm Pods lên tối đa **5 Pods** (yêu cầu Metrics Server hoạt động lành mạnh).

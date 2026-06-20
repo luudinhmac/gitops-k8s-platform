@@ -319,7 +319,10 @@ export default function RichEditor({ id, name, value, onChange, placeholder }: R
                     } catch {
                         baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001').replace('/api/v1', '').replace('/v1', '').replace('/api', '');
                     }
-                    quill.insertEmbed(insertIndex, 'image', `${baseUrl}${data.url}`);
+                    const imageUrl = data.url.startsWith('http://') || data.url.startsWith('https://')
+                        ? data.url
+                        : `${baseUrl}${data.url}`;
+                    quill.insertEmbed(insertIndex, 'image', imageUrl);
                     setTimeout(() => {
                         quill.setSelection(insertIndex + 1, 0);
                     }, 50);

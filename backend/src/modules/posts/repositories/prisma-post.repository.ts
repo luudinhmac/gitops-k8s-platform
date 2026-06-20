@@ -61,8 +61,28 @@ export class PrismaPostRepository implements IPostRepository {
       }
     }
 
-    if (filter.category_id !== undefined)
+    if (filter.category) {
+      const cat = await this.prisma.category.findFirst({
+        where: {
+          OR: [
+            { slug: filter.category },
+            { name: { equals: filter.category, mode: 'insensitive' } },
+          ],
+        },
+      });
+      if (cat) {
+        const childCats = await this.prisma.category.findMany({
+          where: { parent_id: cat.id },
+          select: { id: true },
+        });
+        const categoryIds = [cat.id, ...childCats.map(c => c.id)];
+        where.category_id = { in: categoryIds };
+      } else {
+        where.category_id = -1;
+      }
+    } else if (filter.category_id !== undefined) {
       where.category_id = filter.category_id;
+    }
     if (filter.author_id !== undefined) where.author_id = filter.author_id;
     if (filter.series_id !== undefined) where.series_id = filter.series_id;
     if (filter.is_pinned !== undefined) where.is_pinned = filter.is_pinned;

@@ -5,15 +5,16 @@
 # ==============================================================================
 
 image:
-  tag: "dev-5e6c9cba"
+  tag: "dev-c1c3e4a8"
 ingress:
   enabled: true
+  issuer: letsencrypt-prod
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: websecure
     traefik.ingress.kubernetes.io/router.tls: "true"
     traefik.ingress.kubernetes.io/router.middlewares: infra-infra-compress@kubernetescrd
   host: staging.luumac.io.vn
-  secretName: luumac-wildcard-tls
+  secretName: portfolio-frontend-staging-tls
 resources:
   requests:
     cpu: 100m

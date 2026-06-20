@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import api from '@/lib/axios';
 
 import { User } from '@/types';
 
@@ -97,6 +98,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } else {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    // Intercept Axios response errors to clear user state on 401 Unauthorized
+    const interceptor = api.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          console.log('[Auth] Intercepted 401 Unauthorized. Clearing session...');
+          document.cookie = 'logged_in=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=lax';
+          document.cookie = 'user_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; samesite=lax';
+          setUser(null);
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      api.interceptors.response.eject(interceptor);
+    };
   }, []);
 
   const login = (userData: User) => {

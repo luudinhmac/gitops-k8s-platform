@@ -10,7 +10,9 @@ import {
   Req,
   Query,
   ParseIntPipe,
+  UseInterceptors,
 } from '@nestjs/common';
+import { CacheInterceptor } from '@nestjs/cache-manager';
 import { AuthGuard } from '@nestjs/passport';
 import { PermissionsGuard } from '../../auth/permissions.guard';
 import { Permissions } from '../../auth/permissions.decorator';
@@ -47,6 +49,7 @@ export class PostsController {
   ) {}
 
   @Get()
+  @UseInterceptors(CacheInterceptor)
   @ApiOperation({ summary: 'Get all published posts' })
   @ApiResponse({ status: 200, type: [PostEntity] })
   findAll(
@@ -55,6 +58,7 @@ export class PostsController {
     @Query('sort') sort?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
+    @Query('category') category?: string,
   ) {
     const userIdNum = userId ? parseInt(userId) : undefined;
     const pageNum = page ? parseInt(page) : 1;
@@ -68,6 +72,7 @@ export class PostsController {
       userIdNum,
       pageNum,
       limitNum,
+      category,
     );
   }
 

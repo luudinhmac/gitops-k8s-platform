@@ -18,7 +18,7 @@ spec:
         - /environments/staging/postgres-values.yaml
   destination:
     server: https://kubernetes.default.svc
-    namespace: database
+    namespace: blog-staging
   syncPolicy:
     automated:
       prune: true
