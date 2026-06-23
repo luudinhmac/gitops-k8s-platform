@@ -1,6 +1,6 @@
 # 🚀 System Engineer Portfolio & Blog Portal
 
-Chào mừng bạn đến với kho lưu trữ mã nguồn của hệ thống **Portfolio & Blog Cá nhân** của **LƯU ĐÌNH MÁC**. Đây là một dự án chuẩn doanh nghiệp (Production-Grade) được thiết kế chuyên biệt cho Kỹ sư Hệ thống (System Engineer) để chia sẻ kiến thức công nghệ và trình diễn năng lực hạ tầng.
+Chào mừng bạn đến với kho lưu trữ mã nguồn của hệ thống ** Blog Cá nhân** của **LƯU ĐÌNH MÁC**. Đây là một dự án  được thiết kế để chia sẻ kiến thức công nghệ và trình diễn năng lực hạ tầng.
 
 Hệ thống tuân thủ triết lý **Documentation-as-Code (DaC)**, tích hợp toàn bộ tài liệu kỹ thuật trực tiếp vào nhánh mã nguồn để đồng bộ phiên bản và quản trị dễ dàng.
 
