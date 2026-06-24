@@ -1,9 +1,4 @@
 # ADR 0001: Clean Architecture Domain Isolation Refactoring
-
-* **Status:** Accepted
-* **Date:** 2026-06-17
-* **Author:** Lead Solutions Architect
-
 ---
 
 ## Context (Bối cảnh)
