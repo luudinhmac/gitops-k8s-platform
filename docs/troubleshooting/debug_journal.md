@@ -40,7 +40,15 @@ Tài liệu này ghi lại các lỗi kỹ thuật quan trọng gặp phải tro
 
 ---
 
-## 4. Mẹo Vận Hành & Gỡ Lỗi Nhanh (Operational Tips)
+## 4. Lỗi Sai Lệch Nội Dung Tên Riêng (Mác vs Mạc)
+
+* **Triệu chứng (Symptom):** Tên hiển thị của chủ sở hữu hệ thống hiển thị sai lệch thành "Lưu Đình Mạc" (Dấu nặng) thay vì đúng là "Lưu Đình Mác" (Dấu sắc).
+* **Nguyên nhân (Root Cause):** Nhầm lẫn gõ phím tiếng Việt trong quá trình nhập liệu cơ sở dữ liệu ban đầu và viết metadata SEO.
+* **Giải pháp khắc phục (Solution):** Thực hiện rà soát và cập nhật đồng loạt chuỗi text từ `MẠC` sang `MÁC` trên tất cả các trang UI tĩnh, file cấu hình, metadata SEO và database seeding script.
+
+---
+
+## 5. Mẹo Vận Hành & Gỡ Lỗi Nhanh (Operational Tips)
 
 Khi gặp các sự cố không rõ nguyên nhân liên quan đến quyền truy cập hoặc mất session của trang Admin:
 * Hãy nhấn **F12** mở **Browser Console** để xem các bản ghi bắt đầu bằng tiền tố `[Auth]` được in ra từ `AuthContext.tsx`. Các log này sẽ ghi lại chi tiết các bước bắt tay (handshake) và mã lỗi HTTP trả về từ API Backend.

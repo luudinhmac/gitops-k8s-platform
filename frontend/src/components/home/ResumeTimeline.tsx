@@ -15,30 +15,47 @@ interface TimelineItem {
 
 const timelineData: TimelineItem[] = [
   {
-    title: 'IT Services Specialist',
-    subtitle: 'Thi Thien Solutions Technology Corporation',
-    period: 'Tháng 11/2023 - Hiện tại',
+    title: 'Infrastructure Engineer',
+    subtitle: 'Saigon Precision — Misumi Group',
+    period: 'Tháng 03/2026 - Hiện tại',
     description: [
-      'Cấu hình SQL Server Failover Cluster Instance (FCI) trên Windows Server 2022 (2-node).',
-      'Triển khai iSCSI Direct Attach, MPIO và Storage Tiering (SSD/HDD) cho HPE MSA 2060.',
-      'Khôi phục dịch vụ cơ sở dữ liệu quan trọng bằng cách cấu hình lại SAN volumes và Cluster nodes.',
-      'Xử lý sự cố khẩn cấp: Khôi phục root ESXi 8 cho BV Bưu điện (trong 2h), Reset pass ESXi 7 cho Vietsovpetro Resort Hồ Tràm.',
-      'Chẩn đoán và xử lý lỗi phần cứng/phần mềm phức tạp cho hệ thống lưu trữ SAN (Dell, IBM, 3PAR, MSA).',
-      'Cấu hình CUDA drivers, TensorFlow, PyTorch, Jupyter Notebook với GPU support cho AI/ML.'
+      'Di chuyển các workloads production từ hệ thống on-premise VMware lên CMC Cloud, đảm bảo tính liên tục dịch vụ.',
+      'Thiết kế và tự động hóa triển khai các nền tảng giám sát doanh nghiệp (Zabbix, Grafana, Docker Compose, Ansible).',
+      'Xây dựng các dashboard tùy chỉnh, metrics, triggers và workflow cảnh báo qua webhook tới Microsoft Teams để quản lý sự cố thời gian thực.',
+      'Triển khai giám sát topology mạng thời gian thực và băng thông sử dụng Grafana Network Weathermap.',
+      'Quản trị môi trường ảo hóa VMware hỗ trợ các cơ sở dữ liệu sản xuất Oracle Database và Microsoft SQL Server.',
+      'Quản lý hạ tầng mạng nội bộ và các dịch vụ doanh nghiệp: Firewall, VPN, Active Directory, ảo hóa.',
+      'Vận hành hệ thống sao lưu Veeam Backup & Replication liên kết với Cloudflare R2 object storage.'
     ],
     status: 'PRESENT',
     type: 'WORK',
-    tags: ['SQL Cluster', 'HPE MSA', 'SAN Storage', 'AI Infrastructure']
+    tags: ['Cloud Migration', 'Ansible', 'VMware', 'Grafana', 'Veeam Backup']
+  },
+  {
+    title: 'Systems Deployment Engineer',
+    subtitle: 'Thi Thien Solutions Technology Corporation',
+    period: 'Tháng 11/2023 - Tháng 03/2026',
+    description: [
+      'Cấu hình SQL Server Failover Cluster Instance (FCI) trên Windows Server 2022 (2-node) đảm bảo tính sẵn sàng cao.',
+      'Triển khai iSCSI Direct Attach, MPIO và Storage Tiering (SSD/HDD) cho hệ thống lưu trữ HPE MSA 2060.',
+      'Khôi phục thành công quyền truy cập root ESXi 8 cho BV Bưu điện, đưa hệ thống bệnh viện hoạt động lại sau sự cố mất điện kéo dài 10 ngày trong vòng 2 giờ.',
+      'Khôi phục thông tin đăng nhập ESXi 7 cho Vietsovpetro Resort Hồ Tràm với thời gian gián đoạn dưới 1 giờ.',
+      'Xử lý sự cố đồng bộ hóa HA trên cụm HPE SimpliVity cho Báo Sài Gòn Giải Phóng.',
+      'Chẩn đoán và xử lý lỗi phần cứng/phần mềm phức tạp cho các hệ thống lưu trữ SAN (Dell, IBM, 3PAR, MSA).',
+      'Hỗ trợ thiết lập VMware ESXi 8, cài đặt Oracle Linux và cấu hình Oracle Database cho Bệnh viện Hùng Vương.',
+      'Cấu hình CUDA drivers, TensorFlow, PyTorch và Jupyter Notebook hỗ trợ GPU cho các workloads AI/ML.'
+    ],
+    status: 'COMPLETED',
+    type: 'WORK',
+    tags: ['SQL Cluster', 'HPE MSA', 'SAN Storage', 'AI Infrastructure', 'VMware ESXi']
   },
   {
     title: 'Freelance System Engineer',
     subtitle: 'Kubernetes & OpenStack Deployment Support',
     period: 'Tháng 04/2025 & Tháng 10/2025',
     description: [
-      'Xử lý sự cố cụm Kubernetes ngăn worker nodes gia nhập cụm và khôi phục production workloads.',
-      'Triển khai lại các manifest và cấu hình Kubernetes hiện có để khôi phục dịch vụ.',
-      'Điều tra lỗi khởi động dịch vụ và dependency issues trong OpenStack cài đặt bằng Kolla-Ansible.',
-      'Hỗ trợ cấu hình lại OpenStack để đưa các dịch vụ online thành công.'
+      'Xử lý sự cố cụm Kubernetes ngăn worker nodes gia nhập cụm và khôi phục các production workloads bằng cách triển khai lại manifests (Tháng 04/2025).',
+      'Điều tra lỗi khởi động dịch vụ và xung đột dependencies trong OpenStack cài đặt bằng Kolla-Ansible, đưa các dịch vụ online thành công (Tháng 10/2025).'
     ],
     status: 'COMPLETED',
     type: 'WORK',
@@ -49,52 +66,48 @@ const timelineData: TimelineItem[] = [
     subtitle: 'Delta Engineering Corporation (Nay là DEC Engineering JSC)',
     period: 'Tháng 09/2020 - Tháng 04/2022',
     description: [
-      'Triển khai, nâng cấp và cấu hình thiết bị mạng (WiFi, camera, switch, router, NAS, server).',
-      'Thiết lập hệ thống giám sát toàn diện hạ tầng mạng bằng Zabbix và Grafana.',
-      'Triển khai hệ thống lưu trữ phân tán CEPH để sử dụng với OpenStack và Proxmox cluster.',
+      'Triển khai và vận hành OpenStack, cụm Proxmox và lưu trữ phân tán CEPH cho hạ tầng Private Cloud.',
+      'Thiết lập kiến trúc HA cho MariaDB và PostgreSQL sử dụng HAProxy, Galera Cluster và Patroni.',
       'Xây dựng và vận hành Private Cloud với Nextcloud tích hợp SSO (ADFS) cho Microsoft Office 365.',
-      'Triển khai giải pháp VDI sử dụng Windows Server cho quản lý lưu trữ tập trung với thin client.',
-      'Tự động hóa các tác vụ quản trị hệ thống bằng Bash và Python, giảm 80% công sức thủ công.'
+      'Triển khai hệ thống giám sát tập trung bằng Zabbix và Grafana; cấu hình thiết bị tường lửa (Sophos, Fortinet, pfSense).',
+      'Tự động hóa các tác vụ quản trị hệ thống hàng ngày bằng Bash và Python, giảm 80% thời gian thực hiện thủ công.',
+      'Quản trị hệ thống IT nội bộ: cấp phát tài khoản người dùng, Active Directory, Microsoft 365 và Domain Controller.'
     ],
     status: 'COMPLETED',
     type: 'WORK',
-    tags: ['Zabbix', 'CEPH', 'Nextcloud', 'VDI Automation']
+    tags: ['Zabbix', 'CEPH', 'Nextcloud', 'Private Cloud', 'OpenStack', 'HA Cluster']
   },
   {
     title: 'System Operation',
-    subtitle: 'Berjaya Gia Thinh Investment Technology JSC',
+    subtitle: 'Berjaya Gia Thinh Investment Technology JSC (Vietlott)',
     period: 'Tháng 01/2019 - Tháng 12/2019',
     description: [
-      'Vận hành hệ thống Vietlott: Giám sát máy chủ, thực hiện sao lưu hàng ngày/tuần ra băng tải (tape).',
-      'Di chuyển băng tải dữ liệu đến PDC và DRC đảm bảo an toàn lưu trữ.',
-      'Quản lý hệ thống khởi động/đóng và vận hành OSS (Online Sell Server) trên OpenVMS.',
-      'Cài đặt mail server trên CentOS 6 và hỗ trợ kỹ thuật trong thời gian quay số mở thưởng.'
+      'Vận hành và giám sát hệ thống máy chủ Vietlott; thực hiện sao lưu hàng ngày/hàng tuần ra băng tải (tape).',
+      'Quản lý hệ thống khởi động/đóng và vận hành OSS (Online Sell Server) trên hệ điều hành OpenVMS trong các kỳ quay thưởng.'
     ],
     status: 'COMPLETED',
     type: 'WORK',
     tags: ['Backup Tape', 'OpenVMS', 'System Ops']
   },
   {
-    title: 'Operator (NOC) Trainee',
+    title: 'NOC Operator Trainee',
     subtitle: 'Online Mobile Services JSC (MoMo)',
     period: 'Tháng 01/2018 - Tháng 08/2018',
     description: [
-      'Giám sát máy chủ và dịch vụ (Nagios, Grafana, Web) đảm bảo hệ thống vận hành ổn định.',
-      'Ghi nhận lỗi và xử lý các vấn đề kỹ thuật do người dùng báo cáo hoặc hệ thống ghi nhận.',
-      'Hỗ trợ các bộ phận Chăm sóc khách hàng, Phát triển sản phẩm và Hệ thống phân phối.'
+      'Giám sát máy chủ và dịch vụ bằng Nagios và Grafana; ghi nhận và xử lý các sự cố bất thường để đảm bảo tính sẵn sàng của nền tảng.'
     ],
     status: 'COMPLETED',
     type: 'WORK',
-    tags: ['NOC', 'Monitoring', 'Nagios']
+    tags: ['NOC', 'Monitoring', 'Nagios', 'Grafana']
   },
   {
     title: 'Đại học Sư phạm Kỹ thuật TP.HCM',
-    subtitle: 'Kỹ Sư Công nghệ Thông tin',
+    subtitle: 'Cử nhân Công nghệ Thông tin',
     period: '2014 - 2019',
     description: [
       'Chuyên ngành: Mạng máy tính và truyền thông.',
-      'Đồ án: Xây dựng hệ thống cân bằng tải với tính sẵn sàng cao (High Availability).',
-      'Đồ án: Giải pháp ngăn chặn xâm nhập cho Website (Modsecurity, SQLi, XSS, DOS).'
+      'Đồ án tốt nghiệp: Xây dựng hệ thống cân bằng tải với tính sẵn sàng cao (High Availability).',
+      'Nghiên cứu giải pháp bảo mật và ngăn chặn xâm nhập cho Website (Modsecurity, SQLi, XSS, DOS).'
     ],
     status: 'COMPLETED',
     type: 'EDUCATION'
@@ -108,7 +121,7 @@ const timelineData: TimelineItem[] = [
       '2024: DevOps & DevSecOps, Practical Kubernetes Certification.',
       '2017: CCNA (VNPRO).'
     ],
-    status: 'IN_PROGRESS',
+    status: 'COMPLETED',
     type: 'CERTIFICATION'
   }
 ];
@@ -297,12 +310,8 @@ export default function ResumeTimeline() {
                     Tải bản CV đầy đủ (PDF) để xem chi tiết hơn về các dự án và kỹ năng của tôi.
                   </p>
                   <div className="flex flex-col gap-3">
-                    <a href="/Luu_Dinh_Mac_CV_EN.pdf" download className="w-full px-5 py-3.5 bg-white text-primary rounded-xl text-xs font-bold flex items-center justify-center hover:bg-slate-50 transition-all active:scale-95 shadow-lg">
-                      Download English CV
-                      <Download size={16} className="ml-2" />
-                    </a>
-                    <a href="/Luu_Dinh_Mac_CV_VN.pdf" download className="w-full px-5 py-3.5 bg-white/10 hover:bg-white/20 text-white border border-white/20 rounded-xl text-xs font-bold flex items-center justify-center transition-all backdrop-blur-md active:scale-95">
-                      Tải CV Tiếng Việt
+                    <a href="/LuuDinhMac_CV_DevOps.pdf" download className="w-full px-5 py-3.5 bg-white text-primary rounded-xl text-xs font-bold flex items-center justify-center hover:bg-slate-50 transition-all active:scale-95 shadow-lg">
+                      Tải CV DevOps (PDF)
                       <Download size={16} className="ml-2" />
                     </a>
                   </div>

@@ -67,7 +67,7 @@ export default function AboutContent() {
                 <ChevronRight size={18} className="ml-2 group-hover:translate-x-1 transition-transform" />
               </Link>
               <div className="flex items-center gap-3">
-                <a href="/Luu_Dinh_Mac_CV_EN.pdf" download className="p-4 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl font-bold border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95 shadow-md group">
+                <a href="/LuuDinhMac_CV_DevOps.pdf" download className="p-4 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl font-bold border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95 shadow-md group">
                    <Download size={18} className="group-hover:text-primary transition-colors" />
                 </a>
                 <Link href="#projects" className="px-6 py-4 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl font-bold border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all active:scale-95 shadow-md text-sm">
