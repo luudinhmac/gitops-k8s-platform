@@ -59,6 +59,16 @@ Khi cụm máy chủ bị lỗi hoàn toàn và đã được dựng lại bằn
 > 1. Tránh chạy ghi đè khi Pod database đang hoạt động tích cực để ngăn ngừa lỗi bất đồng bộ file.
 > 2. Khuyên dùng: Scale Down các Deployment liên quan (`replicas=0`), thực hiện Restore, sau đó Scale Up trở lại.
 
+### 1.5. Hình ảnh minh họa sao lưu thực tế (Velero Backup Screenshots)
+
+Dưới đây là các bản ghi chép thực tế quá trình sao lưu tự động và cấu hình lưu trữ trên Cloudflare R2:
+
+*   **Danh sách các bản sao lưu K8s tự động hàng ngày lên R2:**
+    ![Velero Backups List](../../images/backup-daily-k8s-to-r2.png)
+
+*   **Thông tin chi tiết của một bản sao lưu thành công:**
+    ![Velero Backup Detail](../../images/detail-backup-daily-k8s-r2.png)
+
 ---
 
 ## 2. Sao Lưu & Khôi Phục Cơ Sở Dữ Liệu PostgreSQL Thủ Công

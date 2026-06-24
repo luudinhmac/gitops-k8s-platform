@@ -11,7 +11,7 @@ export default function AboutSection() {
     {
       category: "Infrastructure & Virtualization",
       icon: Layers,
-      skills: ["VMware ESXi & vCenter", "OpenStack", "Proxmox", "KVM", "CEPH Storage", "Docker & Kubernetes"]
+      skills: ["VMware ESXi/vCenter/vSAN", "OpenStack (Kolla-Ansible)", "Proxmox", "KVM", "CEPH Storage", "Docker & Kubernetes"]
     },
     {
       category: "Operating Systems",
@@ -21,12 +21,12 @@ export default function AboutSection() {
     {
       category: "Networking & Security",
       icon: Shield,
-      skills: ["Firewalls (Sophos, Fortinet, pfSense)", "VPN & HA", "Wazuh Security Monitoring", "CVE Patching", "Web Security (Modsecurity)"]
+      skills: ["Firewalls (Sophos, Fortinet, pfSense)", "VPN & HA", "Wazuh Security Monitoring", "CVE Patching", "Web Security (Modsecurity)", "TCP/IP, DNS, DHCP, SNMP"]
     },
     {
       category: "Automation & DevOps",
       icon: Cpu,
-      skills: ["Python & Bash Scripting", "Ansible & Terraform", "Git & GitLab CI/CD", "Jenkins", "Harbor & Rancher"]
+      skills: ["Python & Bash Scripting", "Ansible & Terraform", "Git & GitLab CI/CD", "Jenkins", "Helm & ArgoCD", "Sealed Secrets & Velero", "Harbor & Rancher"]
     },
     {
       category: "Monitoring & Logging",
@@ -36,7 +36,7 @@ export default function AboutSection() {
     {
       category: "Cloud & Web Servers",
       icon: Globe,
-      skills: ["AWS (EC2, S3, VPC, IAM)", "Nginx & Apache", "HAProxy", "Nextcloud Private Cloud"]
+      skills: ["CMC Cloud", "AWS (EC2, S3, VPC, IAM)", "Cloudflare R2", "HPE MSA / SAN Storage (Dell, IBM, 3PAR)", "Nginx & Apache", "HAProxy & Traefik", "Nextcloud Private Cloud"]
     }
   ];
 
@@ -58,11 +58,11 @@ export default function AboutSection() {
             </div>
             <h2 className="text-3xl md:text-5xl font-bold text-slate-900 dark:text-white mb-6 leading-tight tracking-tight">
               Kỹ sư Hệ thống & <br />
-              <span className="text-primary italic font-display">Tự động hóa</span>
+              <span className="text-primary italic font-display">DevOps</span>
             </h2>
             <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 leading-relaxed mb-8 max-w-3xl italic--vibrant font-medium">
-              Tôi là <span className="font-bold text-slate-900 dark:text-white">Lưu Đình Mác</span>, một Kỹ sư Hệ thống với kinh nghiệm vận hành các hạ tầng công nghệ trọng yếu.
-              Tôi chuyên sâu về Linux, ảo hóa, và Cloud Native, luôn tập trung vào <span className="text-primary font-bold">Tính sẵn sàng cao (High Availability)</span> và <span className="text-primary font-bold">Tối ưu hóa vận hành</span> thông qua tự động hóa.
+              Tôi là <span className="font-bold text-slate-900 dark:text-white">Lưu Đình Mác</span>, một Kỹ sư Hạ tầng & DevOps chuyên sâu về Linux, ảo hóa, lưu trữ và hạ tầng đám mây.
+              Tôi có kinh nghiệm thực tế trong việc di chuyển hệ thống lên CMC Cloud, tự động hóa CI/CD, vận hành các cụm Kubernetes tự chạy (Self-hosted) với GitOps, và thiết lập hệ thống giám sát cảnh báo thời gian thực nhằm tối ưu hóa hiệu suất và duy trì <span className="text-primary font-bold">Tính sẵn sàng cao (High Availability)</span>.
             </p>
           </div>
 
