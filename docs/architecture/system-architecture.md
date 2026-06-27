@@ -48,34 +48,47 @@ Cụm Kubernetes được tổ chức thành các Namespace chuyên biệt nhằ
 
 | Namespace | Vai trò | Các tài nguyên chính |
 | :--- | :--- | :--- |
-| **`infra`** | Hạ tầng mạng, định tuyến | Traefik, Cert-Manager, `admin-allowlist` Middleware |
-| **`production`** | Môi trường Product | Backend, Frontend (Next.js), PVC Uploads |
-| **`portfolio`** | Môi trường Staging | Backend-staging, Frontend-staging, PVC |
-| **`database-production`** | Cơ sở dữ liệu Prod | StatefulSet PostgreSQL |
-| **`database`** | Cơ sở dữ liệu Staging | StatefulSet PostgreSQL Staging |
+| **`infra`** | Hạ tầng mạng, định tuyến | Traefik Ingress, `admin-allowlist` Middleware |
+| **`cert-manager`** | Quản lý chứng chỉ SSL/TLS | Cert-manager controller & resource definitions |
+| **`blog-prod`** | Môi trường Production | Backend NestJS, Frontend Next.js, StatefulSet PostgreSQL, Redis |
+| **`blog-staging`** | Môi trường Staging | Backend-staging, Frontend-staging, StatefulSet PostgreSQL Staging, Redis Staging |
 | **`monitoring`** | Giám sát & Đo đạc | Prometheus, Grafana, Metrics-Server |
 | **`kubernetes-dashboard`**| Giao diện quản trị K8s | Kubernetes Dashboard, `admin-user` ServiceAccount |
 | **`argocd`** | Triển khai GitOps | ArgoCD Server, Application Controllers |
-
----
+| **`local-path-storage`**| Trình cấp phát lưu trữ local | Local Path Provisioner |
+| **`longhorn-system`** | Lưu trữ phân tán | Longhorn storage components |
+| **`velero`** | Sao lưu & Phục hồi | Velero backup manager & cron jobs |
+| **`trivy-system`** | Quét lỗ hổng bảo mật | Trivy Operator & reports |
 
 ## 💾 Kiến Trúc Lưu Trữ (Storage Architecture)
 
-Hệ thống lưu trữ trên cụm đơn node được cấu hình sử dụng Local Path Provisioner để ghi trực tiếp lên đĩa cứng vật lý của VPS hoặc lưu trữ phân tán Longhorn cho dữ liệu production:
+Hệ thống kết hợp giữa lưu trữ khối cục bộ/phân tán trên cụm Kubernetes cho cơ sở dữ liệu và lưu trữ đối tượng Cloudflare R2 cho tài nguyên tĩnh:
 
 ```mermaid
-graph LR
-    Pods[Frontend/Backend Pods] -->|PVC Mount| PV[Persistent Volume]
-    PV -->|Local Directory Mapping| HostDisk[/data/k8s/storage/... trên VPS Host]
+graph TD
+    subgraph K8s Cluster Storage
+        lh_SC[StorageClass: longhorn] -->|Longhorn Engine| PV_lh[Persistent Volume - Distributed]
+        local_SC[StorageClass: local-path] -->|Local Path Provisioner| PV_local[Persistent Volume - Local]
+    end
+    subgraph Cloud Storage
+        R2[Cloudflare R2 Object Storage]
+    end
+    
+    PV_local -->|Directory Mapping| HostDisk[<host_storage_path>/... trên VPS Host]
+    PV_lh -->|Replicated Blocks| Disk[Replicated disks on cluster nodes]
+    
+    FE_Uploads[Backend API Pods] -->|Direct S3 API Upload| R2
 ```
 
-### Chi tiết các tệp lưu trữ chính:
-* **StorageClass `local-path`:** Tự động cấp phát hostPath trên Node VPS cho các nhu cầu môi trường Staging.
-* **StorageClass `longhorn`:** Sử dụng giải pháp lưu trữ khối phân tán Longhorn (phiên bản v1.7.0) làm hạ tầng lưu trữ chính cho Production (Postgres, Backend Uploads, Redis persistence).
+### Chi tiết phân bổ lưu trữ:
+* **Cloudflare R2 Object Storage (Bucket `blog-upload-prod`):**
+  * **avatar/**: Lưu trữ toàn bộ ảnh đại diện của người dùng.
+  * **post/**: Lưu trữ toàn bộ ảnh bìa bài viết, hình ảnh chèn trong nội dung blog và các file tài liệu đính kèm.
+* **StorageClass `longhorn`:** Sử dụng giải pháp lưu trữ khối phân tán Longhorn làm hạ tầng lưu trữ chính cho Production (PostgreSQL Database và Redis persistence).
+* **StorageClass `local-path`:** Tự động cấp phát hostPath trên Node VPS cho các nhu cầu dữ liệu của môi trường Staging.
 * **Đường dẫn lưu trữ vật lý trên VPS Host:**
-  * Backend Production Uploads: `/data/k8s/storage/backend-uploads-prod` (lưu trữ ảnh bìa bài viết, avatar, file đính kèm).
-  * Database Production: `/data/k8s/storage/postgres-production-pvc`.
-  * Database Staging: `/data/k8s/storage/postgres-staging-pvc`.
+  * Database Production: `<host_storage_path>/postgres-production-pvc`
+  * Database Staging: `<host_storage_path>/postgres-staging-pvc`
 
 ---
 

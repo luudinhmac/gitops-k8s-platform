@@ -80,12 +80,12 @@ Nếu ArgoCD báo lỗi `Access Denied` hoặc `Authentication required` khi ké
 Hệ thống sử dụng kiến trúc **Microservices (Frontend / Backend tách biệt)** và **GitOps**.
 
 ### Workflow Hàng Ngày (Phát triển tính năng):
-1. **Viết Code**: Developer làm việc trên 2 repo riêng biệt (`portfolio-frontend` và `portfolio-backend`).
+1. **Viết Code**: Developer làm việc trên 2 repo riêng biệt (Frontend: [../../frontend](../../frontend) và Backend: [../../backend](../../backend)).
 2. **Commit & Push**: Lên code ở nhánh `dev` hoặc tag `v*` của từng repo.
 3. **CI/CD Tự động**:
    - **GitLab CI** tự động chạy Test, Build Docker Image.
-   - CI script tự động thực hiện **Direct Git Push** để cập nhật mã Image Tag vào file `environments/staging/*-values.yaml` trên repo `infra` này.
-4. **ArgoCD Tự động Sync**: ArgoCD phát hiện repo `infra` có commit mới, tự động báo K8s tạo Pod mới. Riêng Backend sẽ chạy Init Container để migrate DB trước khi khởi động.
+   - CI script tự động thực hiện **Direct Git Push** để cập nhật mã Image Tag vào file `environments/staging/*-values.yaml` trên repo [infra](../../infra) này.
+4. **ArgoCD Tự động Sync**: ArgoCD phát hiện repo [infra](../../infra) có commit mới, tự động báo K8s tạo Pod mới. Riêng Backend sẽ chạy Init Container để migrate DB trước khi khởi động.
 
 ## 4. Các lệnh hữu ích
 
@@ -103,6 +103,8 @@ kubectl exec -it postgres-0 -n database -- psql -U portfolio_user -d portfolio_s
 
 ### Truy cập Kubernetes Dashboard
 Dashboard được quản lý trong namespace `kubernetes-dashboard`.
+
+![Kubernetes Dashboard](../../images/k8s-dashboard-pod.png)
 
 #### 1. Lấy Token đăng nhập
 *   **Token tạm thời (24h)**:
@@ -193,14 +195,14 @@ Hệ thống đã được cấu hình Baseline chuẩn cho Production. **Tuyệ
 
 Để các pipeline chạy thông suốt, bạn cần cấu hình các biến sau trên GitLab (**Settings > CI/CD > Variables**):
 
-### Tại Repo Infrastructure (Quản lý chung)
+### Tại Repo Infrastructure ([../../infra](../../infra) - Quản lý chung)
 *   **`KUBECONFIG`** (Type: File): Chứa nội dung file cấu hình truy cập Cluster.
 *   **`STAGING_DATABASE_URL`**: URL kết nối Postgres Staging.
 *   **`STAGING_JWT_SECRET`**: Khóa bí mật dùng cho Staging.
 *   **`PROD_DATABASE_URL`**: URL kết nối Postgres Production.
 *   **`PROD_JWT_SECRET`**: Khóa bí mật dùng cho Production.
-
-### Tại Repo Backend & Frontend (Ứng dụng)
+ 
+### Tại Repo Backend & Frontend (Ứng dụng: [../../backend](../../backend) & [../../frontend](../../frontend))
 *   **`GITLAB_API_TOKEN`**: Personal Access Token hoặc Project Access Token của repo **Infra** (cần quyền `write_repository`) để CI của App có thể tự động `clone`, `commit` và `push` cập nhật Tag vào Infra.
 *   **`CI_REGISTRY_USER`** / **`CI_REGISTRY_PASSWORD`**: Tài khoản Docker Hub để push/pull image.
 

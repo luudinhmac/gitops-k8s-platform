@@ -4,6 +4,11 @@ import type { NextRequest } from 'next/server';
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Bypass health check endpoint immediately to avoid backend calls, proxying, or maintenance redirects
+  if (pathname === '/api/health') {
+    return NextResponse.next();
+  }
+
   // Generate dynamic CSP nonce
   const nonce = btoa(crypto.randomUUID());
   const isDev = process.env.NODE_ENV === 'development';
@@ -71,7 +76,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/maintenance') ||
     pathname.startsWith('/_next') ||
     pathname === '/favicon.ico' ||
-    pathname.startsWith('/images');
+    pathname.startsWith('/images') ||
+    pathname.endsWith('.pdf');
 
   if (isExcludedPath) {
     return setCSP(NextResponse.next({

@@ -55,6 +55,14 @@ Hệ thống sử dụng Bitnami Sealed Secrets để mã hóa cấu hình nhạ
   ```bash
   brew install kubeseal
   ```
+* **Linux:**
+  ```bash
+  # Tải bản release nhị phân của kubeseal
+  KUBESEAL_VERSION=$(curl -s https://api.github.com/repos/bitnami-labs/sealed-secrets/releases/latest | grep tag_name | cut -d '"' -f 4 | sed 's/v//')
+  curl -OL "https://github.com/bitnami-labs/sealed-secrets/releases/download/v${KUBESEAL_VERSION}/kubeseal-${KUBESEAL_VERSION}-linux-amd64.tar.gz"
+  tar -xvzf kubeseal-${KUBESEAL_VERSION}-linux-amd64.tar.gz kubeseal
+  sudo install -m 755 kubeseal /usr/local/bin/kubeseal
+  ```
 
 ### 3.2. Trích xuất Public Certificate (Public Key)
 Để mã hóa các Secret mà không cần quyền kết nối trực tiếp đến cụm Kubernetes của môi trường Production, ta cần lưu giữ chứng chỉ Public Key trên Git:
@@ -71,9 +79,9 @@ kubeseal --controller-name=sealed-secrets --controller-namespace=kube-system --f
 ```bash
 # Mã hóa cho môi trường Production (Lưu vào file production/portfolio-sealed-secrets.yaml)
 kubectl create secret generic portfolio-secrets \
-  --namespace blog-prod \
-  --from-literal=DATABASE_URL="postgresql://portfolio_admin:password-prod@postgres.blog-prod:5432/portfolio_production?sslmode=disable" \
-  --from-literal=JWT_SECRET="jwt-prod-secure-key-2026" \
+  --namespace <namespace_prod> \
+  --from-literal=DATABASE_URL="postgresql://<db_user>:<db_password>@<db_host>:5432/<db_name>?sslmode=disable" \
+  --from-literal=JWT_SECRET="<jwt_secret_key>" \
   --dry-run=client -o yaml | \
 kubeseal --cert infra/certs/sealed-secrets-prod.pem --format=yaml \
   > infra/environments/production/portfolio-sealed-secrets.yaml
@@ -82,9 +90,9 @@ kubeseal --cert infra/certs/sealed-secrets-prod.pem --format=yaml \
 #### B. Mã hóa thông tin đăng nhập Cloudflare R2 (S3 API Storage Credentials)
 ```bash
 kubectl create secret generic r2-credentials \
-  --namespace blog-prod \
-  --from-literal=r2-access-key-id="R2_ACCESS_KEY_XXXX" \
-  --from-literal=r2-secret-access-key="R2_SECRET_KEY_YYYY" \
+  --namespace <namespace_prod> \
+  --from-literal=r2-access-key-id="<r2_access_key_id>" \
+  --from-literal=r2-secret-access-key="<r2_secret_access_key>" \
   --dry-run=client -o yaml | \
 kubeseal --cert infra/certs/sealed-secrets-prod.pem --format=yaml \
   > infra/environments/production/r2-sealed-secret.yaml
@@ -93,8 +101,8 @@ kubeseal --cert infra/certs/sealed-secrets-prod.pem --format=yaml \
 #### C. Mã hóa thông tin xác thực bộ nhớ đệm Redis
 ```bash
 kubectl create secret generic redis-credentials \
-  --namespace blog-prod \
-  --from-literal=redis-password="redis-secure-password-2026" \
+  --namespace <namespace_prod> \
+  --from-literal=redis-password="<redis_secure_password>" \
   --dry-run=client -o yaml | \
 kubeseal --cert infra/certs/sealed-secrets-prod.pem --format=yaml \
   > infra/environments/production/redis-sealed-secret.yaml

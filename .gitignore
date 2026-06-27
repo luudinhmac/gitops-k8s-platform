@@ -57,3 +57,8 @@ ZMigrate/
 scratch/
 
 docs/onboarding/cv/*
+docs/archive/infra_implementation_plan.md
+
+# Local Secrets
+secrets.txt
+secrets.text
