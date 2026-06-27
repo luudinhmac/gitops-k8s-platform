@@ -1,4 +1,4 @@
-# Quy trình vá lỗ hổng bảo mật (Security Patching Guide)
+# 🛡️ Security Patching & CVE Mitigation Guide
 
 Tài liệu này hướng dẫn quy trình từng bước để phát hiện, phân tích và vá các lỗ hổng bảo mật trong các thư viện phụ thuộc (dependencies) của dự án bằng công cụ **Trivy** và cơ chế ghi đè của **pnpm**.
 
@@ -125,10 +125,9 @@ Report Summary
 
 ---
 
-### Bước 6: Commit và Đẩy Lên Repository
+## Bước 6: Commit và Đẩy Lên Repository
 Tách biệt việc vá lỗi bảo mật thành một commit riêng biệt để dễ theo dõi và rollback khi cần thiết:
 ```bash
 git add package.json pnpm-lock.yaml
 git commit -m "fix(security): resolve <tên-thư-viện> vulnerabilities via pnpm overrides"
-git push origin <branch-name>
 ```

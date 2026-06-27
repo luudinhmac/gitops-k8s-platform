@@ -14,10 +14,12 @@ COMMIT_MSG=${CI_COMMIT_MESSAGE:-"No message"}
 # Calculate Job and Pipeline Durations
 JOB_DURATION_TEXT="N/A"
 if [ -n "$CI_JOB_STARTED_AT" ]; then
-    START_EPOCH=$(date -d "${CI_JOB_STARTED_AT}" +%s 2>/dev/null)
+    # Strip Z and T to get simple format YYYY-MM-DD HH:MM:SS
+    CLEANED_DATE=$(echo "$CI_JOB_STARTED_AT" | sed 's/Z//' | sed 's/T/ /')
+    # Use -u to parse in UTC
+    START_EPOCH=$(date -u -d "$CLEANED_DATE" +%s 2>/dev/null)
     if [ -z "$START_EPOCH" ]; then
-        CLEANED_DATE=$(echo "$CI_JOB_STARTED_AT" | sed 's/Z//' | sed 's/T/ /')
-        START_EPOCH=$(date -d "$CLEANED_DATE" +%s 2>/dev/null)
+        START_EPOCH=$(TZ=UTC date -d "$CLEANED_DATE" +%s 2>/dev/null)
     fi
     if [ -n "$START_EPOCH" ]; then
         END_EPOCH=$(date +%s)
@@ -34,10 +36,12 @@ fi
 
 PIPELINE_DURATION_TEXT="N/A"
 if [ -n "$CI_PIPELINE_CREATED_AT" ]; then
-    PIPE_START_EPOCH=$(date -d "${CI_PIPELINE_CREATED_AT}" +%s 2>/dev/null)
+    # Strip Z and T to get simple format YYYY-MM-DD HH:MM:SS
+    CLEANED_DATE=$(echo "$CI_PIPELINE_CREATED_AT" | sed 's/Z//' | sed 's/T/ /')
+    # Use -u to parse in UTC
+    PIPE_START_EPOCH=$(date -u -d "$CLEANED_DATE" +%s 2>/dev/null)
     if [ -z "$PIPE_START_EPOCH" ]; then
-        CLEANED_DATE=$(echo "$CI_PIPELINE_CREATED_AT" | sed 's/Z//' | sed 's/T/ /')
-        PIPE_START_EPOCH=$(date -d "$CLEANED_DATE" +%s 2>/dev/null)
+        PIPE_START_EPOCH=$(TZ=UTC date -d "$CLEANED_DATE" +%s 2>/dev/null)
     fi
     if [ -n "$PIPE_START_EPOCH" ]; then
         END_EPOCH=$(date +%s)

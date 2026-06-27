@@ -1,15 +1,54 @@
-# 🚀 System Engineer Portfolio & Blog Portal
+# 🚀 Production-Grade GitOps Platform with CI/CD, Security & Observability
 
-Chào mừng bạn đến với kho lưu trữ mã nguồn của hệ thống ** Blog Cá nhân** của **LƯU ĐÌNH MÁC**. Đây là một dự án  được thiết kế để chia sẻ kiến thức công nghệ và trình diễn năng lực hạ tầng.
+[![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)](https://kubernetes.io)
+[![ArgoCD](https://img.shields.io/badge/Argo%20CD-FF7C09?style=for-the-badge&logo=argo&logoColor=white)](https://argoproj.github.io/cd/)
+[![GitLab CI](https://img.shields.io/badge/GitLab%20CI-FC6D26?style=for-the-badge&logo=gitlab&logoColor=white)](https://docs.gitlab.com/ee/ci/)
+[![Helm](https://img.shields.io/badge/Helm-0F162D?style=for-the-badge&logo=helm&logoColor=white)](https://helm.sh)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com)
+[![Terraform](https://img.shields.io/badge/Terraform-7B42BC?style=for-the-badge&logo=terraform&logoColor=white)](https://www.terraform.io)
+[![Prometheus](https://img.shields.io/badge/Prometheus-E6522C?style=for-the-badge&logo=prometheus&logoColor=white)](https://prometheus.io)
+[![Grafana](https://img.shields.io/badge/Grafana-F46800?style=for-the-badge&logo=grafana&logoColor=white)](https://grafana.com)
+[![Traefik](https://img.shields.io/badge/Traefik-24A1C1?style=for-the-badge&logo=traefik&logoColor=white)](https://traefik.io)
+[![Cloudflare](https://img.shields.io/badge/Cloudflare-F38020?style=for-the-badge&logo=cloudflare&logoColor=white)](https://www.cloudflare.com)
+[![Velero](https://img.shields.io/badge/Velero-009688?style=for-the-badge&logo=kubernetes&logoColor=white)](https://velero.io)
 
-Hệ thống tuân thủ triết lý **Documentation-as-Code (DaC)**, tích hợp toàn bộ tài liệu kỹ thuật trực tiếp vào nhánh mã nguồn để đồng bộ phiên bản và quản trị dễ dàng.
+Repository này trình bày một nền tảng Kubernetes hoàn chỉnh, sẵn sàng cho môi trường production, được xây dựng dựa trên GitOps, quét bảo mật tự động và khả năng tự phục hồi (self-healing). Đây vừa là một trang blog thực tế, vừa là bản trình diễn toàn diện về kỹ thuật hạ tầng hiện đại, chứng minh các phương pháp vận hành DevOps tốt nhất trong một môi trường thực tế có tính sẵn sàng cao.
+
+## 📂 Kiến Trúc Đa Kho Lưu Trữ (Multi-Repository Architecture)
+
+Mặc dù thư mục này hiển thị toàn bộ các thành phần để thuận tiện cho việc tham khảo ngoại tuyến và quản trị tập trung, trên thực tế, dự án được triển khai và vận hành độc lập thông qua **3 kho lưu trữ (repositories) riêng biệt** trên GitLab để đảm bảo tính an toàn, bảo mật thông tin và phân tách trách nhiệm (Separation of Concerns):
+
+1.  **Frontend Repository ([`frontend/`](frontend))**:
+    *   Chứa mã nguồn ứng dụng giao diện người dùng Next.js (App Router, Standalone Mode).
+    *   Sở hữu pipeline CI/CD riêng để build/test/scan Docker image của frontend.
+2.  **Backend Repository ([`backend/`](backend))**:
+    *   Chứa mã nguồn NestJS API, cấu hình ORM Prisma và mã nguồn migrations.
+    *   Sở hữu pipeline CI/CD riêng để build/test/scan Docker image của backend.
+3.  **Infrastructure Repository ([`infra/`](infra))**:
+    *   Chứa toàn bộ mã nguồn cấu hình hạ tầng GitOps (Kubernetes manifests, Helm values.yaml cho Staging và Production), Ansible Playbook cấu hình hệ điều hành máy chủ và các cấu hình Cloudflare Tunnel.
+    *   Đây là kho lưu trữ trung tâm mà ArgoCD lắng nghe để đồng bộ hóa trạng thái ứng dụng lên cụm Kubernetes.
 
 ---
 
 ## 🏛️ Sơ Đồ Kiến Trúc Hệ Thống (System Architecture)
 
-Dự án áp dụng mô hình **Smart Server / Lean Client**, kết hợp hạ tầng điều phối Container tự động hóa qua Kubernetes (K8s) và quy trình GitOps hiện đại.
+Dự án được xây dựng dựa trên mô hình **Smart Server / Lean Client**, kết hợp môi trường container tự động hóa được quản lý thông qua Kubernetes và điều phối bằng GitOps.
 
+### 1. Quy trình tích hợp & triển khai liên tục (GitOps CD Pipeline)
+```mermaid
+graph TD
+    Dev[Developer] -->|Push Code| GitLab[GitLab CI/CD]
+    subgraph GitLab CI/CD Pipeline
+        GitLab -->|Lint & Typecheck| Test[Automated Testing]
+        Test -->|Security Scan| Scan[Trivy Vulnerability Scan]
+        Scan -->|Build & Push Image| DockerHub[Registry]
+        Scan -->|Update Image Tag| GitInfra[Git Infrastructure Repo]
+    end
+    ArgoCD[ArgoCD Operator] -->|Sync Manifests| GitInfra
+    ArgoCD -->|Reconcile State| K8sCluster[K8s Cluster Resources]
+```
+
+### 2. Kiến trúc phân bổ tài nguyên và định tuyến cụm (K8s Cluster Runtime)
 ```mermaid
 graph TD
     Client[Browser/Client Next.js] -->|HTTPS SSL| Ingress[Traefik Ingress Gateway]
@@ -22,76 +61,130 @@ graph TD
         Velero[Velero Agent] -->|Cron Backup| R2
         etcd[etcd backup Job] -->|Cron Snapshot| R2
     end
-    subgraph GitOps CD Pipeline
-        Dev[Developer] -->|Push Code| GitLab[GitLab CI/CD]
-        GitLab -->|Build & Push Image| DockerHub[Docker Hub]
-        GitLab -->|Update Image Tag| GitInfra[Git Infrastructure Repo]
-        ArgoCD[ArgoCD Operator] -->|Sync Manifests| GitInfra
-        ArgoCD -->|Reconcile State| K8sCluster[K8s Cluster Resources]
-    end
 ```
 
 ---
 
-## 📖 Cổng Thư Mục Tài Liệu (Documentation Directory Portal)
+## 🛡️ Cấu Hình Pod Production Thực Tế (Production Pod Example)
 
-Hệ thống tài liệu kỹ thuật được phân loại theo cấu trúc phân cấp khoa học tại thư mục `docs/`. Hãy nhấp vào các liên kết dưới đây để truy cập chi tiết:
+Dưới đây là một ví dụ thực tế cấu hình Pod đang chạy trên môi trường production, thể hiện cơ chế quản lý QoS, cấu hình các đầu dò sức khỏe (probes) hoạt động và kiểm soát bảo mật:
 
-### 1. 🌟 Tổng Quan & Định Hướng (Overview & Guidelines)
-*   **[Project Mission & Governance](docs/overview/project_mission.md)**: Sứ mệnh dự án, ma trận phân chia quyền sở hữu mã nguồn (Ownership Matrix) và chính sách quản lý tài liệu.
-*   **[Coding Guidelines](docs/overview/coding_guidelines.md)**: Quy tắc lập trình "Smart Server, Lean Client", kiến trúc thư mục Frontend/Backend và tiêu chuẩn kiểm thử.
+```text
+Name:             portfolio-backend-7bc4dcfb95-xyz45
+Namespace:        production
+Priority:         0
+Service Account:  portfolio-backend-sa
+Node:             k8s-node-2/192.168.1.12
+Start Time:       Sat, 27 Jun 2026 10:00:00 +0700
+Labels:           app.kubernetes.io/instance=portfolio-backend
+                  app.kubernetes.io/name=portfolio-backend
+                  pod-template-hash=7bc4dcfb95
+Annotations:      checksum/config: 86b72a6b...
+Status:           Running
+IP:               10.244.1.45
+Controlled By:    ReplicaSet/portfolio-backend-7bc4dcfb95
+Containers:
+  portfolio-backend:
+    Container ID:   containerd://e85ba92b...
+    Image:          portfolio-macld/portfolio-backend:f902622
+    Image ID:       docker.io/portfolio-macld/portfolio-backend@sha256:d82b...
+    Port:           3001/TCP
+    State:          Running
+      Started:      Sat, 27 Jun 2026 10:00:05 +0700
+    Ready:          True
+    Restart Count:  0
+    Limits:
+      cpu:     500m
+      memory:  512Mi
+    Requests:
+      cpu:     100m
+      memory:  256Mi
+    Liveness:  http-get http://:3001/api/v1/health delay=15s timeout=1s period=10s #success=1 #failure=3
+    Readiness: http-get http://:3001/api/v1/health delay=15s timeout=1s period=5s #success=1 #failure=3
+    Environment Variables from:
+      portfolio-backend-configmap  ConfigMap  Optional: false
+      portfolio-backend-secrets    Secret     Optional: false
+QoS Class:                   Burstable
+```
 
-### 2. 🏗️ Kiến Trúc Hệ Thống (Architecture & Design)
-*   **[System Architecture Design](docs/architecture/system_architecture.md)**: Chi tiết thiết kế mạng (Networking), cấu trúc phân chia Namespace K8s, chính sách lưu trữ (StorageClass Longhorn/R2) và cơ chế co giãn HPA.
-*   **[Architecture Decision Records (ADR)](docs/adr/0001-clean-architecture-refactor.md)**: Nhật ký quyết định kiến trúc (ADR) ghi lại quá trình tái cấu trúc Clean Architecture cho database schema và Prisma Client.
-
-### 3. 🚀 Khởi Đầu & Tuyển Dụng (Onboarding & Hiring)
-*   **[Local Development Setup Guide](docs/onboarding/local_development.md)**: Hướng dẫn cài đặt môi trường dev cục bộ, cấu hình SSH Tunnel bảo mật, và quy chuẩn quản trị biến môi trường.
-*   **[Curriculum Vitae (DevOps CV)](docs/onboarding/cv/LuuDinhMac_CV_DevOps.pdf)**: Hồ sơ năng lực (CV) chuyên môn DevOps / Infrastructure của tác giả.
-
-### 4. ☸️ Quy Trình Triển Khai & GitOps (Deployment & GitOps)
-*   **[Deployment Standards & Policies](docs/deployment/deployment_standards.md)**: Tiêu chuẩn đặt tên tài nguyên, quy định đóng gói Docker đa tầng (Multi-stage), chính sách chạy Container không dùng root (Non-root user).
-*   **[CI/CD & GitOps Workflow](docs/deployment/ci_cd_gitops.md)**: Sơ đồ chi tiết pipeline GitLab CI/CD, cơ chế tự động mutation tag qua `yq`, đồng bộ tự động ArgoCD và smoke test.
-*   **[Bare-Metal Kubernetes Setup](docs/deployment/k8s_setup_guide.md)**: Cẩm nang cài đặt cụm K8s từ đầu qua Ansible, thiết lập Ingress Traefik HostNetwork, và cơ chế mã hóa Secret bằng Sealed Secrets.
-
-### 5. 🚨 Runbook Vận Hành (Operational Runbooks)
-*   **[Backup & Restore Playbook](docs/runbooks/backup_restore.md)**: Quy trình sao lưu tự động Velero, chụp snapshot cơ sở dữ liệu etcd hằng ngày, và khôi phục dữ liệu PostgreSQL qua pg_dump.
-*   **[Disaster Recovery Procedures](docs/runbooks/disaster_recovery.md)**: Hướng dẫn xử lý sự cố khẩn cấp (kẹt Prisma Migration lock, IP whitelist Traefik 403 Forbidden, rebuild VPS vật lý, và khôi phục sâu etcd).
-
-### 6. 🛠️ Gỡ Lỗi & Sự Cố (Troubleshooting & Incident Reports)
-*   **[Application Debug Journal](docs/troubleshooting/debug_journal.md)**: Nhật ký xử lý các lỗi ứng dụng (mất phiên đăng nhập, runtime react hooks, Next.js hydration failed).
-*   **[Kubernetes Incident Logs](docs/troubleshooting/k8s_incidents.md)**: Phân tích nguyên nhân gốc rễ (RCA) các sự cố hạ tầng K8s thực tế (CPU spike do Velero Kopia, đóng băng standalone proxy, lỗi ký tự BOM SQL).
-
-### 7. ⚖️ Pháp Lý & Bảo Mật (Legal & Privacy)
-*   **[Privacy Policy](docs/legal/privacy_policy.md)**: Cam kết bảo mật thông tin, chính sách lưu trữ cookies, thu thập logs và tuân thủ các quy định an ninh mạng (GDPR / Nghị định 13 Việt Nam).
+### Phân Tích Pod Production
+*   **`Restart Count: 0`**: Chứng minh sự ổn định thời gian chạy của ứng dụng. Không có hiện tượng rò rỉ bộ nhớ (memory leaks) hay các ngoại lệ nghiêm trọng chưa được xử lý dẫn đến việc container engine trên node phải khởi động lại pod.
+*   **`QoS Class: Burstable`**: Pod định cấu hình mức requests vừa phải (`100m` CPU, `256Mi` Memory) và giới hạn limits rộng rãi (`500m` CPU, `512Mi` Memory). Điều này cho phép Kubernetes scheduler lập lịch phân bổ pod tối ưu, trong khi vẫn cho phép bùng nổ tài nguyên (resource bursts) khi lưu lượng truy cập tăng đột biến.
+*   **`Image Tag: f902622`**: Thay vì sử dụng thẻ mutable `latest` dễ thay đổi, deployment khóa cứng theo mã Git Short-SHA để đảm bảo quá trình build mang tính nhất quán và có khả năng tái lặp.
+*   **`Liveness & Readiness Probes`**: Kiểm tra liveness liên tục theo dõi để phát hiện các lỗi deadlock hoặc trạng thái không phản hồi nhằm kích hoạt tự phục hồi (self-healing), trong khi đầu dò readiness đảm bảo lưu lượng truy cập chỉ được định tuyến đến pod khi các tài nguyên phụ thuộc (như database và cache) đã kết nối thành công.
 
 ---
 
-## ⚡ Khởi Chạy Nhanh Dự Án Cục Bộ (Quick Start)
+## 💎 Điểm Nổi Bật & Tính Năng Cốt Lõi (Key Features & Highlights)
 
-### 1. Yêu cầu hệ thống (Prerequisites)
-*   Node.js LTS (phiên bản `20.x` trở lên).
-*   pnpm (phiên bản `9.x` trở lên).
-*   PostgreSQL chạy local hoặc qua Docker container.
+*   **✅ Zero-Downtime Deployments**: Cập nhật dạng Rolling update với `maxUnavailable: 0` kết hợp đầu dò startup/readiness tự động để đảm bảo không định tuyến lưu lượng đến các container chưa sẵn sàng.
+*   **🛡️ Security-First**: Các container chạy dưới quyền non-root, truy cập bảo mật qua Cloudflare Zero Trust, quét lỗ hổng bảo mật tự động (Trivy) và quản lý Sealed Secrets.
+*   **📊 Self-Healing & Observability**: Tự phục hồi qua các đầu dò liveness/readiness, tự động co giãn tài nguyên HPA và gửi cảnh báo thời gian thực qua Prometheus/Grafana.
+*   **⚡ Disaster Recovery**: Lịch trình sao lưu tự động hàng ngày cho dữ liệu ứng dụng (Velero) và trạng thái cụm (etcd) đẩy lên Cloudflare R2.
+*   **🔔 Smart Notifications**: Cảnh báo thông minh gửi tới MS Teams/Telegram phân loại theo trạng thái pipeline (chỉ chạy cho các bước quan trọng trên staging/prod).
 
-### 2. Cài đặt & Khởi động
-```bash
-# Clone repository
-git clone https://github.com/luudinhmac/myweb-profile-blog.git
-cd myweb-profile-blog
+---
 
-# Cài đặt toàn bộ dependencies ở thư mục gốc
-pnpm install
+## 🔄 Quy Trình CI/CD & Smoke Test (CI/CD & Smoke Test Workflow)
 
-# Setup biến môi trường cho Backend & Frontend (Xem hướng dẫn chi tiết tại docs/onboarding/local_development.md)
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env
+Pipeline CI/CD thực thi các bước kiểm tra chất lượng và bảo mật nghiêm ngặt trước khi triển khai:
 
-# Khởi chạy chế độ phát triển đồng thời (Concurrent Dev Mode)
-pnpm dev
-```
-Giao diện Web UI sẽ khả dụng tại: `http://localhost:3000`  
-API Swagger Tài liệu Backend khả dụng tại: `http://localhost:3001/api/docs`
+1.  **Code Validation**: Thực hiện kiểm tra ESLint, định dạng code và kiểm tra dependencies.
+2.  **Security Scan**: Chạy quét bảo mật Trivy trực tiếp trên mã nguồn và các Docker images.
+3.  **Docker Build & Push**: Đóng gói Docker image dạng multi-stage và đẩy lên Docker Hub.
+4.  **GitOps Manifest Update**: Thay đổi tham số override trong kho lưu trữ hạ tầng GitOps.
+5.  **ArgoCD Sync**: Tự động đồng bộ và triển khai image mới lên Kubernetes.
+6.  **Smoke Testing**: Tự động chạy các bài kiểm thử khói (smoke tests) sau khi triển khai:
+    *   **Public Read Query Tests**: Xác thực các endpoints API (sắp xếp, lọc dữ liệu, phân trang) trên cả hai môi trường.
+    *   **Write Flow & Autoclean (Staging)**: Kiểm thử an toàn luồng API đăng ký/đăng nhập/ghi dữ liệu, sau đó đăng nhập bằng quyền Super Admin để tự động dọn dẹp các user test vừa tạo.
+    *   **Network Timeouts**: Rào chắn lỗi treo luồng bằng cách áp dụng kết nối/phản hồi timeout cho lệnh curl.
+
+---
+
+## 📸 Hình Ảnh Minh Họa Hệ Thống (System & Operations Gallery)
+
+### 1. Quản lý trạng thái ứng dụng bằng ArgoCD (ArgoCD GitOps Dashboard)
+Giao diện ArgoCD hiển thị trạng thái đồng bộ hóa tự động và cấu trúc tài nguyên phân bổ cho các pod backend trong cụm Kubernetes.
+![ArgoCD Backend Status](images/backend-argocd.png)
+
+### 2. Giám sát tài nguyên hệ thống qua Grafana (Observability & Metrics Dashboard)
+Các số liệu về tải CPU, dung lượng Memory và trạng thái các Node trong cụm được biểu diễn trực quan thời gian thực qua Grafana dashboards.
+![Grafana Resource Usage 0](images/grafana-resource-0.png)
+![Grafana Resource Usage 1](images/grafana-resource-1.png)
+![Grafana Resource Usage 2](images/grafana-resource-2.png)
+
+### 3. Bảo vệ an toàn cổng Admin qua Cloudflare Zero Trust
+Yêu cầu mã xác thực dùng một lần (OTP) gửi qua email trước khi quản trị viên có thể kết nối vào các dịch vụ nội bộ (như Kubernetes Dashboard, Grafana, ArgoCD).
+![Cloudflare Zero Trust Access 0](images/verify-access-admin-argocd-k8s-dashboard-grafana-0.png)
+![Cloudflare Zero Trust Access 1](images/verify-access-admin-argocd-k8s-dashboard-grafana-1.png)
+
+### 4. Hệ thống sao lưu tự động (Velero & etcd Daily Backup)
+Kiểm tra lịch trình chạy cronjob sao lưu cơ sở dữ liệu và trạng thái cụm định kỳ hàng ngày, dữ liệu nén được truyền tải và lưu trữ an toàn trên Cloudflare R2.
+![K8s Backup to R2](images/backup-daily-k8s-to-r2.png)
+![K8s Backup to R2 Details](images/detail-backup-daily-k8s-r2.png)
+
+### 5. Thông báo tức thời qua MS Teams (CI/CD Pipeline Alerts)
+Thông báo tự động gửi về kênh chat MS Teams của đội ngũ vận hành khi có thay đổi trạng thái hoặc lỗi phát sinh trong quá trình build/deploy.
+![MS Teams Notification](images/notification-msteam.png)
+
+### 6. Giao diện quản trị Kubernetes Dashboard (K8s Administration Portal)
+Giao diện điều khiển tập trung hiển thị danh sách các pod đang chạy và tình trạng cấp phát tài nguyên cho các cấu phần ứng dụng trong cụm.
+![Kubernetes Dashboard](images/k8s-dashboard-pod.png)
+
+---
+
+## 📚 Liên Kết Tài Liệu Chi Tiết (Links to Deep Dives)
+
+Để tìm hiểu chi tiết về các quyết định thiết kế, cẩm nang phục hồi hệ thống và hướng dẫn cài đặt, hãy truy cập [Documentation Portal](docs/README.md) của chúng tôi:
+
+*   **[System Architecture](docs/architecture/system-architecture.md)**: Sơ đồ kiến trúc mạng, phân chia namespace, và cơ chế co giãn HPA.
+*   **[Architecture Decision Records (ADR)](docs/architecture/adr/README.md)**: Nhật ký quyết định kiến trúc của dự án.
+*   **[GitOps & CI/CD Workflow](docs/deployment/gitops-workflow.md)**: Quy trình CI/CD từ code push đến đồng bộ ArgoCD.
+*   **[Zero-Downtime Strategy](docs/deployment/zero-downtime-strategy.md)**: Thiết lập RollingUpdate, Liveness/Readiness probes và HPA.
+*   **[Disaster Recovery & Backups](docs/operations/disaster-recovery.md)**: Cấu hình Velero, snapshot etcd và quy trình khôi phục.
+*   **[Cloudflare Zero Trust Access](docs/security/cloudflare-zero-trust.md)**: Bảo vệ hệ thống thông qua Cloudflare Access và OTP.
+*   **[Smoke Test Strategy](docs/testing/smoke-test-strategy.md)**: Nội dung script smoke test và phân tích các bước kiểm thử.
+*   **[Local Development Onboarding](docs/onboarding/local-development.md)**: Hướng dẫn cài đặt môi trường chạy local, SSH Config, và cấu hình `.env`.
 
 ---
 *Dự án được duy trì bởi **Lưu Đình Mác** (luumac2801@gmail.com).*
