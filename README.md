@@ -1,5 +1,7 @@
 # 🚀 Production-Grade GitOps Platform with CI/CD, Security & Observability
 
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-luumac.io.vn-brightgreen?style=for-the-badge&logo=google-chrome&logoColor=white)](https://luumac.io.vn)
+[![Maintenance](https://img.shields.io/badge/Maintenance-Active-success?style=for-the-badge&logo=git&logoColor=white)](#)
 [![Kubernetes](https://img.shields.io/badge/Kubernetes-326CE5?style=for-the-badge&logo=kubernetes&logoColor=white)](https://kubernetes.io)
 [![ArgoCD](https://img.shields.io/badge/Argo%20CD-FF7C09?style=for-the-badge&logo=argo&logoColor=white)](https://argoproj.github.io/cd/)
 [![GitLab CI](https://img.shields.io/badge/GitLab%20CI-FC6D26?style=for-the-badge&logo=gitlab&logoColor=white)](https://docs.gitlab.com/ee/ci/)
@@ -13,6 +15,17 @@
 [![Velero](https://img.shields.io/badge/Velero-009688?style=for-the-badge&logo=kubernetes&logoColor=white)](https://velero.io)
 
 Repository này trình bày một nền tảng Kubernetes hoàn chỉnh, sẵn sàng cho môi trường production, được xây dựng dựa trên GitOps, quét bảo mật tự động và khả năng tự phục hồi (self-healing). Đây vừa là một trang blog thực tế, vừa là bản trình diễn toàn diện về kỹ thuật hạ tầng hiện đại, chứng minh các phương pháp vận hành DevOps tốt nhất trong một môi trường thực tế có tính sẵn sàng cao.
+
+## 💡 Giá Trị Thực Tiễn (Value Proposition)
+
+Dự án này giải quyết các thách thức lớn nhất trong quản trị vận hành hệ thống hiện đại bằng cách tự động hóa và tiêu chuẩn hóa toàn bộ chu kỳ:
+
+*   **Tách biệt trách nhiệm triệt để (Decoupled Repositories)**: Phân tách riêng biệt Frontend, Backend, và Infrastructure để bảo mật mã nguồn và tinh gọn luồng chạy CI/CD của từng thành phần.
+*   **Hạ tầng dưới dạng Code (GitOps & IaC)**: Đồng bộ hóa tự động từ trạng thái git (manifests) lên Kubernetes thông qua ArgoCD, loại bỏ hoàn toàn các cấu hình thủ công dễ sai sót.
+*   **Bảo mật đa lớp (Security-First)**: Quét lỗ hổng tĩnh (Trivy), ký số kiểm chứng hình ảnh (Cosign), và bảo vệ cổng quản trị cụm (Kubernetes Dashboard, Grafana, ArgoCD) thông qua Cloudflare Zero Trust OTP.
+*   **Tự phục hồi & Giám sát thông minh (Resilience & Observability)**: Đảm bảo độ sẵn sàng cao bằng RollingUpdate, Liveness/Readiness probes, HPA co giãn tự động và hệ thống cảnh báo thời gian thực về MS Teams khi có lỗi xảy ra.
+
+---
 
 ## 📂 Kiến Trúc Đa Kho Lưu Trữ (Multi-Repository Architecture)
 
