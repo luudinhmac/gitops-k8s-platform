@@ -16,14 +16,13 @@
 
 Repository này trình bày một nền tảng Kubernetes hoàn chỉnh, sẵn sàng cho môi trường production, được xây dựng dựa trên GitOps, quét bảo mật tự động và khả năng tự phục hồi (self-healing). Đây vừa là một trang blog thực tế, vừa là bản trình diễn toàn diện về kỹ thuật hạ tầng hiện đại, chứng minh các phương pháp vận hành DevOps tốt nhất trong một môi trường thực tế có tính sẵn sàng cao.
 
-## 💡 Giá Trị Thực Tiễn (Value Proposition)
+## 💎 Điểm Nổi Bật & Tính Năng Cốt Lõi (Key Features & Highlights)
 
-Dự án này giải quyết các thách thức lớn nhất trong quản trị vận hành hệ thống hiện đại bằng cách tự động hóa và tiêu chuẩn hóa toàn bộ chu kỳ:
-
-*   **Tách biệt trách nhiệm triệt để (Decoupled Repositories)**: Phân tách riêng biệt Frontend, Backend, và Infrastructure để bảo mật mã nguồn và tinh gọn luồng chạy CI/CD của từng thành phần.
-*   **Hạ tầng dưới dạng Code (GitOps & IaC)**: Đồng bộ hóa tự động từ trạng thái git (manifests) lên Kubernetes thông qua ArgoCD, loại bỏ hoàn toàn các cấu hình thủ công dễ sai sót.
-*   **Bảo mật đa lớp (Security-First)**: Quét lỗ hổng tĩnh (Trivy), ký số kiểm chứng hình ảnh (Cosign), và bảo vệ cổng quản trị cụm (Kubernetes Dashboard, Grafana, ArgoCD) thông qua Cloudflare Zero Trust OTP.
-*   **Tự phục hồi & Giám sát thông minh (Resilience & Observability)**: Đảm bảo độ sẵn sàng cao bằng RollingUpdate, Liveness/Readiness probes, HPA co giãn tự động và hệ thống cảnh báo thời gian thực về MS Teams khi có lỗi xảy ra.
+*   **✅ Zero-Downtime Deployments**: Cập nhật dạng Rolling update với `maxUnavailable: 0` kết hợp đầu dò startup/readiness tự động để đảm bảo không định tuyến lưu lượng đến các container chưa sẵn sàng.
+*   **🛡️ Security-First**: Các container chạy dưới quyền non-root, truy cập bảo mật qua Cloudflare Zero Trust, quét lỗ hổng bảo mật tự động (Trivy) và quản lý Sealed Secrets.
+*   **📊 Self-Healing & Observability**: Tự phục hồi qua các đầu dò liveness/readiness, tự động co giãn tài nguyên HPA và gửi cảnh báo thời gian thực qua Prometheus/Grafana.
+*   **⚡ Disaster Recovery**: Lịch trình sao lưu tự động hàng ngày cho dữ liệu ứng dụng (Velero) và trạng thái cụm (etcd) đẩy lên Cloudflare R2.
+*   **🔔 Smart Notifications**: Cảnh báo thông minh gửi tới MS Teams/Telegram phân loại theo trạng thái pipeline (chỉ chạy cho các bước quan trọng trên staging/prod).
 
 ---
 
@@ -126,17 +125,7 @@ QoS Class:                   Burstable
 *   **`Image Tag: f902622`**: Thay vì sử dụng thẻ mutable `latest` dễ thay đổi, deployment khóa cứng theo mã Git Short-SHA để đảm bảo quá trình build mang tính nhất quán và có khả năng tái lặp.
 *   **`Liveness & Readiness Probes`**: Kiểm tra liveness liên tục theo dõi để phát hiện các lỗi deadlock hoặc trạng thái không phản hồi nhằm kích hoạt tự phục hồi (self-healing), trong khi đầu dò readiness đảm bảo lưu lượng truy cập chỉ được định tuyến đến pod khi các tài nguyên phụ thuộc (như database và cache) đã kết nối thành công.
 
----
 
-## 💎 Điểm Nổi Bật & Tính Năng Cốt Lõi (Key Features & Highlights)
-
-*   **✅ Zero-Downtime Deployments**: Cập nhật dạng Rolling update với `maxUnavailable: 0` kết hợp đầu dò startup/readiness tự động để đảm bảo không định tuyến lưu lượng đến các container chưa sẵn sàng.
-*   **🛡️ Security-First**: Các container chạy dưới quyền non-root, truy cập bảo mật qua Cloudflare Zero Trust, quét lỗ hổng bảo mật tự động (Trivy) và quản lý Sealed Secrets.
-*   **📊 Self-Healing & Observability**: Tự phục hồi qua các đầu dò liveness/readiness, tự động co giãn tài nguyên HPA và gửi cảnh báo thời gian thực qua Prometheus/Grafana.
-*   **⚡ Disaster Recovery**: Lịch trình sao lưu tự động hàng ngày cho dữ liệu ứng dụng (Velero) và trạng thái cụm (etcd) đẩy lên Cloudflare R2.
-*   **🔔 Smart Notifications**: Cảnh báo thông minh gửi tới MS Teams/Telegram phân loại theo trạng thái pipeline (chỉ chạy cho các bước quan trọng trên staging/prod).
-
----
 
 ## 🔄 Quy Trình CI/CD & Smoke Test (CI/CD & Smoke Test Workflow)
 
