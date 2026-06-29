@@ -1,6 +1,6 @@
-# Báo Cáo Phân Tích Kiến Trúc & Hạ Tầng Hệ Thống Portfolio
+# Báo Cáo Phân Tích Kiến Trúc & Hạ Tầng Hệ Thống
 
-Tài liệu này cung cấp kết quả phân tích toàn bộ cấu trúc hệ thống, mã nguồn, tệp tin cấu hình, sơ đồ triển khai và quy trình CI/CD của dự án Portfolio. Báo cáo được xây dựng từ góc nhìn của Kiến trúc sư giải pháp (Solutions Architect) nhằm hỗ trợ công việc vận hành, tối ưu hóa và khôi phục hệ thống khi có sự cố.
+Tài liệu này cung cấp kết quả phân tích toàn bộ cấu trúc hệ thống, mã nguồn, tệp tin cấu hình, sơ đồ triển khai và quy trình CI/CD nhằm hỗ trợ công việc vận hành, tối ưu hóa và khôi phục hệ thống khi có sự cố.
 
 ---
 
