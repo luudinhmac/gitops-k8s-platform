@@ -254,3 +254,77 @@ spec:
 * Toàn bộ dữ liệu etcd cũ đã được bảo toàn nguyên vẹn trên bucket mới `cluster-etcd-backup-prod`.
 * CronJob `etcd-backup` trên Kubernetes được cập nhật và sẵn sàng chạy cho các chu kỳ sao lưu tiếp theo mà không gây lỗi cho hệ thống Velero.
 
+---
+
+## Sự Cố 7: Lộ Lọt Khóa JWT_SECRET Trên Git Và Sử Dụng Khóa Yếu Ở Môi Trường Staging/Production
+
+### 1. Hiện tượng (Symptom)
+* Qua rà soát bảo mật mã nguồn, phát hiện khóa mã hóa JWT (`JWT_SECRET`) của môi trường Production tồn tại dưới dạng văn bản thô (plain-text) trong lịch sử Git (file `infra/ansible/vars/secrets.yml` và `docs/troubleshooting/k8s_incidents.md` cũ).
+* Khóa JWT này đang hoạt động trực tiếp trên cụm Kubernetes môi trường Production (`blog-prod`), tạo ra nguy cơ bảo mật nghiêm trọng nếu kẻ tấn công lấy được khóa và giả mạo chữ ký JWT để leo thang đặc quyền.
+* Môi trường Staging (`blog-staging`) đang sử dụng một khóa thô yếu và dễ đoán (`macld@2026`).
+
+### 2. Quá trình kiểm tra và nguyên nhân (Debugging & Root Cause Analysis)
+1. **Kiểm tra thông tin Secret thực tế trên cụm:**
+   * Truy xuất khóa giải mã của Production:
+     ```bash
+     $ kubectl get secret portfolio-secrets -n blog-prod -o jsonpath="{.data.JWT_SECRET}" | base64 --decode; echo
+     5Ttv+p4uNMkFFnM2N/1jY86/XpsjZv8v8EZKaU120BA=
+     ```
+     *Đánh giá:* Trùng khớp hoàn toàn với khóa bị lộ trên lịch sử Git.
+   * Truy xuất khóa giải mã của Staging:
+     ```bash
+     $ kubectl get secret portfolio-secrets -n blog-staging -o jsonpath="{.data.JWT_SECRET}" | base64 --decode; echo
+     macld@2026
+     ```
+     *Đánh giá:* Khóa staging quá yếu và lộ trong lịch sử phát triển.
+2. **Nguyên nhân gốc rễ:**
+   * Trong giai đoạn thiết lập ban đầu, các khóa bí mật chưa được tách biệt hoàn toàn hoặc được lưu trữ tạm thời dưới dạng biến chưa mã hóa trong tệp playbook Ansible và tài liệu hướng dẫn kỹ thuật trước khi được đưa vào Git.
+
+### 3. Giải pháp khắc phục (Remediation)
+1. **Rotate khóa bảo mật:** Tạo ra 2 khóa bảo mật JWT ngẫu nhiên mới, có độ dài tối thiểu 256-bit (32 bytes) và được mã hóa Base64 cho mỗi môi trường Production và Staging.
+2. **Mã hóa an toàn qua GitOps (Sealed Secrets):** Sử dụng công cụ `kubeseal` kết hợp với public certificate của controller (`infra/sealed-cert.pem`) để mã hóa thô (raw-encrypt) các khóa này trước khi lưu trữ vào repository GitOps.
+3. **Đồng bộ hóa qua ArgoCD:** Commit và push các thay đổi cấu hình lên nhánh `main` để ArgoCD tự động áp dụng và giải mã các SealedSecret vào cụm Kubernetes.
+4. **Tái khởi động Workload:** Restart Rolling các pod backend ở cả 2 môi trường để áp dụng khóa mới ngay lập tức.
+
+### 4. Các bước xử lý chi tiết (Implementation Steps)
+1. **Sinh khóa ngẫu nhiên và Mã hóa thô bằng kubeseal (Chạy qua Python script):**
+   * Mã hóa cho Production (`blog-prod`):
+     ```bash
+     $ echo -n "<new-prod-key>" | kubeseal --raw --from-file=stdin --cert infra/sealed-cert.pem --name portfolio-secrets --namespace blog-prod
+     # Output: AgBVWMdasQaQFIv...
+     ```
+   * Mã hóa cho Staging (`blog-staging`):
+     ```bash
+     $ echo -n "<new-staging-key>" | kubeseal --raw --from-file=stdin --cert infra/sealed-cert.pem --name portfolio-secrets --namespace blog-staging
+     # Output: AgBcttcAZx/DIOru...
+     ```
+2. **Cập nhật file cấu hình Helm Values trong repository:**
+   * Thay thế giá trị khóa `JWT_SECRET` tại `sealedSecret.encryptedData` trong:
+     * [environments/production/backend-values.yaml](file:///d:/DATA/Portfolio/infra/environments/production/backend-values.yaml)
+     * [environments/staging/backend-values.yaml](file:///d:/DATA/Portfolio/infra/environments/staging/backend-values.yaml)
+3. **Commit và Push lên Git để ArgoCD đồng bộ:**
+   * Thực hiện commit và push thay đổi lên repository `portfolio-infratructure.git` ( GitLab):
+     ```bash
+     $ git add environments/production/backend-values.yaml environments/staging/backend-values.yaml
+     $ git commit -m "fix(security): rotate compromised JWT secrets"
+     $ git push origin main
+     ```
+4. **Trigger ArgoCD đồng bộ và kiểm tra trạng thái:**
+   * Refresh ứng dụng trên ArgoCD:
+     ```bash
+     $ kubectl annotate application portfolio-root-app-production -n argocd argocd.argoproj.io/refresh=normal --overwrite
+     ```
+5. **Restart Rolling các pod Backend:**
+   ```bash
+   $ kubectl rollout restart deployment/portfolio-backend-production -n blog-prod
+   $ kubectl rollout restart deployment/portfolio-backend-staging -n blog-staging
+   ```
+
+### 5. Kết quả (Outcome)
+* Toàn bộ các Pod của Backend đã restart thành công và hoạt động ổn định ở trạng thái `Running`.
+* Kiểm tra giải mã giá trị khóa thực tế trong Secret của cluster:
+  * **Production (`blog-prod`)**: Khóa mới đã được cập nhật thành công (Bắt đầu bằng: `jgM1...`, kết thúc bằng: `...CEc=`).
+  * **Staging (`blog-staging`)**: Khóa mới đã được cập nhật thành công (Bắt đầu bằng: `25NN...`, kết thúc bằng: `...PGg=`).
+* Đảm bảo không còn bất kỳ khóa JWT_SECRET dạng văn bản trần nào hoạt động trên hệ thống.
+
+
