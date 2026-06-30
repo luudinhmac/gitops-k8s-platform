@@ -129,8 +129,8 @@ Deployment của Backend yêu cầu nạp cấu hình (Database URL, JWT Secret)
 Khởi tạo Secret tương ứng cho môi trường Staging:
 ```bash
 kubectl create secret generic portfolio-secrets -n portfolio \
-  --from-literal=DATABASE_URL="postgresql://portfolio_user:macld%402026@postgres-staging.database:5432/portfolio_staging" \
-  --from-literal=JWT_SECRET="5Ttv+p4uNMkFFnM2N/1jY86/XpsjZv8v8EZKaU120BA="
+  --from-literal=DATABASE_URL="postgresql://<db-user>:<db-password>@<db-host>:<db-port>/<db-name>" \
+  --from-literal=JWT_SECRET="<jwt-secret-key>"
 ```
 
 ---
@@ -159,4 +159,98 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true # Giải pháp xử lý lỗi CRD OutOfSync
 ```
+
+---
+
+## Sự Cố 6: Velero BackupStorageLocation Bị 'Unavailable' Do Xung Đột Thư Mục etcd-backups
+
+### 1. Hiện tượng (Symptom)
+* Một số pod trong namespace `velero` chuyển sang trạng thái `Error` (Failed) khi thực hiện tác vụ bảo trì repository Kopia (`maintain-job`).
+* Trạng thái tổng quan của `BackupStorageLocation` tên `default` bị chuyển thành `Unavailable`:
+  ```bash
+  $ kubectl get backupstoragelocations -n velero
+  NAME      PHASE         LAST VALIDATED   AGE   DEFAULT
+  default   Unavailable   41s              23d   true
+  ```
+* Logs của pod điều khiển Velero (`velero-57f7fd5b5c-wj8cg`) báo lỗi xác thực bucket liên tục:
+  ```log
+  time="2026-06-30T16:33:02Z" level=error msg="fail to validate backup store" backup-storage-location=velero/default controller=backup-storage-location error="Backup store contains invalid top-level directories: [etcd-backups]" error.file="/go/src/github.com/vmware-tanzu/velero/pkg/persistence/object_store.go:222" error.function="github.com/vmware-tanzu/velero/pkg/persistence.(*objectBackupStore).IsValid" logSource="pkg/controller/backup_storage_location_controller.go:144"
+  ```
+
+### 2. Quá trình kiểm tra và nguyên nhân gốc rễ (Debugging & Root Cause Analysis)
+1. **Kiểm tra logs các pod bảo trì Kopia bị lỗi:**
+   Truy xuất log từ một pod bị lỗi (ví dụ: `infra-default-kopia-cd24c-maintain-job-1782823328816-kkhl8`):
+   ```bash
+   $ kubectl logs infra-default-kopia-cd24c-maintain-job-1782823328816-kkhl8 -n velero
+   ```
+   Kết quả nhận được:
+   ```log
+   time="2026-06-30T12:42:51Z" level=error msg="An error occurred when running repo prune" error="failed to boost repo connect: error to connect backup repo: error to connect to storage: error retrieving storage config from bucket \"velero-k8s-prod\": Get \"https://<r2-account-id>.r2.cloudflarestorage.com/velero-k8s-prod/kopia/infra/.storageconfig\": dial tcp: lookup <r2-account-id>.r2.cloudflarestorage.com on 10.96.0.10:53: server misbehaving"
+   ```
+   Đồng thời logs của CoreDNS trong namespace `kube-system` ghi nhận lỗi timeout kết nối DNS bên ngoài tại thời điểm đó:
+   ```log
+   [ERROR] plugin/errors: 2 <r2-account-id>.r2.cloudflarestorage.com. AAAA: read udp 10.0.0.196:60312->8.8.8.8:53: i/o timeout
+   ```
+   **Kết luận lỗi Kopia:** Lỗi của pod bảo trì Kopia hoàn toàn do sự cố mạng tạm thời (transient network DNS timeout) trên cluster và đã tự phục hồi ở các lượt chạy kế tiếp.
+
+2. **Kiểm tra trạng thái xác thực Bucket của Velero:**
+   Mặc dù mạng đã ổn định, lệnh `kubectl get backupstoragelocations -n velero` vẫn hiển thị `Unavailable`. Lỗi chi tiết:
+   ```text
+   Backupstore contains invalid top-level directories: [etcd-backups]
+   ```
+   * **Nguyên nhân gốc rễ:** CronJob sao lưu etcd (`etcd-backup` tại `infra/platform/etcd-backup/cronjob.yaml`) được thiết lập để đẩy các file snapshot etcd trực tiếp lên cùng một bucket với Velero (`velero-k8s-prod`) dưới thư mục `/etcd-backups`:
+     ```bash
+     mc cp "$BACKUP_FILE" r2/velero-k8s-prod/etcd-backups/
+     ```
+     Velero có cơ chế xác thực rất nghiêm ngặt đối với bucket lưu trữ của mình. Nó quét thư mục gốc (root) của bucket và mong đợi chỉ chứa các thư mục do chính Velero quản lý (như `backups/`, `restores/`, `kopia/`, `metadata/`). Sự hiện diện của thư mục ngoài `etcd-backups` ở cấp root khiến Velero đánh dấu BSL là không khả dụng (`Unavailable`).
+
+### 3. Giải pháp khắc phục (Remediation)
+1. **Chuẩn hóa kiến trúc lưu trữ:** Tạo một bucket R2 riêng biệt có tên `cluster-etcd-backup-prod` để lưu trữ riêng các bản sao lưu etcd control plane, tách biệt hoàn toàn khỏi bucket `velero-k8s-prod` của Velero.
+2. **Cấu hình phân quyền:** Cấu hình lại API Token hiện tại trên Cloudflare R2 (Access Key `<r2-access-key-id>`) để có toàn quyền đọc/ghi trên cả 2 bucket (`velero-k8s-prod` và `cluster-etcd-backup-prod`).
+3. **Di chuyển dữ liệu cũ:** Di chuyển toàn bộ các snapshot etcd cũ đang tồn tại trong `velero-k8s-prod/etcd-backups/` sang bucket mới `cluster-etcd-backup-prod/etcd-backups/`.
+4. **Dọn dẹp và sửa đổi cấu hình CronJob:** Xóa bỏ thư mục `etcd-backups` khỏi bucket gốc của Velero để Velero tự động khôi phục trạng thái hoạt động bình thường, và cập nhật điểm đích lưu trữ trong file manifest `cronjob.yaml`.
+
+### 4. Các bước xử lý chi tiết (Implementation Steps)
+1. **Khởi tạo và Phân quyền:**
+   * Tạo bucket `cluster-etcd-backup-prod` trên Cloudflare Dashboard.
+   * Gán bucket mới vào phạm vi hoạt động (scoping) của R2 API Token hiện tại.
+2. **Chạy Script di chuyển và dọn dẹp dữ liệu (Python/boto3):**
+   Thực hiện liệt kê, sao chép và xóa sạch dữ liệu cũ tại root của bucket Velero:
+   ```python
+   # Script di chuyển dữ liệu
+   import boto3
+   s3 = boto3.client('s3', endpoint_url='https://<r2-account-id>.r2.cloudflarestorage.com', ...)
+   
+   # Sao chép từ velero-k8s-prod/etcd-backups/ sang cluster-etcd-backup-prod/etcd-backups/
+   # Sau đó xóa tại velero-k8s-prod/etcd-backups/
+   ```
+   *Kết quả thực thi:* Đã sao chép và dọn dẹp sạch 15 file snapshots cũ dạng `etcd-snapshot-*.db`.
+3. **Cập nhật và áp dụng cấu hình CronJob mới:**
+   Thay đổi điểm đích upload file backup trong `infra/platform/etcd-backup/cronjob.yaml`:
+   ```yaml
+   # Sửa đổi từ:
+   mc cp "$BACKUP_FILE" r2/velero-k8s-prod/etcd-backups/
+   # Thành:
+   mc cp "$BACKUP_FILE" r2/cluster-etcd-backup-prod/etcd-backups/
+   ```
+   Áp dụng cấu hình lên cluster:
+   ```bash
+   $ kubectl apply -f infra/platform/etcd-backup/cronjob.yaml
+   cronjob.batch/etcd-backup configured
+   ```
+4. **Kích hoạt kiểm tra lại Velero:**
+   Thực hiện restart deployment Velero để buộc trigger quá trình validation ngay lập tức:
+   ```bash
+   $ kubectl rollout restart deployment/velero -n velero
+   ```
+
+### 5. Kết quả (Outcome)
+* Trạng thái của **BackupStorageLocation** chuyển về **`Available`** thành công:
+  ```bash
+  $ kubectl get backupstoragelocations -n velero
+  NAME      PHASE       LAST VALIDATED   AGE   DEFAULT
+  default   Available   19s              23d   true
+  ```
+* Toàn bộ dữ liệu etcd cũ đã được bảo toàn nguyên vẹn trên bucket mới `cluster-etcd-backup-prod`.
+* CronJob `etcd-backup` trên Kubernetes được cập nhật và sẵn sàng chạy cho các chu kỳ sao lưu tiếp theo mà không gây lỗi cho hệ thống Velero.
 
