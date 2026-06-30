@@ -37,15 +37,3 @@ spec:
           value: {{ .Values.env.nodeEnv | quote }}
         - name: INTERNAL_API_URL
           value: {{ .Values.env.internalApiUrl | quote }} # IMPORTANT: Internal ClusterIP for server-side requests to backend
-        livenessProbe:
-          httpGet:
-            path: /api/health
-            port: {{ .Values.service.port }}
-          initialDelaySeconds: 15
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /api/health
-            port: {{ .Values.service.port }}
-          initialDelaySeconds: 15
-          periodSeconds: 5

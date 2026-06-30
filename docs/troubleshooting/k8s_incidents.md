@@ -129,8 +129,8 @@ Deployment của Backend yêu cầu nạp cấu hình (Database URL, JWT Secret)
 Khởi tạo Secret tương ứng cho môi trường Staging:
 ```bash
 kubectl create secret generic portfolio-secrets -n portfolio \
-  --from-literal=DATABASE_URL="postgresql://portfolio_user:macld%402026@postgres-staging.database:5432/portfolio_staging" \
-  --from-literal=JWT_SECRET="5Ttv+p4uNMkFFnM2N/1jY86/XpsjZv8v8EZKaU120BA="
+  --from-literal=DATABASE_URL="postgresql://<db-user>:<db-password>@<db-host>:<db-port>/<db-name>" \
+  --from-literal=JWT_SECRET="<jwt-secret-key>"
 ```
 
 ---
@@ -159,4 +159,256 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true # Giải pháp xử lý lỗi CRD OutOfSync
 ```
+
+---
+
+## Sự Cố 6: Velero BackupStorageLocation Bị 'Unavailable' Do Xung Đột Thư Mục etcd-backups
+
+### 1. Hiện tượng (Symptom)
+* Một số pod trong namespace `velero` chuyển sang trạng thái `Error` (Failed) khi thực hiện tác vụ bảo trì repository Kopia (`maintain-job`).
+* Trạng thái tổng quan của `BackupStorageLocation` tên `default` bị chuyển thành `Unavailable`:
+  ```bash
+  $ kubectl get backupstoragelocations -n velero
+  NAME      PHASE         LAST VALIDATED   AGE   DEFAULT
+  default   Unavailable   41s              23d   true
+  ```
+* Logs của pod điều khiển Velero (`velero-57f7fd5b5c-wj8cg`) báo lỗi xác thực bucket liên tục:
+  ```log
+  time="2026-06-30T16:33:02Z" level=error msg="fail to validate backup store" backup-storage-location=velero/default controller=backup-storage-location error="Backup store contains invalid top-level directories: [etcd-backups]" error.file="/go/src/github.com/vmware-tanzu/velero/pkg/persistence/object_store.go:222" error.function="github.com/vmware-tanzu/velero/pkg/persistence.(*objectBackupStore).IsValid" logSource="pkg/controller/backup_storage_location_controller.go:144"
+  ```
+
+### 2. Quá trình kiểm tra và nguyên nhân gốc rễ (Debugging & Root Cause Analysis)
+1. **Kiểm tra logs các pod bảo trì Kopia bị lỗi:**
+   Truy xuất log từ một pod bị lỗi (ví dụ: `infra-default-kopia-cd24c-maintain-job-1782823328816-kkhl8`):
+   ```bash
+   $ kubectl logs infra-default-kopia-cd24c-maintain-job-1782823328816-kkhl8 -n velero
+   ```
+   Kết quả nhận được:
+   ```log
+   time="2026-06-30T12:42:51Z" level=error msg="An error occurred when running repo prune" error="failed to boost repo connect: error to connect backup repo: error to connect to storage: error retrieving storage config from bucket \"velero-k8s-prod\": Get \"https://<r2-account-id>.r2.cloudflarestorage.com/velero-k8s-prod/kopia/infra/.storageconfig\": dial tcp: lookup <r2-account-id>.r2.cloudflarestorage.com on 10.96.0.10:53: server misbehaving"
+   ```
+   Đồng thời logs của CoreDNS trong namespace `kube-system` ghi nhận lỗi timeout kết nối DNS bên ngoài tại thời điểm đó:
+   ```log
+   [ERROR] plugin/errors: 2 <r2-account-id>.r2.cloudflarestorage.com. AAAA: read udp 10.0.0.196:60312->8.8.8.8:53: i/o timeout
+   ```
+   **Kết luận lỗi Kopia:** Lỗi của pod bảo trì Kopia hoàn toàn do sự cố mạng tạm thời (transient network DNS timeout) trên cluster và đã tự phục hồi ở các lượt chạy kế tiếp.
+
+2. **Kiểm tra trạng thái xác thực Bucket của Velero:**
+   Mặc dù mạng đã ổn định, lệnh `kubectl get backupstoragelocations -n velero` vẫn hiển thị `Unavailable`. Lỗi chi tiết:
+   ```text
+   Backupstore contains invalid top-level directories: [etcd-backups]
+   ```
+   * **Nguyên nhân gốc rễ:** CronJob sao lưu etcd (`etcd-backup` tại `infra/platform/etcd-backup/cronjob.yaml`) được thiết lập để đẩy các file snapshot etcd trực tiếp lên cùng một bucket với Velero (`velero-k8s-prod`) dưới thư mục `/etcd-backups`:
+     ```bash
+     mc cp "$BACKUP_FILE" r2/velero-k8s-prod/etcd-backups/
+     ```
+     Velero có cơ chế xác thực rất nghiêm ngặt đối với bucket lưu trữ của mình. Nó quét thư mục gốc (root) của bucket và mong đợi chỉ chứa các thư mục do chính Velero quản lý (như `backups/`, `restores/`, `kopia/`, `metadata/`). Sự hiện diện của thư mục ngoài `etcd-backups` ở cấp root khiến Velero đánh dấu BSL là không khả dụng (`Unavailable`).
+
+### 3. Giải pháp khắc phục (Remediation)
+1. **Chuẩn hóa kiến trúc lưu trữ:** Tạo một bucket R2 riêng biệt có tên `cluster-etcd-backup-prod` để lưu trữ riêng các bản sao lưu etcd control plane, tách biệt hoàn toàn khỏi bucket `velero-k8s-prod` của Velero.
+2. **Cấu hình phân quyền:** Cấu hình lại API Token hiện tại trên Cloudflare R2 (Access Key `<r2-access-key-id>`) để có toàn quyền đọc/ghi trên cả 2 bucket (`velero-k8s-prod` và `cluster-etcd-backup-prod`).
+3. **Di chuyển dữ liệu cũ:** Di chuyển toàn bộ các snapshot etcd cũ đang tồn tại trong `velero-k8s-prod/etcd-backups/` sang bucket mới `cluster-etcd-backup-prod/etcd-backups/`.
+4. **Dọn dẹp và sửa đổi cấu hình CronJob:** Xóa bỏ thư mục `etcd-backups` khỏi bucket gốc của Velero để Velero tự động khôi phục trạng thái hoạt động bình thường, và cập nhật điểm đích lưu trữ trong file manifest `cronjob.yaml`.
+
+### 4. Các bước xử lý chi tiết (Implementation Steps)
+1. **Khởi tạo và Phân quyền:**
+   * Tạo bucket `cluster-etcd-backup-prod` trên Cloudflare Dashboard.
+   * Gán bucket mới vào phạm vi hoạt động (scoping) của R2 API Token hiện tại.
+2. **Chạy Script di chuyển và dọn dẹp dữ liệu (Python/boto3):**
+   Thực hiện liệt kê, sao chép và xóa sạch dữ liệu cũ tại root của bucket Velero:
+   ```python
+   # Script di chuyển dữ liệu
+   import boto3
+   s3 = boto3.client('s3', endpoint_url='https://<r2-account-id>.r2.cloudflarestorage.com', ...)
+   
+   # Sao chép từ velero-k8s-prod/etcd-backups/ sang cluster-etcd-backup-prod/etcd-backups/
+   # Sau đó xóa tại velero-k8s-prod/etcd-backups/
+   ```
+   *Kết quả thực thi:* Đã sao chép và dọn dẹp sạch 15 file snapshots cũ dạng `etcd-snapshot-*.db`.
+3. **Cập nhật và áp dụng cấu hình CronJob mới:**
+   Thay đổi điểm đích upload file backup trong `infra/platform/etcd-backup/cronjob.yaml`:
+   ```yaml
+   # Sửa đổi từ:
+   mc cp "$BACKUP_FILE" r2/velero-k8s-prod/etcd-backups/
+   # Thành:
+   mc cp "$BACKUP_FILE" r2/cluster-etcd-backup-prod/etcd-backups/
+   ```
+   Áp dụng cấu hình lên cluster:
+   ```bash
+   $ kubectl apply -f infra/platform/etcd-backup/cronjob.yaml
+   cronjob.batch/etcd-backup configured
+   ```
+4. **Kích hoạt kiểm tra lại Velero:**
+   Thực hiện restart deployment Velero để buộc trigger quá trình validation ngay lập tức:
+   ```bash
+   $ kubectl rollout restart deployment/velero -n velero
+   ```
+
+### 5. Kết quả (Outcome)
+* Trạng thái của **BackupStorageLocation** chuyển về **`Available`** thành công:
+  ```bash
+  $ kubectl get backupstoragelocations -n velero
+  NAME      PHASE       LAST VALIDATED   AGE   DEFAULT
+  default   Available   19s              23d   true
+  ```
+* Toàn bộ dữ liệu etcd cũ đã được bảo toàn nguyên vẹn trên bucket mới `cluster-etcd-backup-prod`.
+* CronJob `etcd-backup` trên Kubernetes được cập nhật và sẵn sàng chạy cho các chu kỳ sao lưu tiếp theo mà không gây lỗi cho hệ thống Velero.
+
+---
+
+## Sự Cố 7: Lộ Lọt Khóa JWT_SECRET Trên Git Và Sử Dụng Khóa Yếu Ở Môi Trường Staging/Production
+
+### 1. Hiện tượng (Symptom)
+* Qua rà soát bảo mật mã nguồn, phát hiện khóa mã hóa JWT (`JWT_SECRET`) của môi trường Production tồn tại dưới dạng văn bản thô (plain-text) trong lịch sử Git (file `infra/ansible/vars/secrets.yml` và `docs/troubleshooting/k8s_incidents.md` cũ).
+* Khóa JWT này đang hoạt động trực tiếp trên cụm Kubernetes môi trường Production (`blog-prod`), tạo ra nguy cơ bảo mật nghiêm trọng nếu kẻ tấn công lấy được khóa và giả mạo chữ ký JWT để leo thang đặc quyền.
+* Môi trường Staging (`blog-staging`) đang sử dụng một khóa thô yếu và dễ đoán (`macld@2026`).
+
+### 2. Quá trình kiểm tra và nguyên nhân (Debugging & Root Cause Analysis)
+1. **Kiểm tra thông tin Secret thực tế trên cụm:**
+   * Truy xuất khóa giải mã của Production:
+     ```bash
+     $ kubectl get secret portfolio-secrets -n blog-prod -o jsonpath="{.data.JWT_SECRET}" | base64 --decode; echo
+     5Ttv+p4uNMkFFnM2N/1jY86/XpsjZv8v8EZKaU120BA=
+     ```
+     *Đánh giá:* Trùng khớp hoàn toàn với khóa bị lộ trên lịch sử Git.
+   * Truy xuất khóa giải mã của Staging:
+     ```bash
+     $ kubectl get secret portfolio-secrets -n blog-staging -o jsonpath="{.data.JWT_SECRET}" | base64 --decode; echo
+     macld@2026
+     ```
+     *Đánh giá:* Khóa staging quá yếu và lộ trong lịch sử phát triển.
+2. **Nguyên nhân gốc rễ:**
+   * Trong giai đoạn thiết lập ban đầu, các khóa bí mật chưa được tách biệt hoàn toàn hoặc được lưu trữ tạm thời dưới dạng biến chưa mã hóa trong tệp playbook Ansible và tài liệu hướng dẫn kỹ thuật trước khi được đưa vào Git.
+
+### 3. Giải pháp khắc phục (Remediation)
+1. **Rotate khóa bảo mật:** Tạo ra 2 khóa bảo mật JWT ngẫu nhiên mới, có độ dài tối thiểu 256-bit (32 bytes) và được mã hóa Base64 cho mỗi môi trường Production và Staging.
+2. **Mã hóa an toàn qua GitOps (Sealed Secrets):** Sử dụng công cụ `kubeseal` kết hợp với public certificate của controller (`infra/sealed-cert.pem`) để mã hóa thô (raw-encrypt) các khóa này trước khi lưu trữ vào repository GitOps.
+3. **Đồng bộ hóa qua ArgoCD:** Commit và push các thay đổi cấu hình lên nhánh `main` để ArgoCD tự động áp dụng và giải mã các SealedSecret vào cụm Kubernetes.
+4. **Tái khởi động Workload:** Restart Rolling các pod backend ở cả 2 môi trường để áp dụng khóa mới ngay lập tức.
+
+### 4. Các bước xử lý chi tiết (Implementation Steps)
+1. **Tự động hóa xoay vòng khóa bằng Script Python:**
+   Để tự động hóa việc tạo khóa bảo mật ngẫu nhiên, tự động gọi `kubeseal` mã hóa thô và chèn trực tiếp các giá trị mã hóa mới vào file cấu hình Helm values, sử dụng kịch bản script [infra/scripts/rotate_secrets.py](../../infra/scripts/rotate_secrets.py):
+
+   ```python
+   import secrets
+   import base64
+   import subprocess
+   import os
+   import shutil
+
+   def gen_key():
+       return base64.b64encode(secrets.token_bytes(32)).decode('utf-8')
+
+   def find_kubeseal(infra_dir):
+       # Tìm kubeseal trong PATH hệ thống
+       path_bin = shutil.which("kubeseal")
+       if path_bin:
+           return path_bin
+       
+       # Tìm trong thư mục agent bin
+       agent_bin_dir = os.path.join(infra_dir, "..", ".agent", "bin")
+       for name in ["kubeseal.exe", "kubeseal"]:
+           candidate = os.path.join(agent_bin_dir, name)
+           if os.path.exists(candidate):
+               return candidate
+       return "kubeseal"
+
+   def seal_value(kubeseal_path, value, name, namespace, cert_path):
+       temp_file = "temp_secret_val.txt"
+       with open(temp_file, "w", encoding="utf-8") as f:
+           f.write(value)
+           
+       cmd = [
+           kubeseal_path,
+           "--raw",
+           f"--from-file={temp_file}",
+           "--cert", cert_path,
+           "--name", name,
+           "--namespace", namespace
+       ]
+       p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+       stdout, stderr = p.communicate()
+       
+       if os.path.exists(temp_file):
+           os.remove(temp_file)
+           
+       if p.returncode != 0:
+           raise Exception(f"kubeseal failed: {stderr.decode('utf-8')}")
+       return stdout.decode('utf-8').strip()
+
+   def update_yaml_file(filepath, old_val_line_prefix, new_sealed_val):
+       with open(filepath, 'r', encoding='utf-8') as f:
+           lines = f.readlines()
+       
+       updated = False
+       for i, line in enumerate(lines):
+           if line.strip().startswith("JWT_SECRET:"):
+               indent = line[:line.find("JWT_SECRET:")]
+               lines[i] = f'{indent}JWT_SECRET: "{new_sealed_val}"\n'
+               updated = True
+               break
+               
+       if not updated:
+           raise Exception(f"Không tìm thấy dòng chứa JWT_SECRET trong {filepath}")
+           
+       with open(filepath, 'w', encoding='utf-8') as f:
+           f.writelines(lines)
+
+   def main():
+       script_dir = os.path.dirname(os.path.abspath(__file__))
+       infra_dir = os.path.dirname(script_dir)
+       
+       cert_path = os.path.join(infra_dir, "sealed-cert.pem")
+       prod_values_path = os.path.join(infra_dir, "environments", "production", "backend-values.yaml")
+       staging_values_path = os.path.join(infra_dir, "environments", "staging", "backend-values.yaml")
+       
+       kubeseal_path = find_kubeseal(infra_dir)
+       prod_key = gen_key()
+       staging_key = gen_key()
+       
+       prod_sealed = seal_value(kubeseal_path, prod_key, "portfolio-secrets", "blog-prod", cert_path)
+       staging_sealed = seal_value(kubeseal_path, staging_key, "portfolio-secrets", "blog-staging", cert_path)
+       
+       update_yaml_file(prod_values_path, "JWT_SECRET:", prod_sealed)
+       update_yaml_file(staging_values_path, "JWT_SECRET:", staging_sealed)
+       print("Xoay vòng khóa và cập nhật values.yaml thành công!")
+
+   if __name__ == "__main__":
+       main()
+   ```
+
+   **Cách thực thi nhanh:**
+   ```bash
+   $ python infra/scripts/rotate_secrets.py
+   ```
+2. **Cập nhật file cấu hình Helm Values trong repository:**
+   * Thay thế giá trị khóa `JWT_SECRET` tại `sealedSecret.encryptedData` trong:
+     * [environments/production/backend-values.yaml](file:///d:/DATA/Portfolio/infra/environments/production/backend-values.yaml)
+     * [environments/staging/backend-values.yaml](file:///d:/DATA/Portfolio/infra/environments/staging/backend-values.yaml)
+3. **Commit và Push lên Git để ArgoCD đồng bộ:**
+   * Thực hiện commit và push thay đổi lên repository `portfolio-infratructure.git` ( GitLab):
+     ```bash
+     $ git add environments/production/backend-values.yaml environments/staging/backend-values.yaml
+     $ git commit -m "fix(security): rotate compromised JWT secrets"
+     $ git push origin main
+     ```
+4. **Trigger ArgoCD đồng bộ và kiểm tra trạng thái:**
+   * Refresh ứng dụng trên ArgoCD:
+     ```bash
+     $ kubectl annotate application portfolio-root-app-production -n argocd argocd.argoproj.io/refresh=normal --overwrite
+     ```
+5. **Restart Rolling các pod Backend:**
+   ```bash
+   $ kubectl rollout restart deployment/portfolio-backend-production -n blog-prod
+   $ kubectl rollout restart deployment/portfolio-backend-staging -n blog-staging
+   ```
+
+### 5. Kết quả (Outcome)
+* Toàn bộ các Pod của Backend đã restart thành công và hoạt động ổn định ở trạng thái `Running`.
+* Kiểm tra giải mã giá trị khóa thực tế trong Secret của cluster:
+  * **Production (`blog-prod`)**: Khóa mới đã được cập nhật thành công (Bắt đầu bằng: `jgM1...`, kết thúc bằng: `...CEc=`).
+  * **Staging (`blog-staging`)**: Khóa mới đã được cập nhật thành công (Bắt đầu bằng: `25NN...`, kết thúc bằng: `...PGg=`).
+* Đảm bảo không còn bất kỳ khóa JWT_SECRET dạng văn bản trần nào hoạt động trên hệ thống.
+
 

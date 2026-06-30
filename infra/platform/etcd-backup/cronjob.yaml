@@ -75,7 +75,7 @@ spec:
                   mc alias set r2 https://a8823974263cfbb734616640f1b9dd55.r2.cloudflarestorage.com "$ACCESS_KEY" "$SECRET_KEY"
                   
                   echo "Uploading snapshot to Cloudflare R2..."
-                  mc cp "$BACKUP_FILE" r2/velero-k8s-prod/etcd-backups/
+                  mc cp "$BACKUP_FILE" r2/cluster-etcd-backup-prod/etcd-backups/
                 else
                   echo "Error: Access Key or Secret Key not found in decrypted credentials!"
                 fi
