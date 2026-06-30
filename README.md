@@ -185,7 +185,10 @@ Giao diện điều khiển tập trung hiển thị danh sách các pod đang c
 *   **[Zero-Downtime Strategy](docs/deployment/zero-downtime-strategy.md)**: Thiết lập RollingUpdate, Liveness/Readiness probes và HPA.
 *   **[Disaster Recovery & Backups](docs/operations/disaster-recovery.md)**: Cấu hình Velero, snapshot etcd và quy trình khôi phục.
 *   **[Cloudflare Zero Trust Access](docs/security/cloudflare-zero-trust.md)**: Bảo vệ hệ thống thông qua Cloudflare Access và OTP.
+*   **[Secrets Management](docs/security/secrets-management.md)**: Hướng dẫn quản lý và mã hóa dữ liệu nhạy cảm bằng Sealed Secrets.
+*   **[Monitoring & Dashboards](docs/operations/monitoring-dashboards.md)**: Giám sát tài nguyên hệ thống và cấu hình các cảnh báo Prometheus/Grafana.
 *   **[Smoke Test Strategy](docs/testing/smoke-test-strategy.md)**: Nội dung script smoke test và phân tích các bước kiểm thử.
+*   **[Kubernetes Incident Playbook](docs/troubleshooting/k8s_incidents.md)**: Nhật ký xử lý sự cố hạ tầng thực tế (Velero, OOM, Trivy CPU Spike, JWT secret rotation).
 *   **[Local Development Onboarding](docs/onboarding/local-development.md)**: Hướng dẫn cài đặt môi trường chạy local, SSH Config, và cấu hình `.env`.
 
 ---
