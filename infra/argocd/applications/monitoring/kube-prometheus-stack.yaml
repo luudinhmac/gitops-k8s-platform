@@ -57,6 +57,47 @@ spec:
               limits:
                 cpu: 50m
                 memory: 64Mi
+            env:
+              - name: TELEGRAM_BOT_TOKEN
+                valueFrom:
+                  secretKeyRef:
+                    name: alertmanager-telegram-secrets
+                    key: telegram_bot_token
+              - name: TELEGRAM_CHAT_ID
+                valueFrom:
+                  secretKeyRef:
+                    name: alertmanager-telegram-secrets
+                    key: telegram_chat_id
+          config:
+            global:
+              resolve_timeout: 5m
+            route:
+              group_by: ['alertname', 'namespace', 'job']
+              group_wait: 30s
+              group_interval: 5m
+              repeat_interval: 4h
+              receiver: 'telegram-infra-alerts'
+              routes:
+                - matchers:
+                    - alertname = Watchdog
+                  receiver: 'null'
+            receivers:
+              - name: 'null'
+              - name: 'telegram-infra-alerts'
+                telegram_configs:
+                  - bot_token: '${TELEGRAM_BOT_TOKEN}'
+                    chat_id: ${TELEGRAM_CHAT_ID}
+                    parse_mode: 'HTML'
+                    send_resolved: true
+                    message: |
+                      {{ range .Alerts -}}
+                      {{ if eq .Status "firing" }}🚨 <b>[CẢNH BÁO HẠ TẦNG] {{ .Labels.alertname }}</b>{{ else }}✅ <b>[ĐÃ PHỤC HỒI] {{ .Labels.alertname }}</b>{{ end }}
+                      <b>Độ nghiêm trọng:</b> <code>{{ .Labels.severity }}</code>
+                      <b>Namespace:</b> <code>{{ .Labels.namespace }}</code>
+                      <b>Pod liên quan:</b> <code>{{ .Labels.pod }}</code>
+                      <b>Chi tiết:</b> {{ .Annotations.summary }}
+                      <b>Thời gian:</b> {{ .StartsAt.Local }}
+                      {{ end }}
 
         prometheusOperator:
           resources:
