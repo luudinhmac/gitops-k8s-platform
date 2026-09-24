@@ -225,3 +225,30 @@ kubectl rollout restart deployment/sealed-secrets-controller -n kube-system
 >     # Xóa file tạm
 >     kubectl exec -it postgres-production-0 -n blog-prod -- rm /tmp/portfolio_backup_utf8.sql
 >     ```
+
+---
+
+## 🕒 Quy trình Tải & Khôi phục từ Bản Sao Lưu Tự Động (`postgres-backup-prod`)
+
+Hệ thống đã được trang bị Kubernetes CronJob `postgres-backup-prod` tại namespace `blog-prod` tự động sao lưu dữ liệu `pg_dump` lúc **03:00 AM ICT** hàng ngày.
+
+### 1. Vị trí bản sao lưu:
+* **Cloudflare R2**: Bucket `cluster-db-backup-prod`, thư mục `postgres-backups/prod/` (tự động lưu giữ 30 ngày).
+* **Local VPS Node**: `/data/k8s/backups/postgres-dumps/` (lưu giữ 7 ngày).
+
+### 2. Cách tải và Restore bản sao lưu tự động mới nhất:
+```bash
+# Lấy file .sql.gz mới nhất từ VPS Node hoặc giải nén file backup
+zcat /data/k8s/backups/postgres-dumps/postgres_prod_YYYY-MM-DD_HH-MM-SS.sql.gz > /tmp/restore.sql
+
+# Copy file vào Postgres Pod
+kubectl cp /tmp/restore.sql postgres-production-0:/tmp/restore.sql -n blog-prod
+
+# Làm sạch public schema và Import dữ liệu
+kubectl exec -it postgres-production-0 -n blog-prod -- psql -U portfolio_user -d portfolio_production -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+kubectl exec -it postgres-production-0 -n blog-prod -- psql -U portfolio_user -d portfolio_production -f /tmp/restore.sql
+
+# Xóa file tạm
+kubectl exec -it postgres-production-0 -n blog-prod -- rm /tmp/restore.sql
+rm /tmp/restore.sql
+```

@@ -26,4 +26,4 @@ smoke_test_production:
     - apk add --no-cache curl
   script:
     - echo "Executing frontend smoke test for production..."
-    - sh .gitlab/scripts/smoke-test.sh https://blog.luumac.io.vn production
+    - sh .gitlab/scripts/smoke-test.sh https://luumac.io.vn production

@@ -1,6 +1,6 @@
 # Stage 1: Builder
 FROM node:22-alpine AS builder
-RUN apk add --no-cache libc6-compat
+RUN apk update && apk upgrade --no-cache && apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main libcrypto3 libssl3 libc6-compat
 RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 WORKDIR /app
 
@@ -26,7 +26,7 @@ RUN --mount=type=cache,target=/app/.next/cache \
 
 # Stage 2: Runner
 FROM node:22-alpine AS runner
-RUN apk update && apk upgrade --no-cache && apk add --no-cache libc6-compat
+RUN apk update && apk upgrade --no-cache && apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main libcrypto3 libssl3 libc6-compat
 # Remove npm and npx to eliminate base image security vulnerabilities
 RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 WORKDIR /app

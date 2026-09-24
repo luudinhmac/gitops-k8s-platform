@@ -37,7 +37,7 @@ spec:
             - -c
             - |
               echo "Installing required packages..."
-              apk add --no-cache curl jq
+              apk add --no-cache --no-progress curl jq rclone
               
               echo "Downloading etcdctl..."
               wget -qO- https://github.com/etcd-io/etcd/releases/download/v3.5.24/etcd-v3.5.24-linux-amd64.tar.gz | tar -xzO etcd-v3.5.24-linux-amd64/etcdctl > /usr/local/bin/etcdctl
@@ -67,18 +67,19 @@ spec:
                 SECRET_KEY=$(echo "$AWS_CREDENTIALS" | grep aws_secret_access_key | cut -d'"' -f2)
                 
                 if [ -n "$ACCESS_KEY" ] && [ -n "$SECRET_KEY" ]; then
-                  echo "Downloading MinIO Client (mc)..."
-                  wget -qO /usr/local/bin/mc https://dl.min.io/client/mc/release/linux-amd64/mc
-                  chmod +x /usr/local/bin/mc
-                  
-                  echo "Configuring MinIO Client alias..."
-                  mc alias set r2 https://a8823974263cfbb734616640f1b9dd55.r2.cloudflarestorage.com "$ACCESS_KEY" "$SECRET_KEY"
+                  echo "Configuring rclone for Cloudflare R2..."
+                  export RCLONE_CONFIG_R2_TYPE="s3"
+                  export RCLONE_CONFIG_R2_PROVIDER="Cloudflare"
+                  export RCLONE_CONFIG_R2_ACCESS_KEY_ID="$ACCESS_KEY"
+                  export RCLONE_CONFIG_R2_SECRET_ACCESS_KEY="$SECRET_KEY"
+                  export RCLONE_CONFIG_R2_ENDPOINT="https://a8823974263cfbb734616640f1b9dd55.r2.cloudflarestorage.com"
+                  export RCLONE_CONFIG_R2_ACL="private"
                   
                   echo "Uploading snapshot to Cloudflare R2..."
-                  mc cp "$BACKUP_FILE" r2/cluster-etcd-backup-prod/etcd-backups/
+                  rclone copy "$BACKUP_FILE" r2:cluster-etcd-backup-prod/etcd-backups/
                   
                   echo "Cleaning up Cloudflare R2 backups older than 7 days..."
-                  mc rm --recursive --force --older-than 7d r2/cluster-etcd-backup-prod/etcd-backups/
+                  rclone delete --min-age 7d r2:cluster-etcd-backup-prod/etcd-backups/
                 else
                   echo "Error: Access Key or Secret Key not found in decrypted credentials!"
                 fi

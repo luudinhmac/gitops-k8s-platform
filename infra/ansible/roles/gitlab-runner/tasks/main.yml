@@ -44,8 +44,7 @@
         --token "{{ RUNNER_TOKEN_STAGING }}" \
         --executor "docker" \
         --docker-image "docker:latest" \
-        --docker-volumes "/var/run/docker.sock:/var/run/docker.sock" \
-        --docker-volumes "/etc/localtime:/etc/localtime:ro" \
+        --docker-volumes "/var/run/docker.sock:/var/run/docker.sock,/etc/localtime:/etc/localtime:ro" \
         --env "TZ=Asia/Ho_Chi_Minh" \
         --description "Agent 1 - Build VM"
       when: runner_check.rc != 0
