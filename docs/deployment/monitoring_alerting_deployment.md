@@ -94,9 +94,9 @@ kubectl get prometheusrules -n monitoring
 
 1. **Gửi tin nhắn giả lập Cảnh báo (Firing Alert)**:
    ```bash
-   Get-Content "scratch/test_alert_en.json" | ssh k8s-prod "curl -i -X POST -H 'Content-Type: application/json' -d @- http://10.0.0.181:9093/api/v2/alerts"
+   Get-Content "scratch/live_test_alert.json" | ssh k8s-prod "curl -i -X POST -H 'Content-Type: application/json' -d @- http://10.98.100.221:9093/api/v2/alerts"
    ```
 2. **Gửi tin nhắn giả lập Phục hồi (Resolved Alert)**:
    ```bash
-   Get-Content "scratch/test_alert_en_resolved.json" | ssh k8s-prod "curl -i -X POST -H 'Content-Type: application/json' -d @- http://10.0.0.181:9093/api/v2/alerts"
+   Get-Content "scratch/live_test_alert_resolved.json" | ssh k8s-prod "curl -i -X POST -H 'Content-Type: application/json' -d @- http://10.98.100.221:9093/api/v2/alerts"
    ```
