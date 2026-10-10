@@ -27,3 +27,10 @@ resource "cloudflare_r2_bucket" "terraform_state" {
   account_id = var.cloudflare_account_id
   name       = "terraform-state-blog"
 }
+
+# 6. Bucket: cluster-db-backup-prod (PostgreSQL logical dumps)
+resource "cloudflare_r2_bucket" "cluster_db_backup_prod" {
+  account_id = var.cloudflare_account_id
+  name       = "cluster-db-backup-prod"
+}
+

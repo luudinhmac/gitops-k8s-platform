@@ -72,4 +72,7 @@ trivy-config.json
 trivy-fs.json
 trivy-image.json
 get_tags.py
+*.pprof
+heap.txt
+Trivy Security Report.html
 

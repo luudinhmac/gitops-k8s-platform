@@ -1,6 +1,6 @@
 # Description: Main tasks for the 'gitlab-runner' role.
 # Installs and registers GitLab Runner for CI/CD jobs.
-# Last Updated: 2026-05-12
+# Last Updated: 2026-08-23
 
 ---
 - name: Install GitLab Runner binary on Build Agent
@@ -55,6 +55,28 @@
         minute: "0"
         hour: "3"
         job: "docker system prune -af --volumes"
+
+    - name: Configure concurrent jobs in GitLab Runner
+      lineinfile:
+        path: /etc/gitlab-runner/config.toml
+        regexp: '^concurrent\s*=.*'
+        line: 'concurrent = 8'
+      register: concurrent_updated
+
+    - name: Configure request_concurrency in GitLab Runner
+      lineinfile:
+        path: /etc/gitlab-runner/config.toml
+        insertafter: '^\[\[runners\]\]'
+        regexp: '^\s*request_concurrency\s*=.*'
+        line: '  request_concurrency = 8'
+      register: concurrency_updated
+
+    - name: Restart GitLab Runner if configuration updated
+      service:
+        name: gitlab-runner
+        state: restarted
+      when: concurrent_updated.changed or concurrency_updated.changed
+
 
 - name: Install Helm on K8s Nodes
   when: "'staging_k8s' in group_names or 'production' in group_names"

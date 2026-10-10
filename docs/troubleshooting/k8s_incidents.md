@@ -512,3 +512,45 @@ spec:
    ```
 3. **Đồng bộ hóa**:
    Đẩy các thay đổi lên Gitlab và để ArgoCD tự động áp dụng. Quá trình rollout StatefulSet và DaemonSet diễn ra thành công. Throttling đã giảm sâu và không còn gửi cảnh báo rác về Telegram.
+
+---
+
+## Sự Cố 11: Control Plane & Operator Pod Restart Hàng Loạt Do Mất Quyền Leader Election
+
+### 1. Hiện tượng (Symptom)
+* Ghi nhận một số Pod thành phần hạ tầng bị tăng chỉ số `RESTARTS`:
+  * `kube-system/kube-controller-manager-k8s-prod`
+  * `doppler-operator-system/doppler-operator-controller-manager-79b4845cbd-2z59k`
+  * `kube-system/kube-scheduler-k8s-prod`
+  * `kube-system/cilium-operator-b65f9447-z5h5c`
+* Các Pod trên dừng lần lượt từ `12:14:15 - 12:14:16 UTC+7` và đồng loạt khởi động lại thành công vào lúc `12:14:19 UTC+7` (Thời gian gián đoạn kéo dài **3 - 4 giây**).
+
+### 2. Bằng chứng kỹ thuật & Nguyên nhân gốc rễ (Technical Evidence & RCA)
+1. **Thông số tài nguyên OS (`sar` & `journalctl`)**:
+   * **CPU Usage**: `10.93%` (bình thường, nhàn rỗi).
+   * **Load Average**: `0.36 - 0.49` trên 3 vCPUs (rất thấp).
+   * **RAM / OOM Killer**: `0` sự kiện Kernel OOM (OS không thiếu RAM).
+   * **Disk %util trung bình**: `10.93%` / Await: `7.30ms` (tổng thể đĩa không nghẽn kéo dài).
+2. **Thông số Timeout kỹ thuật gây sự cố**:
+   * Ngưỡng Client Timeout cập nhật Lease: **`5.0 giây (5000 ms)`**.
+   * Ngưỡng tối đa giữ Lease (Lease Duration): **`15.0 giây`**.
+   * **Log thực tế**:
+     * `12:14:09 UTC+7`: `Put .../leases/kube-controller-manager?timeout=5s: context deadline exceeded` (Timeout > 5000ms).
+     * `12:14:10 UTC+7`: Kubelet báo `Failed to update lease: etcdserver: request timed out` (etcd trễ ghi đĩa `fsync` > 5000ms).
+     * `12:14:16 UTC+7`: `leader election lost` do vượt quá 15s deadline mà không làm tươi khóa thành công.
+3. **Cơ chế gây ra spike**:
+   * Đợt tạo/hủy volume của Job bảo trì Kopia Velero lúc `12:13:45 UTC+7` gây biến động trễ ghi đĩa tức thời (I/O fsync spike > 5s) trên cụm Single-node, làm `etcd` bị quá hạn 5s phản hồi cho API Server.
+
+### 3. Giải pháp & Chi tiết
+* Chi tiết báo cáo incident và log thực tế được lưu tại: [incident_report_leader_election_loss.md](file:///d:/DATA/Portfolio/docs/troubleshooting/incident_report_leader_election_loss.md).
+* Hệ thống đã tự phục hồi thành công sau 3-4 giây. Không gây gián đoạn các ứng dụng (`portfolio-backend`, `portfolio-frontend`). Không cần can thiệp cấu hình.
+
+
+
+
+
+### 3. Giải pháp & Chi tiết
+* Chi tiết báo cáo incident và log thực tế được lưu tại: [incident_report_leader_election_loss.md](file:///d:/DATA/Portfolio/docs/troubleshooting/incident_report_leader_election_loss.md).
+* Hệ thống đã tự phục hồi thành công sau 3-4 giây. Không gây gián đoạn các ứng dụng (`portfolio-backend`, `portfolio-frontend`). Không cần can thiệp cấu hình.
+
+

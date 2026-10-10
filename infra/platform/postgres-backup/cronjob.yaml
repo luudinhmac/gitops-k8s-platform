@@ -1,0 +1,112 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup-prod
+  namespace: blog-prod
+  labels:
+    app: postgres-backup-prod
+spec:
+  schedule: "0 20 * * *" # 03:00 AM ICT daily (20:00 UTC)
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            app: postgres-backup-prod
+        spec:
+          serviceAccountName: postgres-backup-sa
+          restartPolicy: OnFailure
+          nodeSelector:
+            kubernetes.io/hostname: k8s-prod
+          containers:
+          - name: backup
+            image: alpine:3.20
+            env:
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-production-secret
+                  key: DB_USER
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-production-secret
+                  key: DB_PASSWORD
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-production-secret
+                  key: DB_NAME
+            - name: DB_HOST
+              value: "postgres-production.blog-prod.svc.cluster.local"
+            command:
+            - /bin/sh
+            - -c
+            - |
+              echo "Installing required packages (postgresql16-client, curl, jq, rclone)..."
+              apk add --no-cache --no-progress postgresql16-client curl jq rclone
+              
+              echo "Preparing backup file name..."
+              TIMESTAMP=$(date +%F_%H-%M-%S)
+              BACKUP_FILE="/backup/postgres_prod_${TIMESTAMP}.sql.gz"
+              
+              echo "Starting pg_dump..."
+              PGPASSWORD="${DB_PASSWORD}" pg_dump -h "${DB_HOST}" -U "${DB_USER}" -d "${DB_NAME}" --clean --if-exists | gzip > "${BACKUP_FILE}"
+              
+              if [ ! -s "${BACKUP_FILE}" ]; then
+                echo "Error: Backup file is empty!"
+                exit 1
+              fi
+              
+              echo "Backup created successfully ($(du -h ${BACKUP_FILE} | cut -f1))"
+              
+              echo "Fetching R2 credentials from Velero..."
+              TOKEN=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
+              SECRET_JSON=$(curl -s -k -H "Authorization: Bearer $TOKEN" \
+                https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}/api/v1/namespaces/velero/secrets/cloud-credentials)
+              
+              AWS_CREDENTIALS_B64=$(echo "$SECRET_JSON" | jq -r '.data.cloud // empty')
+              if [ -n "$AWS_CREDENTIALS_B64" ]; then
+                AWS_CREDENTIALS=$(echo "$AWS_CREDENTIALS_B64" | base64 -d)
+                ACCESS_KEY=$(echo "$AWS_CREDENTIALS" | grep aws_access_key_id | cut -d'"' -f2)
+                SECRET_KEY=$(echo "$AWS_CREDENTIALS" | grep aws_secret_access_key | cut -d'"' -f2)
+                
+                if [ -n "$ACCESS_KEY" ] && [ -n "$SECRET_KEY" ]; then
+                  echo "Configuring rclone for Cloudflare R2..."
+                  export RCLONE_CONFIG_R2_TYPE="s3"
+                  export RCLONE_CONFIG_R2_PROVIDER="Other"
+                  export RCLONE_CONFIG_R2_ACCESS_KEY_ID="$ACCESS_KEY"
+                  export RCLONE_CONFIG_R2_SECRET_ACCESS_KEY="$SECRET_KEY"
+                  export RCLONE_CONFIG_R2_ENDPOINT="https://a8823974263cfbb734616640f1b9dd55.r2.cloudflarestorage.com"
+                  export RCLONE_CONFIG_R2_REGION="auto"
+                  export RCLONE_CONFIG_R2_NO_CHECK_BUCKET="true"
+                  
+                  echo "Uploading backup to Cloudflare R2 (cluster-db-backup-prod/postgres-backups/prod/)..."
+                  rclone copy "$BACKUP_FILE" r2:cluster-db-backup-prod/postgres-backups/prod/
+                  
+                  echo "Cleaning up Cloudflare R2 backups older than 30 days..."
+                  rclone delete --min-age 30d r2:cluster-db-backup-prod/postgres-backups/prod/
+                else
+                  echo "Error: Access Key or Secret Key not found in decrypted credentials!"
+                  exit 1
+                fi
+              else
+                echo "Error: Failed to fetch/parse R2 credentials from Velero secret!"
+                exit 1
+              fi
+              
+              echo "Cleaning up local backups older than 7 days..."
+              find /backup -name "postgres_prod_*.sql.gz" -mtime +7 -exec rm -f {} \;
+              
+              echo "PostgreSQL backup process completed successfully."
+            volumeMounts:
+            - name: backup-dir
+              mountPath: /backup
+          volumes:
+          - name: backup-dir
+            hostPath:
+              path: /data/k8s/backups/postgres-dumps
+              type: DirectoryOrCreate
