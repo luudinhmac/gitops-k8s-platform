@@ -541,6 +541,12 @@ spec:
 3. **Cơ chế gây ra spike**:
    * Đợt tạo/hủy volume của Job bảo trì Kopia Velero lúc `12:13:45 UTC+7` gây biến động trễ ghi đĩa tức thời (I/O fsync spike > 5s) trên cụm Single-node, làm `etcd` bị quá hạn 5s phản hồi cho API Server.
 
+### 3. Giải pháp & Chi tiết
+* Chi tiết báo cáo incident và log thực tế được lưu tại: [incident_report_leader_election_loss.md](file:///d:/DATA/Portfolio/docs/troubleshooting/incident_report_leader_election_loss.md).
+* Hệ thống đã tự phục hồi thành công sau 3-4 giây. Không gây gián đoạn các ứng dụng (`portfolio-backend`, `portfolio-frontend`). Không cần can thiệp cấu hình.
+
+
+
 
 
 ### 3. Giải pháp & Chi tiết
