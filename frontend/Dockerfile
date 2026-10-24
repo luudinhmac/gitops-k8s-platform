@@ -1,5 +1,15 @@
+# ==============================================================================
+# FRONTEND DOCKERFILE (Next.js)
+# LAST UPDATED: 2026-10-24
+# SECURITY PATCH: Pinned node:22.23.4-alpine to resolve:
+#   - CVE-2026-111497 (Brotli Decoder Buffer Overflow - RCE/DoS)
+#   - CVE-2026-105482 (DNS Resolution NUL Character Truncation)
+#   - CVE-2026-105483 (TLS Hostname IP Verification Bypass)
+#   - CVE-2026-109924 (Undici EventSource Memory Exhaustion DoS)
+# ==============================================================================
+
 # Stage 1: Builder
-FROM node:22-alpine AS builder
+FROM node:22.23.4-alpine AS builder
 RUN apk update && apk upgrade --no-cache && apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main libcrypto3 libssl3 libc6-compat
 RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 WORKDIR /app
@@ -25,7 +35,7 @@ RUN --mount=type=cache,target=/app/.next/cache \
     pnpm run build
 
 # Stage 2: Runner
-FROM node:22-alpine AS runner
+FROM node:22.23.4-alpine AS runner
 RUN apk update && apk upgrade --no-cache && apk add --no-cache --repository=https://dl-cdn.alpinelinux.org/alpine/edge/main libcrypto3 libssl3 libc6-compat
 # Remove npm and npx to eliminate base image security vulnerabilities
 RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx

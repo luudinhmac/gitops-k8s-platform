@@ -1,8 +1,18 @@
+# ==============================================================================
+# BACKEND DOCKERFILE (NestJS)
+# LAST UPDATED: 2026-10-24
+# SECURITY PATCH: Pinned node:22.23.4-alpine to resolve:
+#   - CVE-2026-111497 (Brotli Decoder Buffer Overflow - RCE/DoS)
+#   - CVE-2026-105482 (DNS Resolution NUL Character Truncation)
+#   - CVE-2026-105483 (TLS Hostname IP Verification Bypass)
+#   - CVE-2026-109924 (Undici EventSource Memory Exhaustion DoS)
+# ==============================================================================
+
 # ==========================================
 # STAGE 1: Install all dependencies & build
 # ==========================================
-FROM node:22-alpine AS builder
-RUN apk add --no-cache libc6-compat openssl
+FROM node:22.23.4-alpine AS builder
+RUN apk update && apk upgrade --no-cache && apk add --no-cache libc6-compat openssl
 RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 WORKDIR /app
 
@@ -32,8 +42,8 @@ RUN rm -rf dist && pnpm run build
 # ==========================================
 # STAGE 2: Build production-only dependencies
 # ==========================================
-FROM node:22-alpine AS prod-deps
-RUN apk add --no-cache libc6-compat openssl
+FROM node:22.23.4-alpine AS prod-deps
+RUN apk update && apk upgrade --no-cache && apk add --no-cache libc6-compat openssl
 RUN corepack enable && corepack prepare pnpm@9.15.4 --activate
 WORKDIR /app
 
@@ -52,7 +62,7 @@ RUN npx prisma generate
 # ==========================================
 # STAGE 3: Final Runner stage
 # ==========================================
-FROM node:22-alpine AS runner
+FROM node:22.23.4-alpine AS runner
 RUN apk update && apk upgrade --no-cache && apk add --no-cache openssl
 # Remove npm and npx to eliminate base image security vulnerabilities
 RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
